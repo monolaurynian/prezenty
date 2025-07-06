@@ -8,26 +8,37 @@ const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' ? false : true,
+    credentials: true
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(session({
-    secret: 'prezenty-secret-key-2024',
+    secret: process.env.SESSION_SECRET || 'prezenty-secret-key-2024',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        httpOnly: true,
+        sameSite: 'lax'
+    }
 }));
 
 // Database setup
-const db = new sqlite3.Database('./prezenty.db', (err) => {
+const dbPath = process.env.DATABASE_PATH || './prezenty.db';
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Błąd połączenia z bazą danych:', err);
+        console.error('Sprawdź uprawnienia do zapisu w katalogu:', path.dirname(dbPath));
         process.exit(1);
     }
-    console.log('Połączono z bazą danych SQLite');
+    console.log('Połączono z bazą danych SQLite:', dbPath);
 });
 
 // Create tables
@@ -38,7 +49,12 @@ db.serialize(() => {
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
+    )`, (err) => {
+        if (err) {
+            console.error('Błąd tworzenia tabeli users:', err);
+            process.exit(1);
+        }
+    });
 
     // Recipients table with identification fields
     db.run(`CREATE TABLE IF NOT EXISTS recipients (
@@ -48,7 +64,12 @@ db.serialize(() => {
         identified_by INTEGER,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (identified_by) REFERENCES users (id)
-    )`);
+    )`, (err) => {
+        if (err) {
+            console.error('Błąd tworzenia tabeli recipients:', err);
+            process.exit(1);
+        }
+    });
 
     // Presents table
     db.run(`CREATE TABLE IF NOT EXISTS presents (
@@ -59,7 +80,12 @@ db.serialize(() => {
         is_checked BOOLEAN DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (recipient_id) REFERENCES recipients (id)
-    )`);
+    )`, (err) => {
+        if (err) {
+            console.error('Błąd tworzenia tabeli presents:', err);
+            process.exit(1);
+        }
+    });
 
     // Add new columns to existing recipients table if they don't exist
     db.run("PRAGMA table_info(recipients)", (err, rows) => {
@@ -362,9 +388,9 @@ app.post('/api/register', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
     console.log(`Serwer Prezenty działa na porcie ${PORT}`);
-    console.log(`Dostępny pod adresem: http://localhost:${PORT}`);
+    console.log(`Dostępny pod adresem: http://${HOST}:${PORT}`);
     console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
     console.log(`Database path: ${path.resolve('./prezenty.db')}`);
 }).on('error', (err) => {

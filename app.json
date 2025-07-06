@@ -1,0 +1,22 @@
+{
+  "name": "prezenty",
+  "description": "Aplikacja do zarządzania pomysłami na prezenty świąteczne",
+  "repository": "https://github.com/yourusername/prezenty",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "keywords": ["node", "express", "christmas", "presents"],
+  "env": {
+    "NODE_ENV": {
+      "description": "Environment",
+      "value": "production"
+    },
+    "SESSION_SECRET": {
+      "description": "Session secret key",
+      "generator": "secret"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+} 
