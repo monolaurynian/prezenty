@@ -1872,14 +1872,32 @@ a:hover {
 
 /* Slide down effect for checked presents */
 .present-item.checked {
-    opacity: 0.6;
-    background: rgba(52, 199, 89, 0.05);
-    border-color: rgba(52, 199, 89, 0.2);
+    opacity: 0.7;
+    background: rgba(128, 128, 128, 0.1);
+    border-color: rgba(128, 128, 128, 0.3);
+    transition: all 0.5s ease;
+    transform: translateY(0);
 }
 
 .present-item.checked .present-title {
     text-decoration: line-through;
     color: var(--ios-text-secondary);
+}
+
+/* Animation for checking/unchecking presents */
+.present-item {
+    transition: all 0.5s ease;
+    transform: translateY(0);
+}
+
+.present-item.checking {
+    transform: translateY(10px);
+    opacity: 0.8;
+}
+
+.present-item.unchecking {
+    transform: translateY(-10px);
+    opacity: 0.8;
 }
 
 /* Share buttons with text improvements */

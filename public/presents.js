@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Global variable to store all presents
 let allPresents = [];
-let currentSortValue = 'date-desc';
+let currentSortValue = 'status';
 
 function checkAuth() {
     fetch('/api/auth')
@@ -174,6 +174,11 @@ function initializeSortOptions() {
             sortButton.appendChild(document.createTextNode(' ' + text.split(' ')[1]));
             sortButton.appendChild(document.createElement('i')).className = 'fas fa-chevron-down ms-1';
             
+            // Set initial button text for status
+            if (value === 'status') {
+                sortButton.innerHTML = '<i class="fas fa-check-circle"></i> Status<i class="fas fa-chevron-down ms-1"></i>';
+            }
+            
             // Hide dropdown
             document.getElementById('sortDropdown').style.display = 'none';
             
@@ -183,7 +188,7 @@ function initializeSortOptions() {
     });
     
     // Set default selected
-    const defaultOption = document.querySelector('[data-value="date-desc"]');
+    const defaultOption = document.querySelector('[data-value="status"]');
     if (defaultOption) {
         defaultOption.classList.add('selected');
     }
@@ -443,31 +448,37 @@ function togglePresent(id, isChecked) {
     .then(data => {
         console.log('Toggle response:', data);
         if (data.success) {
-            console.log('Toggle successful, refreshing display...');
+            console.log('Toggle successful, adding animation...');
             
-            // Add slide down effect for checked presents
+            // Add animation effect for checked presents
             const presentItem = document.querySelector(`[data-id="${id}"]`);
             if (presentItem) {
                 console.log('Found present item:', presentItem);
+                
                 if (isChecked) {
-                    // Add checked class and slide down effect
-                    presentItem.classList.add('checked');
-                    presentItem.style.transition = 'all 0.5s ease';
-                    presentItem.style.transform = 'translateY(10px)';
+                    // Add checking animation
+                    presentItem.classList.add('checking');
                     setTimeout(() => {
-                        presentItem.style.transform = 'translateY(0)';
-                    }, 100);
+                        presentItem.classList.remove('checking');
+                        presentItem.classList.add('checked');
+                    }, 250);
                 } else {
-                    // Remove checked class
-                    presentItem.classList.remove('checked');
+                    // Add unchecking animation
+                    presentItem.classList.add('unchecking');
+                    setTimeout(() => {
+                        presentItem.classList.remove('unchecking');
+                        presentItem.classList.remove('checked');
+                    }, 250);
                 }
             } else {
                 console.log('Present item not found in DOM');
             }
             
-            // Refresh the display to update sorting
-            console.log('Calling filterAndDisplayPresents...');
-            filterAndDisplayPresents();
+            // Refresh the display to update sorting after animation
+            setTimeout(() => {
+                console.log('Calling loadPresents to refresh data...');
+                loadPresents();
+            }, 300);
         } else {
             console.error('Toggle failed:', data.error);
             showErrorModal(data.error || 'Błąd podczas aktualizacji prezentu');
