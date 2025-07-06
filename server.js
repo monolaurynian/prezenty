@@ -22,7 +22,13 @@ app.use(session({
 }));
 
 // Database setup
-const db = new sqlite3.Database('./prezenty.db');
+const db = new sqlite3.Database('./prezenty.db', (err) => {
+    if (err) {
+        console.error('Błąd połączenia z bazą danych:', err);
+        process.exit(1);
+    }
+    console.log('Połączono z bazą danych SQLite');
+});
 
 // Create tables
 db.serialize(() => {
@@ -89,6 +95,10 @@ function requireAuth(req, res, next) {
 }
 
 // Routes
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -355,4 +365,9 @@ app.post('/api/register', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Serwer Prezenty działa na porcie ${PORT}`);
     console.log(`Dostępny pod adresem: http://localhost:${PORT}`);
+    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`Database path: ${path.resolve('./prezenty.db')}`);
+}).on('error', (err) => {
+    console.error('Błąd uruchamiania serwera:', err);
+    process.exit(1);
 }); 
