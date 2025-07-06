@@ -299,13 +299,10 @@ function displayRecipientsWithPresents(recipients, presents) {
                     <div class="col-md-4 text-end">
                         <div class="btn-group-vertical w-100">
                             ${!isIdentifiedByOther ? `
-                                <button class="btn btn-outline-primary btn-sm mb-2" onclick="openProfilePictureModal(${recipient.id})">
+                                <button class="btn btn-outline-primary btn-sm" onclick="openProfilePictureModal(${recipient.id})">
                                     <i class="fas fa-camera me-1"></i>Zmień zdjęcie
                                 </button>
                             ` : ''}
-                            <button class="btn btn-outline-danger btn-sm ${!isIdentifiedByOther ? '' : 'mt-2'}" onclick="deleteRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')">
-                                <i class="fas fa-trash me-1"></i>Usuń
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -317,17 +314,16 @@ function displayRecipientsWithPresents(recipients, presents) {
 function generateProfilePictureHTML(recipient, isIdentified) {
     if (recipient.profile_picture) {
         return `
-            <div class="profile-picture-wrapper position-relative mb-2 ${isIdentified ? 'identified' : ''}" style="display: inline-block;">
+            <div class="profile-picture-wrapper mb-2 ${isIdentified ? 'identified' : ''}">
                 <img src="${escapeHtml(recipient.profile_picture)}" 
                      alt="Zdjęcie profilowe" 
-                     class="img-fluid rounded-circle"
-                     style="width: 80px; height: 80px; object-fit: cover; border: 3px solid var(--border-light);">
+                     class="img-fluid">
             </div>
         `;
     } else {
         return `
-            <div class="profile-picture-wrapper position-relative mb-2 ${isIdentified ? 'identified' : ''}" style="width: 80px; height: 80px; border-radius: 50%; background: var(--border-light); display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 3px solid var(--border-light);">
-                <i class="fas fa-user fa-2x text-muted"></i>
+            <div class="profile-picture-wrapper mb-2 ${isIdentified ? 'identified' : ''}">
+                <i class="fas fa-user"></i>
             </div>
         `;
     }
@@ -367,6 +363,30 @@ function confirmSelfIdentification() {
         console.error('Error:', error);
         showErrorModal('Błąd połączenia z serwerem');
     });
+}
+
+function deleteRecipientFromModal() {
+    if (!pendingIdentificationRecipientId) return;
+    
+    // Get the recipient name from the modal
+    const recipientName = document.getElementById('identificationRecipientName').textContent;
+    
+    // Close the self-identification modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('selfIdentificationModal'));
+    modal.hide();
+    
+    // Show the confirmation modal
+    document.getElementById('confirmDeleteRecipientModalBody').innerHTML = `
+        <p>Czy na pewno chcesz usunąć osobę <strong>${escapeHtml(recipientName)}</strong>?</p>
+        <p class="text-muted">Ta operacja jest nieodwracalna i usunie wszystkie prezenty tej osoby.</p>
+    `;
+    
+    // Store the recipient ID for deletion
+    window.pendingDeleteRecipientId = pendingIdentificationRecipientId;
+    window.pendingDeleteRecipientName = recipientName;
+    
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmDeleteRecipientModal'));
+    confirmModal.show();
 }
 
 function showRecipientSelectionModal() {
