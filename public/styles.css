@@ -27,6 +27,7 @@
     --christmas-red: #ff3b30;
     --christmas-green: #34c759;
     --christmas-gold: #ffcc00;
+    --border-light: #e9ecef;
 }
 
 body {
@@ -134,7 +135,7 @@ body {
 
 .login-header {
     background: transparent;
-    padding: 2rem 2rem 1rem 2rem;
+    padding: 0.5rem 1.25rem 0.5rem 1.25rem;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -144,7 +145,7 @@ body {
 
 .login-header h2 {
     color: white;
-    font-size: 1.5rem;
+    font-size: 1.15rem;
     font-weight: 700;
     margin: 0;
     position: relative;
@@ -154,7 +155,7 @@ body {
 }
 
 .login-body {
-    padding: 2rem;
+    padding: 1.25rem;
     position: relative;
     background: transparent;
     backdrop-filter: blur(0px);
@@ -194,303 +195,473 @@ body {
     z-index: 1;
 }
 
-/* Flat Design Input Groups with red icons */
-.input-group-text {
-    background: var(--christmas-red);
-    color: white !important;
-    border: 2px solid var(--christmas-red);
-    border-radius: 12px 0 0 12px;
-    font-weight: 600;
-    padding: 1rem 1.25rem;
-}
-
-.input-group-text i {
-    color: white !important;
-}
-
-/* iOS-style Flat Design Submit Button */
-.btn-login {
-    background: var(--christmas-red);
-    border: none;
-    border-radius: 12px;
-    padding: 1rem 2rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: white;
-    transition: all 0.2s ease;
-    width: 100%;
-    margin-top: 1rem;
-    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
-    backdrop-filter: blur(3px);
-}
-
-.btn-login:hover {
-    background: #d70015;
-    color: white !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4);
-}
-
-.btn-login:active {
-    transform: translateY(0);
-}
-
-/* Flat Design Link Buttons */
-.btn-link {
-    color: white;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    margin-top: 1rem;
-    font-size: 0.9rem;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-    position: relative;
-    z-index: 1;
-}
-
-.btn-link:hover {
-    color: white !important;
-    background: rgba(255, 59, 48, 0.2);
-    text-decoration: none;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-}
-
-/* iOS-style Flat Design Form Inputs */
-.form-control {
-    border: 2px solid #e1e5e9;
-    border-radius: 12px;
-    padding: 0.875rem 1rem;
+/* Form improvements */
+.form-control, .form-select {
+    border: 2px solid var(--ios-border);
+    border-radius: 16px;
+    padding: 0.875rem 1.25rem;
     font-size: 0.95rem;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(3px);
     font-family: inherit;
     font-weight: 500;
+    min-height: 48px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
-.form-control:focus {
+.form-control:focus, .form-select:focus {
     border-color: var(--ios-primary);
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
     background: white;
     outline: none;
+    transform: translateY(-1px);
 }
 
-/* iOS-style Flat Design Icons */
-.login-card .fa-gift {
-    font-size: 2rem;
-    color: var(--christmas-red);
-    margin-bottom: 0.75rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+/* Form row improvements */
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -0.75rem;
+    width: 100%;
 }
 
-/* iOS-style Main Content Cards */
-.main-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: var(--ios-blur);
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-    margin-bottom: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+.form-row > * {
+    padding: 0 0.75rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Input group improvements */
+.input-group {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 100%;
     overflow: hidden;
 }
 
-.main-card .card-header {
+.input-group-text {
     background: var(--christmas-red);
-    color: white;
+    color: white !important;
+    border: 2px solid var(--christmas-red);
+    border-radius: 16px 0 0 16px;
+    font-weight: 600;
+    padding: 0.875rem 1.25rem;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.input-group .form-control {
+    border-radius: 0 16px 16px 0;
+    border-left: none;
+}
+
+.input-group .form-control:focus {
+    border-left: none;
+}
+
+/* Button group improvements */
+.btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+.btn-group .btn {
+    flex: 1;
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Modal improvements for better containment */
+.modal-dialog {
+    max-width: 90vw;
+    margin: 1.75rem auto;
+}
+
+.modal-content {
+    border-radius: 20px;
     border: none;
-    padding: 1.25rem 1.5rem;
-    font-weight: 600;
-    letter-spacing: -0.3px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    max-width: 100%;
+    overflow: hidden;
 }
 
-.main-card .card-header h3 {
+.modal-header {
+    border-bottom: 1px solid var(--ios-border);
+    padding: 1.5rem 2rem;
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+}
+
+.modal-body {
+    padding: 2rem;
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--ios-border);
+    padding: 1.5rem 2rem;
+    border-radius: 0 0 20px 20px;
+    overflow: hidden;
+}
+
+.modal-title {
     font-size: 1.25rem;
-    margin: 0;
-    font-weight: 700;
-}
-
-.main-card .card-body {
-    padding: 1.5rem;
-}
-
-/* Navigation */
-.navbar {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: var(--ios-blur);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.navbar-brand {
-    font-weight: 700;
-    font-size: 1.25rem;
-    color: var(--christmas-red) !important;
-}
-
-.nav-link {
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: var(--ios-text) !important;
-    transition: all 0.2s ease;
-}
-
-.nav-link:hover {
-    color: var(--christmas-red) !important;
-}
-
-.nav-link.active {
-    color: var(--christmas-red) !important;
     font-weight: 600;
-}
-
-/* Form labels and spacing */
-.form-label {
-    font-weight: 600;
-    font-size: 0.9rem;
     color: var(--ios-text);
-    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.form-textarea {
-    min-height: 80px;
-    resize: vertical;
+/* Alert improvements for better containment */
+.alert {
+    border-radius: 16px;
+    border: none;
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
-/* Present items with improved alignment */
+.alert-success {
+    background: rgba(52, 199, 89, 0.1);
+    color: #2db84d;
+    border-left: 4px solid var(--ios-success);
+}
+
+.alert-danger {
+    background: rgba(255, 59, 48, 0.1);
+    color: #e03535;
+    border-left: 4px solid var(--ios-danger);
+}
+
+.alert-warning {
+    background: rgba(255, 149, 0, 0.1);
+    color: #ff9500;
+    border-left: 4px solid #ff9500;
+}
+
+/* Table improvements */
+.table {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.table th,
+.table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--ios-border);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Card improvements */
+.card {
+    border-radius: 20px;
+    border: none;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+.card-img-top {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+/* List group improvements */
+.list-group {
+    border-radius: 16px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+}
+
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid var(--ios-border);
+    padding: 1rem 1.5rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* Badge improvements */
+.badge {
+    border-radius: 12px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Tooltip improvements */
+.tooltip {
+    max-width: 200px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.tooltip-inner {
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    max-width: 200px;
+}
+
+/* Popover improvements */
+.popover {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    max-width: 300px;
+    overflow: hidden;
+}
+
+.popover-header {
+    border-bottom: 1px solid var(--ios-border);
+    border-radius: 16px 16px 0 0;
+    padding: 1rem 1.5rem;
+}
+
+.popover-body {
+    padding: 1.5rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Present items improvements */
 .present-item {
     background: var(--ios-card);
     border: 1px solid var(--ios-border);
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 0.75rem;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .present-item:hover {
     border-color: var(--ios-primary);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
 }
 
 .present-item .row {
     align-items: center;
+    width: 100%;
+    margin: 0;
 }
 
-.present-item .col-md-1 {
-    text-align: center;
-}
-
-.present-item .col-md-2 {
-    text-align: center;
+.present-item .col-md-1,
+.present-item .col-md-2,
+.present-item .col-md-3,
+.present-item .col-md-4 {
+    padding: 0 0.75rem;
+    overflow: hidden;
 }
 
 .present-item .form-check {
-    margin: 0;
     display: flex;
     justify-content: center;
+    margin: 0;
 }
 
 .present-item .form-check-input {
     margin: 0;
     cursor: pointer;
+    width: 1.2rem;
+    height: 1.2rem;
 }
 
 .present-title {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
     margin: 0;
     color: var(--ios-text);
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .present-comments {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--ios-text-secondary);
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .present-date {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: var(--ios-text-secondary);
-}
-
-/* Search and filter controls */
-.search-controls {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-}
-
-.search-input {
-    border: 2px solid var(--ios-border);
-    border-radius: 10px;
-    padding: 0.625rem 0.875rem;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-    background: var(--ios-card);
-    flex: 1;
-    min-width: 200px;
-}
-
-.search-input:focus {
-    border-color: var(--ios-primary);
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
-    outline: none;
-}
-
-.sort-button {
-    background: var(--ios-primary);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 0.625rem 1rem;
-    font-size: 0.9rem;
     font-weight: 500;
-    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+/* Share buttons improvements */
+.share-buttons {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.share-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.share-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+}
+
+.share-btn.whatsapp {
+    background: rgba(37, 211, 102, 0.1);
+    color: #25d366;
+    border-color: #25d366;
+}
+
+.share-btn.whatsapp:hover {
+    background: #25d366;
+    color: white;
+}
+
+.share-btn.messenger {
+    background: rgba(0, 132, 255, 0.1);
+    color: #0084ff;
+    border-color: #0084ff;
+}
+
+.share-btn.messenger:hover {
+    background: #0084ff;
+    color: white;
+}
+
+.share-btn.email {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.share-btn.email:hover {
+    background: #6c757d;
+    color: white;
+}
+
+/* Button group improvements */
+.btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.btn-group-vertical .btn {
+    border-radius: 8px;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+    min-width: 40px;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+    justify-content: center;
 }
 
-.sort-button:hover {
-    background: #0056b3;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+.btn-group-vertical .btn:first-child {
+    border-radius: 8px 8px 0 0;
 }
 
-.sort-button:active {
-    transform: translateY(0);
+.btn-group-vertical .btn:last-child {
+    border-radius: 0 0 8px 8px;
 }
 
-/* Sort dropdown */
+.btn-group-vertical .btn:not(:first-child):not(:last-child) {
+    border-radius: 0;
+}
+
+/* Special case for single button in group */
+.btn-group-vertical .btn:only-child {
+    border-radius: 8px;
+}
+
+/* Sort dropdown improvements */
 .sort-dropdown {
     position: absolute;
     top: 100%;
     right: 0;
     background: var(--ios-card);
     border: 1px solid var(--ios-border);
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
     z-index: 1000;
-    min-width: 200px;
-    margin-top: 0.5rem;
+    min-width: 220px;
+    max-width: 300px;
+    margin-top: 0.75rem;
+    backdrop-filter: blur(10px);
+    overflow: hidden;
 }
 
 .sort-option {
-    padding: 0.75rem 1rem;
+    padding: 1rem 1.25rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     border-bottom: 1px solid var(--ios-border);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .sort-option:last-child {
@@ -499,6 +670,7 @@ body {
 
 .sort-option:hover {
     background: var(--ios-light-gray);
+    transform: translateX(4px);
 }
 
 .sort-option.selected {
@@ -506,69 +678,155 @@ body {
     color: white;
 }
 
+/* Search controls improvements */
+.search-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+    padding-top: 0;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+}
+
+.search-input {
+    border: 2px solid var(--ios-border);
+    border-radius: 16px;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: var(--ios-card);
+    flex: 1;
+    min-width: 200px;
+    max-width: 100%;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    margin-top: 0.5rem;
+}
+
+.search-input:focus {
+    border-color: var(--ios-primary);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.sort-button {
+    background: var(--ios-primary);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.25);
+    height: 48px;
+    box-sizing: border-box;
+    margin-top: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: fit-content;
+    cursor: pointer;
+}
+
+.sort-button:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 122, 255, 0.35);
+}
+
+.sort-button:active {
+    transform: translateY(0);
+}
+
 /* Buttons with improved styling */
+.btn {
+    border-radius: 16px;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
 .btn-danger {
     background: var(--ios-danger);
     color: white;
-    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
-    font-size: 0.9rem;
-    font-weight: 500;
+    box-shadow: 0 6px 20px rgba(255, 59, 48, 0.25);
 }
 
 .btn-danger:hover {
     background: #e03535;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4);
+    box-shadow: 0 10px 30px rgba(255, 59, 48, 0.35);
 }
 
 .btn-success {
     background: var(--ios-success);
     color: white;
-    box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
-    font-size: 0.9rem;
-    font-weight: 500;
+    box-shadow: 0 6px 20px rgba(52, 199, 89, 0.25);
 }
 
 .btn-success:hover {
     background: #2db84d;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(52, 199, 89, 0.4);
+    box-shadow: 0 10px 30px rgba(52, 199, 89, 0.35);
 }
 
 .btn-outline-danger {
     border: 2px solid var(--ios-danger);
     color: var(--ios-danger);
     background: transparent;
-    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.2);
-    font-size: 0.85rem;
-    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(255, 59, 48, 0.15);
 }
 
 .btn-outline-danger:hover {
     background: var(--ios-danger);
     color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+    box-shadow: 0 8px 25px rgba(255, 59, 48, 0.25);
 }
 
 /* Share buttons */
 .share-buttons {
     display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
     flex-wrap: wrap;
 }
 
 .share-btn {
-    padding: 0.375rem 0.75rem;
-    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
     text-decoration: none;
-    font-size: 0.8rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .share-btn.whatsapp {
@@ -587,32 +845,59 @@ body {
 }
 
 .share-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     color: white;
     text-decoration: none;
 }
 
 /* Progress bars */
 .progress {
-    height: 6px;
-    border-radius: 3px;
+    height: 8px;
+    border-radius: 4px;
     background: var(--ios-light-gray);
+    overflow: hidden;
 }
 
 .progress-bar {
-    border-radius: 3px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
 }
 
 /* Responsive improvements */
 @media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+    
+    .main-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .main-card .card-header {
+        padding: 0.75rem 1rem;
+    }
+    
     .search-controls {
         flex-direction: column;
         align-items: stretch;
+        gap: 1rem;
     }
     
     .search-input {
         min-width: auto;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .sort-button {
+        width: 100%;
+        justify-content: center;
+        max-width: 100%;
+    }
+    
+    .present-item {
+        padding: 1.25rem;
     }
     
     .present-item .row {
@@ -625,6 +910,58 @@ body {
     .present-item .col-md-4 {
         width: 100%;
         text-align: left;
+        padding: 0;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.25rem;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .sort-dropdown {
+        right: 0;
+        left: 0;
+        min-width: auto;
+        max-width: 100%;
+    }
+    
+    .navbar-nav {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .nav-link {
+        text-align: center;
+        margin: 0.25rem 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+    
+    .main-card .card-body {
+        padding: 1rem;
+    }
+    
+    .main-card .card-header {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .main-card .card-header h3 {
+        font-size: 1.1rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .form-control, .form-select {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
     }
 }
 
@@ -752,4 +1089,817 @@ body {
 
 .form-select option.text-primary:hover {
     background-color: rgba(0, 122, 255, 0.2);
+}
+
+/* Recipients page improvements */
+.recipient-item {
+    background: var(--ios-card);
+    border: 1px solid var(--ios-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.recipient-item:hover {
+    border-color: var(--ios-border);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    transform: none;
+}
+
+.recipient-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--ios-text);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.recipient-item .btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+.recipient-item .btn-group-vertical .btn {
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    min-height: 40px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recipient-item .btn-group-vertical .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.recipient-item .btn-outline-primary {
+    border: 2px solid var(--ios-primary);
+    color: var(--ios-primary);
+    background: rgba(0, 122, 255, 0.05);
+}
+
+.recipient-item .btn-outline-primary:hover {
+    background: var(--ios-primary);
+    color: white;
+    border-color: var(--ios-primary);
+}
+
+.recipient-item .btn-outline-danger {
+    border: 2px solid var(--ios-danger);
+    color: var(--ios-danger);
+    background: rgba(255, 59, 48, 0.05);
+}
+
+.recipient-item .btn-outline-danger:hover {
+    background: var(--ios-danger);
+    color: white;
+    border-color: var(--ios-danger);
+}
+
+.recipient-item .btn-outline-success {
+    border: 2px solid var(--ios-success);
+    color: var(--ios-success);
+    background: rgba(52, 199, 89, 0.05);
+}
+
+.recipient-item .btn-outline-success:hover {
+    background: var(--ios-success);
+    color: white;
+    border-color: var(--ios-success);
+}
+
+.recipient-item .btn-outline-warning {
+    border: 2px solid #ff9500;
+    color: #ff9500;
+    background: rgba(255, 149, 0, 0.05);
+}
+
+.recipient-item .btn-outline-warning:hover {
+    background: #ff9500;
+    color: white;
+    border-color: #ff9500;
+}
+
+/* Profile picture improvements */
+.profile-picture-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-picture-wrapper.identified::after {
+    content: '\f058';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #2db84d;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.profile-picture-wrapper.identified img,
+.profile-picture-wrapper.identified {
+    border: 3px solid #2db84d !important;
+}
+
+/* Progress bar improvements */
+.recipient-item .progress {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.recipient-item .progress-bar {
+    background: var(--ios-success);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+/* Badge improvements */
+.recipient-item .badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.recipient-item .badge.bg-success {
+    background: rgba(52, 199, 89, 0.1) !important;
+    color: var(--ios-success) !important;
+    border: 1px solid var(--ios-success);
+}
+
+/* Alert improvements in recipient items */
+.recipient-item .alert {
+    border-radius: 12px;
+    border: none;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.recipient-item .alert-warning {
+    background: rgba(255, 149, 0, 0.1);
+    color: #ff9500;
+    border-left: 3px solid #ff9500;
+}
+
+/* Presents preview improvements */
+.presents-preview {
+    margin-top: 1rem;
+}
+
+.presents-preview .present-item {
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.presents-preview .present-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+    transform: none;
+    box-shadow: none;
+}
+
+.presents-preview .present-item.checked {
+    opacity: 0.6;
+    background: rgba(52, 199, 89, 0.05);
+}
+
+/* Responsive improvements for recipients */
+@media (max-width: 768px) {
+    .recipient-item {
+        padding: 1rem;
+    }
+    
+    .recipient-item .row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .recipient-item .col-md-2,
+    .recipient-item .col-md-4,
+    .recipient-item .col-md-6 {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .recipient-item .btn-group-vertical {
+        flex-direction: row;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .recipient-item .btn-group-vertical .btn {
+        flex: 1;
+        max-width: 150px;
+    }
+    
+    .recipient-name {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .profile-picture-wrapper {
+        margin: 0 auto;
+    }
+}
+
+/* Container improvements */
+.container {
+    max-width: 1200px;
+    padding: 0 1.5rem;
+    margin: 0 auto;
+    overflow-x: hidden;
+}
+
+.container.mt-4 {
+    margin-top: 2rem !important;
+}
+
+/* Checkbox improvements */
+.form-check-input {
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 6px;
+    border: 2px solid var(--ios-border);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--ios-primary);
+    border-color: var(--ios-primary);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+    border-color: var(--ios-primary);
+}
+
+/* Spinner improvements */
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+    border-width: 0.2rem;
+    color: var(--ios-primary);
+}
+
+/* Text improvements */
+.text-muted {
+    color: var(--ios-text-secondary) !important;
+    font-weight: 500;
+}
+
+/* Link improvements */
+a {
+    color: var(--ios-primary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+/* Recipient link improvements */
+.recipient-link {
+    color: var(--ios-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    background: rgba(0, 122, 255, 0.1);
+}
+
+.recipient-link:hover {
+    color: #0056b3;
+    background: rgba(0, 122, 255, 0.15);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+/* Comment link improvements */
+.comment-link {
+    color: var(--ios-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 0.125rem 0.25rem;
+    border-radius: 4px;
+    background: rgba(0, 122, 255, 0.1);
+    font-size: 0.85rem;
+}
+
+.comment-link:hover {
+    color: #0056b3;
+    background: rgba(0, 122, 255, 0.15);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.comment-link:visited {
+    color: var(--ios-primary);
+}
+
+/* Profile picture improvements */
+.profile-picture-wrapper {
+    position: relative;
+    display: inline-block;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.profile-picture-wrapper:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.profile-picture-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.profile-picture-wrapper.identified img,
+.profile-picture-wrapper.identified {
+    border: 3px solid var(--christmas-green);
+    box-shadow: 0 4px 15px rgba(52, 199, 89, 0.2);
+}
+
+/* Certification badge improvements */
+.cert-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, var(--christmas-green), #2db84d);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+    border: 2px solid white;
+}
+
+.cert-badge i {
+    color: white;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+/* Global box-sizing fix */
+* {
+    box-sizing: border-box;
+}
+
+/* Row and column improvements */
+.row {
+    margin: 0;
+    width: 100%;
+}
+
+.col-md-1, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-8 {
+    padding: 0 0.75rem;
+    overflow: hidden;
+}
+
+/* iOS-style Main Content Cards */
+.main-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: var(--ios-blur);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 100%;
+}
+
+.main-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.12);
+}
+
+.main-card .card-header {
+    background: var(--christmas-red);
+    backdrop-filter: var(--ios-blur);
+    border-bottom: 1px solid var(--ios-border);
+    padding: 0.75rem 1.5rem;
+    border-radius: 20px 20px 0 0;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    overflow: hidden;
+}
+
+.main-card .card-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.main-card .card-body {
+    padding: 2rem;
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Navigation */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: var(--ios-blur);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 1rem 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: var(--christmas-red) !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-link {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--ios-text) !important;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem !important;
+    border-radius: 12px;
+    margin: 0 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-link:hover {
+    color: var(--christmas-red) !important;
+    background: rgba(255, 59, 48, 0.1);
+}
+
+.nav-link.active {
+    color: var(--christmas-red) !important;
+    font-weight: 600;
+    background: rgba(255, 59, 48, 0.15);
+}
+
+/* Form labels and spacing */
+.form-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--ios-text);
+    margin-bottom: 0.75rem;
+    display: block;
+    width: 100%;
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+    line-height: 1.5;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* iOS-style Flat Design Submit Button */
+.btn-login {
+    background: var(--christmas-red);
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.2s ease;
+    width: 100%;
+    margin-top: 1rem;
+    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+    backdrop-filter: blur(3px);
+}
+
+.btn-login:hover {
+    background: #d70015;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+/* Flat Design Link Buttons */
+.btn-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 1;
+}
+
+.btn-link:hover {
+    color: white !important;
+    background: rgba(255, 59, 48, 0.2);
+    text-decoration: none;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+/* iOS-style Flat Design Icons */
+.login-card .fa-gift {
+    font-size: 2rem;
+    color: var(--christmas-red);
+    margin-bottom: 0.75rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Flat Design Input Groups with red icons */
+.input-group-text i {
+    color: white !important;
+}
+
+/* Button group improvements for recipients */
+.recipient-item .btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+.recipient-item .btn-group-vertical .btn {
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    min-height: 40px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recipient-item .btn-group-vertical .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Fix for single button or first/last button in group */
+.recipient-item .btn-group-vertical .btn:first-child {
+    border-radius: 12px;
+}
+
+.recipient-item .btn-group-vertical .btn:last-child {
+    border-radius: 12px;
+}
+
+.recipient-item .btn-group-vertical .btn:only-child {
+    border-radius: 12px;
+}
+
+/* Identification buttons improvements */
+.recipient-item .btn-outline-success.btn-sm,
+.recipient-item .btn-outline-warning.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+    min-height: 32px;
+    border-radius: 8px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recipient-item .btn-outline-success.btn-sm:hover,
+.recipient-item .btn-outline-warning.btn-sm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Ensure identification buttons are smaller than action buttons */
+.recipient-item .mb-3 .btn {
+    max-width: 200px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Responsive adjustments for identification buttons */
+@media (max-width: 768px) {
+    .recipient-item .mb-3 .btn {
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
+/* Override Bootstrap btn-group-vertical styles for recipients */
+.recipient-item .btn-group-vertical > .btn {
+    border-radius: 12px !important;
+    margin-bottom: 0.5rem;
+}
+
+.recipient-item .btn-group-vertical > .btn:first-child {
+    border-radius: 12px !important;
+}
+
+.recipient-item .btn-group-vertical > .btn:last-child {
+    border-radius: 12px !important;
+    margin-bottom: 0;
+}
+
+.recipient-item .btn-group-vertical > .btn:only-child {
+    border-radius: 12px !important;
+    margin-bottom: 0;
+}
+
+/* Ensure proper spacing between buttons */
+.recipient-item .btn-group-vertical > .btn:not(:last-child) {
+    margin-bottom: 0.5rem;
+}
+
+/* Better alignment for identification buttons next to name */
+.recipient-item .d-flex.align-items-center .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    padding: 0.375rem 0.75rem;
+    min-height: 32px;
+    border-radius: 8px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recipient-item .d-flex.align-items-center .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Ensure name and button are properly aligned */
+.recipient-item .d-flex.align-items-center {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.recipient-item .recipient-name {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .recipient-item .d-flex.align-items-center {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .recipient-item .d-flex.align-items-center .btn {
+        align-self: flex-start;
+    }
+}
+
+/* Present list action buttons improvements */
+.present-item .btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.present-item .btn-group-vertical .btn {
+    border-radius: 8px;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+    min-width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.present-item .btn-group-vertical .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.present-item .btn-group-vertical .btn:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.present-item .btn-group-vertical .btn:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.present-item .btn-group-vertical .btn:not(:first-child):not(:last-child) {
+    border-radius: 0;
+}
+
+.present-item .btn-group-vertical .btn:only-child {
+    border-radius: 8px;
+}
+
+/* Slide down effect for checked presents */
+.present-item.checked {
+    opacity: 0.6;
+    background: rgba(52, 199, 89, 0.05);
+    border-color: rgba(52, 199, 89, 0.2);
+}
+
+.present-item.checked .present-title {
+    text-decoration: line-through;
+    color: var(--ios-text-secondary);
+}
+
+/* Share buttons with text improvements */
+.share-buttons .share-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.share-buttons .share-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
 } 

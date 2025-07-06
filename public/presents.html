@@ -34,25 +34,25 @@
     <div class="container mt-4">
         <!-- Add Present Form -->
         <div class="card main-card">
-            <div class="card-header">
-                <h3 class="mb-0">
+            <div class="card-header" style="min-height: 48px; display: flex; align-items: center;">
+                <h3 class="mb-0 d-flex align-items-center" style="padding-top: 0.25rem; padding-bottom: 0.25rem;">
                     <i class="fas fa-plus me-2"></i>Dodaj Nowy Prezent
                 </h3>
             </div>
             <div class="card-body">
                 <form id="presentForm">
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3 d-flex flex-column">
                             <label for="presentTitle" class="form-label">Jaki prezent?</label>
-                            <input type="text" class="form-control" id="presentTitle" placeholder="Nazwa prezentu" required>
+                            <input type="text" class="form-control" id="presentTitle" placeholder="Nazwa prezentu" required style="height: 50%;">
                         </div>
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-2 mb-3 d-flex flex-column">
                             <label for="recipientSelect" class="form-label">Dla kogo?</label>
-                            <select class="form-select" id="recipientSelect" required>
+                            <select class="form-select" id="recipientSelect" required style="height: 50%; border: 1px solid #ced4da;">
                                 <option value="">Wybierz osobę</option>
                             </select>
                         </div>
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-5 mb-3">
                             <label for="comments" class="form-label">Dodatkowe informacje</label>
                             <textarea class="form-control form-textarea" id="comments" placeholder="Opis, link, uwagi..."></textarea>
                         </div>
@@ -69,8 +69,8 @@
 
         <!-- Recipients Overview -->
         <div class="card main-card">
-            <div class="card-header">
-                <h3 class="mb-0">
+            <div class="card-header" style="min-height: 48px; display: flex; align-items: center;">
+                <h3 class="mb-0 d-flex align-items-center" style="padding-top: 0.25rem; padding-bottom: 0.25rem;">
                     <i class="fas fa-chart-pie me-2"></i>Przegląd Prezentów
                 </h3>
             </div>
@@ -89,8 +89,8 @@
         <div class="card main-card">
             <div class="card-header">
                 <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h3 class="mb-0">
+                    <div class="col-md-6 text-start d-flex align-items-center" style="min-height: 48px;">
+                        <h3 class="mb-0 d-flex align-items-center" style="padding-top: 0.25rem; padding-bottom: 0.25rem;">
                             <i class="fas fa-list me-2"></i>Lista Prezentów
                         </h3>
                     </div>
@@ -152,16 +152,12 @@
                 <div class="modal-body">
                     <form id="addRecipientForm">
                         <div class="mb-3">
-                            <label for="newRecipientName" class="form-label">Imię i nazwisko</label>
-                            <input type="text" class="form-control" id="newRecipientName" placeholder="Wprowadź imię i nazwisko" required>
+                            <label for="newRecipientName" class="form-label">Imię</label>
+                            <input type="text" class="form-control" id="newRecipientName" placeholder="Wprowadź imię" required>
                         </div>
                         <div class="mb-3">
                             <label for="newRecipientEmail" class="form-label">Email (opcjonalnie)</label>
                             <input type="email" class="form-control" id="newRecipientEmail" placeholder="email@example.com">
-                        </div>
-                        <div class="mb-3">
-                            <label for="newRecipientPhone" class="form-label">Telefon (opcjonalnie)</label>
-                            <input type="tel" class="form-control" id="newRecipientPhone" placeholder="+48 123 456 789">
                         </div>
                         <div class="mb-3">
                             <label for="newRecipientNotes" class="form-label">Notatki (opcjonalnie)</label>
@@ -176,6 +172,66 @@
                     <button type="button" class="btn btn-primary" onclick="addNewRecipient()">
                         <i class="fas fa-plus me-1"></i>Dodaj osobę
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal do edycji prezentu -->
+    <div class="modal fade" id="editPresentModal" tabindex="-1" aria-labelledby="editPresentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPresentModalLabel">
+                        <i class="fas fa-edit me-2"></i>Edytuj prezent
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPresentForm">
+                        <div class="mb-3">
+                            <label for="editPresentTitle" class="form-label">Nazwa prezentu</label>
+                            <input type="text" class="form-control" id="editPresentTitle" placeholder="Nazwa prezentu" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editRecipientSelect" class="form-label">Dla kogo?</label>
+                            <select class="form-select" id="editRecipientSelect" required>
+                                <option value="">Wybierz osobę</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPresentComments" class="form-label">Dodatkowe informacje</label>
+                            <textarea class="form-control" id="editPresentComments" rows="3" placeholder="Opis, link, uwagi..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Anuluj
+                    </button>
+                    <button type="submit" class="btn btn-primary" onclick="updatePresent()">
+                        <i class="fas fa-save me-1"></i>Zapisz zmiany
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Błąd
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorModalMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
                 </div>
             </div>
         </div>

@@ -54,9 +54,23 @@ function checkAuth() {
 }
 
 function loadRecipients() {
+    console.log('Loading recipients for dropdown...');
+    
     fetch('/api/recipients')
-    .then(response => response.json())
+    .then(response => {
+        console.log('Recipients response status:', response.status);
+        if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = '/';
+                throw new Error('Unauthorized');
+            }
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
     .then(recipients => {
+        console.log('Recipients loaded for dropdown:', recipients.length, 'recipients');
+        
         const select = document.getElementById('recipientSelect');
         select.innerHTML = '<option value="">Wybierz osobę</option>';
         
@@ -67,12 +81,15 @@ function loadRecipients() {
             select.appendChild(option);
         });
         
-        // Dodaj opcję "Dodaj nową osobę"
+        // Dodaj opcję "Dodaj nową osobę" do głównego dropdowna
         const addNewOption = document.createElement('option');
         addNewOption.value = 'add-new';
         addNewOption.className = 'text-primary';
         addNewOption.innerHTML = '<i class="fas fa-plus"></i> + Dodaj nową osobę';
         select.appendChild(addNewOption);
+        
+        // Synchronizuj dropdowny
+        syncDropdowns();
         
         // Dodaj event listener dla zmiany wyboru
         select.addEventListener('change', function() {
@@ -92,9 +109,11 @@ function loadRecipients() {
 }
 
 function loadPresents() {
+    console.log('loadPresents called');
     fetch('/api/presents')
     .then(response => response.json())
     .then(presents => {
+        console.log('Presents loaded from server:', presents);
         allPresents = presents;
         filterAndDisplayPresents();
         displayRecipientsOverview(presents);
@@ -107,6 +126,7 @@ function loadPresents() {
 }
 
 function filterAndDisplayPresents() {
+    console.log('filterAndDisplayPresents called');
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput.value.toLowerCase().trim();
     
@@ -130,7 +150,8 @@ function filterAndDisplayPresents() {
 
 function toggleSortDropdown() {
     const dropdown = document.getElementById('sortDropdown');
-    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    const currentDisplay = dropdown.style.display;
+    dropdown.style.display = currentDisplay === 'none' || currentDisplay === '' ? 'block' : 'none';
 }
 
 function initializeSortOptions() {
@@ -279,14 +300,14 @@ function displayPresents(presents) {
         return `
             <div class="present-item ${present.is_checked ? 'checked' : ''}" data-id="${present.id}">
                 <div class="row align-items-center">
-                    <div class="col-md-1">
-                        <div class="form-check">
+                    <div class="col-md-1 text-center">
+                        <div class="form-check d-flex justify-content-center">
                             <input class="form-check-input" type="checkbox" 
                                    ${present.is_checked ? 'checked' : ''} 
                                    onchange="togglePresent(${present.id}, this.checked)">
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <h5 class="present-title mb-1">${escapeHtml(present.title)}</h5>
                         <small class="text-muted">
                             <i class="fas fa-user me-1"></i>
@@ -297,15 +318,20 @@ function displayPresents(presents) {
                         ${commentsHTML}
                         ${shareButtons}
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 text-center">
                         <small class="present-date">
                             ${new Date(present.created_at).toLocaleDateString('pl-PL')}
                         </small>
                     </div>
                     <div class="col-md-1">
-                        <button class="btn btn-outline-danger btn-sm" onclick="deletePresent(${present.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="btn-group-vertical btn-group-sm" role="group">
+                            <button class="btn btn-outline-primary btn-sm mb-1" onclick="editPresent(${present.id}, '${escapeHtml(present.title)}', '${escapeHtml(present.comments || '')}', ${present.recipient_id || 'null'})" title="Edytuj">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deletePresent(${present.id})" title="Usuń">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -314,9 +340,20 @@ function displayPresents(presents) {
 }
 
 function formatComments(comments) {
-    // Convert URLs to clickable links
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const formattedComments = comments.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1 <i class="fas fa-external-link-alt"></i></a>');
+    if (!comments) return '';
+    
+    // Escape HTML first to prevent XSS
+    let escapedComments = escapeHtml(comments);
+    
+    // Convert URLs to clickable links with better regex
+    const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/gi;
+    const formattedComments = escapedComments.replace(urlRegex, function(url) {
+        // Clean up the URL (remove trailing punctuation)
+        const cleanUrl = url.replace(/[.,;:!?]+$/, '');
+        const punctuation = url.match(/[.,;:!?]+$/);
+        
+        return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="comment-link">${cleanUrl}</a><i class="fas fa-external-link-alt ms-1" style="font-size: 0.8em; color: var(--ios-blue);"></i>${punctuation ? punctuation[0] : ''}`;
+    });
     
     return `<div class="present-comments">${formattedComments}</div>`;
 }
@@ -326,14 +363,14 @@ function generateShareButtons(present) {
     const encodedText = encodeURIComponent(text);
     
     return `
-        <div class="share-buttons">
-            <a href="https://wa.me/?text=${encodedText}" target="_blank" class="share-btn whatsapp">
+        <div class="share-buttons d-flex gap-1 flex-wrap">
+            <a href="https://wa.me/?text=${encodedText}" target="_blank" class="share-btn whatsapp btn btn-sm btn-outline-success">
                 <i class="fab fa-whatsapp"></i> WhatsApp
             </a>
-            <a href="https://www.facebook.com/dialog/send?link=${encodeURIComponent(window.location.origin)}&app_id=966242223397117&redirect_uri=${encodeURIComponent(window.location.origin)}&quote=${encodedText}" target="_blank" class="share-btn messenger">
+            <a href="https://www.facebook.com/dialog/send?link=${encodeURIComponent(window.location.origin)}&app_id=966242223397117&redirect_uri=${encodeURIComponent(window.location.origin)}&quote=${encodedText}" target="_blank" class="share-btn messenger btn btn-sm btn-outline-primary">
                 <i class="fab fa-facebook-messenger"></i> Messenger
             </a>
-            <a href="mailto:?subject=Prezent&body=${encodedText}" class="share-btn email">
+            <a href="mailto:?subject=Prezent&body=${encodedText}" class="share-btn email btn btn-sm btn-outline-secondary">
                 <i class="fas fa-envelope"></i> Email
             </a>
         </div>
@@ -386,12 +423,15 @@ function addPresent() {
         showFormMessage('Błąd połączenia z serwerem', 'danger');
     })
     .finally(() => {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
+        if (submitBtn) {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
     });
 }
 
 function togglePresent(id, isChecked) {
+    console.log('togglePresent called with:', { id, isChecked });
     fetch(`/api/presents/${id}/check`, {
         method: 'PUT',
         headers: {
@@ -401,14 +441,41 @@ function togglePresent(id, isChecked) {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Toggle response:', data);
         if (data.success) {
-            loadPresents();
+            console.log('Toggle successful, refreshing display...');
+            
+            // Add slide down effect for checked presents
+            const presentItem = document.querySelector(`[data-id="${id}"]`);
+            if (presentItem) {
+                console.log('Found present item:', presentItem);
+                if (isChecked) {
+                    // Add checked class and slide down effect
+                    presentItem.classList.add('checked');
+                    presentItem.style.transition = 'all 0.5s ease';
+                    presentItem.style.transform = 'translateY(10px)';
+                    setTimeout(() => {
+                        presentItem.style.transform = 'translateY(0)';
+                    }, 100);
+                } else {
+                    // Remove checked class
+                    presentItem.classList.remove('checked');
+                }
+            } else {
+                console.log('Present item not found in DOM');
+            }
+            
+            // Refresh the display to update sorting
+            console.log('Calling filterAndDisplayPresents...');
+            filterAndDisplayPresents();
         } else {
-            console.error('Error toggling present:', data.error);
+            console.error('Toggle failed:', data.error);
+            showErrorModal(data.error || 'Błąd podczas aktualizacji prezentu');
         }
     })
     .catch(error => {
         console.error('Error:', error);
+        showErrorModal('Błąd połączenia z serwerem');
     });
 }
 
@@ -474,32 +541,28 @@ function clearSearch() {
 // Funkcja do dodawania nowej osoby przez modal
 function addNewRecipient() {
     const name = document.getElementById('newRecipientName').value.trim();
-    const email = document.getElementById('newRecipientEmail').value.trim();
-    const phone = document.getElementById('newRecipientPhone').value.trim();
-    const notes = document.getElementById('newRecipientNotes').value.trim();
     
     if (!name) {
-        alert('Proszę wprowadzić imię i nazwisko osoby');
+        alert('Proszę wprowadzić imię osoby');
         return;
     }
     
-    const recipientData = {
-        name: name,
-        email: email || null,
-        phone: phone || null,
-        notes: notes || null
-    };
+    console.log('Adding new recipient from modal:', { name });
     
     fetch('/api/recipients', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(recipientData)
+        body: JSON.stringify({ name: name })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Add recipient response status:', response.status);
+        return response.json();
+    })
     .then(data => {
-        if (data.success) {
+        console.log('Add recipient response data:', data);
+        if (data.id) {
             // Zamknij modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('addRecipientModal'));
             modal.hide();
@@ -513,17 +576,138 @@ function addNewRecipient() {
             // Pokaż komunikat sukcesu
             showFormMessage('Osoba została dodana pomyślnie!', 'success');
             
-            // Automatycznie wybierz nowo dodaną osobę
+            // Automatycznie wybierz nowo dodaną osobę w obu dropdownach
             setTimeout(() => {
                 const select = document.getElementById('recipientSelect');
-                select.value = data.recipient.id;
+                const editSelect = document.getElementById('editRecipientSelect');
+                select.value = data.id;
+                if (editSelect) {
+                    editSelect.value = data.id;
+                }
             }, 100);
         } else {
-            alert('Błąd podczas dodawania osoby: ' + (data.message || 'Nieznany błąd'));
+            alert('Błąd podczas dodawania osoby: ' + (data.error || 'Nieznany błąd'));
         }
     })
     .catch(error => {
         console.error('Error adding recipient:', error);
         alert('Błąd podczas dodawania osoby. Spróbuj ponownie.');
     });
+}
+
+function editPresent(id, title, comments, recipientId) {
+    // Store the present ID for the update
+    window.currentEditPresentId = id;
+    
+    // Populate the edit modal
+    document.getElementById('editPresentTitle').value = title;
+    document.getElementById('editPresentComments').value = comments;
+    document.getElementById('editRecipientSelect').value = recipientId || '';
+    
+    // Show the edit modal
+    const modal = new bootstrap.Modal(document.getElementById('editPresentModal'));
+    modal.show();
+}
+
+function updatePresent() {
+    const id = window.currentEditPresentId;
+    const title = document.getElementById('editPresentTitle').value.trim();
+    const comments = document.getElementById('editPresentComments').value.trim();
+    const recipientId = document.getElementById('editRecipientSelect').value;
+    
+    const submitBtn = document.querySelector('#editPresentForm button[onclick*="updatePresent"]');
+    const originalText = submitBtn ? submitBtn.innerHTML : '';
+    
+    if (!title) {
+        showErrorModal('Nazwa prezentu jest wymagana');
+        return;
+    }
+    
+    if (!recipientId) {
+        showErrorModal('Wybierz osobę dla której jest prezent');
+        return;
+    }
+    
+    if (!submitBtn) {
+        showErrorModal('Nie można znaleźć przycisku zapisu');
+        return;
+    }
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Zapisywanie...';
+    submitBtn.disabled = true;
+    
+    fetch(`/api/presents/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            title: title,
+            recipient_id: recipientId,
+            comments: comments
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccessMessage('Prezent został zaktualizowany pomyślnie!');
+            loadPresents();
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editPresentModal'));
+            modal.hide();
+        } else {
+            showErrorModal(data.error || 'Błąd podczas aktualizacji prezentu');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorModal('Błąd połączenia z serwerem');
+    })
+    .finally(() => {
+        if (submitBtn) {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+}
+
+function showErrorModal(message) {
+    // Zamknij wszystkie otwarte modale Bootstrap przed pokazaniem errorModal
+    document.querySelectorAll('.modal.show').forEach(modalEl => {
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+    });
+    document.getElementById('errorModalMessage').textContent = message;
+    const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+    modal.show();
+}
+
+function showSuccessMessage(message) {
+    // Show success message as a temporary alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 3000);
+}
+
+// Funkcja do synchronizacji dropdownów
+function syncDropdowns() {
+    const mainSelect = document.getElementById('recipientSelect');
+    const editSelect = document.getElementById('editRecipientSelect');
+    
+    if (mainSelect && editSelect) {
+        // Skopiuj wszystkie opcje z głównego dropdowna do edycji
+        editSelect.innerHTML = mainSelect.innerHTML;
+    }
 } 

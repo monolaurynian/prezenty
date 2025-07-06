@@ -87,10 +87,16 @@
                 <div class="modal-body">
                     <form id="profilePictureForm">
                         <div class="mb-3">
-                            <label for="profilePictureUrl" class="form-label">URL zdjęcia</label>
+                            <label for="profilePictureFile" class="form-label">Wybierz plik</label>
+                            <input type="file" class="form-control" id="profilePictureFile" 
+                                   accept="image/*" onchange="previewImage(this)">
+                            <div class="form-text">Wybierz plik obrazu (JPG, PNG, GIF)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="profilePictureUrl" class="form-label">Lub wklej URL zdjęcia</label>
                             <input type="url" class="form-control" id="profilePictureUrl" 
-                                   placeholder="https://example.com/photo.jpg" required>
-                            <div class="form-text">Wklej link do zdjęcia (np. z Google Drive, Imgur, etc.)</div>
+                                   placeholder="https://example.com/photo.jpg">
+                            <div class="form-text">Alternatywnie wklej link do zdjęcia</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Podgląd:</label>
@@ -105,6 +111,65 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
                     <button type="button" class="btn btn-danger" onclick="saveProfilePicture()">Zapisz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Self Identification Modal -->
+    <div class="modal fade" id="selfIdentificationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Identyfikacja</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Czy na pewno chcesz zidentyfikować się jako <strong id="identificationRecipientName"></strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-success" onclick="confirmSelfIdentification()">Tak, to jestem ja</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Identification Modal -->
+    <div class="modal fade" id="cancelIdentificationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Anuluj identyfikację</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Czy na pewno chcesz anulować identyfikację jako <strong id="cancelIdentificationRecipientName"></strong>?</p>
+                    <p class="text-muted">Po anulowaniu będziesz mógł ponownie zidentyfikować się jako ta osoba.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmCancelIdentification()">Tak, anuluj identyfikację</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Błąd
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorModalMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
                 </div>
             </div>
         </div>

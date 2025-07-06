@@ -1,5 +1,6 @@
 let currentUserId = null;
 let currentRecipientId = null;
+let pendingIdentificationRecipientId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Check authentication
@@ -50,9 +51,12 @@ function checkAuth() {
 }
 
 function loadRecipientsWithPresents() {
+    console.log('Loading recipients and presents...');
+    
     // Load both recipients and presents
     Promise.all([
         fetch('/api/recipients').then(response => {
+            console.log('Recipients response status:', response.status);
             if (!response.ok) {
                 if (response.status === 401) {
                     window.location.href = '/';
@@ -63,6 +67,7 @@ function loadRecipientsWithPresents() {
             return response.json();
         }),
         fetch('/api/presents').then(response => {
+            console.log('Presents response status:', response.status);
             if (!response.ok) {
                 if (response.status === 401) {
                     window.location.href = '/';
@@ -74,6 +79,7 @@ function loadRecipientsWithPresents() {
         })
     ])
     .then(([recipients, presents]) => {
+        console.log('Data loaded successfully:', { recipients: recipients.length, presents: presents.length });
         displayRecipientsWithPresents(recipients, presents);
     })
     .catch(error => {
@@ -119,7 +125,6 @@ function displayRecipientsWithPresents(recipients, presents) {
             generatePresentsList(recipientPresents) : 
             '<p class="text-muted mb-0">Brak prezentów dla tej osoby</p>';
         
-        const identificationHTML = generateIdentificationHTML(recipient, isIdentified, isIdentifiedByOther);
         const profilePictureHTML = generateProfilePictureHTML(recipient, isIdentified);
         
         return `
@@ -129,11 +134,29 @@ function displayRecipientsWithPresents(recipients, presents) {
                         ${profilePictureHTML}
                     </div>
                     <div class="col-md-6">
-                        <h5 class="recipient-name mb-2">
-                            <i class="fas fa-user me-2"></i>
-                            ${escapeHtml(recipient.name)}
-                        </h5>
-                        ${identificationHTML}
+                        <div class="d-flex align-items-center mb-2">
+                            <h5 class="recipient-name mb-0 me-3">
+                                <i class="fas fa-user me-2"></i>
+                                ${escapeHtml(recipient.name)}
+                            </h5>
+                            ${isIdentified ? `
+                                <button class="btn btn-outline-success btn-sm" onclick="cancelIdentification(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                                    <i class="fas fa-check-circle me-1"></i>To jest Twój profil
+                                </button>
+                            ` : ''}
+                        </div>
+                        ${isIdentifiedByOther ? `
+                            <div class="alert alert-warning py-2 px-3 mb-3">
+                                <i class="fas fa-user-check me-1"></i>
+                                <small>Zidentyfikowane przez: ${escapeHtml(recipient.identified_by_username || 'nieznany użytkownik')}</small>
+                            </div>
+                        ` : !isIdentified ? `
+                            <div class="d-flex align-items-center mb-3">
+                                <button class="btn btn-outline-success btn-sm me-2" onclick="identifyAsRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                                    <i class="fas fa-user-check me-1"></i>To jestem ja
+                                </button>
+                            </div>
+                        ` : ''}
                         <div class="mb-3">
                             <small class="text-muted">
                                 <i class="fas fa-gift me-1"></i>
@@ -161,7 +184,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                                     <i class="fas fa-camera me-1"></i>Zmień zdjęcie
                                 </button>
                             ` : ''}
-                            <button class="btn btn-outline-danger btn-sm" onclick="deleteRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                            <button class="btn btn-outline-danger btn-sm ${isIdentified ? '' : 'mt-2'}" onclick="deleteRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')">
                                 <i class="fas fa-trash me-1"></i>Usuń
                             </button>
                         </div>
@@ -172,55 +195,37 @@ function displayRecipientsWithPresents(recipients, presents) {
     }).join('');
 }
 
-function generateIdentificationHTML(recipient, isIdentified, isIdentifiedByOther) {
-    if (isIdentified) {
-        return `
-            <div class="alert alert-success py-2 px-3 mb-3">
-                <i class="fas fa-check-circle me-1"></i>
-                <small>To jest Twój profil</small>
-            </div>
-        `;
-    } else if (isIdentifiedByOther) {
-        return `
-            <div class="alert alert-warning py-2 px-3 mb-3">
-                <i class="fas fa-user-check me-1"></i>
-                <small>Zidentyfikowane przez: ${escapeHtml(recipient.identified_by_username || 'nieznany użytkownik')}</small>
-            </div>
-        `;
-    } else {
-        return `
-            <div class="mb-3">
-                <button class="btn btn-outline-success btn-sm" onclick="identifyAsRecipient(${recipient.id})">
-                    <i class="fas fa-user-check me-1"></i>To jestem ja
-                </button>
-            </div>
-        `;
-    }
-}
-
 function generateProfilePictureHTML(recipient, isIdentified) {
     if (recipient.profile_picture) {
         return `
-            <img src="${escapeHtml(recipient.profile_picture)}" 
-                 alt="Zdjęcie profilowe" 
-                 class="img-fluid rounded-circle mb-2" 
-                 style="width: 80px; height: 80px; object-fit: cover; border: 3px solid ${isIdentified ? 'var(--christmas-green)' : 'var(--border-light)'};">
+            <div class="profile-picture-wrapper position-relative mb-2 ${isIdentified ? 'identified' : ''}" style="display: inline-block;">
+                <img src="${escapeHtml(recipient.profile_picture)}" 
+                     alt="Zdjęcie profilowe" 
+                     class="img-fluid rounded-circle"
+                     style="width: 80px; height: 80px; object-fit: cover; border: 3px solid var(--border-light);">
+            </div>
         `;
     } else {
         return `
-            <div class="profile-placeholder mb-2" style="width: 80px; height: 80px; border-radius: 50%; background: var(--border-light); display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 3px solid ${isIdentified ? 'var(--christmas-green)' : 'var(--border-light)'};">
+            <div class="profile-picture-wrapper position-relative mb-2 ${isIdentified ? 'identified' : ''}" style="width: 80px; height: 80px; border-radius: 50%; background: var(--border-light); display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 3px solid var(--border-light);">
                 <i class="fas fa-user fa-2x text-muted"></i>
             </div>
         `;
     }
 }
 
-function identifyAsRecipient(recipientId) {
-    if (!confirm('Czy na pewno chcesz zidentyfikować się jako ta osoba? Ta akcja nie może być cofnięta.')) {
-        return;
-    }
+function identifyAsRecipient(recipientId, recipientName) {
+    pendingIdentificationRecipientId = recipientId;
+    document.getElementById('identificationRecipientName').textContent = recipientName;
     
-    fetch(`/api/recipients/${recipientId}/identify`, {
+    const modal = new bootstrap.Modal(document.getElementById('selfIdentificationModal'));
+    modal.show();
+}
+
+function confirmSelfIdentification() {
+    if (!pendingIdentificationRecipientId) return;
+    
+    fetch(`/api/recipients/${pendingIdentificationRecipientId}/identify`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -229,21 +234,87 @@ function identifyAsRecipient(recipientId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showFormMessage('Pomyślnie zidentyfikowano!', 'success');
+            showSuccessMessage('Pomyślnie zidentyfikowano!');
             loadRecipientsWithPresents();
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('selfIdentificationModal'));
+            modal.hide();
         } else {
-            showFormMessage(data.error || 'Błąd podczas identyfikacji', 'danger');
+            showErrorModal(data.error || 'Błąd podczas identyfikacji');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showFormMessage('Błąd połączenia z serwerem', 'danger');
+        showErrorModal('Błąd połączenia z serwerem');
     });
+}
+
+function cancelIdentification(recipientId, recipientName) {
+    pendingIdentificationRecipientId = recipientId;
+    document.getElementById('cancelIdentificationRecipientName').textContent = recipientName;
+    
+    const modal = new bootstrap.Modal(document.getElementById('cancelIdentificationModal'));
+    modal.show();
+}
+
+function confirmCancelIdentification() {
+    if (!pendingIdentificationRecipientId) return;
+    
+    fetch(`/api/recipients/${pendingIdentificationRecipientId}/identify`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccessMessage('Identyfikacja została anulowana!');
+            loadRecipientsWithPresents();
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('cancelIdentificationModal'));
+            modal.hide();
+        } else {
+            showErrorModal(data.error || 'Błąd podczas anulowania identyfikacji');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorModal('Błąd połączenia z serwerem');
+    });
+}
+
+function showErrorModal(message) {
+    document.getElementById('errorModalMessage').textContent = message;
+    const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+    modal.show();
+}
+
+function showSuccessMessage(message) {
+    // Show success message as a temporary alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 3000);
 }
 
 function openProfilePictureModal(recipientId) {
     currentRecipientId = recipientId;
     document.getElementById('profilePictureUrl').value = '';
+    document.getElementById('profilePictureFile').value = '';
     document.getElementById('profilePicturePreview').style.display = 'none';
     
     // Get current profile picture if exists
@@ -265,74 +336,152 @@ function openProfilePictureModal(recipientId) {
     modal.show();
 }
 
-function saveProfilePicture() {
-    const profilePictureUrl = document.getElementById('profilePictureUrl').value.trim();
+function previewImage(input) {
+    const preview = document.getElementById('profilePicturePreview');
+    const file = input.files[0];
     
-    if (!profilePictureUrl) {
-        showFormMessage('URL zdjęcia jest wymagany', 'danger');
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+function saveProfilePicture() {
+    if (!currentRecipientId) return;
+    
+    const url = document.getElementById('profilePictureUrl').value.trim();
+    const file = document.getElementById('profilePictureFile').files[0];
+    
+    if (!url && !file) {
+        showErrorModal('Wybierz plik lub wprowadź URL zdjęcia');
         return;
     }
     
+    if (file) {
+        // Check file size (10MB limit)
+        const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+        if (file.size > maxSize) {
+            showErrorModal('Plik jest zbyt duży. Maksymalny rozmiar to 10MB.');
+            return;
+        }
+        
+        // Handle file upload
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            saveImageToServer(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    } else if (url) {
+        // Handle URL
+        saveImageToServer(url);
+    }
+}
+
+function saveImageToServer(imageData) {
     fetch(`/api/recipients/${currentRecipientId}/profile-picture`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ profile_picture: profilePictureUrl })
+        body: JSON.stringify({ profile_picture: imageData })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 413) {
+                throw new Error('Plik jest zbyt duży. Maksymalny rozmiar to 10MB.');
+            }
+            return response.json().then(data => {
+                throw new Error(data.error || 'Błąd podczas zapisywania zdjęcia');
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            showFormMessage('Zdjęcie profilowe zostało zaktualizowane!', 'success');
+            showSuccessMessage('Zdjęcie profilowe zostało zapisane!');
+            loadRecipientsWithPresents();
+            
+            // Close the modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('profilePictureModal'));
             modal.hide();
-            loadRecipientsWithPresents();
         } else {
-            showFormMessage(data.error || 'Błąd podczas aktualizacji zdjęcia', 'danger');
+            showErrorModal(data.error || 'Błąd podczas zapisywania zdjęcia');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showFormMessage('Błąd połączenia z serwerem', 'danger');
+        showErrorModal(error.message || 'Błąd połączenia z serwerem');
     });
 }
 
 function generatePresentsList(presents) {
-    if (presents.length === 0) return '';
+    if (presents.length === 0) {
+        return '<p class="text-muted mb-0">Brak prezentów dla tej osoby</p>';
+    }
     
     // Sort presents: unchecked first, then checked
-    presents.sort((a, b) => {
-        if (a.is_checked === b.is_checked) {
-            return new Date(b.created_at) - new Date(a.created_at);
+    const sortedPresents = presents.sort((a, b) => {
+        if (a.is_checked !== b.is_checked) {
+            return a.is_checked ? 1 : -1;
         }
-        return a.is_checked ? 1 : -1;
+        return new Date(b.created_at) - new Date(a.created_at);
     });
-    
-    const presentsList = presents.map(present => {
-        const statusIcon = present.is_checked ? 
-            '<i class="fas fa-check-circle text-success me-1"></i>' : 
-            '<i class="fas fa-circle text-muted me-1"></i>';
-        
-        return `
-            <div class="present-preview-item ${present.is_checked ? 'checked' : ''}">
-                <div class="d-flex align-items-center">
-                    ${statusIcon}
-                    <span class="present-preview-title">${escapeHtml(present.title)}</span>
-                </div>
-                ${present.comments ? `
-                    <small class="text-muted ms-3">
-                        ${formatCommentsPreview(present.comments)}
-                    </small>
-                ` : ''}
-            </div>
-        `;
-    }).join('');
     
     return `
         <div class="presents-list">
-            ${presentsList}
+            ${sortedPresents.map(present => `
+                <div class="present-item ${present.is_checked ? 'checked' : ''}" data-id="${present.id}">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="form-check me-2">
+                                <input class="form-check-input" type="checkbox" 
+                                       ${present.is_checked ? 'checked' : ''} 
+                                       onchange="togglePresentFromRecipients(${present.id}, this.checked)">
+                            </div>
+                            <div>
+                                <h6 class="present-title mb-1">${escapeHtml(present.title)}</h6>
+                                ${present.comments ? `
+                                    <small class="text-muted">${formatCommentsPreview(present.comments)}</small>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            ${new Date(present.created_at).toLocaleDateString('pl-PL')}
+                        </small>
+                    </div>
+                </div>
+            `).join('')}
         </div>
     `;
+}
+
+function togglePresentFromRecipients(id, isChecked) {
+    fetch(`/api/presents/${id}/check`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_checked: isChecked })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Refresh the recipients list to show updated state
+            loadRecipientsWithPresents();
+        } else {
+            showErrorModal(data.error || 'Błąd podczas aktualizacji prezentu');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorModal('Błąd połączenia z serwerem');
+    });
 }
 
 function formatCommentsPreview(comments) {
@@ -350,74 +499,52 @@ function addRecipient() {
     const name = document.getElementById('recipientName').value.trim();
     
     if (!name) {
-        showFormMessage('Imię i nazwisko jest wymagane', 'danger');
+        showErrorModal('Nazwa jest wymagana');
         return;
     }
-    
-    const submitBtn = document.querySelector('#recipientForm button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Dodawanie...';
-    submitBtn.disabled = true;
     
     fetch('/api/recipients', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: name })
+        body: JSON.stringify({ name })
     })
     .then(response => response.json())
     .then(data => {
         if (data.id) {
-            showFormMessage('Osoba została dodana pomyślnie!', 'success');
+            showSuccessMessage('Osoba została dodana!');
             document.getElementById('recipientForm').reset();
             loadRecipientsWithPresents();
         } else {
-            showFormMessage(data.error || 'Błąd podczas dodawania osoby', 'danger');
+            showErrorModal(data.error || 'Błąd podczas dodawania osoby');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showFormMessage('Błąd połączenia z serwerem', 'danger');
-    })
-    .finally(() => {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
+        showErrorModal('Błąd połączenia z serwerem');
     });
 }
 
 function deleteRecipient(id, name) {
-    if (!confirm(`Czy na pewno chcesz usunąć osobę "${name}"? Wszystkie prezenty dla tej osoby zostaną również usunięte.`)) {
-        return;
+    if (confirm(`Czy na pewno chcesz usunąć osobę "${name}"? Ta akcja nie może być cofnięta.`)) {
+        fetch(`/api/recipients/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessMessage('Osoba została usunięta!');
+                loadRecipientsWithPresents();
+            } else {
+                showErrorModal(data.error || 'Błąd podczas usuwania osoby');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorModal('Błąd połączenia z serwerem');
+        });
     }
-    
-    fetch(`/api/recipients/${id}`, {
-        method: 'DELETE'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showFormMessage('Osoba została usunięta pomyślnie!', 'success');
-            loadRecipientsWithPresents();
-        } else {
-            showFormMessage(data.error || 'Błąd podczas usuwania osoby', 'danger');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showFormMessage('Błąd połączenia z serwerem', 'danger');
-    });
-}
-
-function showFormMessage(message, type) {
-    const messageDiv = document.getElementById('formMessage');
-    messageDiv.textContent = message;
-    messageDiv.className = `alert alert-${type} mt-3`;
-    messageDiv.style.display = 'block';
-    
-    setTimeout(() => {
-        messageDiv.style.display = 'none';
-    }, 5000);
 }
 
 function escapeHtml(text) {

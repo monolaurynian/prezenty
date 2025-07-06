@@ -15,8 +15,8 @@ app.use(cors({
     origin: process.env.NODE_ENV === 'production' ? false : true,
     credentials: true
 }));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'prezenty-secret-key-2024',
@@ -32,13 +32,18 @@ app.use(session({
 
 // Database setup
 const dbPath = process.env.DATABASE_PATH || './prezenty.db';
-const db = new sqlite3.Database(dbPath, (err) => {
+console.log('Attempting to connect to database:', path.resolve(dbPath));
+
+const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
     if (err) {
         console.error('Błąd połączenia z bazą danych:', err);
         console.error('Sprawdź uprawnienia do zapisu w katalogu:', path.dirname(dbPath));
+        console.error('Error code:', err.code);
+        console.error('Error message:', err.message);
         process.exit(1);
     }
     console.log('Połączono z bazą danych SQLite:', dbPath);
+    console.log('Database path resolved:', path.resolve(dbPath));
 });
 
 // Create tables
@@ -59,7 +64,7 @@ db.serialize(() => {
     // Recipients table with identification fields
     db.run(`CREATE TABLE IF NOT EXISTS recipients (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
+        name TEXT NOT NULL UNIQUE,
         profile_picture TEXT,
         identified_by INTEGER,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -69,6 +74,7 @@ db.serialize(() => {
             console.error('Błąd tworzenia tabeli recipients:', err);
             process.exit(1);
         }
+        console.log('Tabela recipients została utworzona/sprawdzona');
     });
 
     // Presents table
@@ -88,17 +94,35 @@ db.serialize(() => {
     });
 
     // Add new columns to existing recipients table if they don't exist
-    db.run("PRAGMA table_info(recipients)", (err, rows) => {
-        if (!err && rows) {
-            const hasProfilePicture = rows.some(row => row.name === 'profile_picture');
-            const hasIdentifiedBy = rows.some(row => row.name === 'identified_by');
-            
-            if (!hasProfilePicture) {
-                db.run("ALTER TABLE recipients ADD COLUMN profile_picture TEXT");
-            }
-            if (!hasIdentifiedBy) {
-                db.run("ALTER TABLE recipients ADD COLUMN identified_by INTEGER REFERENCES users(id)");
-            }
+    db.all("PRAGMA table_info(recipients)", (err, rows) => {
+        if (err) {
+            console.error('Error checking table schema:', err);
+            return;
+        }
+        
+        const columnNames = rows.map(row => row.name);
+        console.log('Current columns in recipients table:', columnNames);
+        
+        if (!columnNames.includes('profile_picture')) {
+            console.log('Adding profile_picture column...');
+            db.run("ALTER TABLE recipients ADD COLUMN profile_picture TEXT", (err) => {
+                if (err) {
+                    console.error('Error adding profile_picture column:', err);
+                } else {
+                    console.log('profile_picture column added successfully');
+                }
+            });
+        }
+        
+        if (!columnNames.includes('identified_by')) {
+            console.log('Adding identified_by column...');
+            db.run("ALTER TABLE recipients ADD COLUMN identified_by INTEGER REFERENCES users(id)", (err) => {
+                if (err) {
+                    console.error('Error adding identified_by column:', err);
+                } else {
+                    console.log('identified_by column added successfully');
+                }
+            });
         }
     });
 
@@ -107,6 +131,18 @@ db.serialize(() => {
         if (!row) {
             const hashedPassword = bcrypt.hashSync('admin123', 10);
             db.run("INSERT INTO users (username, password) VALUES (?, ?)", ['admin', hashedPassword]);
+        }
+    });
+    
+    // Check existing recipients for debugging
+    db.all("SELECT * FROM recipients", (err, rows) => {
+        if (err) {
+            console.error('Error checking recipients:', err);
+        } else {
+            console.log('Existing recipients in database:', rows.length, 'recipients');
+            if (rows.length > 0) {
+                console.log('Recipients:', rows.map(r => ({ id: r.id, name: r.name })));
+            }
         }
     });
 });
@@ -170,6 +206,7 @@ app.post('/api/logout', (req, res) => {
 
 // Check auth status
 app.get('/api/auth', (req, res) => {
+    console.log('Auth check - session:', { userId: req.session.userId, username: req.session.username });
     if (req.session.userId) {
         res.json({ authenticated: true, user: { id: req.session.userId, username: req.session.username } });
     } else {
@@ -179,45 +216,54 @@ app.get('/api/auth', (req, res) => {
 
 // Recipients API
 app.get('/api/recipients', requireAuth, (req, res) => {
-    db.all(`
-        SELECT r.*, u.username as identified_by_username 
-        FROM recipients r 
-        LEFT JOIN users u ON r.identified_by = u.id 
-        ORDER BY r.name
-    `, (err, rows) => {
+    console.log('Getting recipients for user:', req.session.userId);
+    
+    // First check if database is accessible
+    db.get("SELECT COUNT(*) as count FROM recipients", (err, result) => {
         if (err) {
-            return res.status(500).json({ error: 'Błąd podczas pobierania osób' });
+            console.error('Database error checking recipients table:', err);
+            return res.status(500).json({ error: 'Błąd dostępu do bazy danych' });
         }
-        res.json(rows);
+        
+        console.log('Recipients table accessible, count:', result.count);
+        
+        // Now get all recipients with user info
+        db.all(`
+            SELECT r.*, u.username as identified_by_username 
+            FROM recipients r 
+            LEFT JOIN users u ON r.identified_by = u.id 
+            ORDER BY r.name
+        `, (err, rows) => {
+            if (err) {
+                console.error('Database error getting recipients:', err);
+                return res.status(500).json({ error: 'Błąd podczas pobierania osób' });
+            }
+            console.log('Recipients loaded successfully:', rows.length, 'recipients');
+            res.json(rows);
+        });
     });
 });
 
 app.post('/api/recipients', requireAuth, (req, res) => {
     const { name } = req.body;
     
+    console.log('Adding recipient:', { name, userId: req.session.userId, body: req.body });
+    
     if (!name || name.trim() === '') {
+        console.log('Validation failed: empty name');
         return res.status(400).json({ error: 'Nazwa jest wymagana' });
     }
     
     db.run("INSERT INTO recipients (name) VALUES (?)", [name.trim()], function(err) {
         if (err) {
+            if (err.code === 'SQLITE_CONSTRAINT') {
+                return res.status(409).json({ error: 'Taka osoba już istnieje!' });
+            }
+            console.error('Database error adding recipient:', err);
             return res.status(500).json({ error: 'Błąd podczas dodawania osoby' });
         }
+        console.log('Recipient added successfully:', { id: this.lastID, name: name.trim() });
         res.json({ id: this.lastID, name: name.trim() });
-    });
-});
-
-app.delete('/api/recipients/:id', requireAuth, (req, res) => {
-    const { id } = req.params;
-    
-    db.run("DELETE FROM recipients WHERE id = ?", [id], function(err) {
-        if (err) {
-            return res.status(500).json({ error: 'Błąd podczas usuwania osoby' });
-        }
-        if (this.changes === 0) {
-            return res.status(404).json({ error: 'Osoba nie została znaleziona' });
-        }
-        res.json({ success: true });
     });
 });
 
@@ -250,14 +296,75 @@ app.post('/api/recipients/:id/identify', requireAuth, (req, res) => {
     });
 });
 
-app.post('/api/recipients/:id/profile-picture', requireAuth, (req, res) => {
+// Cancel self-identification API
+app.delete('/api/recipients/:id/identify', requireAuth, (req, res) => {
+    console.log('Cancel identification request:', { id: req.params.id, userId: req.session.userId });
     const { id } = req.params;
-    const { profile_picture } = req.body;
     const userId = req.session.userId;
     
     // Check if user is identified as this recipient
     db.get("SELECT identified_by FROM recipients WHERE id = ?", [id], (err, recipient) => {
         if (err) {
+            console.error('Database error checking identification:', err);
+            return res.status(500).json({ error: 'Błąd podczas sprawdzania identyfikacji' });
+        }
+        
+        if (!recipient) {
+            console.log('Recipient not found:', id);
+            return res.status(404).json({ error: 'Osoba nie została znaleziona' });
+        }
+        
+        console.log('Recipient found:', { id, identified_by: recipient.identified_by, userId });
+        
+        if (recipient.identified_by !== userId) {
+            console.log('User not authorized to cancel identification');
+            return res.status(403).json({ error: 'Nie możesz anulować identyfikacji innej osoby' });
+        }
+        
+        // Remove identification
+        db.run("UPDATE recipients SET identified_by = NULL WHERE id = ?", [id], function(err) {
+            if (err) {
+                console.error('Database error canceling identification:', err);
+                return res.status(500).json({ error: 'Błąd podczas anulowania identyfikacji' });
+            }
+            console.log('Identification canceled successfully for recipient:', id);
+            res.json({ success: true });
+        });
+    });
+});
+
+app.delete('/api/recipients/:id', requireAuth, (req, res) => {
+    console.log('Delete recipient request:', { id: req.params.id, userId: req.session.userId });
+    const { id } = req.params;
+    
+    db.run("DELETE FROM recipients WHERE id = ?", [id], function(err) {
+        if (err) {
+            console.error('Database error deleting recipient:', err);
+            return res.status(500).json({ error: 'Błąd podczas usuwania osoby' });
+        }
+        if (this.changes === 0) {
+            console.log('Recipient not found for deletion:', id);
+            return res.status(404).json({ error: 'Osoba nie została znaleziona' });
+        }
+        console.log('Recipient deleted successfully:', id);
+        res.json({ success: true });
+    });
+});
+
+app.post('/api/recipients/:id/profile-picture', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const { profile_picture } = req.body;
+    const userId = req.session.userId;
+    
+    // Validate input
+    if (!profile_picture) {
+        return res.status(400).json({ error: 'Brak danych zdjęcia' });
+    }
+    
+    // Check if user is identified as this recipient
+    db.get("SELECT identified_by FROM recipients WHERE id = ?", [id], (err, recipient) => {
+        if (err) {
+            console.error('Database error checking recipient:', err);
             return res.status(500).json({ error: 'Błąd podczas sprawdzania uprawnień' });
         }
         
@@ -272,8 +379,10 @@ app.post('/api/recipients/:id/profile-picture', requireAuth, (req, res) => {
         // Update profile picture
         db.run("UPDATE recipients SET profile_picture = ? WHERE id = ?", [profile_picture, id], function(err) {
             if (err) {
+                console.error('Database error updating profile picture:', err);
                 return res.status(500).json({ error: 'Błąd podczas aktualizacji zdjęcia profilowego' });
             }
+            console.log('Profile picture updated successfully for recipient:', id);
             res.json({ success: true });
         });
     });
@@ -303,6 +412,8 @@ app.get('/api/recipients/:id', requireAuth, (req, res) => {
 
 // Presents API
 app.get('/api/presents', requireAuth, (req, res) => {
+    console.log('Getting presents for user:', req.session.userId);
+    
     db.all(`
         SELECT p.*, r.name as recipient_name 
         FROM presents p 
@@ -310,7 +421,12 @@ app.get('/api/presents', requireAuth, (req, res) => {
         ORDER BY p.created_at DESC
     `, (err, rows) => {
         if (err) {
+            console.error('Database error getting presents:', err);
             return res.status(500).json({ error: 'Błąd podczas pobierania prezentów' });
+        }
+        console.log('Presents loaded successfully:', rows.length, 'presents');
+        if (rows.length > 0) {
+            console.log('Sample present data:', rows[0]);
         }
         res.json(rows);
     });
@@ -339,15 +455,64 @@ app.put('/api/presents/:id/check', requireAuth, (req, res) => {
     const { id } = req.params;
     const { is_checked } = req.body;
     
-    db.run("UPDATE presents SET is_checked = ? WHERE id = ?", [is_checked ? 1 : 0, id], function(err) {
+    console.log('Check present request:', { id, is_checked, userId: req.session.userId });
+    
+    // First check if the present exists and get its current status
+    db.get("SELECT id, is_checked FROM presents WHERE id = ?", [id], (err, present) => {
         if (err) {
-            return res.status(500).json({ error: 'Błąd podczas aktualizacji prezentu' });
+            console.error('Database error checking present:', err);
+            return res.status(500).json({ error: 'Błąd podczas sprawdzania prezentu' });
         }
-        if (this.changes === 0) {
+        
+        if (!present) {
+            console.log('No present found with id:', id);
             return res.status(404).json({ error: 'Prezent nie został znaleziony' });
         }
-        res.json({ success: true });
+        
+        console.log('Present found:', present);
+        
+        // Update the present
+        db.run("UPDATE presents SET is_checked = ? WHERE id = ?", [is_checked ? 1 : 0, id], function(err) {
+            if (err) {
+                console.error('Database error updating present check status:', err);
+                return res.status(500).json({ error: 'Błąd podczas aktualizacji prezentu' });
+            }
+            
+            console.log('Present check status updated successfully:', { 
+                id, 
+                oldStatus: present.is_checked, 
+                newStatus: is_checked, 
+                changes: this.changes 
+            });
+            
+            res.json({ success: true });
+        });
     });
+});
+
+app.put('/api/presents/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const { title, recipient_id, comments } = req.body;
+    
+    if (!title || title.trim() === '') {
+        return res.status(400).json({ error: 'Nazwa prezentu jest wymagana' });
+    }
+    
+    db.run(
+        "UPDATE presents SET title = ?, recipient_id = ?, comments = ? WHERE id = ?",
+        [title.trim(), recipient_id || null, comments || null, id],
+        function(err) {
+            if (err) {
+                console.error('Database error updating present:', err);
+                return res.status(500).json({ error: 'Błąd podczas aktualizacji prezentu' });
+            }
+            if (this.changes === 0) {
+                return res.status(404).json({ error: 'Prezent nie został znaleziony' });
+            }
+            console.log('Present updated successfully:', id);
+            res.json({ success: true });
+        }
+    );
 });
 
 app.delete('/api/presents/:id', requireAuth, (req, res) => {
@@ -385,6 +550,21 @@ app.post('/api/register', (req, res) => {
             res.json({ success: true, user: { id: this.lastID, username: username } });
         });
     });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Server error:', err);
+    
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return res.status(400).json({ error: 'Nieprawidłowy format danych JSON' });
+    }
+    
+    if (err.type === 'entity.too.large') {
+        return res.status(413).json({ error: 'Plik jest zbyt duży. Maksymalny rozmiar to 10MB.' });
+    }
+    
+    res.status(500).json({ error: 'Błąd serwera' });
 });
 
 // Start server
