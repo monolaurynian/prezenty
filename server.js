@@ -136,6 +136,28 @@ db.serialize(() => {
         }
     });
 
+    // Add new columns to existing presents table if they don't exist
+    db.all("PRAGMA table_info(presents)", (err, rows) => {
+        if (err) {
+            console.error('Error checking presents table schema:', err);
+            return;
+        }
+        
+        const columnNames = rows.map(row => row.name);
+        console.log('Current columns in presents table:', columnNames);
+        
+        if (!columnNames.includes('reserved_by')) {
+            console.log('Adding reserved_by column...');
+            db.run("ALTER TABLE presents ADD COLUMN reserved_by INTEGER REFERENCES users(id)", (err) => {
+                if (err) {
+                    console.error('Error adding reserved_by column:', err);
+                } else {
+                    console.log('reserved_by column added successfully');
+                }
+            });
+        }
+    });
+
     // Insert default admin user if not exists
     db.get("SELECT id FROM users WHERE username = 'admin'", (err, row) => {
         if (!row) {
@@ -175,15 +197,21 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/presents', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'presents.html'));
+    // If user is authenticated, redirect to recipients page
+    if (req.session.userId) {
+        res.redirect('/recipients');
+    } else {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
 });
 
 app.get('/recipients', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'recipients.html'));
+    // If user is not authenticated, redirect to login page
+    if (!req.session.userId) {
+        res.redirect('/');
+    } else {
+        res.sendFile(path.join(__dirname, 'public', 'recipients.html'));
+    }
 });
 
 app.get('/register', (req, res) => {
@@ -248,18 +276,18 @@ app.get('/api/recipients', requireAuth, (req, res) => {
         console.log('Recipients table accessible, count:', result.count);
         
         // Now get all recipients with user info
-        db.all(`
-            SELECT r.*, u.username as identified_by_username 
-            FROM recipients r 
-            LEFT JOIN users u ON r.identified_by = u.id 
-            ORDER BY r.name
-        `, (err, rows) => {
-            if (err) {
+    db.all(`
+        SELECT r.*, u.username as identified_by_username 
+        FROM recipients r 
+        LEFT JOIN users u ON r.identified_by = u.id 
+        ORDER BY r.name
+    `, (err, rows) => {
+        if (err) {
                 console.error('Database error getting recipients:', err);
-                return res.status(500).json({ error: 'Błąd podczas pobierania osób' });
-            }
+            return res.status(500).json({ error: 'Błąd podczas pobierania osób' });
+        }
             console.log('Recipients loaded successfully:', rows.length, 'recipients');
-            res.json(rows);
+        res.json(rows);
         });
     });
 });
@@ -312,6 +340,30 @@ app.post('/api/recipients/:id/identify', requireAuth, (req, res) => {
                 return res.status(500).json({ error: 'Błąd podczas identyfikacji' });
             }
             res.json({ success: true });
+        });
+    });
+});
+
+// Check if user is identified
+app.get('/api/user/identification-status', requireAuth, (req, res) => {
+    const userId = req.session.userId;
+    const username = req.session.username;
+    
+    console.log('Identification status check for user:', { userId, username });
+    
+    db.get("SELECT id, name FROM recipients WHERE identified_by = ?", [userId], (err, recipient) => {
+        if (err) {
+            console.error('Database error checking identification status:', err);
+            return res.status(500).json({ error: 'Błąd podczas sprawdzania statusu identyfikacji' });
+        }
+        
+        const isIdentified = !!recipient;
+        console.log('Identification status result:', { userId, username, isIdentified, recipient });
+        
+        res.json({
+            isIdentified: isIdentified,
+            identifiedRecipient: recipient,
+            username: username
         });
     });
 });
@@ -433,18 +485,85 @@ app.get('/api/recipients/:id', requireAuth, (req, res) => {
 // Presents API
 app.get('/api/presents', requireAuth, (req, res) => {
     console.log('Getting presents for user:', req.session.userId);
+    const userId = req.session.userId;
     
+    // First check if user is identified
+    db.get("SELECT r.* FROM recipients r WHERE r.identified_by = ?", [userId], (err, identifiedRecipient) => {
+        if (err) {
+            console.error('Database error checking user identification:', err);
+            return res.status(500).json({ error: 'Błąd podczas sprawdzania identyfikacji' });
+        }
+        
+        if (identifiedRecipient) {
+            // User is identified - only show progress (checked/unchecked count) for their presents
+            db.all(`
+                SELECT 
+                    COUNT(*) as total_presents,
+                    SUM(CASE WHEN is_checked = 1 THEN 1 ELSE 0 END) as checked_presents,
+                    SUM(CASE WHEN is_checked = 0 THEN 1 ELSE 0 END) as unchecked_presents
+                FROM presents p 
+                WHERE p.recipient_id = ?
+            `, [identifiedRecipient.id], (err, progressRows) => {
+                if (err) {
+                    console.error('Database error getting progress:', err);
+                    return res.status(500).json({ error: 'Błąd podczas pobierania postępu' });
+                }
+                
+                const progress = progressRows[0] || { total_presents: 0, checked_presents: 0, unchecked_presents: 0 };
+                console.log('Progress for identified user:', progress);
+                
+                res.json({
+                    identified: true,
+                    recipient: {
+                        id: identifiedRecipient.id,
+                        name: identifiedRecipient.name
+                    },
+                    progress: progress,
+                    presents: [] // Empty array since we don't show presents to identified users
+                });
+            });
+        } else {
+            // User is not identified - show all presents normally
     db.all(`
-        SELECT p.*, r.name as recipient_name 
+        SELECT p.*, r.name as recipient_name, u.username as reserved_by_username 
         FROM presents p 
         LEFT JOIN recipients r ON p.recipient_id = r.id 
+        LEFT JOIN users u ON p.reserved_by = u.id
         ORDER BY p.created_at DESC
     `, (err, rows) => {
         if (err) {
-            console.error('Database error getting presents:', err);
+                    console.error('Database error getting presents:', err);
+            return res.status(500).json({ error: 'Błąd podczas pobierania prezentów' });
+                }
+                console.log('Presents loaded successfully:', rows.length, 'presents');
+                if (rows.length > 0) {
+                    console.log('Sample present data:', rows[0]);
+                }
+                res.json({
+                    identified: false,
+                    presents: rows
+                });
+            });
+        }
+    });
+});
+
+// Get all presents without identification logic (for recipients view)
+app.get('/api/presents/all', requireAuth, (req, res) => {
+    console.log('Getting all presents for recipients view');
+    
+    db.all(`
+        SELECT p.*, r.name as recipient_name, u.username as reserved_by_username 
+        FROM presents p 
+        LEFT JOIN recipients r ON p.recipient_id = r.id 
+        LEFT JOIN users u ON p.reserved_by = u.id
+        ORDER BY p.created_at DESC
+    `, (err, rows) => {
+        if (err) {
+            console.error('Database error getting all presents:', err);
             return res.status(500).json({ error: 'Błąd podczas pobierania prezentów' });
         }
-        console.log('Presents loaded successfully:', rows.length, 'presents');
+        console.log('All presents loaded successfully:', rows.length, 'presents');
         if (rows.length > 0) {
             console.log('Sample present data:', rows[0]);
         }
@@ -505,7 +624,7 @@ app.put('/api/presents/:id/check', requireAuth, (req, res) => {
                 changes: this.changes 
             });
             
-            res.json({ success: true });
+        res.json({ success: true });
         });
     });
 });
@@ -549,6 +668,85 @@ app.delete('/api/presents/:id', requireAuth, (req, res) => {
     });
 });
 
+// Reserve present
+app.post('/api/presents/:id/reserve', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const userId = req.session.userId;
+    
+    console.log('Reserve present request:', { id, userId });
+    
+    // First check if the present exists and is not already reserved
+    db.get("SELECT id, reserved_by FROM presents WHERE id = ?", [id], (err, present) => {
+        if (err) {
+            console.error('Database error checking present:', err);
+            return res.status(500).json({ error: 'Błąd podczas sprawdzania prezentu' });
+        }
+        
+        if (!present) {
+            console.log('No present found with id:', id);
+            return res.status(404).json({ error: 'Prezent nie został znaleziony' });
+        }
+        
+        if (present.reserved_by) {
+            console.log('Present already reserved by user:', present.reserved_by);
+            return res.status(409).json({ error: 'Prezent jest już zarezerwowany' });
+        }
+        
+        // Reserve the present
+        db.run("UPDATE presents SET reserved_by = ? WHERE id = ?", [userId, id], function(err) {
+            if (err) {
+                console.error('Database error reserving present:', err);
+                return res.status(500).json({ error: 'Błąd podczas rezerwacji prezentu' });
+            }
+            
+            console.log('Present reserved successfully:', { id, userId, changes: this.changes });
+            res.json({ success: true });
+        });
+    });
+});
+
+// Cancel reservation
+app.delete('/api/presents/:id/reserve', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const userId = req.session.userId;
+    
+    console.log('Cancel reservation request:', { id, userId });
+    
+    // First check if the present exists and is reserved by this user
+    db.get("SELECT id, reserved_by FROM presents WHERE id = ?", [id], (err, present) => {
+        if (err) {
+            console.error('Database error checking present:', err);
+            return res.status(500).json({ error: 'Błąd podczas sprawdzania prezentu' });
+        }
+        
+        if (!present) {
+            console.log('No present found with id:', id);
+            return res.status(404).json({ error: 'Prezent nie został znaleziony' });
+        }
+        
+        if (!present.reserved_by) {
+            console.log('Present is not reserved');
+            return res.status(409).json({ error: 'Prezent nie jest zarezerwowany' });
+        }
+        
+        if (present.reserved_by !== userId) {
+            console.log('Present reserved by different user:', present.reserved_by);
+            return res.status(403).json({ error: 'Nie możesz anulować rezerwacji innej osoby' });
+        }
+        
+        // Cancel the reservation
+        db.run("UPDATE presents SET reserved_by = NULL WHERE id = ?", [id], function(err) {
+            if (err) {
+                console.error('Database error canceling reservation:', err);
+                return res.status(500).json({ error: 'Błąd podczas anulowania rezerwacji' });
+            }
+            
+            console.log('Reservation canceled successfully:', { id, userId, changes: this.changes });
+            res.json({ success: true });
+        });
+    });
+});
+
 // Registration API
 app.post('/api/register', (req, res) => {
     console.log('Registration request received:', { username: req.body.username, hasPassword: !!req.body.password });
@@ -588,6 +786,97 @@ app.post('/api/register', (req, res) => {
             console.log('Session created:', { userId: req.session.userId, username: req.session.username });
             
             res.json({ success: true, user: { id: this.lastID, username: username } });
+        });
+    });
+});
+
+// Check if user is identified
+app.get('/api/user/identification', requireAuth, (req, res) => {
+    const userId = req.session.userId;
+    
+    db.get("SELECT r.* FROM recipients r WHERE r.identified_by = ?", [userId], (err, recipient) => {
+        if (err) {
+            console.error('Database error checking user identification:', err);
+            return res.status(500).json({ error: 'Błąd podczas sprawdzania identyfikacji' });
+        }
+        
+        if (recipient) {
+            res.json({ 
+                identified: true, 
+                recipient: { 
+                    id: recipient.id, 
+                    name: recipient.name 
+                } 
+            });
+        } else {
+            res.json({ identified: false });
+        }
+    });
+});
+
+// Add new recipient and identify user
+app.post('/api/user/identify', requireAuth, (req, res) => {
+    const { name } = req.body;
+    const userId = req.session.userId;
+    
+    if (!name || name.trim() === '') {
+        return res.status(400).json({ error: 'Imię jest wymagane' });
+    }
+    
+    // Check if user is already identified
+    db.get("SELECT r.* FROM recipients r WHERE r.identified_by = ?", [userId], (err, existingRecipient) => {
+        if (err) {
+            console.error('Database error checking existing identification:', err);
+            return res.status(500).json({ error: 'Błąd podczas sprawdzania identyfikacji' });
+        }
+        
+        if (existingRecipient) {
+            return res.status(409).json({ error: 'Jesteś już zidentyfikowany jako ' + existingRecipient.name });
+        }
+        
+        // Check if recipient with this name already exists
+        db.get("SELECT * FROM recipients WHERE name = ?", [name.trim()], (err, existingRecipient) => {
+            if (err) {
+                console.error('Database error checking existing recipient:', err);
+                return res.status(500).json({ error: 'Błąd podczas sprawdzania osoby' });
+            }
+            
+            if (existingRecipient) {
+                // Check if this recipient is already identified by someone else
+                if (existingRecipient.identified_by && existingRecipient.identified_by !== userId) {
+                    return res.status(409).json({ error: 'Ta osoba została już zidentyfikowana przez innego użytkownika' });
+                }
+                
+                // Update existing recipient to identify this user
+                db.run("UPDATE recipients SET identified_by = ? WHERE id = ?", [userId, existingRecipient.id], function(err) {
+                    if (err) {
+                        console.error('Database error updating recipient identification:', err);
+                        return res.status(500).json({ error: 'Błąd podczas identyfikacji' });
+                    }
+                    res.json({ 
+                        success: true, 
+                        recipient: { 
+                            id: existingRecipient.id, 
+                            name: existingRecipient.name 
+                        } 
+                    });
+                });
+            } else {
+                // Create new recipient and identify user
+                db.run("INSERT INTO recipients (name, identified_by) VALUES (?, ?)", [name.trim(), userId], function(err) {
+                    if (err) {
+                        console.error('Database error creating recipient:', err);
+                        return res.status(500).json({ error: 'Błąd podczas tworzenia osoby' });
+                    }
+                    res.json({ 
+                        success: true, 
+                        recipient: { 
+                            id: this.lastID, 
+                            name: name.trim() 
+                        } 
+                    });
+                });
+            }
         });
     });
 });

@@ -8,22 +8,16 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
 </head>
-<body>
+<body class="recipients-page">
     <div class="background-overlay"></div>
     
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="/presents">
-                <i class="fas fa-gift me-2"></i>Prezenty
+            <a class="navbar-brand" href="/recipients">
+                <i class="fas fa-gift me-2"></i>Życzenia Prezentowe
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="/presents">
-                    <i class="fas fa-gift me-1"></i>Prezenty
-                </a>
-                <a class="nav-link active" href="/recipients">
-                    <i class="fas fa-users me-1"></i>Osoby
-                </a>
                 <button class="btn btn-outline-danger btn-sm" onclick="logout()">
                     <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
                 </button>
@@ -32,37 +26,46 @@
     </nav>
 
     <div class="container mt-4">
-        <!-- Add Recipient Form -->
-        <div class="card main-card">
-            <div class="card-header">
-                <h3 class="mb-0">
-                    <i class="fas fa-user-plus me-2"></i>Dodaj Nową Osobę
-                </h3>
-            </div>
-            <div class="card-body">
-                <form id="recipientForm">
-                    <div class="row">
-                        <div class="col-md-8 mb-3">
-                            <label for="recipientName" class="form-label">Imię i nazwisko</label>
-                            <input type="text" class="form-control" id="recipientName" placeholder="Wprowadź imię i nazwisko" required>
-                        </div>
-                        <div class="col-md-4 mb-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-success w-100">
-                                <i class="fas fa-plus me-1"></i>Dodaj Osobę
-                            </button>
-                        </div>
+        <!-- Action Buttons -->
+        <div class="row">
+            <div class="col-4 mb-4">
+                <div class="card main-card compact-card">
+                    <div class="card-body text-center d-flex flex-column justify-content-center">
+                        <button class="btn btn-primary btn-lg mb-3 action-btn" onclick="openAddPresentModal()">
+                            <i class="fas fa-plus me-1"></i><span class="btn-text">Dodaj Prezent</span>
+                        </button>
+                        <p class="text-muted">Dodaj nowy pomysł na prezent</p>
                     </div>
-                </form>
-                <div id="formMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="col-4 mb-4">
+                <div class="card main-card compact-card">
+                    <div class="card-body text-center d-flex flex-column justify-content-center">
+                        <button class="btn btn-warning btn-lg mb-3 action-btn" onclick="openReservedPresentsModal()">
+                            <i class="fas fa-bookmark me-1"></i><span class="btn-text">Zarezerwowane Prezenty</span>
+                        </button>
+                        <p class="text-muted">Zobacz prezenty, które zarezerwowałeś</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4 mb-4">
+                <div class="card main-card compact-card">
+                    <div class="card-body text-center d-flex flex-column justify-content-center">
+                        <button class="btn btn-success btn-lg mb-3 action-btn" onclick="openAddRecipientModal()">
+                            <i class="fas fa-user-plus me-1"></i><span class="btn-text">Dodaj Osobę</span>
+                        </button>
+                        <p class="text-muted">Dodaj nową osobę do listy</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Recipients List with Presents -->
+        <!-- Lista Osób i Ich Prezenty -->
         <div class="card main-card">
             <div class="card-header">
-                <h3 class="mb-0">
-                    <i class="fas fa-users me-2"></i>Lista Osób i Ich Prezenty
-                </h3>
+                <h5 class="card-title mb-0 text-white">
+                    <i class="fas fa-users me-2 text-white"></i>Lista Osób i Ich Prezenty
+                </h5>
             </div>
             <div class="card-body">
                 <div id="recipientsList">
@@ -71,6 +74,102 @@
                             <span class="visually-hidden">Ładowanie...</span>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Present Modal -->
+    <div class="modal fade" id="addPresentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>Dodaj Nowy Prezent
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPresentForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="presentTitle" class="form-label">Jaki prezent?</label>
+                                <input type="text" class="form-control" id="presentTitle" placeholder="Nazwa prezentu" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="recipientSelect" class="form-label">Dla kogo?</label>
+                                <select class="form-select" id="recipientSelect" required>
+                                    <option value="">Wybierz osobę</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="presentComments" class="form-label">Dodatkowe informacje</label>
+                            <textarea class="form-control" id="presentComments" rows="3" placeholder="Opis, linki, uwagi..."></textarea>
+                        </div>
+                    </form>
+                    <div id="addPresentMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-primary" onclick="addPresentFromModal()">
+                        <i class="fas fa-plus me-1"></i>Dodaj prezent
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reserved Presents Modal -->
+    <div class="modal fade" id="reservedPresentsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-bookmark me-2"></i>Zarezerwowane Prezenty
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="reservedPresentsList">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Ładowanie...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Recipient Modal -->
+    <div class="modal fade" id="addRecipientModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-plus me-2"></i>Dodaj Nową Osobę
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRecipientForm">
+                        <div class="mb-3">
+                            <label for="recipientName" class="form-label">Imię i nazwisko</label>
+                            <input type="text" class="form-control" id="recipientName" placeholder="Wprowadź imię i nazwisko" required>
+                        </div>
+                    </form>
+                    <div id="addRecipientMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-success" onclick="addRecipientFromModal()">
+                        <i class="fas fa-plus me-1"></i>Dodaj Osobę
+                    </button>
                 </div>
             </div>
         </div>
@@ -129,7 +228,47 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-warning" onclick="showRecipientSelectionModal()">Nie, to nie ja</button>
                     <button type="button" class="btn btn-success" onclick="confirmSelfIdentification()">Tak, to jestem ja</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipient Selection Modal -->
+    <div class="modal fade" id="recipientSelectionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-users me-2"></i>Wybierz swoje imię
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <h6>Dostępne osoby:</h6>
+                        <div id="availableRecipientsList" class="list-group">
+                            <!-- Lista będzie generowana dynamicznie -->
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <h6>Dodaj nową osobę:</h6>
+                        <form id="newRecipientForm">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="newRecipientName" 
+                                       placeholder="Wprowadź swoje imię i nazwisko" required>
+                                <button type="button" class="btn btn-success" onclick="addNewRecipientAndIdentify()">
+                                    <i class="fas fa-plus me-1"></i>Dodaj i zidentyfikuj
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="recipientSelectionMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
                 </div>
             </div>
         </div>
@@ -167,6 +306,51 @@
                 </div>
                 <div class="modal-body">
                     <p id="errorModalMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal potwierdzenia usunięcia osoby -->
+    <div class="modal fade" id="confirmDeleteRecipientModal" tabindex="-1" aria-labelledby="confirmDeleteRecipientModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteRecipientModalLabel">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Potwierdź usunięcie
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="confirmDeleteRecipientModalBody">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Anuluj
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="deleteRecipientConfirmed()">
+                        <i class="fas fa-trash me-1"></i>Usuń
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reserved By Other Modal -->
+    <div class="modal fade" id="reservedByOtherModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-warning">
+                        <i class="fas fa-bookmark me-2"></i>Prezent Zarezerwowany
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="reservedByOtherMessage" class="mb-0"></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>

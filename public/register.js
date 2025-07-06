@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(({ status, body }) => {
             if (status === 200 && body.success) {
                 // Redirect to presents page after successful registration
-                window.location.href = '/presents';
+                window.location.href = '/recipients';
             } else {
                 showError(body.error || 'Błąd rejestracji');
             }
