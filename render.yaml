@@ -4,10 +4,14 @@ services:
     env: node
     plan: free
     buildCommand: npm install
-    startCommand: node server.js
+    startCommand: npm run db:setup
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
       - key: SESSION_SECRET
-        generateValue: true 
+        generateValue: true
+      - key: DATABASE_PATH
+        value: /tmp/prezenty.db
+      - key: BACKUP_PATH
+        value: /tmp/prezenty-backup.db 

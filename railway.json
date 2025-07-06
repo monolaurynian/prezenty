@@ -4,10 +4,14 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "node server.js",
+    "startCommand": "npm run db:setup",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
+  },
+  "variables": {
+    "DATABASE_PATH": "/tmp/prezenty.db",
+    "BACKUP_PATH": "/tmp/prezenty-backup.db"
   }
 } 

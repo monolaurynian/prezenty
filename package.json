@@ -8,7 +8,10 @@
     "dev": "nodemon server.js",
     "build": "echo 'No build step required'",
     "test": "echo 'No tests specified'",
-    "postinstall": "echo 'Dependencies installed successfully'"
+    "postinstall": "echo 'Dependencies installed successfully'",
+    "db:backup": "node scripts/db-backup.js backup",
+    "db:restore": "node scripts/db-backup.js restore",
+    "db:setup": "npm run db:restore && npm start"
   },
   "keywords": [
     "christmas",
