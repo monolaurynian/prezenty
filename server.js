@@ -20,10 +20,10 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'prezenty-secret-key-2024',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: { 
-        secure: process.env.NODE_ENV === 'production',
+        secure: false, // Changed to false for compatibility
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         httpOnly: true,
         sameSite: 'lax'
@@ -37,13 +37,17 @@ console.log('Attempting to connect to database:', path.resolve(dbPath));
 const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
     if (err) {
         console.error('Błąd połączenia z bazą danych:', err);
-        console.error('Sprawdź uprawnienia do zapisu w katalogu:', path.dirname(dbPath));
+        console.error('Database path:', dbPath);
+        console.error('Resolved path:', path.resolve(dbPath));
+        console.error('Directory exists:', require('fs').existsSync(path.dirname(dbPath)));
+        console.error('File exists:', require('fs').existsSync(dbPath));
         console.error('Error code:', err.code);
         console.error('Error message:', err.message);
         process.exit(1);
     }
     console.log('Połączono z bazą danych SQLite:', dbPath);
     console.log('Database path resolved:', path.resolve(dbPath));
+    console.log('Database file exists:', require('fs').existsSync(dbPath));
 });
 
 // Create tables
@@ -149,9 +153,12 @@ db.serialize(() => {
 
 // Authentication middleware
 function requireAuth(req, res, next) {
+    console.log('Auth check - session:', { userId: req.session.userId, username: req.session.username });
     if (req.session.userId) {
+        console.log('Auth successful for user:', req.session.username);
         next();
     } else {
+        console.log('Auth failed: no session');
         res.status(401).json({ error: 'Wymagana autoryzacja' });
     }
 }
@@ -181,19 +188,26 @@ app.get('/register', (req, res) => {
 
 // Login
 app.post('/api/login', (req, res) => {
+    console.log('Login request received:', { username: req.body.username, hasPassword: !!req.body.password });
     const { username, password } = req.body;
     
     db.get("SELECT * FROM users WHERE username = ?", [username], (err, user) => {
         if (err) {
+            console.error('Database error during login:', err);
             return res.status(500).json({ error: 'Błąd serwera' });
         }
         
         if (!user || !bcrypt.compareSync(password, user.password)) {
+            console.log('Login failed: invalid credentials for user:', username);
             return res.status(401).json({ error: 'Nieprawidłowa nazwa użytkownika lub hasło' });
         }
         
+        console.log('Login successful for user:', username);
         req.session.userId = user.id;
         req.session.username = user.username;
+        
+        console.log('Session created:', { userId: req.session.userId, username: req.session.username });
+        
         res.json({ success: true, user: { id: user.id, username: user.username } });
     });
 });
@@ -531,22 +545,42 @@ app.delete('/api/presents/:id', requireAuth, (req, res) => {
 
 // Registration API
 app.post('/api/register', (req, res) => {
+    console.log('Registration request received:', { username: req.body.username, hasPassword: !!req.body.password });
     const { username, password } = req.body;
+    
     if (!username || !password) {
+        console.log('Registration failed: missing username or password');
         return res.status(400).json({ error: 'Wymagane jest podanie nazwy użytkownika i hasła' });
     }
+    
+    console.log('Checking if username exists:', username);
     db.get("SELECT id FROM users WHERE username = ?", [username], (err, row) => {
+        if (err) {
+            console.error('Database error checking username:', err);
+            return res.status(500).json({ error: 'Błąd podczas sprawdzania nazwy użytkownika' });
+        }
+        
         if (row) {
+            console.log('Registration failed: username already exists:', username);
             return res.status(409).json({ error: 'Nazwa użytkownika jest już zajęta' });
         }
+        
+        console.log('Creating new user:', username);
         const hashedPassword = bcrypt.hashSync(password, 10);
         db.run("INSERT INTO users (username, password) VALUES (?, ?)", [username, hashedPassword], function(err) {
             if (err) {
+                console.error('Database error creating user:', err);
                 return res.status(500).json({ error: 'Błąd podczas rejestracji' });
             }
+            
+            console.log('User created successfully:', { id: this.lastID, username: username });
+            
             // Automatycznie loguj użytkownika po rejestracji
             req.session.userId = this.lastID;
             req.session.username = username;
+            
+            console.log('Session created:', { userId: req.session.userId, username: req.session.username });
+            
             res.json({ success: true, user: { id: this.lastID, username: username } });
         });
     });
