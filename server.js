@@ -2,6 +2,7 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
 const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
@@ -19,6 +20,11 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 app.use(session({
+    store: new SQLiteStore({
+        db: 'sessions.db',
+        dir: './',
+        table: 'sessions'
+    }),
     secret: process.env.SESSION_SECRET || 'prezenty-secret-key-2024',
     resave: true,
     saveUninitialized: true,
