@@ -947,14 +947,14 @@ body {
         width: 100%;
         max-width: 100%;
         height: 100vh;
-        border-radius: 0;
+        border-radius: 20px;
         margin: 0;
         display: flex;
         flex-direction: column;
     }
     
     .login-card::before {
-        border-radius: 0;
+        border-radius: 20px;
     }
     
     .login-header {
@@ -965,7 +965,7 @@ body {
         padding: 1.5rem 1rem;
     }
     
-    .login-header h2 {
+    .login-header h2, .login-header h4 {
         font-size: 1.5rem;
         text-align: center;
     }
@@ -980,7 +980,7 @@ body {
     }
     
     .login-body::before {
-        border-radius: 0;
+        border-radius: 0 0 20px 20px;
     }
     
     .form-control, .form-select {
