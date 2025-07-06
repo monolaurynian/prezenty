@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prezenty - Zarządzanie Osobami</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="/presents">
+                <i class="fas fa-gift me-2"></i>Prezenty
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/presents">
+                    <i class="fas fa-gift me-1"></i>Prezenty
+                </a>
+                <a class="nav-link active" href="/recipients">
+                    <i class="fas fa-users me-1"></i>Osoby
+                </a>
+                <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Add Recipient Form -->
+        <div class="card main-card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Dodaj Nową Osobę
+                </h3>
+            </div>
+            <div class="card-body">
+                <form id="recipientForm">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="recipientName" class="form-label">Imię i nazwisko</label>
+                            <input type="text" class="form-control" id="recipientName" placeholder="Wprowadź imię i nazwisko" required>
+                        </div>
+                        <div class="col-md-4 mb-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-plus me-1"></i>Dodaj Osobę
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <div id="formMessage" class="alert mt-3" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Recipients List with Presents -->
+        <div class="card main-card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Lista Osób i Ich Prezenty
+                </h3>
+            </div>
+            <div class="card-body">
+                <div id="recipientsList">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Ładowanie...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Picture Modal -->
+    <div class="modal fade" id="profilePictureModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dodaj zdjęcie profilowe</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="profilePictureForm">
+                        <div class="mb-3">
+                            <label for="profilePictureUrl" class="form-label">URL zdjęcia</label>
+                            <input type="url" class="form-control" id="profilePictureUrl" 
+                                   placeholder="https://example.com/photo.jpg" required>
+                            <div class="form-text">Wklej link do zdjęcia (np. z Google Drive, Imgur, etc.)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Podgląd:</label>
+                            <div class="text-center">
+                                <img id="profilePicturePreview" src="" alt="Podgląd" 
+                                     style="max-width: 200px; max-height: 200px; display: none;" 
+                                     class="img-fluid rounded">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-danger" onclick="saveProfilePicture()">Zapisz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="recipients.js"></script>
+</body>
+</html> 

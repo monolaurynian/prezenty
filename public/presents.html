@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prezenty - Lista Prezentów</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="/presents">
+                <i class="fas fa-gift me-2"></i>Prezenty
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link active" href="/presents">
+                    <i class="fas fa-gift me-1"></i>Prezenty
+                </a>
+                <a class="nav-link" href="/recipients">
+                    <i class="fas fa-users me-1"></i>Osoby
+                </a>
+                <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Add Present Form -->
+        <div class="card main-card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>Dodaj Nowy Prezent
+                </h3>
+            </div>
+            <div class="card-body">
+                <form id="presentForm">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="presentTitle" class="form-label">Jaki prezent?</label>
+                            <input type="text" class="form-control" id="presentTitle" placeholder="Nazwa prezentu" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="recipientSelect" class="form-label">Dla kogo?</label>
+                            <select class="form-select" id="recipientSelect" required>
+                                <option value="">Wybierz osobę</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="comments" class="form-label">Dodatkowe informacje</label>
+                            <textarea class="form-control form-textarea" id="comments" placeholder="Opis, link, uwagi..."></textarea>
+                        </div>
+                        <div class="col-md-2 mb-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="fas fa-plus me-1"></i>Dodaj
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <div id="formMessage" class="alert mt-3" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Recipients Overview -->
+        <div class="card main-card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Przegląd Prezentów
+                </h3>
+            </div>
+            <div class="card-body">
+                <div id="recipientsOverview">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Ładowanie...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Presents List -->
+        <div class="card main-card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h3 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Lista Prezentów
+                        </h3>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="search-controls">
+                            <input type="text" class="search-input" 
+                                   id="searchInput" placeholder="Szukaj prezentów, osób...">
+                            <button type="button" class="sort-button" onclick="toggleSortDropdown()">
+                                <i class="fas fa-sort"></i>
+                                Sortuj
+                                <i class="fas fa-chevron-down ms-1"></i>
+                            </button>
+                            <div class="sort-dropdown" id="sortDropdown" style="display: none;">
+                                <div class="sort-option" data-value="date-desc">
+                                    <i class="fas fa-calendar-alt"></i> Data (najnowsze)
+                                </div>
+                                <div class="sort-option" data-value="date-asc">
+                                    <i class="fas fa-calendar-alt"></i> Data (najstarsze)
+                                </div>
+                                <div class="sort-option" data-value="title-asc">
+                                    <i class="fas fa-sort-alpha-down"></i> Nazwa (A-Z)
+                                </div>
+                                <div class="sort-option" data-value="title-desc">
+                                    <i class="fas fa-sort-alpha-up"></i> Nazwa (Z-A)
+                                </div>
+                                <div class="sort-option" data-value="recipient-asc">
+                                    <i class="fas fa-user"></i> Osoba (A-Z)
+                                </div>
+                                <div class="sort-option" data-value="status">
+                                    <i class="fas fa-check-circle"></i> Status (niezakupione)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="presentsList" class="presents-container">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Ładowanie...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal do dodawania nowej osoby -->
+    <div class="modal fade" id="addRecipientModal" tabindex="-1" aria-labelledby="addRecipientModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addRecipientModalLabel">
+                        <i class="fas fa-user-plus me-2"></i>Dodaj nową osobę
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRecipientForm">
+                        <div class="mb-3">
+                            <label for="newRecipientName" class="form-label">Imię i nazwisko</label>
+                            <input type="text" class="form-control" id="newRecipientName" placeholder="Wprowadź imię i nazwisko" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newRecipientEmail" class="form-label">Email (opcjonalnie)</label>
+                            <input type="email" class="form-control" id="newRecipientEmail" placeholder="email@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="newRecipientPhone" class="form-label">Telefon (opcjonalnie)</label>
+                            <input type="tel" class="form-control" id="newRecipientPhone" placeholder="+48 123 456 789">
+                        </div>
+                        <div class="mb-3">
+                            <label for="newRecipientNotes" class="form-label">Notatki (opcjonalnie)</label>
+                            <textarea class="form-control" id="newRecipientNotes" rows="3" placeholder="Dodatkowe informacje o osobie..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Anuluj
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="addNewRecipient()">
+                        <i class="fas fa-plus me-1"></i>Dodaj osobę
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="presents.js"></script>
+</body>
+</html> 

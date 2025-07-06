@@ -1,0 +1,755 @@
+/* iOS-style Christmas Theme */
+:root {
+    --ios-red: #ff3b30;
+    --ios-green: #34c759;
+    --ios-blue: #007aff;
+    --ios-orange: #ff9500;
+    --ios-purple: #af52de;
+    --ios-pink: #ff2d92;
+    --ios-yellow: #ffcc00;
+    --ios-gray: #8e8e93;
+    --ios-light-gray: #f2f2f7;
+    --ios-dark-gray: #1c1c1e;
+    --ios-background: #f2f2f7;
+    --ios-card: #ffffff;
+    --ios-text: #000000;
+    --ios-text-secondary: #8e8e93;
+    --ios-border: #c6c6c8;
+    --ios-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --ios-shadow-large: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --ios-blur: blur(20px);
+    --ios-primary: #007aff;
+    --ios-secondary: #5856d6;
+    --ios-success: #34c759;
+    --ios-warning: #ff9500;
+    --ios-danger: #ff3b30;
+    --ios-info: #5ac8fa;
+    --christmas-red: #ff3b30;
+    --christmas-green: #34c759;
+    --christmas-gold: #ffcc00;
+}
+
+body {
+    background: url('seba.jpg') no-repeat center center fixed;
+    background-size: cover;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    transition: all 0.3s ease;
+}
+
+.background-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    z-index: -1;
+}
+
+/* Cover Banner with Header */
+.cover-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+}
+
+.cover-banner h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -1px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.cover-banner p {
+    font-size: 1.2rem;
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
+/* Login Panel with seba.jpg heading */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+/* Keep card container stable, only animate content */
+.login-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: var(--ios-blur);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    z-index: 1;
+}
+
+.login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('seba.jpg') no-repeat center center;
+    background-size: cover;
+    opacity: 0.95;
+    z-index: -1;
+    border-radius: 20px;
+}
+
+/* Animate only the content inside */
+.login-header, .login-body {
+    transition: opacity 0.3s ease;
+}
+
+.content-transition {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.content-transition.loaded {
+    opacity: 1;
+}
+
+.login-header {
+    background: transparent;
+    padding: 2rem 2rem 1rem 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-header h2 {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 0, 0, 0.6);
+    letter-spacing: -0.5px;
+}
+
+.login-body {
+    padding: 2rem;
+    position: relative;
+    background: transparent;
+    backdrop-filter: blur(0px);
+}
+
+.login-body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    z-index: -1;
+    border-radius: 0 0 20px 20px;
+}
+
+.login-body h4 {
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 4px 16px rgba(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 1;
+}
+
+.login-body .text-center p {
+    color: white !important;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 3px 12px rgba(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 1;
+}
+
+.login-body p {
+    color: white !important;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 3px 12px rgba(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 1;
+}
+
+/* Flat Design Input Groups with red icons */
+.input-group-text {
+    background: var(--christmas-red);
+    color: white !important;
+    border: 2px solid var(--christmas-red);
+    border-radius: 12px 0 0 12px;
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+}
+
+.input-group-text i {
+    color: white !important;
+}
+
+/* iOS-style Flat Design Submit Button */
+.btn-login {
+    background: var(--christmas-red);
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.2s ease;
+    width: 100%;
+    margin-top: 1rem;
+    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+    backdrop-filter: blur(3px);
+}
+
+.btn-login:hover {
+    background: #d70015;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+/* Flat Design Link Buttons */
+.btn-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 1;
+}
+
+.btn-link:hover {
+    color: white !important;
+    background: rgba(255, 59, 48, 0.2);
+    text-decoration: none;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+/* iOS-style Flat Design Form Inputs */
+.form-control {
+    border: 2px solid #e1e5e9;
+    border-radius: 12px;
+    padding: 0.875rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(3px);
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.form-control:focus {
+    border-color: var(--ios-primary);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    background: white;
+    outline: none;
+}
+
+/* iOS-style Flat Design Icons */
+.login-card .fa-gift {
+    font-size: 2rem;
+    color: var(--christmas-red);
+    margin-bottom: 0.75rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* iOS-style Main Content Cards */
+.main-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: var(--ios-blur);
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+}
+
+.main-card .card-header {
+    background: var(--christmas-red);
+    color: white;
+    border: none;
+    padding: 1.25rem 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+}
+
+.main-card .card-header h3 {
+    font-size: 1.25rem;
+    margin: 0;
+    font-weight: 700;
+}
+
+.main-card .card-body {
+    padding: 1.5rem;
+}
+
+/* Navigation */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: var(--ios-blur);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--christmas-red) !important;
+}
+
+.nav-link {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--ios-text) !important;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    color: var(--christmas-red) !important;
+}
+
+.nav-link.active {
+    color: var(--christmas-red) !important;
+    font-weight: 600;
+}
+
+/* Form labels and spacing */
+.form-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--ios-text);
+    margin-bottom: 0.5rem;
+}
+
+.form-textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Present items with improved alignment */
+.present-item {
+    background: var(--ios-card);
+    border: 1px solid var(--ios-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.present-item:hover {
+    border-color: var(--ios-primary);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.present-item .row {
+    align-items: center;
+}
+
+.present-item .col-md-1 {
+    text-align: center;
+}
+
+.present-item .col-md-2 {
+    text-align: center;
+}
+
+.present-item .form-check {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.present-item .form-check-input {
+    margin: 0;
+    cursor: pointer;
+}
+
+.present-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--ios-text);
+}
+
+.present-comments {
+    font-size: 0.85rem;
+    color: var(--ios-text-secondary);
+    margin-top: 0.5rem;
+}
+
+.present-date {
+    font-size: 0.8rem;
+    color: var(--ios-text-secondary);
+}
+
+/* Search and filter controls */
+.search-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    border: 2px solid var(--ios-border);
+    border-radius: 10px;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    background: var(--ios-card);
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-input:focus {
+    border-color: var(--ios-primary);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    outline: none;
+}
+
+.sort-button {
+    background: var(--ios-primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0.625rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+}
+
+.sort-button:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.sort-button:active {
+    transform: translateY(0);
+}
+
+/* Sort dropdown */
+.sort-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--ios-card);
+    border: 1px solid var(--ios-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    min-width: 200px;
+    margin-top: 0.5rem;
+}
+
+.sort-option {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--ios-border);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sort-option:last-child {
+    border-bottom: none;
+}
+
+.sort-option:hover {
+    background: var(--ios-light-gray);
+}
+
+.sort-option.selected {
+    background: var(--ios-primary);
+    color: white;
+}
+
+/* Buttons with improved styling */
+.btn-danger {
+    background: var(--ios-danger);
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.btn-danger:hover {
+    background: #e03535;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4);
+}
+
+.btn-success {
+    background: var(--ios-success);
+    color: white;
+    box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.btn-success:hover {
+    background: #2db84d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 199, 89, 0.4);
+}
+
+.btn-outline-danger {
+    border: 2px solid var(--ios-danger);
+    color: var(--ios-danger);
+    background: transparent;
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.2);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.btn-outline-danger:hover {
+    background: var(--ios-danger);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+}
+
+/* Share buttons */
+.share-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.share-btn {
+    padding: 0.375rem 0.75rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.share-btn.whatsapp {
+    background: #25d366;
+    color: white;
+}
+
+.share-btn.messenger {
+    background: #0084ff;
+    color: white;
+}
+
+.share-btn.email {
+    background: var(--ios-gray);
+    color: white;
+}
+
+.share-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    color: white;
+    text-decoration: none;
+}
+
+/* Progress bars */
+.progress {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--ios-light-gray);
+}
+
+.progress-bar {
+    border-radius: 3px;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .search-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-input {
+        min-width: auto;
+    }
+    
+    .present-item .row {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .present-item .col-md-1,
+    .present-item .col-md-2,
+    .present-item .col-md-4 {
+        width: 100%;
+        text-align: left;
+    }
+}
+
+/* Snowfall effect - only in login panels */
+.login-card .snowflake {
+    position: absolute;
+    top: -100px;
+    z-index: 0; /* Behind form elements */
+    user-select: none;
+    cursor: default;
+    animation: fall linear infinite;
+    color: white;
+    font-size: 0.8em;
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.6);
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+@keyframes fall {
+    0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 0.6;
+    }
+    10% {
+        opacity: 0.8;
+    }
+    90% {
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(400px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Different snowflake positions and slower speeds */
+.login-card .snowflake:nth-child(1) { left: 10%; animation-duration: 20s; animation-delay: 0s; }
+.login-card .snowflake:nth-child(2) { left: 20%; animation-duration: 25s; animation-delay: 5s; }
+.login-card .snowflake:nth-child(3) { left: 30%; animation-duration: 30s; animation-delay: 10s; }
+.login-card .snowflake:nth-child(4) { left: 40%; animation-duration: 22s; animation-delay: 15s; }
+.login-card .snowflake:nth-child(5) { left: 50%; animation-duration: 28s; animation-delay: 20s; }
+.login-card .snowflake:nth-child(6) { left: 60%; animation-duration: 24s; animation-delay: 25s; }
+.login-card .snowflake:nth-child(7) { left: 70%; animation-duration: 32s; animation-delay: 30s; }
+.login-card .snowflake:nth-child(8) { left: 80%; animation-duration: 20s; animation-delay: 35s; }
+.login-card .snowflake:nth-child(9) { left: 90%; animation-duration: 26s; animation-delay: 40s; }
+.login-card .snowflake:nth-child(10) { left: 15%; animation-duration: 30s; animation-delay: 45s; }
+.login-card .snowflake:nth-child(11) { left: 25%; animation-duration: 22s; animation-delay: 50s; }
+.login-card .snowflake:nth-child(12) { left: 35%; animation-duration: 28s; animation-delay: 55s; }
+.login-card .snowflake:nth-child(13) { left: 45%; animation-duration: 24s; animation-delay: 60s; }
+.login-card .snowflake:nth-child(14) { left: 55%; animation-duration: 32s; animation-delay: 65s; }
+.login-card .snowflake:nth-child(15) { left: 65%; animation-duration: 20s; animation-delay: 70s; }
+.login-card .snowflake:nth-child(16) { left: 75%; animation-duration: 26s; animation-delay: 75s; }
+.login-card .snowflake:nth-child(17) { left: 85%; animation-duration: 30s; animation-delay: 80s; }
+.login-card .snowflake:nth-child(18) { left: 95%; animation-duration: 22s; animation-delay: 85s; }
+.login-card .snowflake:nth-child(19) { left: 5%; animation-duration: 28s; animation-delay: 90s; }
+.login-card .snowflake:nth-child(20) { left: 100%; animation-duration: 24s; animation-delay: 95s; }
+
+/* iOS-style Presents container */
+.presents-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.present-item {
+    order: 0;
+}
+
+.present-item.checked {
+    order: 1;
+}
+
+/* iOS-style filter dropdown */
+.filter-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.filter-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--ios-card);
+    border: 1px solid var(--ios-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+}
+
+.filter-result-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--ios-border);
+}
+
+.filter-result-item:last-child {
+    border-bottom: none;
+}
+
+.filter-result-item:hover {
+    background: var(--ios-light-gray);
+}
+
+.filter-result-item.selected {
+    background: var(--ios-primary);
+    color: white;
+}
+
+/* Ensure form elements are above snowflakes */
+.login-header, .login-body, .input-group, .btn, .form-control {
+    position: relative;
+    z-index: 2;
+}
+
+/* Style dla opcji "Dodaj nową osobę" w dropdownie */
+.form-select option.text-primary {
+    color: var(--ios-primary) !important;
+    font-weight: 500;
+    background-color: rgba(0, 122, 255, 0.1);
+}
+
+.form-select option.text-primary:hover {
+    background-color: rgba(0, 122, 255, 0.2);
+} 
