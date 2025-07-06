@@ -1,7 +1,7 @@
 {
   "name": "prezenty",
   "description": "Aplikacja do zarządzania pomysłami na prezenty świąteczne",
-  "repository": "https://github.com/yourusername/prezenty",
+  "repository": "https://github.com/username/prezenty",
   "logo": "https://node-js-sample.herokuapp.com/node.png",
   "keywords": ["node", "express", "christmas", "presents"],
   "env": {

@@ -18,8 +18,6 @@ RUN mkdir -p /app/data && chmod 755 /app/data
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV HOST=srv895343.hstgr.cloud
-
 
 # Expose port
 EXPOSE 3000

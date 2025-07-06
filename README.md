@@ -83,7 +83,7 @@ Aplikacja webowa w języku polskim do zarządzania pomysłami na prezenty świą
 1. **Dodaj rekord DNS**
    - **Typ**: `A`
    - **Nazwa**: `prezenty`
-   - **Wartość**: `191.101.81.57` (IP Coolify)
+   - **Wartość**: `[YOUR_SERVER_IP]` (IP serwera)
    - **TTL**: `300`
 
 2. **Czekaj na propagację DNS** (może potrwać do 24h)
