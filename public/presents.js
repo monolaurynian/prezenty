@@ -364,8 +364,30 @@ function formatComments(comments) {
 }
 
 function generateShareButtons(present) {
-    const text = `Prezent: ${present.title}${present.recipient_name ? ` dla ${present.recipient_name}` : ''}`;
-    const encodedText = encodeURIComponent(text);
+    // Create detailed message with more information
+    let message = `🎁 Prezent: ${present.title}`;
+    
+    if (present.recipient_name) {
+        message += `\n👤 Dla: ${present.recipient_name}`;
+    }
+    
+    if (present.comments && present.comments.trim()) {
+        message += `\n💭 Komentarz: ${present.comments.trim()}`;
+    }
+    
+    if (present.created_at) {
+        const date = new Date(present.created_at);
+        const formattedDate = date.toLocaleDateString('pl-PL', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        message += `\n📅 Dodano: ${formattedDate}`;
+    }
+    
+    message += `\n\n🎄 Aplikacja Prezenty - zarządzanie pomysłami na prezenty świąteczne`;
+    
+    const encodedText = encodeURIComponent(message);
     
     return `
         <div class="share-buttons d-flex gap-1 flex-wrap">
@@ -375,7 +397,7 @@ function generateShareButtons(present) {
             <a href="https://www.facebook.com/dialog/send?link=${encodeURIComponent(window.location.origin)}&app_id=966242223397117&redirect_uri=${encodeURIComponent(window.location.origin)}&quote=${encodedText}" target="_blank" class="share-btn messenger btn btn-sm btn-outline-primary">
                 <i class="fab fa-facebook-messenger"></i> Messenger
             </a>
-            <a href="mailto:?subject=Prezent&body=${encodedText}" class="share-btn email btn btn-sm btn-outline-secondary">
+            <a href="mailto:?subject=🎁 Prezent: ${encodeURIComponent(present.title)}&body=${encodedText}" class="share-btn email btn btn-sm btn-outline-secondary">
                 <i class="fas fa-envelope"></i> Email
             </a>
         </div>
