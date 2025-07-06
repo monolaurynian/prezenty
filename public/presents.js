@@ -330,9 +330,9 @@ function displayPresents(presents) {
                     </div>
                     <div class="col-md-1">
                         <div class="btn-group-vertical btn-group-sm" role="group">
-                            <button class="btn btn-outline-primary btn-sm mb-1" onclick="editPresent(${present.id}, '${escapeHtml(present.title)}', '${escapeHtml(present.comments || '')}', ${present.recipient_id || 'null'})" title="Edytuj">
-                                <i class="fas fa-edit"></i>
-                            </button>
+                                            <button class="btn btn-outline-danger btn-sm mb-1" onclick="editPresent(${present.id}, '${escapeHtml(present.title)}', '${escapeHtml(present.comments || '')}', ${present.recipient_id || 'null'})" title="Edytuj">
+                    <i class="fas fa-edit"></i>
+                </button>
                             <button class="btn btn-outline-danger btn-sm" onclick="deletePresent(${present.id})" title="Usuń">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -576,7 +576,7 @@ function addNewRecipient() {
     const name = document.getElementById('newRecipientName').value.trim();
     
     if (!name) {
-        alert('Proszę wprowadzić imię osoby');
+        showErrorModal('Proszę wprowadzić imię osoby');
         return;
     }
     
@@ -619,12 +619,12 @@ function addNewRecipient() {
                 }
             }, 100);
         } else {
-            alert('Błąd podczas dodawania osoby: ' + (data.error || 'Nieznany błąd'));
+            showErrorModal('Błąd podczas dodawania osoby: ' + (data.error || 'Nieznany błąd'));
         }
     })
     .catch(error => {
         console.error('Error adding recipient:', error);
-        alert('Błąd podczas dodawania osoby. Spróbuj ponownie.');
+        showErrorModal('Błąd podczas dodawania osoby. Spróbuj ponownie.');
     });
 }
 
@@ -648,9 +648,6 @@ function updatePresent() {
     const comments = document.getElementById('editPresentComments').value.trim();
     const recipientId = document.getElementById('editRecipientSelect').value;
     
-    const submitBtn = document.querySelector('#editPresentForm button[onclick*="updatePresent"]');
-    const originalText = submitBtn ? submitBtn.innerHTML : '';
-    
     if (!title) {
         showErrorModal('Nazwa prezentu jest wymagana');
         return;
@@ -661,12 +658,14 @@ function updatePresent() {
         return;
     }
     
-    if (!submitBtn) {
-        showErrorModal('Nie można znaleźć przycisku zapisu');
-        return;
+    // Find the submit button more reliably
+    const submitBtn = document.querySelector('#editPresentModal .btn-primary');
+    const originalText = submitBtn ? submitBtn.innerHTML : 'Zapisz zmiany';
+    
+    if (submitBtn) {
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Zapisywanie...';
+        submitBtn.disabled = true;
     }
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Zapisywanie...';
-    submitBtn.disabled = true;
     
     fetch(`/api/presents/${id}`, {
         method: 'PUT',
