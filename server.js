@@ -813,31 +813,11 @@ app.post('/api/user/identify', requireAuth, (req, res) => {
                             id: result.rows[0].id, 
                             name: name.trim() 
                         } 
-                                    });
-            } else {
-                // User is not identified - show all presents normally
-                getAllPresents()
-                    .then(presents => {
-                        console.log('Presents loaded successfully:', presents.length, 'presents');
-                        if (presents.length > 0) {
-                            console.log('Sample present data:', presents[0]);
-                        }
-                        res.json({
-                            identified: false,
-                            presents: presents
-                        });
-                    })
-                    .catch(err => {
-                        console.error('Database error getting presents:', err);
-                        handleDbError(err, res, 'Błąd podczas pobierania prezentów');
                     });
+                });
             }
-        })
-        .catch(err => {
-            console.error('Database error checking user identification:', err);
-            handleDbError(err, res, 'Błąd podczas sprawdzania identyfikacji');
         });
-});
+    });
 });
 
 // Error handling middleware
