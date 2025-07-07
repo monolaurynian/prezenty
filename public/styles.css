@@ -11516,3 +11516,12 @@ a:hover {
     border: 3px solid var(--border-light);
     transition: all 0.3s ease;
 }
+
+
+#profileModalImage {
+  max-height: 90vh !important;
+  width: auto !important;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
