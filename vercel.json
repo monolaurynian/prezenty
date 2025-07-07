@@ -14,8 +14,7 @@
   ],
   "env": {
     "NODE_ENV": "production",
-    "DATABASE_PATH": "/tmp/prezenty.db",
-    "BACKUP_PATH": "/tmp/prezenty-backup.db"
+    "DATABASE_URL": "<your_postgres_connection_string>"
   },
   "functions": {
     "server.js": {

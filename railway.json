@@ -4,14 +4,13 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "npm run db:setup",
+    "startCommand": "npm start",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   },
   "variables": {
-    "DATABASE_PATH": "/tmp/prezenty.db",
-    "BACKUP_PATH": "/tmp/prezenty-backup.db"
+    "DATABASE_URL": "<your_postgres_connection_string>"
   }
 } 

@@ -4,14 +4,12 @@ services:
     env: node
     plan: free
     buildCommand: npm install
-    startCommand: npm run db:setup
+    startCommand: npm start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
       - key: SESSION_SECRET
         generateValue: true
-      - key: DATABASE_PATH
-        value: /tmp/prezenty.db
-      - key: BACKUP_PATH
-        value: /tmp/prezenty-backup.db 
+      - key: DATABASE_URL
+        value: <your_postgres_connection_string> 
