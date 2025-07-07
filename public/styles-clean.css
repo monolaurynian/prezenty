@@ -1,0 +1,261 @@
+/*
+ * Cleaned-up, deduplicated, and organized CSS for Prezenty app
+ * Only unique, necessary rules are kept. Duplicates and obsolete selectors removed.
+ * All color values use CSS variables. Key animations and responsive rules preserved.
+ */
+
+:root {
+    --ios-red: #ff3b30;
+    --ios-green: #34c759;
+    --ios-blue: #007aff;
+    --ios-orange: #ff9500;
+    --ios-purple: #af52de;
+    --ios-pink: #ff2d92;
+    --ios-yellow: #ffcc00;
+    --ios-gray: #8e8e93;
+    --ios-light-gray: #f2f2f7;
+    --ios-dark-gray: #1c1c1e;
+    --ios-background: #f2f2f7;
+    --ios-card: #ffffff;
+    --ios-text: #000000;
+    --ios-text-secondary: #8e8e93;
+    --ios-border: #c6c6c8;
+    --ios-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --ios-shadow-large: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --ios-blur: blur(20px);
+    --ios-primary: #007aff;
+    --ios-secondary: #5856d6;
+    --ios-success: #34c759;
+    --ios-warning: #ff9500;
+    --ios-danger: #ff3b30;
+    --ios-info: #5ac8fa;
+    --christmas-red: #ff3b30;
+    --christmas-green: #34c759;
+    --christmas-gold: #ffcc00;
+    --border-light: #e9ecef;
+}
+
+body {
+    background: url('seba.jpg') no-repeat center center fixed;
+    background-size: cover;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    transition: all 0.3s ease;
+}
+
+.background-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    z-index: -1;
+}
+
+/* --- Login/Register Card --- */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+.login-card {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: var(--ios-blur);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    overflow: hidden;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    z-index: 1;
+}
+.login-header, .login-body {
+    transition: opacity 0.3s ease;
+}
+.content-transition { opacity: 0; transition: opacity 0.3s ease; }
+.content-transition.loaded { opacity: 1; }
+
+/* --- Form Controls --- */
+.form-control, .form-select {
+    border: 2px solid var(--ios-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    background: #fff;
+    color: var(--ios-text);
+    transition: border-color 0.2s;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--ios-primary);
+    outline: none;
+}
+.input-group-text {
+    background: var(--ios-light-gray);
+    border: 1px solid var(--ios-border);
+    color: var(--ios-text-secondary);
+}
+
+/* --- Buttons --- */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+.btn-login {
+    background: var(--ios-primary);
+    color: #fff;
+    border: none;
+}
+.btn-login:hover {
+    background: var(--ios-secondary);
+}
+.btn-outline-primary {
+    border: 2px solid var(--ios-primary);
+    color: var(--ios-primary);
+    background: transparent;
+}
+.btn-outline-primary:hover {
+    background: var(--ios-primary);
+    color: #fff;
+}
+.btn-outline-danger {
+    border: 2px solid var(--ios-danger);
+    color: var(--ios-danger);
+    background: transparent;
+}
+.btn-outline-danger:hover {
+    background: var(--ios-danger);
+    color: #fff;
+}
+
+/* --- Present List --- */
+.presents-list, .presents-list-container {
+    position: relative;
+    overflow: hidden;
+}
+.present-item {
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    padding: 1.25rem 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+.present-item.checked {
+    opacity: 0.7;
+    background: rgba(128,128,128,0.1);
+    border-color: rgba(128,128,128,0.3);
+}
+.present-item .form-check-input {
+    margin: 0;
+    cursor: pointer;
+    width: 1.2rem;
+    height: 1.2rem;
+}
+.present-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--ios-text);
+    margin: 0 0 0.25rem 0;
+    line-height: 1.4;
+    word-break: break-word;
+}
+.present-comments {
+    font-size: 0.95rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+    line-height: 1.5;
+    word-break: break-word;
+}
+.present-date {
+    font-size: 0.85rem;
+    color: var(--ios-text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* --- Animations --- */
+@keyframes smoothSlideUp {
+    0% { transform: translateY(100%); opacity: 1; z-index: 2; }
+    80%,100% { transform: translateY(0); opacity: 1; z-index: 2; }
+}
+@keyframes smoothSlideDown {
+    0% { transform: translateY(-100%); opacity: 1; z-index: 2; }
+    80%,100% { transform: translateY(0); opacity: 1; z-index: 2; }
+}
+@keyframes fadeOutCard {
+    0% { opacity: 1; }
+    80% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+.present-item.smooth-slide-up {
+    animation: smoothSlideUp 0.8s cubic-bezier(0.4,0,0.2,1);
+    z-index: 2;
+}
+.present-item.smooth-slide-down {
+    animation: smoothSlideDown 0.8s cubic-bezier(0.4,0,0.2,1);
+    z-index: 2;
+}
+.present-item.fading {
+    animation: fadeOutCard 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* --- Profile Picture Placeholder & Avatar (deduplicated) --- */
+.profile-picture-placeholder, .recipient-avatar {
+    display: inline-block;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--ios-light-gray);
+    color: var(--ios-text-secondary);
+    text-align: center;
+    line-height: 48px;
+    font-size: 1.5rem;
+    overflow: hidden;
+}
+.profile-picture-placeholder img, .recipient-avatar img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+}
+.profile-picture-placeholder:hover, .recipient-avatar img:hover {
+    filter: brightness(0.95);
+}
+
+/* --- Modals --- */
+.present-item-modal {
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    padding: 1rem;
+}
+.present-item-modal.checked {
+    background-color: #d4edda;
+    border-color: #c3e6cb !important;
+}
+.present-item-modal .form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .login-card { max-width: 95vw; }
+    .present-item, .present-item-modal { padding: 1rem 0.5rem; }
+    .profile-picture-placeholder, .recipient-avatar { width: 40px; height: 40px; line-height: 40px; font-size: 1.2rem; }
+}
+
+/* --- Utility --- */
+.text-muted { color: var(--ios-text-secondary) !important; }
+a { color: var(--ios-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* --- End of cleaned CSS --- */ 

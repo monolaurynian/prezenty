@@ -6,13 +6,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check authentication first, then load data
     checkAuth().then(() => {
         // Load recipients with their presents after auth is confirmed
-    loadRecipientsWithPresents();
+        loadRecipientsWithPresents();
     }).catch(error => {
         console.error('Auth failed:', error);
         window.location.href = '/';
     });
     
-
+    // Initialize animations
+    initializeAnimations();
     
     // Profile picture preview
     const profilePictureUrl = document.getElementById('profilePictureUrl');
@@ -49,6 +50,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Initialize animation system
+function initializeAnimations() {
+    // Add appearing animation to present items when they're first loaded
+    setTimeout(() => {
+        const presentItems = document.querySelectorAll('.present-item');
+        presentItems.forEach((item, index) => {
+            item.classList.add('appearing');
+            setTimeout(() => {
+                item.classList.remove('appearing');
+            }, 600 + (index * 50));
+        });
+    }, 500);
+}
 
 function checkAuth() {
     return fetch('/api/auth')
@@ -800,10 +815,10 @@ function generatePresentsList(presents) {
         return new Date(b.created_at) - new Date(a.created_at);
     });
     
-    return `
-        <div class="presents-list">
-            ${sortedPresents.map(present => `
-                <div class="present-item ${present.is_checked ? 'checked' : ''} ${present.reserved_by && present.reserved_by !== currentUserId ? 'reserved-by-other' : ''} ${present.reserved_by === currentUserId ? 'reserved-by-me' : ''}" data-id="${present.id}">
+    const html = `
+        <div class="presents-list presents-list-container">
+            ${sortedPresents.map((present, index) => `
+                <div class="present-item ${present.is_checked ? 'checked' : ''} ${present.reserved_by && present.reserved_by !== currentUserId ? 'reserved-by-other' : ''} ${present.reserved_by === currentUserId ? 'reserved-by-me' : ''}" data-id="${present.id}" style="transition-delay: ${index * 50}ms;">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center">
                             <div class="form-check me-2">
@@ -829,9 +844,47 @@ function generatePresentsList(presents) {
             `).join('')}
         </div>
     `;
+    
+    // Calculate container height after rendering
+    setTimeout(() => {
+        calculateContainerHeight();
+    }, 100);
+    
+    return html;
 }
 
 function togglePresentFromRecipients(id, isChecked) {
+    const presentItem = document.querySelector(`[data-id="${id}"]`);
+    if (!presentItem) {
+        console.error('Present item not found:', id);
+        return;
+    }
+
+    // Prevent multiple clicks during animation
+    if (presentItem.classList.contains('animating')) {
+        return;
+    }
+
+    // Add animating state to prevent multiple animations
+    presentItem.classList.add('animating');
+
+    // Update the server and state immediately
+    updatePresentCheckStatus(id, isChecked, presentItem);
+
+    // Animate the visual movement, then reorder after animation completes
+    animatePresentTransition(presentItem, isChecked, () => {
+        // Reorder the list after animation completes
+        reorderPresentsList();
+        // Remove animating state
+        presentItem.classList.remove('animating');
+    });
+}
+
+// Separate function to update the server after animation
+function updatePresentCheckStatus(id, isChecked, presentItem) {
+    // Add updating state
+    presentItem.classList.add('updating');
+
     fetch(`/api/presents/${id}/check`, {
         method: 'PUT',
         headers: {
@@ -842,25 +895,85 @@ function togglePresentFromRecipients(id, isChecked) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Add slide animation class to the present item
-            const presentItem = document.querySelector(`[data-id="${id}"]`);
-            if (presentItem) {
-                // Use slide-down for checking (moving to bottom), slide-up for unchecking (moving up)
-                const animationClass = isChecked ? 'slide-down' : 'slide-up';
-                presentItem.classList.add(animationClass);
-                // Remove animation class after animation completes
-                setTimeout(() => {
-                    presentItem.classList.remove(animationClass);
-                }, 400);
-            }
-            // Refresh the recipients list to show updated state
+            // Remove updating state
+            presentItem.classList.remove('updating');
+            presentItem.classList.remove('animating');
+            
+            // Refresh the list to show the final state
             loadRecipientsWithPresents();
         } else {
             console.error('Failed to toggle present:', data.error);
+            presentItem.classList.remove('updating');
+            presentItem.classList.remove('animating');
         }
     })
     .catch(error => {
         console.error('Error toggling present:', error);
+        presentItem.classList.remove('updating');
+        presentItem.classList.remove('animating');
+    });
+}
+
+// Helper function to animate present transitions
+function animatePresentTransition(presentItem, isChecked, callback) {
+    const container = presentItem.closest('.presents-list');
+    if (!container) {
+        if (callback) callback();
+        return;
+    }
+
+    // Get current position and dimensions
+    const rect = presentItem.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const itemHeight = rect.height;
+    const itemTop = rect.top - containerRect.top;
+
+    // Create a clone for the animation
+    const clone = presentItem.cloneNode(true);
+    clone.style.position = 'absolute';
+    clone.style.top = itemTop + 'px';
+    clone.style.left = '0';
+    clone.style.right = '0';
+    clone.style.zIndex = '1000';
+    clone.style.pointerEvents = 'none';
+    clone.style.opacity = '1'; // Keep the animated item fully opaque
+    clone.classList.remove('updating', 'animating');
+    
+    // Add to container
+    container.style.position = 'relative';
+    container.appendChild(clone);
+
+    // Animate the clone
+    const targetY = isChecked ? containerRect.height : -itemHeight;
+    clone.style.transition = 'all 0.8s ease-out'; // Updated to 0.8s
+    
+    // Trigger animation
+    setTimeout(() => {
+        clone.style.transform = `translateY(${targetY}px)`;
+        clone.style.opacity = '0'; // Only fade out at the end
+    }, 10);
+
+    // Remove clone after animation and call callback
+    setTimeout(() => {
+        if (clone.parentNode) {
+            clone.parentNode.removeChild(clone);
+        }
+        // Call the callback function after animation completes
+        if (callback) callback();
+    }, 800); // Updated to 800ms
+}
+
+// Helper function to calculate container height for smooth animations
+function calculateContainerHeight() {
+    const containers = document.querySelectorAll('.presents-list');
+    containers.forEach(container => {
+        const items = container.querySelectorAll('.present-item');
+        if (items.length > 0) {
+            const firstItem = items[0];
+            const itemHeight = firstItem.offsetHeight;
+            const totalHeight = items.length * itemHeight + (items.length - 1) * 8; // 8px margin
+            container.style.minHeight = totalHeight + 'px';
+        }
     });
 }
 
@@ -1186,7 +1299,7 @@ function displayReservedPresentsInModal(presents) {
                         ${uncheckedPresents.length === 0 ? 
                             '<p class="text-muted text-center">Brak prezentów do kupienia</p>' :
                             uncheckedPresents.map(present => `
-                                <div class="present-item-modal card mb-2">
+                                <div class="present-item-modal card mb-2" data-id="${present.id}">
                                     <div class="card-body p-3">
                                         <div class="row align-items-center">
                                             <div class="col-1">
@@ -1224,7 +1337,7 @@ function displayReservedPresentsInModal(presents) {
                         ${checkedPresents.length === 0 ? 
                             '<p class="text-muted text-center">Brak kupionych prezentów</p>' :
                             checkedPresents.map(present => `
-                                <div class="present-item-modal card mb-2 checked">
+                                <div class="present-item-modal card mb-2 checked" data-id="${present.id}">
                                     <div class="card-body p-3">
                                         <div class="row align-items-center">
                                             <div class="col-1">
@@ -1252,6 +1365,37 @@ function displayReservedPresentsInModal(presents) {
 }
 
 function togglePresentFromModal(id, isChecked) {
+    const presentItem = document.querySelector(`.present-item-modal[data-id="${id}"]`);
+    if (!presentItem) {
+        console.error('Present item not found in modal:', id);
+        return;
+    }
+
+    // Prevent multiple clicks during animation
+    if (presentItem.classList.contains('animating')) {
+        return;
+    }
+
+    // Add animating state to prevent multiple animations
+    presentItem.classList.add('animating');
+
+    // Update the server and state immediately
+    updateModalPresentCheckStatus(id, isChecked, presentItem);
+
+    // Animate the visual movement, then reorder after animation completes
+    animateModalPresentTransition(presentItem, isChecked, () => {
+        // Reorder the modal list after animation completes
+        reorderModalPresentsList();
+        // Remove animating state
+        presentItem.classList.remove('animating');
+    });
+}
+
+// Separate function to update the server after modal animation
+function updateModalPresentCheckStatus(id, isChecked, presentItem) {
+    // Add updating state
+    presentItem.classList.add('updating');
+
     fetch(`/api/presents/${id}/check`, {
         method: 'PUT',
         headers: {
@@ -1262,18 +1406,77 @@ function togglePresentFromModal(id, isChecked) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Remove updating state
+            presentItem.classList.remove('updating');
+            presentItem.classList.remove('animating');
+            
             // Refresh the reserved presents modal to show updated categories
-            openReservedPresentsModal();
+            setTimeout(() => {
+                openReservedPresentsModal();
+            }, 300);
             
             // Also refresh the main recipients list to sync checkboxes
             loadRecipientsWithPresents();
         } else {
             console.error('Failed to toggle present:', data.error);
+            presentItem.classList.remove('updating');
+            presentItem.classList.remove('animating');
         }
     })
     .catch(error => {
         console.error('Error toggling present:', error);
+        presentItem.classList.remove('updating');
+        presentItem.classList.remove('animating');
     });
+}
+
+// Helper function to animate present transitions in modal
+function animateModalPresentTransition(presentItem, isChecked, callback) {
+    const container = presentItem.closest('.card-body');
+    if (!container) {
+        if (callback) callback();
+        return;
+    }
+
+    // Get current position and dimensions
+    const rect = presentItem.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const itemHeight = rect.height;
+    const itemTop = rect.top - containerRect.top;
+
+    // Create a clone for the animation
+    const clone = presentItem.cloneNode(true);
+    clone.style.position = 'absolute';
+    clone.style.top = itemTop + 'px';
+    clone.style.left = '0';
+    clone.style.right = '0';
+    clone.style.zIndex = '1000';
+    clone.style.pointerEvents = 'none';
+    clone.style.opacity = '1'; // Keep the animated item fully opaque
+    clone.classList.remove('updating', 'animating');
+    
+    // Add to container
+    container.style.position = 'relative';
+    container.appendChild(clone);
+
+    // Animate the clone
+    const targetY = isChecked ? containerRect.height : -itemHeight;
+    clone.style.transition = 'all 0.8s ease-out'; // Updated to 0.8s
+    
+    // Trigger animation
+    setTimeout(() => {
+        clone.style.transform = `translateY(${targetY}px)`;
+        clone.style.opacity = '0'; // Only fade out at the end
+    }, 10);
+
+    // Remove clone after animation and call callback
+    setTimeout(() => {
+        if (clone.parentNode) {
+            clone.parentNode.removeChild(clone);
+        }
+        // Call the callback function after animation completes
+        if (callback) callback();
+    }, 800); // Updated to 800ms
 }
 
 function cancelReservationFromModal(presentId) {
@@ -1430,21 +1633,26 @@ function reservePresentFromRecipients(presentId) {
         if (data.success) {
             const presentItem = document.querySelector(`[data-id="${presentId}"]`);
             if (presentItem) {
-                presentItem.classList.add('smooth-slide-up');
-                // Find the card that will be overlapped (the new top card)
+                // For reservation: item moves to top (first position)
+                // Don't animate if it's already the first item
                 const presentsList = presentItem.parentElement;
                 if (presentsList) {
-                    const overlappedCard = presentsList.children[0];
-                    if (overlappedCard && overlappedCard !== presentItem) {
-                        overlappedCard.classList.add('fading');
+                    const isFirstItem = presentsList.children[0] === presentItem;
+                    if (!isFirstItem) {
+                        presentItem.classList.add('smooth-slide-up');
+                        // Find the card that will be overlapped (the new top card)
+                        const overlappedCard = presentsList.children[0];
+                        if (overlappedCard && overlappedCard !== presentItem) {
+                            overlappedCard.classList.add('fading');
+                            setTimeout(() => {
+                                overlappedCard.classList.remove('fading');
+                            }, 800);
+                        }
                         setTimeout(() => {
-                            overlappedCard.classList.remove('fading');
-                        }, 400);
+                            presentItem.classList.remove('smooth-slide-up');
+                        }, 800);
                     }
                 }
-                setTimeout(() => {
-                    presentItem.classList.remove('smooth-slide-up');
-                }, 400);
             }
             // Refresh the recipients list to show updated state
             loadRecipientsWithPresents();
@@ -1464,25 +1672,30 @@ function cancelReservationFromRecipients(presentId) {
         if (data.success) {
             const presentItem = document.querySelector(`[data-id="${presentId}"]`);
             if (presentItem) {
-                presentItem.classList.add('smooth-slide-down');
-                // Find the card that will be overlapped (the new card below)
+                // For canceling reservation: item moves to bottom (last position)
+                // Don't animate if it's already the last item
                 const presentsList = presentItem.parentElement;
                 if (presentsList) {
                     const siblings = Array.from(presentsList.children);
-                    const idx = siblings.indexOf(presentItem);
-                    if (idx < siblings.length - 1) {
-                        const overlappedCard = siblings[idx + 1];
-                        if (overlappedCard) {
-                            overlappedCard.classList.add('fading');
-                            setTimeout(() => {
-                                overlappedCard.classList.remove('fading');
-                            }, 400);
+                    const isLastItem = siblings[siblings.length - 1] === presentItem;
+                    if (!isLastItem) {
+                        presentItem.classList.add('smooth-slide-down');
+                        // Find the card that will be overlapped (the new card below)
+                        const idx = siblings.indexOf(presentItem);
+                        if (idx < siblings.length - 1) {
+                            const overlappedCard = siblings[idx + 1];
+                            if (overlappedCard) {
+                                overlappedCard.classList.add('fading');
+                                setTimeout(() => {
+                                    overlappedCard.classList.remove('fading');
+                                }, 800);
+                            }
                         }
+                        setTimeout(() => {
+                            presentItem.classList.remove('smooth-slide-down');
+                        }, 800);
                     }
                 }
-                setTimeout(() => {
-                    presentItem.classList.remove('smooth-slide-down');
-                }, 400);
             }
             // Refresh the recipients list to show updated state
             loadRecipientsWithPresents();
@@ -1701,4 +1914,93 @@ if (typeof window.deletePresent !== 'function') {
       })
       .catch(() => showErrorModal('Błąd połączenia z serwerem'));
   }
+}
+
+// Function to reorder presents list after animation
+function reorderPresentsList() {
+    const presentsList = document.querySelector('.presents-list');
+    if (!presentsList) return;
+
+    const presentItems = Array.from(presentsList.querySelectorAll('.present-item'));
+    
+    // Store original positions before sorting
+    const originalPositions = new Map();
+    presentItems.forEach((item, index) => {
+        originalPositions.set(item, index);
+    });
+    
+    // Sort items: unchecked first, then checked
+    presentItems.sort((a, b) => {
+        const aChecked = a.querySelector('.form-check-input').checked;
+        const bChecked = b.querySelector('.form-check-input').checked;
+        
+        if (aChecked === bChecked) return 0;
+        return aChecked ? 1 : -1; // Unchecked items first
+    });
+
+    // Reorder DOM elements, skipping animation for items that don't move
+    presentItems.forEach((item, newIndex) => {
+        const originalIndex = originalPositions.get(item);
+        
+        // Skip animation if item doesn't change position
+        if (originalIndex === newIndex) {
+            item.style.transition = 'none';
+            presentsList.appendChild(item);
+            // Restore transition after a brief delay
+            setTimeout(() => {
+                item.style.transition = '';
+            }, 10);
+        } else {
+            presentsList.appendChild(item);
+        }
+    });
+}
+
+// Function to reorder modal presents list after animation
+function reorderModalPresentsList() {
+    const modalBody = document.querySelector('#reservedPresentsModal .card-body');
+    if (!modalBody) return;
+
+    const presentItems = Array.from(modalBody.querySelectorAll('.present-item-modal'));
+    
+    // Sort items: unchecked first, then checked
+    presentItems.sort((a, b) => {
+        const aChecked = a.querySelector('.form-check-input').checked;
+        const bChecked = b.querySelector('.form-check-input').checked;
+        
+        if (aChecked === bChecked) return 0;
+        return aChecked ? 1 : -1; // Unchecked items first
+    });
+
+    // Store original positions before sorting
+    const originalPositions = new Map();
+    presentItems.forEach((item, index) => {
+        originalPositions.set(item, index);
+    });
+    
+    // Sort items: unchecked first, then checked
+    presentItems.sort((a, b) => {
+        const aChecked = a.querySelector('.form-check-input').checked;
+        const bChecked = b.querySelector('.form-check-input').checked;
+        
+        if (aChecked === bChecked) return 0;
+        return aChecked ? 1 : -1; // Unchecked items first
+    });
+
+    // Reorder DOM elements, skipping animation for items that don't move
+    presentItems.forEach((item, newIndex) => {
+        const originalIndex = originalPositions.get(item);
+        
+        // Skip animation if item doesn't change position
+        if (originalIndex === newIndex) {
+            item.style.transition = 'none';
+            modalBody.appendChild(item);
+            // Restore transition after a brief delay
+            setTimeout(() => {
+                item.style.transition = '';
+            }, 10);
+        } else {
+            modalBody.appendChild(item);
+        }
+    });
 } 
