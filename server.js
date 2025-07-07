@@ -9,6 +9,10 @@ const multer = require('multer');
 const { Pool } = require('pg');
 const pgSession = require('connect-pg-simple')(session);
 
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL || 'postgresql://mati:(Stanislaw333P)@prezenty-prezenty-khu4ar:5432/prezenty'
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
