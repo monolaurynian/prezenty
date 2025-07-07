@@ -30,6 +30,24 @@ document.addEventListener('DOMContentLoaded', function() {
             preview.style.display = 'none';
         }
     });
+
+    // Add event listener to submit the new recipient form on Enter
+    const newRecipientForm = document.getElementById('newRecipientForm');
+    if (newRecipientForm) {
+        newRecipientForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addNewRecipientAndIdentify();
+        });
+    }
+
+    // Add event listener to submit the add person modal form on Enter
+    const addRecipientForm = document.getElementById('addRecipientForm');
+    if (addRecipientForm) {
+        addRecipientForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addRecipientFromModal();
+        });
+    }
 });
 
 function checkAuth() {
@@ -237,15 +255,37 @@ function displayRecipientsWithPresents(recipients, presents) {
         const isIdentifiedByOther = recipient.identified_by && currentUserId && recipient.identified_by !== currentUserId;
         
         // Show surprise note for identified user, otherwise show presents
-        const presentsHTML = isIdentified ? 
-            `<div class="alert alert-info mb-0">
+        let presentsHTML;
+        if (isIdentified) {
+            // Surprise note
+            presentsHTML = `<div class="alert alert-info mb-0">
                 <i class="fas fa-gift me-2"></i>
                 <strong>Nie mogę Ci pokazać czy prezenty dla Ciebie już zostały kupione. Chyba nie chcesz sobie zepsuć niespodzianki? 🤔</strong>
-            </div>` :
-            (recipientPresents.length > 0 ? 
-            generatePresentsList(recipientPresents) : 
+            </div>`;
+            // List presents added by the current user (created_by = currentUserId)
+            const ownPresents = recipientPresents.filter(p => p.created_by === currentUserId);
+            if (ownPresents.length > 0) {
+                presentsHTML += `
+                <div class="mt-3">
+                  <div class="fw-bold mb-2"><i class="fas fa-list me-1"></i>Twoje dodane prezenty:</div>
+                  <ul class="list-group">
+                    ${ownPresents.map(p => `
+                      <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>${escapeHtml(p.title)}</span>
+                        <button class="btn btn-sm btn-danger" onclick="deletePresent(${p.id}, '${escapeHtml(p.title)}', ${recipient.id})">
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>`;
+            }
+        } else {
+            presentsHTML = (recipientPresents.length > 0 ? 
+                generatePresentsList(recipientPresents) : 
                 '<p class="text-muted mb-0">Brak prezentów dla tej osoby</p>'
             );
+        }
         
         const profilePictureHTML = generateProfilePictureHTML(recipient, isIdentified);
         
@@ -438,13 +478,18 @@ function showRecipientSelectionModal() {
         } else {
             availableRecipientsList.innerHTML = availableRecipients.map(recipient => `
                 <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
+                    <div style="cursor:pointer;" onclick="identifyAsRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
                         <i class="fas fa-user me-2"></i>
-                        <strong>${escapeHtml(recipient.name)}</strong>
+                        <strong class="recipient-name-clickable">${escapeHtml(recipient.name)}</strong>
                     </div>
-                    <button class="btn btn-outline-success btn-sm" onclick="identifyAsRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
-                        <i class="fas fa-check me-1"></i>To jestem ja
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-success btn-sm" onclick="identifyAsRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                            <i class="fas fa-check me-1"></i>To jestem ja
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -458,6 +503,28 @@ function showRecipientSelectionModal() {
     .catch(error => {
         console.error('Error loading recipients:', error);
         showErrorModal('Błąd podczas ładowania listy osób');
+    });
+}
+
+function deleteRecipientFromSelection(recipientId, recipientName) {
+    if (!confirm(`Czy na pewno chcesz usunąć osobę "${recipientName}"? Ta akcja nie może być cofnięta.`)) {
+        return;
+    }
+    fetch(`/api/recipients/${recipientId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccessMessage('Osoba została usunięta!');
+            showRecipientSelectionModal(); // Refresh the modal list
+        } else {
+            showErrorModal(data.error || 'Błąd podczas usuwania osoby');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorModal('Błąd połączenia z serwerem');
     });
 }
 
@@ -498,8 +565,8 @@ function addNewRecipientAndIdentify() {
         return;
     }
     
-    // Add new recipient
-    fetch('/api/recipients', {
+    // Use the atomic endpoint to add and identify in one step
+    fetch('/api/user/identify', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -515,24 +582,10 @@ function addNewRecipientAndIdentify() {
             document.body.focus();
             selectionModal.hide();
             
-            // Identify as the newly created recipient
-            return fetch(`/api/recipients/${data.recipient.id}/identify`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-        } else {
-            throw new Error(data.error || 'Błąd podczas dodawania osoby');
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
             showSuccessMessage(`Pomyślnie dodano i zidentyfikowano jako ${newRecipientName}!`);
             loadRecipientsWithPresents();
         } else {
-            showErrorModal(data.error || 'Błąd podczas identyfikacji');
+            throw new Error(data.error || 'Błąd podczas dodawania osoby');
         }
     })
     .catch(error => {
@@ -1630,4 +1683,22 @@ function openProfilePicturePreview(recipientId) {
         const bootstrapModal = new bootstrap.Modal(modal);
         bootstrapModal.show();
     }
+}
+
+// Add deletePresent function if not present
+if (typeof window.deletePresent !== 'function') {
+  window.deletePresent = function(presentId, presentTitle, recipientId) {
+    if (!confirm(`Czy na pewno chcesz usunąć prezent: "${presentTitle}"?`)) return;
+    fetch(`/api/presents/${presentId}`, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showSuccessMessage('Prezent został usunięty.');
+          loadRecipientsWithPresents();
+        } else {
+          showErrorModal(data.error || 'Błąd podczas usuwania prezentu');
+        }
+      })
+      .catch(() => showErrorModal('Błąd połączenia z serwerem'));
+  }
 } 
