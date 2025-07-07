@@ -11520,7 +11520,7 @@ a:hover {
 
 #profileModalImage {
   max-height: 90vh !important;
-  width: auto !important;
+     max-width: 80vw;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -11528,7 +11528,6 @@ a:hover {
 .profile-preview-image {
      max-height: 70vh !important;
     max-width: 80vw;
-  width: auto !important;
   display: block;
   margin-left: auto;
   margin-right: auto;
