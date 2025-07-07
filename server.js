@@ -22,11 +22,6 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://mati:(Stanislaw333P)@prezenty-prezenty-khu4ar:5432/prezenty'
-    
-});
-
 app.use(session({
     store: new pgSession({
         pool: pool,
