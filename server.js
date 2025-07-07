@@ -23,7 +23,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://mati:(Stanislaw333P)@191.101.81.57:5432/prezenty',
+    connectionString: process.env.DATABASE_URL || 'postgresql://mati:(Stanislaw333P)@prezenty-prezenty-khu4ar:5432/prezenty',
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
