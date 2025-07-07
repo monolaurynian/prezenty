@@ -141,7 +141,7 @@ function loadRecipientsWithPresents() {
                 console.log('Found matching recipient, showing identification modal...');
                 // Auto-show identification modal
                 setTimeout(() => {
-                    identifyAsRecipient(matchingRecipient.id, matchingRecipient.name);
+                    identifyAsRecipient(matchingRecipient.id, matchingRecipient.name, true);
                 }, 1000); // Small delay to ensure page is loaded
             } else {
                 // No matching recipient found - show selection modal immediately
@@ -334,10 +334,20 @@ function generateProfilePictureHTML(recipient, isIdentified) {
     }
 }
 
-function identifyAsRecipient(recipientId, recipientName) {
+function identifyAsRecipient(recipientId, recipientName, hideDeleteButton = false) {
     pendingIdentificationRecipientId = recipientId;
     document.getElementById('identificationRecipientName').textContent = recipientName;
     
+    // Show or hide the delete button
+    const deleteBtn = document.querySelector('#selfIdentificationModal .btn-outline-danger');
+    if (deleteBtn) {
+        if (hideDeleteButton) {
+            deleteBtn.style.display = 'none';
+        } else {
+            deleteBtn.style.display = 'inline-flex';
+        }
+    }
+
     const modal = new bootstrap.Modal(document.getElementById('selfIdentificationModal'));
     modal.show();
 }
