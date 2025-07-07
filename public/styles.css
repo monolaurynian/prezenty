@@ -11529,6 +11529,7 @@ a:hover {
 .profile-preview-image {
      max-height: 70vh !important;
     max-width: 80vw;
+    width: 80%;
   display: block;
   margin-left: auto;
   margin-right: auto;
