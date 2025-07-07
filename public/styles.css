@@ -11521,6 +11521,7 @@ a:hover {
 #profileModalImage {
   max-height: 90vh !important;
      max-width: 80vw;
+    width: inherit;
   display: block;
   margin-left: auto;
   margin-right: auto;
