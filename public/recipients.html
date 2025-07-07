@@ -47,13 +47,13 @@
                         <p class="text-muted">Zobacz prezenty, które zarezerwowałeś</p>
                     </div>
                 </div>
-            </div>
+                        </div>
             <div class="col-4 mb-4">
                 <div class="card main-card compact-card" onclick="openAddRecipientModal()">
                     <div class="card-body text-center d-flex flex-column justify-content-center">
                         <button class="btn btn-success btn-lg mb-3 action-btn">
                             <i class="fas fa-user-plus me-1"></i><span class="btn-text">Dodaj Osobę</span>
-                        </button>
+                            </button>
                         <p class="text-muted">Dodaj nową osobę do listy</p>
                     </div>
                 </div>
@@ -98,9 +98,10 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="recipientSelect" class="form-label">Dla kogo?</label>
-                                <select class="form-select" id="recipientSelect" required>
+                                <select class="form-control" id="recipientSelect" required>
                                     <option value="">Wybierz osobę</option>
                                 </select>
+                                <small class="form-text text-muted">Wybierz osobę z listy lub dodaj nową</small>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -392,6 +393,109 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipient Details Modal -->
+    <div class="modal fade" id="recipientDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user me-2"></i><span id="recipientDetailsName"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4">
+                            <img id="recipientDetailsImage" src="" alt="Zdjęcie profilowe" 
+                                 class="img-fluid rounded-circle mb-3" style="max-width: 200px; max-height: 200px;">
+                            <h6 id="recipientDetailsName2" class="text-primary"></h6>
+                        </div>
+                        <div class="col-md-8">
+                            <div id="recipientDetailsContent">
+                                <!-- Zawartość będzie generowana dynamicznie -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user me-2"></i>Profil
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="profileModalContent" class="text-center">
+                        <!-- Content will be generated dynamically -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Picture Modal -->
+    <div class="modal fade" id="changePictureModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-camera me-2"></i>Zmień zdjęcie profilowe
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changePictureForm">
+                        <div class="mb-3">
+                            <label for="newProfilePicture" class="form-label">Wybierz nowe zdjęcie:</label>
+                            <input type="file" class="form-control" id="newProfilePicture" name="profile_picture" accept="image/*" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Podgląd:</label>
+                            <div id="imagePreview" class="text-center" style="display: none;">
+                                <img id="previewImage" src="" alt="Podgląd" class="img-fluid rounded" style="max-width: 200px; max-height: 200px;">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-primary" onclick="saveNewProfilePicture()">
+                        <i class="fas fa-save me-1"></i>Zapisz
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Picture Preview Modal -->
+    <div class="modal fade profile-preview-modal" id="profilePreviewModal" tabindex="-1" aria-labelledby="profilePreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="profilePreviewModalLabel">Podgląd zdjęcia profilowego</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="profilePreviewImage" class="profile-preview-image" alt="Zdjęcie profilowe">
+                    <div id="profilePreviewName" class="profile-preview-name mt-3"></div>
                 </div>
             </div>
         </div>

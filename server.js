@@ -6,6 +6,8 @@ const SQLiteStore = require('connect-sqlite3')(session);
 const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +37,35 @@ app.use(session({
         sameSite: 'lax'
     }
 }));
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = path.join(__dirname, 'public', 'uploads');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: function (req, file, cb) {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Tylko pliki obrazów są dozwolone'), false);
+        }
+    }
+});
 
 // Database setup
 const dbPath = process.env.DATABASE_PATH || './prezenty.db';
@@ -423,14 +454,13 @@ app.delete('/api/recipients/:id', requireAuth, (req, res) => {
     });
 });
 
-app.post('/api/recipients/:id/profile-picture', requireAuth, (req, res) => {
+app.post('/api/recipients/:id/profile-picture', requireAuth, upload.single('profile_picture'), (req, res) => {
     const { id } = req.params;
-    const { profile_picture } = req.body;
     const userId = req.session.userId;
     
-    // Validate input
-    if (!profile_picture) {
-        return res.status(400).json({ error: 'Brak danych zdjęcia' });
+    // Check if file was uploaded
+    if (!req.file) {
+        return res.status(400).json({ error: 'Brak pliku zdjęcia' });
     }
     
     // Check if user is identified as this recipient
@@ -448,14 +478,15 @@ app.post('/api/recipients/:id/profile-picture', requireAuth, (req, res) => {
             return res.status(403).json({ error: 'Nie masz uprawnień do edycji tego profilu' });
         }
         
-        // Update profile picture
-        db.run("UPDATE recipients SET profile_picture = ? WHERE id = ?", [profile_picture, id], function(err) {
+        // Update profile picture with the uploaded file path
+        const profilePicturePath = '/uploads/' + req.file.filename;
+        db.run("UPDATE recipients SET profile_picture = ? WHERE id = ?", [profilePicturePath, id], function(err) {
             if (err) {
                 console.error('Database error updating profile picture:', err);
                 return res.status(500).json({ error: 'Błąd podczas aktualizacji zdjęcia profilowego' });
             }
             console.log('Profile picture updated successfully for recipient:', id);
-            res.json({ success: true });
+            res.json({ success: true, profile_picture: profilePicturePath });
         });
     });
 });

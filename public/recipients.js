@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check authentication first, then load data
     checkAuth().then(() => {
         // Load recipients with their presents after auth is confirmed
-        loadRecipientsWithPresents();
+    loadRecipientsWithPresents();
     }).catch(error => {
         console.error('Auth failed:', error);
         window.location.href = '/';
@@ -243,7 +243,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                 <strong>Nie mogę Ci pokazać czy prezenty dla Ciebie już zostały kupione. Chyba nie chcesz sobie zepsuć niespodzianki? 🤔</strong>
             </div>` :
             (recipientPresents.length > 0 ? 
-                generatePresentsList(recipientPresents) : 
+            generatePresentsList(recipientPresents) : 
                 '<p class="text-muted mb-0">Brak prezentów dla tej osoby</p>'
             );
         
@@ -253,7 +253,14 @@ function displayRecipientsWithPresents(recipients, presents) {
             <div class="recipient-item" data-id="${recipient.id}" id="recipient-${recipient.id}">
                 <div class="row">
                     <div class="col-md-2 text-center">
-                        ${profilePictureHTML}
+                        <div class="recipient-avatar">
+                            ${recipient.profile_picture && recipient.profile_picture.trim() !== '' ? 
+                                `<img src="${escapeHtml(recipient.profile_picture)}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
+                                `<div class="profile-picture-placeholder" onclick="openProfileModal(${recipient.id})" style="cursor: pointer;">
+                                    <i class="fas fa-user"></i>
+                                </div>`
+                            }
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex align-items-center mb-2">
@@ -280,17 +287,17 @@ function displayRecipientsWithPresents(recipients, presents) {
                             </div>
                         ` : ''}
                         ${!isIdentified ? `
-                            <div class="mb-3">
-                                <small class="text-muted">
-                                    <i class="fas fa-gift me-1"></i>
-                                    Prezenty: ${checkedPresents}/${totalPresents} zakupione
-                                </small>
-                                ${totalPresents > 0 ? `
-                                    <div class="progress mt-2" style="height: 6px;">
-                                        <div class="progress-bar bg-success" style="width: ${(checkedPresents / totalPresents) * 100}%"></div>
-                                    </div>
-                                ` : ''}
-                            </div>
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-gift me-1"></i>
+                                Prezenty: ${checkedPresents}/${totalPresents} zakupione
+                            </small>
+                            ${totalPresents > 0 ? `
+                                <div class="progress mt-2" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: ${(checkedPresents / totalPresents) * 100}%"></div>
+                                </div>
+                            ` : ''}
+                        </div>
                         ` : ''}
                         <div class="presents-preview">
                             ${presentsHTML}
@@ -299,7 +306,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                     <div class="col-md-4 text-end">
                         <div class="btn-group-vertical w-100">
                             ${!isIdentifiedByOther ? `
-                                <button class="btn btn-outline-primary btn-sm" onclick="openProfilePictureModal(${recipient.id})">
+                                <button class="btn btn-outline-primary btn-sm" onclick="openChangePictureModal(${recipient.id})">
                                     <i class="fas fa-camera me-1"></i>Zmień zdjęcie
                                 </button>
                             ` : ''}
@@ -312,20 +319,18 @@ function displayRecipientsWithPresents(recipients, presents) {
 }
 
 function generateProfilePictureHTML(recipient, isIdentified) {
-    if (recipient.profile_picture) {
-        return `
-            <div class="profile-picture-wrapper mb-2 ${isIdentified ? 'identified' : ''}">
-                <img src="${escapeHtml(recipient.profile_picture)}" 
-                     alt="Zdjęcie profilowe" 
-                     class="img-fluid">
-            </div>
-        `;
+    const presents = window._allPresentsByRecipient && window._allPresentsByRecipient[recipient.id] ? window._allPresentsByRecipient[recipient.id] : [];
+    const clickHandler = `onclick="showRecipientDetailsFromList(${recipient.id})" style="cursor:pointer;"`;
+    if (recipient.profile_picture && recipient.profile_picture.trim() !== '') {
+        return `<div class="profile-picture-wrapper mb-2 ${isIdentified ? 'identified' : ''}" ${clickHandler}>
+            <img src="${escapeHtml(recipient.profile_picture)}" alt="Zdjęcie profilowe" class="img-fluid">
+        </div>`;
     } else {
-        return `
-            <div class="profile-picture-wrapper mb-2 ${isIdentified ? 'identified' : ''}">
+        return `<div class="profile-picture-wrapper mb-2 ${isIdentified ? 'identified' : ''}" ${clickHandler}>
+            <div class="profile-picture-placeholder">
                 <i class="fas fa-user"></i>
             </div>
-        `;
+        </div>`;
     }
 }
 
@@ -392,10 +397,12 @@ function deleteRecipientFromModal() {
 function showRecipientSelectionModal() {
     console.log('showRecipientSelectionModal() called');
     
-    // Close the self-identification modal
+    // Close the self-identification modal and move focus out
     const selfIdentificationModal = bootstrap.Modal.getInstance(document.getElementById('selfIdentificationModal'));
     if (selfIdentificationModal) {
         console.log('Closing self-identification modal');
+        // Move focus to body before hiding modal to prevent aria-hidden issues
+        document.body.focus();
         selfIdentificationModal.hide();
     }
     
@@ -445,8 +452,10 @@ function showRecipientSelectionModal() {
 }
 
 function identifyAsRecipientFromSelection(recipientId, recipientName) {
-    // Close the selection modal
+    // Close the selection modal and move focus out
     const selectionModal = bootstrap.Modal.getInstance(document.getElementById('recipientSelectionModal'));
+    // Move focus to body before hiding modal to prevent aria-hidden issues
+    document.body.focus();
     selectionModal.hide();
     
     // Identify as the selected recipient
@@ -490,8 +499,10 @@ function addNewRecipientAndIdentify() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Close the selection modal
+            // Close the selection modal and move focus out
             const selectionModal = bootstrap.Modal.getInstance(document.getElementById('recipientSelectionModal'));
+            // Move focus to body before hiding modal to prevent aria-hidden issues
+            document.body.focus();
             selectionModal.hide();
             
             // Identify as the newly created recipient
@@ -581,29 +592,42 @@ function showSuccessMessage(message) {
     }, 3000);
 }
 
-function openProfilePictureModal(recipientId) {
-    currentRecipientId = recipientId;
-    document.getElementById('profilePictureUrl').value = '';
-    document.getElementById('profilePictureFile').value = '';
-    document.getElementById('profilePicturePreview').style.display = 'none';
+function openProfileModal(recipientId) {
+    const recipient = window._allRecipients.find(r => r.id === recipientId);
+    if (!recipient) return;
     
-    // Get current profile picture if exists
-    fetch(`/api/recipients/${recipientId}`)
-    .then(response => response.json())
-    .then(recipient => {
-        if (recipient.profile_picture) {
-            document.getElementById('profilePictureUrl').value = recipient.profile_picture;
-            const preview = document.getElementById('profilePicturePreview');
-            preview.src = recipient.profile_picture;
-            preview.style.display = 'block';
+    const profileImg = document.getElementById('profileModalImage');
+    const profileName = document.getElementById('profileModalName');
+    
+    if (profileImg && profileName) {
+        profileName.textContent = recipient.name;
+        
+        if (recipient.profile_picture && recipient.profile_picture.trim() !== '') {
+            profileImg.src = recipient.profile_picture;
+            profileImg.style.display = 'block';
+        } else {
+            // Show placeholder instead of image
+            profileImg.style.display = 'none';
+            const placeholder = document.createElement('div');
+            placeholder.className = 'profile-picture-placeholder-large';
+            placeholder.innerHTML = '<i class="fas fa-user"></i>';
+            placeholder.style.width = '200px';
+            placeholder.style.height = '200px';
+            placeholder.style.fontSize = '4rem';
+            placeholder.style.margin = '0 auto';
+            
+            const container = profileImg.parentElement;
+            // Remove any existing placeholder
+            const existingPlaceholder = container.querySelector('.profile-picture-placeholder-large');
+            if (existingPlaceholder) {
+                existingPlaceholder.remove();
+            }
+            container.appendChild(placeholder);
         }
-    })
-    .catch(error => {
-        console.error('Error loading recipient:', error);
-    });
-    
-    const modal = new bootstrap.Modal(document.getElementById('profilePictureModal'));
-    modal.show();
+        
+        const modal = new bootstrap.Modal(document.getElementById('profileModal'));
+        modal.show();
+    }
 }
 
 function previewImage(input) {
@@ -695,28 +719,28 @@ function generatePresentsList(presents) {
         return '<p class="text-muted mb-0">Brak prezentów dla tej osoby</p>';
     }
     
-    // Sort presents: unchecked first, then checked, then reserved by others at the bottom
+    // Sort presents: reserved by current user first, then unchecked, then checked at bottom
     const sortedPresents = presents.sort((a, b) => {
-        // First, move reserved items (by others) to the bottom
-        const aReservedByOther = a.reserved_by && a.reserved_by !== currentUserId;
-        const bReservedByOther = b.reserved_by && b.reserved_by !== currentUserId;
-        
-        if (aReservedByOther && !bReservedByOther) return 1;
-        if (!aReservedByOther && bReservedByOther) return -1;
-        
-        // Then sort by checked status
+        // First, move checked items to the bottom regardless of reservation status
         if (a.is_checked !== b.is_checked) {
             return a.is_checked ? 1 : -1;
         }
         
-        // Finally by creation date
+        // Then sort by reservation status (reserved by current user first)
+        const aReservedByMe = a.reserved_by === currentUserId;
+        const bReservedByMe = b.reserved_by === currentUserId;
+        
+        if (aReservedByMe && !bReservedByMe) return -1;
+        if (!aReservedByMe && bReservedByMe) return 1;
+        
+        // Finally by creation date (newer first)
         return new Date(b.created_at) - new Date(a.created_at);
     });
     
     return `
         <div class="presents-list">
             ${sortedPresents.map(present => `
-                <div class="present-item ${present.is_checked ? 'checked' : ''} ${present.reserved_by && present.reserved_by !== currentUserId ? 'reserved-by-other' : ''}" data-id="${present.id}">
+                <div class="present-item ${present.is_checked ? 'checked' : ''} ${present.reserved_by && present.reserved_by !== currentUserId ? 'reserved-by-other' : ''} ${present.reserved_by === currentUserId ? 'reserved-by-me' : ''}" data-id="${present.id}">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center">
                             <div class="form-check me-2">
@@ -725,7 +749,7 @@ function generatePresentsList(presents) {
                                        onchange="togglePresentFromRecipients(${present.id}, this.checked)">
                             </div>
                             <div class="flex-grow-1">
-                                <h6 class="present-title mb-1">${escapeHtml(present.title)}</h6>
+                                <h6 class="present-title mb-1">${convertUrlsToLinks(escapeHtml(present.title))}</h6>
                                 ${present.comments ? `
                                     <small class="text-muted">${formatCommentsPreview(present.comments)}</small>
                                 ` : ''}
@@ -733,8 +757,8 @@ function generatePresentsList(presents) {
                         </div>
                         <div class="d-flex align-items-center">
                             <small class="text-muted me-2 d-none d-md-inline">
-                                ${new Date(present.created_at).toLocaleDateString('pl-PL')}
-                            </small>
+                            ${new Date(present.created_at).toLocaleDateString('pl-PL')}
+                        </small>
                             ${generateReservationButton(present)}
                         </div>
                     </div>
@@ -755,15 +779,25 @@ function togglePresentFromRecipients(id, isChecked) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Add slide animation class to the present item
+            const presentItem = document.querySelector(`[data-id="${id}"]`);
+            if (presentItem) {
+                // Use slide-down for checking (moving to bottom), slide-up for unchecking (moving up)
+                const animationClass = isChecked ? 'slide-down' : 'slide-up';
+                presentItem.classList.add(animationClass);
+                // Remove animation class after animation completes
+                setTimeout(() => {
+                    presentItem.classList.remove(animationClass);
+                }, 400);
+            }
             // Refresh the recipients list to show updated state
             loadRecipientsWithPresents();
         } else {
-            showErrorModal(data.error || 'Błąd podczas aktualizacji prezentu');
+            console.error('Failed to toggle present:', data.error);
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        showErrorModal('Błąd połączenia z serwerem');
+        console.error('Error toggling present:', error);
     });
 }
 
@@ -772,7 +806,7 @@ function generateReservationButton(present) {
         if (present.reserved_by === currentUserId) {
             return `
                 <button class="btn btn-danger btn-sm w-100 w-md-auto" onclick="cancelReservationFromRecipients(${present.id})" title="Usuń rezerwację">
-                    <i class="fas fa-bookmark"></i>
+                    <i class="fas fa-xmark"></i>
                     <span class="d-inline d-md-none ms-1">Usuń rezerwację</span>
                 </button>
             `;
@@ -803,6 +837,14 @@ function formatCommentsPreview(comments) {
     // Convert URLs to clickable links
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return truncated.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+
+function convertUrlsToLinks(text) {
+    if (!text) return text;
+    
+    // Convert URLs to clickable links
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 }
 
 function addRecipient() {
@@ -891,17 +933,22 @@ function logout() {
         console.error('Logout error:', error);
         window.location.href = '/';
     });
-}
+} 
 
 // Modal functions
 function openAddPresentModal() {
-    // Load recipients for dropdown
-    fetch('/api/recipients')
-    .then(response => response.json())
-    .then(recipients => {
+    // Load recipients for dropdown and check identification status
+    Promise.all([
+        fetch('/api/recipients').then(response => response.json()),
+        fetch('/api/user/identification-status').then(response => response.json())
+    ])
+    .then(([recipients, identificationStatus]) => {
         const select = document.getElementById('recipientSelect');
+        
+        // Clear select
         select.innerHTML = '<option value="">Wybierz osobę</option>';
         
+        // Add existing recipients to select
         recipients.forEach(recipient => {
             const option = document.createElement('option');
             option.value = recipient.id;
@@ -909,9 +956,43 @@ function openAddPresentModal() {
             select.appendChild(option);
         });
         
+        // Add "Add person" option at the end
+        const addOption = document.createElement('option');
+        addOption.value = 'add_new';
+        addOption.textContent = '➕ Dodaj nową osobę';
+        select.appendChild(addOption);
+        
         // Clear form
         document.getElementById('addPresentForm').reset();
         document.getElementById('addPresentMessage').style.display = 'none';
+        
+        // Debug identification status
+        console.log('Full identification status:', identificationStatus);
+        console.log('isIdentified:', identificationStatus.isIdentified);
+        console.log('identifiedRecipient:', identificationStatus.identifiedRecipient);
+        
+        // Default set identified person if user is identified
+        if (identificationStatus.isIdentified && identificationStatus.identifiedRecipient) {
+            // Find the index of the identified person in the options
+            const identifiedId = identificationStatus.identifiedRecipient.id.toString();
+            console.log('User is identified as:', identificationStatus.identifiedRecipient.name, 'with ID:', identifiedId);
+            console.log('Dropdown options:', Array.from(select.options).map(opt => ({value: opt.value, text: opt.textContent})));
+            
+            for (let i = 0; i < select.options.length; i++) {
+                console.log('Checking option', i, ':', select.options[i].value, 'vs', identifiedId);
+                if (select.options[i].value === identifiedId) {
+                    console.log('Found match at index:', i);
+                    select.selectedIndex = i;
+                    break;
+                }
+            }
+            console.log('Final selected index:', select.selectedIndex);
+        } else {
+            console.log('User is not identified - condition failed');
+            console.log('isIdentified check:', identificationStatus.isIdentified);
+            console.log('identifiedRecipient check:', !!identificationStatus.identifiedRecipient);
+            select.selectedIndex = 0; // Select "Wybierz osobę"
+        }
         
         // Show modal
         const modal = new bootstrap.Modal(document.getElementById('addPresentModal'));
@@ -938,6 +1019,24 @@ function addPresentFromModal() {
         return;
     }
     
+    // Check if user wants to add new person
+    if (recipientId === 'add_new') {
+        // Close current modal and open add recipient modal
+        const addPresentModal = bootstrap.Modal.getInstance(document.getElementById('addPresentModal'));
+        addPresentModal.hide();
+        
+        // Store form data for later use
+        window.pendingPresentData = {
+            title: title,
+            comments: comments
+        };
+        
+        // Open add recipient modal
+        openAddRecipientModal();
+        return;
+    }
+    
+    // Add the present with existing recipient
     fetch('/api/presents', {
         method: 'POST',
         headers: {
@@ -954,6 +1053,9 @@ function addPresentFromModal() {
         if (data.id) {
             showModalMessage('addPresentMessage', 'Prezent został dodany!', 'success');
             document.getElementById('addPresentForm').reset();
+            
+            // Refresh the recipients list to show the new present
+            loadRecipientsWithPresents();
             
             // Close modal after 1 second
             setTimeout(() => {
@@ -1001,29 +1103,114 @@ function displayReservedPresentsInModal(presents) {
         return;
     }
     
-    container.innerHTML = presents.map(present => `
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-3">
-                        <h6 class="mb-1">${escapeHtml(present.title)}</h6>
-                        <small class="text-muted">Dla: ${escapeHtml(present.recipient_name)}</small>
+    // Separate presents into two categories
+    const uncheckedPresents = presents.filter(present => !present.is_checked);
+    const checkedPresents = presents.filter(present => present.is_checked);
+    
+    container.innerHTML = `
+        <div class="row">
+            <!-- Do kupienia -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #fff3cd; border-color: #ffeaa7;">
+                        <div>
+                            <i class="fas fa-shopping-cart me-2"></i>
+                            <strong>Do kupienia</strong>
+                        </div>
+                        <span class="badge bg-warning text-dark">${uncheckedPresents.length}</span>
                     </div>
-                    <div class="col-md-4">
-                        ${present.comments ? `<small class="text-muted">${escapeHtml(present.comments)}</small>` : '<small class="text-muted">Brak dodatkowych informacji</small>'}
+                    <div class="card-body">
+                        ${uncheckedPresents.length === 0 ? 
+                            '<p class="text-muted text-center">Brak prezentów do kupienia</p>' :
+                            uncheckedPresents.map(present => `
+                                <div class="present-item-modal card mb-2">
+                                    <div class="card-body p-3">
+                                        <div class="row align-items-center">
+                                            <div class="col-1">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           ${present.is_checked ? 'checked' : ''} 
+                                                           onchange="togglePresentFromModal(${present.id}, this.checked)">
+                                                </div>
+                                            </div>
+                                            <div class="col-11">
+                                                <h6 class="mb-1">${convertUrlsToLinks(escapeHtml(present.title))}</h6>
+                                                <small class="text-muted">Dla: ${escapeHtml(present.recipient_name)}</small>
+                                                ${present.comments ? `<br><small class="text-muted">${escapeHtml(present.comments)}</small>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')
+                        }
                     </div>
-                    <div class="col-md-3">
-                        <small class="text-muted">Dodano: ${new Date(present.created_at).toLocaleDateString('pl-PL')}</small>
+                </div>
+            </div>
+            
+            <!-- Kupione -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #d4edda; border-color: #c3e6cb;">
+                        <div>
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Kupione</strong>
+                        </div>
+                        <span class="badge bg-success">${checkedPresents.length}</span>
                     </div>
-                    <div class="col-md-2 text-end">
-                        <button class="btn btn-outline-danger btn-sm" onclick="cancelReservationFromModal(${present.id})">
-                            <i class="fas fa-times me-1"></i>Anuluj
-                        </button>
+                    <div class="card-body">
+                        ${checkedPresents.length === 0 ? 
+                            '<p class="text-muted text-center">Brak kupionych prezentów</p>' :
+                            checkedPresents.map(present => `
+                                <div class="present-item-modal card mb-2 checked">
+                                    <div class="card-body p-3">
+                                        <div class="row align-items-center">
+                                            <div class="col-1">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           ${present.is_checked ? 'checked' : ''} 
+                                                           onchange="togglePresentFromModal(${present.id}, this.checked)">
+                                                </div>
+                                            </div>
+                                            <div class="col-11">
+                                                <h6 class="mb-1">${convertUrlsToLinks(escapeHtml(present.title))}</h6>
+                                                <small class="text-muted">Dla: ${escapeHtml(present.recipient_name)}</small>
+                                                ${present.comments ? `<br><small class="text-muted">${escapeHtml(present.comments)}</small>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')
+                        }
                     </div>
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+}
+
+function togglePresentFromModal(id, isChecked) {
+    fetch(`/api/presents/${id}/check`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_checked: isChecked })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Refresh the reserved presents modal to show updated categories
+            openReservedPresentsModal();
+            
+            // Also refresh the main recipients list to sync checkboxes
+            loadRecipientsWithPresents();
+        } else {
+            console.error('Failed to toggle present:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error toggling present:', error);
+    });
 }
 
 function cancelReservationFromModal(presentId) {
@@ -1075,14 +1262,28 @@ function addRecipientFromModal() {
     .then(response => response.json())
     .then(data => {
         if (data.id) {
-            showModalMessage('addRecipientMessage', 'Osoba została dodana!', 'success');
-            document.getElementById('addRecipientForm').reset();
+            // Close add recipient modal
+            const addRecipientModal = bootstrap.Modal.getInstance(document.getElementById('addRecipientModal'));
+            addRecipientModal.hide();
             
-            // Close modal after 1 second
-            setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('addRecipientModal'));
-                modal.hide();
-            }, 1000);
+            // Check if we have pending present data
+            if (window.pendingPresentData) {
+                // Return to add present modal with the new recipient selected
+                returnToAddPresentModalWithNewRecipient(data.id, name);
+            } else {
+                // Normal flow - just show success message and refresh list
+                showModalMessage('addRecipientMessage', 'Osoba została dodana!', 'success');
+                document.getElementById('addRecipientForm').reset();
+                
+                // Refresh the recipients list to show the new person
+                loadRecipientsWithPresents();
+                
+                // Close modal after 1 second
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addRecipientModal'));
+                    modal.hide();
+                }, 1000);
+            }
         } else {
             showModalMessage('addRecipientMessage', data.error || 'Błąd podczas dodawania osoby', 'danger');
         }
@@ -1090,6 +1291,60 @@ function addRecipientFromModal() {
     .catch(error => {
         console.error('Error:', error);
         showModalMessage('addRecipientMessage', 'Błąd połączenia z serwerem', 'danger');
+    });
+}
+
+function returnToAddPresentModalWithNewRecipient(recipientId, recipientName) {
+    // Reload recipients and open add present modal
+    Promise.all([
+        fetch('/api/recipients').then(response => response.json()),
+        fetch('/api/user/identification-status').then(response => response.json())
+    ])
+    .then(([recipients, identificationStatus]) => {
+        const select = document.getElementById('recipientSelect');
+        
+        // Clear select
+        select.innerHTML = '<option value="">Wybierz osobę</option>';
+        
+        // Add existing recipients to select
+        recipients.forEach(recipient => {
+            const option = document.createElement('option');
+            option.value = recipient.id;
+            option.textContent = recipient.name;
+            select.appendChild(option);
+        });
+        
+        // Add "Add person" option at the end
+        const addOption = document.createElement('option');
+        addOption.value = 'add_new';
+        addOption.textContent = '➕ Dodaj nową osobę';
+        select.appendChild(addOption);
+        
+        // Restore form data
+        document.getElementById('presentTitle').value = window.pendingPresentData.title;
+        document.getElementById('presentComments').value = window.pendingPresentData.comments;
+        
+        // Select the newly added recipient
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === recipientId.toString()) {
+                select.selectedIndex = i;
+                break;
+            }
+        }
+        
+        // Clear pending data
+        delete window.pendingPresentData;
+        
+        // Clear any previous messages
+        document.getElementById('addPresentMessage').style.display = 'none';
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('addPresentModal'));
+        modal.show();
+    })
+    .catch(error => {
+        console.error('Error loading recipients:', error);
+        showErrorModal('Błąd podczas ładowania listy osób');
     });
 }
 
@@ -1110,16 +1365,27 @@ function reservePresentFromRecipients(presentId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showSuccessMessage('Prezent został zarezerwowany!');
+            const presentItem = document.querySelector(`[data-id="${presentId}"]`);
+            if (presentItem) {
+                presentItem.classList.add('smooth-slide-up');
+                // Find the card that will be overlapped (the new top card)
+                const presentsList = presentItem.parentElement;
+                if (presentsList) {
+                    const overlappedCard = presentsList.children[0];
+                    if (overlappedCard && overlappedCard !== presentItem) {
+                        overlappedCard.classList.add('fading');
+                        setTimeout(() => {
+                            overlappedCard.classList.remove('fading');
+                        }, 400);
+                    }
+                }
+                setTimeout(() => {
+                    presentItem.classList.remove('smooth-slide-up');
+                }, 400);
+            }
             // Refresh the recipients list to show updated state
             loadRecipientsWithPresents();
-        } else {
-            showErrorModal(data.error || 'Błąd podczas rezerwacji prezentu');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showErrorModal('Błąd połączenia z serwerem');
     });
 }
 
@@ -1133,16 +1399,31 @@ function cancelReservationFromRecipients(presentId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showSuccessMessage('Rezerwacja została anulowana!');
+            const presentItem = document.querySelector(`[data-id="${presentId}"]`);
+            if (presentItem) {
+                presentItem.classList.add('smooth-slide-down');
+                // Find the card that will be overlapped (the new card below)
+                const presentsList = presentItem.parentElement;
+                if (presentsList) {
+                    const siblings = Array.from(presentsList.children);
+                    const idx = siblings.indexOf(presentItem);
+                    if (idx < siblings.length - 1) {
+                        const overlappedCard = siblings[idx + 1];
+                        if (overlappedCard) {
+                            overlappedCard.classList.add('fading');
+                            setTimeout(() => {
+                                overlappedCard.classList.remove('fading');
+                            }, 400);
+                        }
+                    }
+                }
+                setTimeout(() => {
+                    presentItem.classList.remove('smooth-slide-down');
+                }, 400);
+            }
             // Refresh the recipients list to show updated state
             loadRecipientsWithPresents();
-        } else {
-            showErrorModal(data.error || 'Błąd podczas anulowania rezerwacji');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showErrorModal('Błąd połączenia z serwerem');
     });
 }
 
@@ -1161,4 +1442,182 @@ function redirectIfAuthenticated() {
                 window.location.href = '/recipients';
             }
         });
+}
+
+function openRecipientDetailsModal(recipient, presents, isIdentified) {
+    // Ustaw dane w modalu
+    document.getElementById('recipientDetailsName').textContent = recipient.name;
+    document.getElementById('recipientDetailsName2').textContent = recipient.name;
+    const img = document.getElementById('recipientDetailsImage');
+    if (recipient.profile_picture) {
+        img.src = recipient.profile_picture;
+        img.style.display = 'block';
+    } else {
+        img.src = '';
+        img.style.display = 'none';
+    }
+    const contentDiv = document.getElementById('recipientDetailsContent');
+    if (isIdentified) {
+        contentDiv.innerHTML = `<div class="alert alert-warning text-center"><b>Co korci Cię żeby zobaczyć czy już ktoś kupił Twoje prezenty??? Wynocha!</b></div>`;
+    } else {
+        // Sortowanie prezentów: najpierw niekupione i niezarezerwowane, potem zarezerwowane, potem kupione
+        const notBought = presents.filter(p => !p.is_checked && !p.reserved_by);
+        const reserved = presents.filter(p => !p.is_checked && p.reserved_by);
+        const bought = presents.filter(p => p.is_checked);
+        function presentRow(p, extraClass = '') {
+            return `<div class="present-item ${extraClass}" style="opacity:${extraClass ? '0.5' : '1'};">` +
+                `<div class="d-flex align-items-center justify-content-between">` +
+                `<div><b>${escapeHtml(p.title)}</b>${p.comments ? `<br><small class='text-muted'>${escapeHtml(p.comments)}</small>` : ''}</div>` +
+                `<div><small>${new Date(p.created_at).toLocaleDateString('pl-PL')}</small></div>` +
+                `</div></div>`;
+        }
+        let html = '';
+        if (notBought.length) {
+            html += `<div class='mb-2'><b>Do kupienia:</b></div>` + notBought.map(p => presentRow(p)).join('');
+        }
+        if (reserved.length) {
+            html += `<div class='mb-2 mt-3'><b>Zarezerwowane:</b></div>` + reserved.map(p => presentRow(p, 'reserved-by-other')).join('');
+        }
+        if (bought.length) {
+            html += `<div class='mb-2 mt-3'><b>Kupione:</b></div>` + bought.map(p => presentRow(p, 'checked')).join('');
+        }
+        if (!html) html = '<p class="text-muted">Brak prezentów dla tej osoby</p>';
+        contentDiv.innerHTML = html;
+    }
+    const modal = new bootstrap.Modal(document.getElementById('recipientDetailsModal'));
+    modal.show();
+}
+
+// Funkcja pomocnicza do wywołania modalu po kliknięciu
+function showRecipientDetailsFromList(recipientId) {
+    // Pobierz dane z listy już załadowanej na stronie
+    const recipients = window._allRecipients || [];
+    const presentsByRecipient = window._allPresentsByRecipient || {};
+    const recipient = recipients.find(r => r.id === recipientId);
+    const presents = presentsByRecipient[recipientId] || [];
+    const isIdentified = currentUserId && recipient.identified_by === currentUserId;
+    openRecipientDetailsModal(recipient, presents, isIdentified);
+}
+
+// Zmodyfikuj displayRecipientsWithPresents by zapisać dane globalnie
+const oldDisplayRecipientsWithPresents = displayRecipientsWithPresents;
+displayRecipientsWithPresents = function(recipients, presents) {
+    // Zbuduj mapę prezentów po recipientId
+    const presentsByRecipient = {};
+    presents.forEach(p => {
+        if (!presentsByRecipient[p.recipient_id]) presentsByRecipient[p.recipient_id] = [];
+        presentsByRecipient[p.recipient_id].push(p);
+    });
+    window._allRecipients = recipients;
+    window._allPresentsByRecipient = presentsByRecipient;
+    oldDisplayRecipientsWithPresents(recipients, presents);
+};
+
+// Add proper focus management for modals to prevent aria-hidden accessibility issues
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle modal hidden events to ensure proper focus management
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.addEventListener('hidden.bs.modal', function() {
+            // Move focus to body when modal is hidden to prevent aria-hidden issues
+            document.body.focus();
+        });
+        
+        modal.addEventListener('show.bs.modal', function() {
+            // Ensure modal is properly accessible when shown
+            this.removeAttribute('aria-hidden');
+        });
+    });
+});
+
+function openChangePictureModal(recipientId) {
+    // Store the recipient ID for later use
+    window.currentChangingRecipientId = recipientId;
+    
+    const modal = document.getElementById('changePictureModal');
+    if (!modal) {
+        console.error('Change picture modal not found');
+        return;
+    }
+    
+    // Clear previous form
+    document.getElementById('changePictureForm').reset();
+    document.getElementById('imagePreview').style.display = 'none';
+    
+    // Show the modal
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+    
+    // Add event listener for file input
+    const fileInput = document.getElementById('newProfilePicture');
+    fileInput.onchange = function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImage').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+}
+
+function saveNewProfilePicture() {
+    const fileInput = document.getElementById('newProfilePicture');
+    const file = fileInput.files[0];
+    const recipientId = window.currentChangingRecipientId;
+    
+    if (!file || !recipientId) {
+        alert('Proszę wybrać zdjęcie');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('profile_picture', file);
+    
+    fetch(`/api/recipients/${recipientId}/profile-picture`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close the modal
+            const modal = document.getElementById('changePictureModal');
+            const bootstrapModal = bootstrap.Modal.getInstance(modal);
+            bootstrapModal.hide();
+            
+            // Refresh the recipients list
+            loadRecipientsWithPresents();
+            
+            // Show success message
+            alert('Zdjęcie profilowe zostało zaktualizowane');
+        } else {
+            alert('Błąd podczas aktualizacji zdjęcia: ' + (data.error || 'Nieznany błąd'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Błąd podczas aktualizacji zdjęcia');
+    });
+}
+
+function openProfilePicturePreview(recipientId) {
+    const recipient = window._allRecipients.find(r => r.id === recipientId);
+    if (!recipient || !recipient.profile_picture || recipient.profile_picture.trim() === '') {
+        return; // Don't open modal for placeholders
+    }
+    
+    const modal = document.getElementById('profilePreviewModal');
+    const previewImage = document.getElementById('profilePreviewImage');
+    const previewName = document.getElementById('profilePreviewName');
+    
+    if (modal && previewImage && previewName) {
+        previewImage.src = recipient.profile_picture;
+        previewName.textContent = recipient.name;
+        
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+    }
 } 
