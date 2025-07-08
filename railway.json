@@ -11,6 +11,6 @@
     "restartPolicyMaxRetries": 10
   },
   "variables": {
-    "DATABASE_URL": "<your_postgres_connection_string>"
+    "NODE_ENV": "production"
   }
 } 
