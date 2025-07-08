@@ -312,22 +312,18 @@ app.post('/api/recipients/:id/identify', requireAuth, (req, res) => {
 app.get('/api/user/identification', requireAuth, (req, res) => {
     const userId = req.session.userId;
     const username = req.session.username;
-    
-    console.log('Identification status check for user:', { userId, username });
-    
     getUserIdentification(userId)
         .then(recipient => {
             const isIdentified = !!recipient;
-            console.log('Identification status result:', { userId, username, isIdentified, recipient });
-            
             res.json({
                 isIdentified: isIdentified,
                 identifiedRecipient: recipient,
-                username: username
+                username: username,
+                userId: userId,
+                name: recipient ? recipient.name : null
             });
         })
         .catch(err => {
-            console.error('Database error checking identification status:', err);
             handleDbError(err, res, 'Błąd podczas sprawdzania statusu identyfikacji');
         });
 });

@@ -186,6 +186,7 @@ function loadRecipientsWithPresents() {
             }
         } else {
             console.log('User is already identified, no modal needed');
+            return; // Prevent any modal from showing
         }
     })
     .catch(error => {
@@ -825,14 +826,11 @@ function generatePresentsList(presents) {
         if (a.is_checked !== b.is_checked) {
             return a.is_checked ? 1 : -1;
         }
-        
         // Then sort by reservation status (reserved by current user first)
         const aReservedByMe = a.reserved_by === currentUserId;
         const bReservedByMe = b.reserved_by === currentUserId;
-        
         if (aReservedByMe && !bReservedByMe) return -1;
         if (!aReservedByMe && bReservedByMe) return 1;
-        
         // Finally by creation date (newer first)
         return new Date(b.created_at) - new Date(a.created_at);
     });
@@ -841,24 +839,26 @@ function generatePresentsList(presents) {
         <div class="presents-list presents-list-container">
             ${sortedPresents.map((present, index) => `
                 <div class="present-item ${present.is_checked ? 'checked' : ''} ${present.reserved_by && present.reserved_by !== currentUserId ? 'reserved-by-other' : ''} ${present.reserved_by === currentUserId ? 'reserved-by-me' : ''}" data-id="${present.id}" style="transition-delay: ${index * 50}ms;">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <div class="form-check me-2">
-                                <input class="form-check-input" type="checkbox" 
-                                       ${present.is_checked ? 'checked' : ''} 
-                                       onchange="togglePresentFromRecipients(${present.id}, this.checked)">
-                            </div>
-                            <div class="flex-grow-1">
+                    <div class="d-flex align-items-start flex-wrap flex-md-nowrap w-100 gap-2">
+                        <!-- Checkbox block -->
+                        <div class="flex-shrink-0 d-flex align-items-center" style="min-width: 36px;">
+                            <input class="form-check-input" type="checkbox" 
+                                ${present.is_checked ? 'checked' : ''} 
+                                onchange="togglePresentFromRecipients(${present.id}, this.checked)">
+                        </div>
+                        <!-- Title and comments block -->
+                        <div class="flex-grow-1">
+                            <div class="present-title-block">
                                 <h6 class="present-title mb-1">${convertUrlsToLinks(escapeHtml(present.title))}</h6>
-                                ${present.comments ? `
-                                    <small class="text-muted">${formatCommentsPreview(present.comments)}</small>
-                                ` : ''}
+                                ${present.comments ? `<div class="present-comments mb-1">${formatCommentsPreview(present.comments)}</div>` : ''}
                             </div>
                         </div>
-                        <div class="d-flex align-items-center">
-                            <small class="text-muted me-2 d-none d-md-inline">
-                            ${new Date(present.created_at).toLocaleDateString('pl-PL')}
-                        </small>
+                        <!-- Date block -->
+                        <div class="d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 90px;">
+                            <small class="text-muted">${new Date(present.created_at).toLocaleDateString('pl-PL')}</small>
+                        </div>
+                        <!-- Reservation block -->
+                        <div class="d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 120px;">
                             ${generateReservationButton(present)}
                         </div>
                     </div>
@@ -1028,13 +1028,21 @@ function generateReservationButton(present) {
 
 function formatCommentsPreview(comments) {
     // Truncate long comments and make URLs clickable
-    const maxLength = 50;
+    const maxLength = 500;
     let truncated = comments.length > maxLength ? 
         comments.substring(0, maxLength) + '...' : comments;
     
-    // Convert URLs to clickable links
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return truncated.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Regex to match URLs and domain-like words
+    // Matches http(s)://... or www.... or anything.something
+    const urlRegex = /((https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?)/gi;
+    return truncated.replace(urlRegex, (match, p1, p2) => {
+        // If it already starts with http/https, use as is
+        let url = match;
+        if (!/^https?:\/\//i.test(match)) {
+            url = 'https://' + match;
+        }
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${match}</a>`;
+    });
 }
 
 function convertUrlsToLinks(text) {
@@ -1334,7 +1342,22 @@ function displayReservedPresentsInModal(presents) {
                                             <div class="col-11">
                                                 <h6 class="mb-1">${convertUrlsToLinks(escapeHtml(present.title))}</h6>
                                                 <small class="text-muted">Dla: ${escapeHtml(present.recipient_name)}</small>
-                                                ${present.comments ? `<br><small class="text-muted">${escapeHtml(present.comments)}</small>` : ''}
+                                                ${
+                                                    typeof present.comments === 'string' && present.comments.trim().length > 0
+                                                        ? `
+                                                    <div class="mt-2">
+                                                        <div class="card card-body p-2" style="background: #f8f9fa; min-height: 80px; max-height: 220px; overflow-y: auto;">
+                                                            <small class="text-muted" style="white-space: pre-line;">${escapeHtml(present.comments)}</small>
+                                                        </div>
+                                                    </div>
+                                                `
+                                                        : ''
+                                                }
+                                                ${
+                                                    present.comments && typeof present.comments !== 'string'
+                                                        ? `<div class="alert alert-danger mt-2 p-2">Błąd: nieprawidłowy format komentarza</div>`
+                                                        : ''
+                                                }
                                             </div>
                                         </div>
                                     </div>
