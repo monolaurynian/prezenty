@@ -12,4 +12,9 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: DATABASE_URL
-        value: <your_postgres_connection_string> 
+        value: <your_postgres_connection_string>
+    # Add a persistent disk for uploads
+    disks:
+      - name: uploads
+        mountPath: /app/public/uploads
+        sizeGB: 1 # Adjust as needed

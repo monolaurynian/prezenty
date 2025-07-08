@@ -23,5 +23,9 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
+# Do NOT copy uploads directory during build; it should be a persistent volume
+# The following line documents the uploads directory as a volume for Docker users
+VOLUME ["/app/public/uploads"]
+
 # Start the application (only when the container runs, not during build)
 CMD ["node", "server.js"] 
