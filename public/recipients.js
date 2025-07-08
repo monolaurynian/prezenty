@@ -111,7 +111,7 @@ function loadRecipientsWithPresents() {
             return response.json();
         }),
         // Check identification status
-        fetch('/api/user/identification-status').then(response => {
+        fetch('/api/user/identification').then(response => {
             if (!response.ok) {
                 throw new Error('Failed to check identification status');
             }
@@ -1116,7 +1116,7 @@ function openAddPresentModal() {
     // Load recipients for dropdown and check identification status
     Promise.all([
         fetch('/api/recipients').then(response => response.json()),
-        fetch('/api/user/identification-status').then(response => response.json())
+        fetch('/api/user/identification').then(response => response.json())
     ])
     .then(([recipients, identificationStatus]) => {
         const select = document.getElementById('recipientSelect');
@@ -1564,7 +1564,7 @@ function returnToAddPresentModalWithNewRecipient(recipientId, recipientName) {
     // Reload recipients and open add present modal
     Promise.all([
         fetch('/api/recipients').then(response => response.json()),
-        fetch('/api/user/identification-status').then(response => response.json())
+        fetch('/api/user/identification').then(response => response.json())
     ])
     .then(([recipients, identificationStatus]) => {
         const select = document.getElementById('recipientSelect');
