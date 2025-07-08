@@ -285,11 +285,17 @@ function displayRecipientsWithPresents(recipients, presents) {
                   <div class="fw-bold mb-2"><i class="fas fa-list me-1"></i>Twoje dodane prezenty:</div>
                   <ul class="list-group">
                     ${ownPresents.map(p => `
-                      <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>${escapeHtml(p.title)}</span>
-                        <button class="btn btn-sm btn-danger" onclick="deletePresent(${p.id}, '${escapeHtml(p.title)}', ${recipient.id})">
-                          <i class="fas fa-trash-alt"></i>
-                        </button>
+                      <li class="list-group-item">
+                        <div class="d-flex align-items-center flex-wrap flex-md-nowrap">
+                          <span class="flex-grow-1">${escapeHtml(p.title)}</span>
+                          <div class="d-flex justify-content-center justify-content-md-end w-100 w-md-auto">
+                            <button class="btn btn-sm btn-danger ms-0 ms-md-2 mt-2 mt-md-0 w-100 w-md-auto"
+                              onclick="deletePresent(${p.id}, '${escapeHtml(p.title)}', ${recipient.id})"
+                              style="max-width:50px;">
+                              <i class="fas fa-trash-alt"></i>
+                            </button>
+                          </div>
+                        </div>
                       </li>
                     `).join('')}
                   </ul>
@@ -498,12 +504,28 @@ function showRecipientSelectionModal() {
                         <strong class="recipient-name-clickable">${escapeHtml(recipient.name)}</strong>
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-outline-success btn-sm" onclick="identifyAsRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                        <button class="btn btn-sm  btn-success" style="width: 70%; margin-right: 2%;
+                    "
+                         onclick="identifyAsRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
                             <i class="fas fa-check me-1"></i>To jestem ja
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="deleteRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                        <button class="btn btn-outline-danger btn-sm" style="width: 28%;" onclick="deleteRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
                             <i class="fas fa-trash"></i>
                         </button>
+                        <style>
+                        @media (max-width: 576px) {
+                            .recipient-name-clickable ~ div > .btn-outline-success {
+                                
+                            width: 70% !important;
+                                min-width: 110px;
+                                margin-right: 2%;
+                            }
+                            .recipient-name-clickable ~ div > .btn-outline-danger {
+                                width: 28% !important;
+                                min-width: 40px;
+                            }
+                        }
+                        </style>
                     </div>
                 </div>
             `).join('');
