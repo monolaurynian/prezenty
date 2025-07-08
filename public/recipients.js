@@ -316,7 +316,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                     <div class="col-md-2 text-center">
                         <div class="recipient-avatar">
                             ${recipient.profile_picture && recipient.profile_picture.trim() !== '' ? 
-                                `<img src="${escapeHtml(recipient.profile_picture)}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
+                                `<img src="${getFullProfilePictureUrl(escapeHtml(recipient.profile_picture))}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
                                 `<div class="profile-picture-placeholder" onclick="openProfileModal(${recipient.id})" style="cursor: pointer;">
                                     <i class="fas fa-user"></i>
                                 </div>`
@@ -384,7 +384,7 @@ function generateProfilePictureHTML(recipient, isIdentified) {
     const clickHandler = `onclick="showRecipientDetailsFromList(${recipient.id})" style="cursor:pointer;"`;
     if (recipient.profile_picture && recipient.profile_picture.trim() !== '') {
         return `<div class="profile-picture-wrapper mb-2 ${isIdentified ? 'identified' : ''}" ${clickHandler}>
-            <img src="${escapeHtml(recipient.profile_picture)}" alt="Zdjęcie profilowe" class="img-fluid">
+            <img src="${getFullProfilePictureUrl(escapeHtml(recipient.profile_picture))}" alt="Zdjęcie profilowe" class="img-fluid">
         </div>`;
     } else {
         return `<div class="profile-picture-wrapper mb-2 ${isIdentified ? 'identified' : ''}" ${clickHandler}>
@@ -703,7 +703,7 @@ function openProfileModal(recipientId) {
         profileName.textContent = recipient.name;
         
         if (recipient.profile_picture && recipient.profile_picture.trim() !== '') {
-            profileImg.src = recipient.profile_picture;
+            profileImg.src = getFullProfilePictureUrl(recipient.profile_picture);
             profileImg.style.display = 'block';
         } else {
             // Show placeholder instead of image
@@ -1748,7 +1748,7 @@ function openRecipientDetailsModal(recipient, presents, isIdentified) {
     document.getElementById('recipientDetailsName2').textContent = recipient.name;
     const img = document.getElementById('recipientDetailsImage');
     if (recipient.profile_picture) {
-        img.src = recipient.profile_picture;
+        img.src = getFullProfilePictureUrl(recipient.profile_picture);
         img.style.display = 'block';
     } else {
         img.src = '';
@@ -1912,7 +1912,7 @@ function openProfilePicturePreview(recipientId) {
     const previewName = document.getElementById('profilePreviewName');
     
     if (modal && previewImage && previewName) {
-        previewImage.src = recipient.profile_picture;
+        previewImage.src = getFullProfilePictureUrl(recipient.profile_picture);
         previewName.textContent = recipient.name;
         
         const bootstrapModal = new bootstrap.Modal(modal);
@@ -2026,3 +2026,12 @@ function reorderModalPresentsList() {
         }
     });
 } 
+
+// Helper to get full profile picture URL
+function getFullProfilePictureUrl(path) {
+    if (!path) return '';
+    if (path.startsWith('/uploads/')) {
+        return 'https://prezenty.matmamon.com' + path;
+    }
+    return path;
+}
