@@ -1,0 +1,12 @@
+version: "1.0"
+
+# This tells Dokploy to use Nixpacks
+build:
+  builder: nixpacks
+  commands:
+    - npm install
+    - npm run build
+
+run:
+  command: npx serve -s dist -l 3000
+  port: 3000
