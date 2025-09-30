@@ -38,6 +38,32 @@ Set these in your Render dashboard:
 3. **Check Status** - Visit `/health` endpoint to see mode
 4. **Set Password** (optional) - Add `DB_PASSWORD` to enable database
 
+## Keep-Alive System
+
+The app includes an automatic keep-alive system for Render deployments:
+
+### Features:
+- **Automatic Ping** - Pings the app every 14 minutes
+- **Production Only** - Only runs when `NODE_ENV=production` and `RENDER=true`
+- **Prevents Sleep** - Keeps the app active on Render's free tier
+- **Smart Detection** - Automatically detects Render environment
+
+### How it Works:
+```javascript
+// Pings https://prezenty.onrender.com every 14 minutes
+const job = new cron.CronJob("*/14 * * * *", function () {
+    https.get("https://prezenty.onrender.com", (res) => {
+        console.log("✅ Keep-alive ping successful");
+    });
+});
+```
+
+### Logs:
+- `✅ Keep-alive ping successful` - Ping worked
+- `⚠️ Keep-alive ping failed` - HTTP error
+- `❌ Keep-alive ping error` - Network error
+- `ℹ️ Keep-alive cronjob skipped` - Not in production
+
 ## Health Check
 
 Visit `https://your-app.onrender.com/health` to see:

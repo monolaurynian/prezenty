@@ -8,6 +8,8 @@ const fs = require('fs');
 const multer = require('multer');
 const mysql = require('mysql2/promise');
 const MySQLStore = require('express-mysql-session')(session);
+const cron = require('cron');
+const https = require('https');
 
 // Load .env file in development, but not in production
 if (process.env.NODE_ENV !== 'production') {
@@ -354,6 +356,30 @@ app.post('/api/recipients/:id/identify', requireAuth, async (req, res) => {
     const { id } = req.params;
     const userId = req.session.userId;
     
+    if (DEMO_MODE) {
+        // Demo mode - simulate identification
+        console.log('Demo mode identification:', { id, userId, demoData: demoData.recipients });
+        const recipient = demoData.recipients.find(r => r.id == id);
+        
+        if (!recipient) {
+            console.log('Recipient not found in demo data:', id);
+            return notFound(res, 'Osoba nie została znaleziona');
+        }
+        
+        console.log('Found recipient for identification:', recipient);
+        
+        if (recipient.identified_by && recipient.identified_by !== userId) {
+            console.log('Recipient already identified by another user:', { currentlyIdentifiedBy: recipient.identified_by, requestingUserId: userId });
+            return conflict(res, 'Ta osoba została już zidentyfikowana przez innego użytkownika');
+        }
+        
+        // Update demo data
+        recipient.identified_by = userId;
+        console.log('Updated recipient identification:', recipient);
+        res.json({ success: true });
+        return;
+    }
+    
     try {
         // Check if recipient is already identified
         const [rows] = await pool.execute('SELECT identified_by FROM recipients WHERE id = ?', [id]);
@@ -413,6 +439,31 @@ app.delete('/api/recipients/:id/identify', requireAuth, async (req, res) => {
     const { id } = req.params;
     const userId = req.session.userId;
     
+    if (DEMO_MODE) {
+        // Demo mode - simulate cancel identification
+        console.log('Demo mode cancel identification:', { id, userId, demoData: demoData.recipients });
+        const recipient = demoData.recipients.find(r => r.id == id);
+        
+        if (!recipient) {
+            console.log('Recipient not found:', id);
+            return notFound(res, 'Osoba nie została znaleziona');
+        }
+        
+        console.log('Found recipient:', recipient);
+        console.log('Checking authorization:', { recipientIdentifiedBy: recipient.identified_by, userId, match: recipient.identified_by === userId });
+        
+        if (recipient.identified_by !== userId) {
+            console.log('User not authorized to cancel identification');
+            return forbidden(res, 'Nie możesz anulować identyfikacji innej osoby');
+        }
+        
+        // Remove identification from demo data
+        recipient.identified_by = null;
+        console.log('Identification canceled successfully for recipient:', id);
+        res.json({ success: true });
+        return;
+    }
+    
     try {
         // Check if user is identified as this recipient
         const [rows] = await pool.execute('SELECT identified_by FROM recipients WHERE id = ?', [id]);
@@ -444,6 +495,26 @@ app.delete('/api/recipients/:id', requireAuth, async (req, res) => {
     console.log('Delete recipient request:', { id: req.params.id, userId: req.session.userId });
     const { id } = req.params;
     
+    if (DEMO_MODE) {
+        // Demo mode - simulate deleting recipient
+        const recipientIndex = demoData.recipients.findIndex(r => r.id == id);
+        
+        if (recipientIndex === -1) {
+            console.log('Recipient not found for deletion:', id);
+            return notFound(res, 'Osoba nie została znaleziona');
+        }
+        
+        // Remove the recipient from demo data
+        demoData.recipients.splice(recipientIndex, 1);
+        
+        // Also remove any presents for this recipient
+        demoData.presents = demoData.presents.filter(p => p.recipient_id != id);
+        
+        console.log('Recipient deleted successfully in demo mode:', id);
+        res.json({ success: true });
+        return;
+    }
+    
     try {
         const [result] = await pool.execute('DELETE FROM recipients WHERE id = ?', [id]);
         
@@ -460,43 +531,96 @@ app.delete('/api/recipients/:id', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/api/recipients/:id/profile-picture', requireAuth, upload.single('profile_picture'), async (req, res) => {
-    const { id } = req.params;
-    const userId = req.session.userId;
-    
-    // Check if file was uploaded
-    if (!req.file) {
-        return badRequest(res, 'Brak pliku zdjęcia');
-    }
-    
-    try {
-        // Allow editing if not identified or identified by this user
-        const [rows] = await pool.execute('SELECT identified_by FROM recipients WHERE id = ?', [id]);
-        const recipient = rows[0];
+app.post('/api/recipients/:id/profile-picture', requireAuth, (req, res) => {
+    // Handle multer upload with custom error handling
+    upload.single('profile_picture')(req, res, async (err) => {
+        const { id } = req.params;
+        const userId = req.session.userId;
         
-        if (!recipient) {
-            return notFound(res, 'Osoba nie została znaleziona');
+        console.log('Profile picture upload request:', { id, userId, hasFile: !!req.file, error: err?.message });
+        
+        if (err) {
+            console.error('Multer error:', err);
+            return res.status(400).json({ error: err.message });
         }
         
-        if (recipient.identified_by && recipient.identified_by !== userId) {
-            return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
+        // Check if file was uploaded
+        if (!req.file) {
+            console.log('No file uploaded');
+            return badRequest(res, 'Brak pliku zdjęcia');
         }
         
-        // Store image data and type in database
-        await pool.execute('UPDATE recipients SET profile_picture = ?, profile_picture_type = ? WHERE id = ?', 
-            [req.file.buffer, req.file.mimetype, id]);
+        console.log('File uploaded:', { 
+            originalname: req.file.originalname, 
+            mimetype: req.file.mimetype, 
+            size: req.file.size 
+        });
         
-        console.log('Profile picture updated successfully for recipient:', id);
-        res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
-    } catch (err) {
-        console.error('Database error updating profile picture:', err);
-        return handleDbError(err, res, 'Błąd podczas aktualizacji zdjęcia profilowego');
-    }
+        if (DEMO_MODE) {
+            // Demo mode - simulate profile picture upload
+            console.log('Demo mode: simulating profile picture upload');
+            const recipient = demoData.recipients.find(r => r.id == id);
+            
+            if (!recipient) {
+                console.log('Recipient not found in demo data:', id);
+                return notFound(res, 'Osoba nie została znaleziona');
+            }
+            
+            if (recipient.identified_by && recipient.identified_by !== userId) {
+                console.log('User not authorized to edit profile:', { recipientIdentifiedBy: recipient.identified_by, userId });
+                return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
+            }
+            
+            // In demo mode, just set a placeholder URL
+            recipient.profile_picture = `demo-image-${id}.jpg`;
+            
+            console.log('Profile picture updated successfully in demo mode for recipient:', id);
+            res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
+            return;
+        }
+        
+        try {
+            // Allow editing if not identified or identified by this user
+            const [rows] = await pool.execute('SELECT identified_by FROM recipients WHERE id = ?', [id]);
+            const recipient = rows[0];
+            
+            if (!recipient) {
+                return notFound(res, 'Osoba nie została znaleziona');
+            }
+            
+            if (recipient.identified_by && recipient.identified_by !== userId) {
+                return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
+            }
+            
+            // Store image data and type in database
+            await pool.execute('UPDATE recipients SET profile_picture = ?, profile_picture_type = ? WHERE id = ?', 
+                [req.file.buffer, req.file.mimetype, id]);
+            
+            console.log('Profile picture updated successfully for recipient:', id);
+            res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
+        } catch (err) {
+            console.error('Database error updating profile picture:', err);
+            return handleDbError(err, res, 'Błąd podczas aktualizacji zdjęcia profilowego');
+        }
+    });
 });
 
 // Serve profile picture from database
 app.get('/api/recipients/:id/profile-picture', async (req, res) => {
     const { id } = req.params;
+    
+    if (DEMO_MODE) {
+        // Demo mode - serve placeholder image
+        const recipient = demoData.recipients.find(r => r.id == id);
+        
+        if (!recipient || !recipient.profile_picture) {
+            return res.status(404).send('Profile picture not found');
+        }
+        
+        // In demo mode, redirect to a placeholder image service
+        res.redirect(`https://via.placeholder.com/200x200/4CAF50/FFFFFF?text=${encodeURIComponent(recipient.name.charAt(0))}`);
+        return;
+    }
     
     try {
         const [rows] = await pool.execute('SELECT profile_picture, profile_picture_type FROM recipients WHERE id = ?', [id]);
@@ -679,6 +803,29 @@ app.put('/api/presents/:id/check', requireAuth, async (req, res) => {
     
     console.log('Check present request:', { id, is_checked, userId: req.session.userId });
     
+    if (DEMO_MODE) {
+        // Demo mode - simulate checking present
+        const present = demoData.presents.find(p => p.id == id);
+        
+        if (!present) {
+            console.log('No present found with id:', id);
+            return notFound(res, 'Prezent nie został znaleziony');
+        }
+        
+        console.log('Present found in demo mode:', present);
+        
+        // Update the present in demo data
+        present.is_checked = is_checked;
+        
+        console.log('Present check status updated successfully in demo mode:', { 
+            id, 
+            newStatus: is_checked
+        });
+        
+        res.json({ success: true });
+        return;
+    }
+    
     try {
         // First check if the present exists and get its current status
         const [rows] = await pool.execute('SELECT id, is_checked FROM presents WHERE id = ?', [id]);
@@ -716,6 +863,24 @@ app.put('/api/presents/:id', requireAuth, async (req, res) => {
         return badRequest(res, 'Nazwa prezentu jest wymagana');
     }
     
+    if (DEMO_MODE) {
+        // Demo mode - simulate updating present
+        const present = demoData.presents.find(p => p.id == id);
+        
+        if (!present) {
+            return notFound(res, 'Prezent nie został znaleziony');
+        }
+        
+        // Update the present in demo data
+        present.title = title.trim();
+        present.recipient_id = recipient_id || null;
+        present.comments = comments || null;
+        
+        console.log('Present updated successfully in demo mode:', id);
+        res.json({ success: true });
+        return;
+    }
+    
     try {
         const [result] = await pool.execute(
             'UPDATE presents SET title = ?, recipient_id = ?, comments = ? WHERE id = ?',
@@ -737,6 +902,21 @@ app.put('/api/presents/:id', requireAuth, async (req, res) => {
 app.delete('/api/presents/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     
+    if (DEMO_MODE) {
+        // Demo mode - simulate deleting present
+        const presentIndex = demoData.presents.findIndex(p => p.id == id);
+        
+        if (presentIndex === -1) {
+            return notFound(res, 'Prezent nie został znaleziony');
+        }
+        
+        // Remove the present from demo data
+        demoData.presents.splice(presentIndex, 1);
+        console.log('Present deleted successfully in demo mode:', id);
+        res.json({ success: true });
+        return;
+    }
+    
     try {
         const [result] = await pool.execute('DELETE FROM presents WHERE id = ?', [id]);
         
@@ -756,6 +936,27 @@ app.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
     const userId = req.session.userId;
     
     console.log('Reserve present request:', { id, userId });
+    
+    if (DEMO_MODE) {
+        // Demo mode - simulate reservation
+        const present = demoData.presents.find(p => p.id == id);
+        
+        if (!present) {
+            console.log('No present found with id:', id);
+            return notFound(res, 'Prezent nie został znaleziony');
+        }
+        
+        if (present.reserved_by) {
+            console.log('Present already reserved by user:', present.reserved_by);
+            return conflict(res, 'Prezent jest już zarezerwowany');
+        }
+        
+        // Reserve the present in demo data
+        present.reserved_by = userId;
+        console.log('Present reserved successfully in demo mode:', { id, userId });
+        res.json({ success: true });
+        return;
+    }
     
     try {
         // First check if the present exists and is not already reserved
@@ -789,6 +990,32 @@ app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
     const userId = req.session.userId;
     
     console.log('Cancel reservation request:', { id, userId });
+    
+    if (DEMO_MODE) {
+        // Demo mode - simulate cancel reservation
+        const present = demoData.presents.find(p => p.id == id);
+        
+        if (!present) {
+            console.log('No present found with id:', id);
+            return notFound(res, 'Prezent nie został znaleziony');
+        }
+        
+        if (!present.reserved_by) {
+            console.log('Present is not reserved');
+            return conflict(res, 'Prezent nie jest zarezerwowany');
+        }
+        
+        if (present.reserved_by !== userId) {
+            console.log('Present reserved by different user:', present.reserved_by);
+            return forbidden(res, 'Nie możesz anulować rezerwacji innej osoby');
+        }
+        
+        // Cancel the reservation in demo data
+        present.reserved_by = null;
+        console.log('Reservation canceled successfully in demo mode:', { id, userId });
+        res.json({ success: true });
+        return;
+    }
     
     try {
         // First check if the present exists and is reserved by this user
@@ -829,6 +1056,19 @@ app.post('/api/register', async (req, res) => {
     if (!username || !password) {
         console.log('Registration failed: missing username or password');
         return badRequest(res, 'Wymagane jest podanie nazwy użytkownika i hasła');
+    }
+    
+    if (DEMO_MODE) {
+        // Demo mode - simulate registration
+        console.log('Demo mode registration for:', username);
+        
+        // In demo mode, just log them in as the demo user
+        req.session.userId = 1;
+        req.session.username = username;
+        
+        console.log('Demo registration successful:', { userId: 1, username: username });
+        res.json({ success: true, user: { id: 1, username: username } });
+        return;
     }
     
     try {
@@ -1049,4 +1289,36 @@ async function startServer() {
     }
 }
 
+// Keep-alive cronjob for Render deployment
+function setupKeepAliveCron() {
+    // Only run keep-alive in production on Render
+    if (process.env.NODE_ENV === 'production' && process.env.RENDER) {
+        console.log('🔄 Setting up keep-alive cronjob for Render...');
+        
+        const job = new cron.CronJob("*/14 * * * *", function () {
+            https
+                .get("https://prezenty.onrender.com", (res) => {
+                    if (res.statusCode === 200) {
+                        console.log("✅ Keep-alive ping successful at", new Date().toLocaleTimeString());
+                    } else {
+                        console.log("⚠️ Keep-alive ping failed:", res.statusCode);
+                    }
+                })
+                .on("error", (e) => {
+                    console.error("❌ Keep-alive ping error:", e.message);
+                });
+        });
+        
+        job.start();
+        console.log('✅ Keep-alive cronjob started - pinging every 14 minutes');
+    } else {
+        console.log('ℹ️ Keep-alive cronjob skipped (not in production on Render)');
+    }
+}
+
 startServer();
+
+// Setup keep-alive after server starts
+setTimeout(() => {
+    setupKeepAliveCron();
+}, 5000); // Wait 5 seconds for server to fully start

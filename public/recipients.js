@@ -85,109 +85,85 @@ function checkAuth() {
 function loadRecipientsWithPresents() {
     console.log('Loading recipients and presents...');
     
-    // Load both recipients and presents
+    // Show loading state immediately
+    const recipientsList = document.getElementById('recipientsList');
+    recipientsList.innerHTML = `
+        <div class="text-center aws-loading-state">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Ładowanie...</span>
+            </div>
+            <p class="mt-3 text-muted">Ładowanie danych...</p>
+        </div>
+    `;
+    
+    // Use cached data if available and fresh
+    const now = Date.now();
+    const cacheExpiry = 30000; // 30 seconds
+    
+    if (window._dataCache && 
+        window._dataCacheTimestamp && 
+        (now - window._dataCacheTimestamp) < cacheExpiry) {
+        console.log('Using cached data');
+        displayRecipientsData(window._dataCache.recipients, window._dataCache.presents, window._dataCache.identificationStatus);
+        return;
+    }
+    
+    // Load data with optimized parallel requests
+    const startTime = performance.now();
+    
     Promise.all([
         fetch('/api/recipients').then(response => {
-            console.log('Recipients response status:', response.status);
             if (!response.ok) {
                 if (response.status === 401) {
                     window.location.href = '/';
                     throw new Error('Unauthorized');
                 }
-                throw new Error('Network response was not ok');
+                throw new Error('Recipients API error');
             }
             return response.json();
         }),
-        // Load presents directly without identification logic
         fetch('/api/presents/all').then(response => {
-            console.log('Presents response status:', response.status);
             if (!response.ok) {
                 if (response.status === 401) {
                     window.location.href = '/';
                     throw new Error('Unauthorized');
                 }
-                throw new Error('Network response was not ok');
+                throw new Error('Presents API error');
             }
             return response.json();
         }),
-        // Check identification status
         fetch('/api/user/identification').then(response => {
             if (!response.ok) {
-                throw new Error('Failed to check identification status');
+                throw new Error('Identification API error');
             }
             return response.json();
         })
     ])
     .then(([recipientsResponse, presentsResponse, identificationStatus]) => {
-        console.log('Data loaded successfully:', { 
-            recipientsResponse: recipientsResponse, 
-            presentsResponse: presentsResponse,
-            identificationStatus: identificationStatus
-        });
+        const endTime = performance.now();
+        console.log(`Data loaded in ${(endTime - startTime).toFixed(2)}ms`);
         
-        // Check for error responses
-        if (recipientsResponse.error) {
-            console.error('Recipients API error:', recipientsResponse.error);
-            throw new Error('Error loading recipients: ' + recipientsResponse.error);
-        }
-        
-        if (presentsResponse.error) {
-            console.error('Presents API error:', presentsResponse.error);
-            throw new Error('Error loading presents: ' + presentsResponse.error);
-        }
-        
-        // Extract arrays from responses
+        // Extract and validate data
         const recipients = Array.isArray(recipientsResponse) ? recipientsResponse : (recipientsResponse.recipients || []);
         const presents = Array.isArray(presentsResponse) ? presentsResponse : [];
         
-        console.log('Extracted data:', { 
-            recipients: recipients.length, 
-            presents: presents.length 
-        });
-        
-        // Additional validation
         if (!recipients || !presents) {
-            console.error('Invalid data received:', { recipients, presents });
             throw new Error('Invalid data received from server');
         }
         
+        // Cache the data
+        window._dataCache = { recipients, presents, identificationStatus };
+        window._dataCacheTimestamp = Date.now();
+        
+        // Update modal cache as well
+        window._cachedRecipients = recipients;
+        window._cachedIdentificationStatus = identificationStatus;
+        
+        // Display data
         displayRecipientsWithPresents(recipients, presents);
         
-        // Check if user needs to identify themselves
-        console.log('Checking identification status:', {
-            isIdentified: identificationStatus.isIdentified,
-            username: identificationStatus.username,
-            recipientsLength: recipients.length
-        });
-        
-        if (!identificationStatus.isIdentified) {
-            console.log('User is not identified, checking for matching recipient...');
-            
-            // Find the first recipient that matches the user's username
-            const matchingRecipient = recipients.find(recipient => 
-                recipient.name.toLowerCase() === identificationStatus.username?.toLowerCase()
-            );
-            
-            console.log('Matching recipient found:', matchingRecipient);
-            
-            if (matchingRecipient) {
-                console.log('Found matching recipient, showing identification modal...');
-                // Auto-show identification modal
-                setTimeout(() => {
-                    identifyAsRecipient(matchingRecipient.id, matchingRecipient.name, true);
-                }, 1000); // Small delay to ensure page is loaded
-            } else {
-                // No matching recipient found - show selection modal immediately
-                console.log('No matching recipient found, showing selection modal...');
-                setTimeout(() => {
-                    console.log('About to call showRecipientSelectionModal()');
-                    showRecipientSelectionModal();
-                }, 1000); // Small delay to ensure page is loaded
-            }
-        } else {
-            console.log('User is already identified, no modal needed');
-            return; // Prevent any modal from showing
-        }
+        // Handle identification logic
+        handleIdentificationLogic(recipients, identificationStatus);
     })
     .catch(error => {
         console.error('Error loading data:', error);
@@ -323,29 +299,45 @@ function displayRecipientsWithPresents(recipients, presents) {
                                 </div>`
                             }
                         </div>
+                        ${!isIdentifiedByOther ? `
+                            <div class="mt-2 d-none d-md-block">
+                                <button class="btn btn-outline-primary btn-sm change-picture-btn" onclick="openChangePictureModal(${recipient.id})">
+                                    <i class="fas fa-camera me-1"></i>Zmień zdjęcie
+                                </button>
+                            </div>
+                        ` : ''}
                     </div>
                     <div class="col-md-6">
-                        <div class="d-flex align-items-center mb-2">
-                            <h5 class="recipient-name mb-0 me-3">
+                        <div class="mb-2">
+                            <h5 class="recipient-name mb-0">
                                 <i class="fas fa-user me-2"></i>
                                 ${escapeHtml(recipient.name)}
                             </h5>
-                            ${isIdentified ? `
-                                <button class="btn btn-outline-success btn-sm w-100" onclick="cancelIdentification(${recipient.id}, '${escapeHtml(recipient.name)}')">
-                                    <i class="fas fa-check-circle me-1"></i>To jest Twój profil
-                                </button>
+                            ${!isIdentified && !hasAnyIdentification ? `
+                                <div class="mt-2">
+                                    <button class="btn btn-outline-success btn-sm identify-btn" onclick="identifyAsRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                                        <i class="fas fa-user-check me-1"></i>To jestem ja
+                                    </button>
+                                </div>
+                            ` : isIdentified ? `
+                                <div class="mt-2">
+                                    <button class="btn btn-outline-success btn-sm identify-btn" onclick="cancelIdentification(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                                        <i class="fas fa-check-circle me-1"></i>To jest Twój profil
+                                    </button>
+                                </div>
+                            ` : ''}
+                            ${!isIdentifiedByOther ? `
+                                <div class="mt-2 d-md-none">
+                                    <button class="btn btn-outline-primary btn-sm change-picture-btn-mobile" onclick="openChangePictureModal(${recipient.id})">
+                                        <i class="fas fa-camera me-1"></i>Zmień zdjęcie
+                                    </button>
+                                </div>
                             ` : ''}
                         </div>
                         ${isIdentifiedByOther ? `
                             <div class="alert alert-warning py-2 px-3 mb-3">
                                 <i class="fas fa-user-check me-1"></i>
                                 <small>Zidentyfikowane przez: ${escapeHtml(recipient.identified_by_username || 'nieznany użytkownik')}</small>
-                            </div>
-                        ` : !isIdentified && !hasAnyIdentification ? `
-                            <div class="d-flex justify-content-start mb-3">
-                                <button class="btn btn-outline-success btn-sm identify-btn" onclick="identifyAsRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')">
-                                    <i class="fas fa-user-check me-1"></i>To jestem ja
-                                </button>
                             </div>
                         ` : ''}
                         ${!isIdentified ? `
@@ -367,11 +359,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                     </div>
                     <div class="col-md-4 text-end">
                         <div class="btn-group-vertical w-100">
-                            ${!isIdentifiedByOther ? `
-                                <button class="btn btn-outline-primary btn-sm" onclick="openChangePictureModal(${recipient.id})">
-                                    <i class="fas fa-camera me-1"></i>Zmień zdjęcie
-                                </button>
-                            ` : ''}
+                            <!-- Other action buttons can be added here if needed -->
                         </div>
                     </div>
                 </div>
@@ -427,6 +415,7 @@ function confirmSelfIdentification() {
     .then(data => {
         if (data.success) {
             showSuccessMessage('Pomyślnie zidentyfikowano!');
+            clearRecipientsCache();
             loadRecipientsWithPresents();
             
             // Close the modal
@@ -619,6 +608,7 @@ function addNewRecipientAndIdentify() {
             selectionModal.hide();
             
             showSuccessMessage(`Pomyślnie dodano i zidentyfikowano jako ${newRecipientName}!`);
+            clearRecipientsCache();
             loadRecipientsWithPresents();
         } else {
             throw new Error(data.error || 'Błąd podczas dodawania osoby');
@@ -1141,71 +1131,76 @@ function logout() {
 
 // Modal functions
 function openAddPresentModal() {
-    // Load recipients for dropdown and check identification status
-    Promise.all([
-        fetch('/api/recipients').then(response => response.json()),
-        fetch('/api/user/identification').then(response => response.json())
-    ])
-    .then(([recipients, identificationStatus]) => {
+    // Show modal immediately for better UX
+    const modal = new bootstrap.Modal(document.getElementById('addPresentModal'));
+    modal.show();
+    
+    // Clear form immediately
+    document.getElementById('addPresentForm').reset();
+    document.getElementById('addPresentMessage').style.display = 'none';
+    
+    // Use cached data if available, otherwise load fresh data
+    if (window._cachedRecipients && window._cachedIdentificationStatus) {
+        populateAddPresentModal(window._cachedRecipients, window._cachedIdentificationStatus);
+    } else {
+        // Show loading state in dropdown
         const select = document.getElementById('recipientSelect');
+        select.innerHTML = '<option value="">Ładowanie...</option>';
         
-        // Clear select
-        select.innerHTML = '<option value="">Wybierz osobę</option>';
-        
-        // Add existing recipients to select
-        recipients.forEach(recipient => {
-            const option = document.createElement('option');
-            option.value = recipient.id;
-            option.textContent = recipient.name;
-            select.appendChild(option);
-        });
-        
-        // Add "Add person" option at the end
-        const addOption = document.createElement('option');
-        addOption.value = 'add_new';
-        addOption.textContent = '➕ Dodaj nową osobę';
-        select.appendChild(addOption);
-        
-        // Clear form
-        document.getElementById('addPresentForm').reset();
-        document.getElementById('addPresentMessage').style.display = 'none';
-        
-        // Debug identification status
-        console.log('Full identification status:', identificationStatus);
-        console.log('isIdentified:', identificationStatus.isIdentified);
-        console.log('identifiedRecipient:', identificationStatus.identifiedRecipient);
-        
-        // Default set identified person if user is identified
-        if (identificationStatus.isIdentified && identificationStatus.identifiedRecipient) {
-            // Find the index of the identified person in the options
-            const identifiedId = identificationStatus.identifiedRecipient.id.toString();
-            console.log('User is identified as:', identificationStatus.identifiedRecipient.name, 'with ID:', identifiedId);
-            console.log('Dropdown options:', Array.from(select.options).map(opt => ({value: opt.value, text: opt.textContent})));
+        // Load data in background
+        Promise.all([
+            fetch('/api/recipients').then(response => response.json()),
+            fetch('/api/user/identification').then(response => response.json())
+        ])
+        .then(([recipients, identificationStatus]) => {
+            // Cache the data
+            window._cachedRecipients = recipients;
+            window._cachedIdentificationStatus = identificationStatus;
             
-            for (let i = 0; i < select.options.length; i++) {
-                console.log('Checking option', i, ':', select.options[i].value, 'vs', identifiedId);
-                if (select.options[i].value === identifiedId) {
-                    console.log('Found match at index:', i);
-                    select.selectedIndex = i;
-                    break;
-                }
-            }
-            console.log('Final selected index:', select.selectedIndex);
-        } else {
-            console.log('User is not identified - condition failed');
-            console.log('isIdentified check:', identificationStatus.isIdentified);
-            console.log('identifiedRecipient check:', !!identificationStatus.identifiedRecipient);
-            select.selectedIndex = 0; // Select "Wybierz osobę"
-        }
-        
-        // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('addPresentModal'));
-        modal.show();
-    })
-    .catch(error => {
-        console.error('Error loading recipients:', error);
-        showErrorModal('Błąd podczas ładowania listy osób');
+            populateAddPresentModal(recipients, identificationStatus);
+        })
+        .catch(error => {
+            console.error('Error loading recipients:', error);
+            const select = document.getElementById('recipientSelect');
+            select.innerHTML = '<option value="">Błąd ładowania</option>';
+            showModalMessage('addPresentMessage', 'Błąd podczas ładowania listy osób', 'danger');
+        });
+    }
+}
+
+function populateAddPresentModal(recipients, identificationStatus) {
+    const select = document.getElementById('recipientSelect');
+    
+    // Clear select
+    select.innerHTML = '<option value="">Wybierz osobę</option>';
+    
+    // Add existing recipients to select
+    recipients.forEach(recipient => {
+        const option = document.createElement('option');
+        option.value = recipient.id;
+        option.textContent = recipient.name;
+        select.appendChild(option);
     });
+    
+    // Add "Add person" option at the end
+    const addOption = document.createElement('option');
+    addOption.value = 'add_new';
+    addOption.textContent = '➕ Dodaj nową osobę';
+    select.appendChild(addOption);
+    
+    // Default set identified person if user is identified
+    if (identificationStatus.isIdentified && identificationStatus.identifiedRecipient) {
+        const identifiedId = identificationStatus.identifiedRecipient.id.toString();
+        
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === identifiedId) {
+                select.selectedIndex = i;
+                break;
+            }
+        }
+    } else {
+        select.selectedIndex = 0; // Select "Wybierz osobę"
+    }
 }
 
 function addPresentFromModal() {
@@ -1584,7 +1579,8 @@ function addRecipientFromModal() {
                 showModalMessage('addRecipientMessage', 'Osoba została dodana!', 'success');
                 document.getElementById('addRecipientForm').reset();
                 
-                // Refresh the recipients list to show the new person
+                // Clear cache and refresh the recipients list to show the new person
+                clearRecipientsCache();
                 loadRecipientsWithPresents();
                 
                 // Close modal after 1 second
@@ -2059,5 +2055,60 @@ function getFullProfilePictureUrl(path) {
 // Add missing loadRecipients function for the refresh button
 function loadRecipients() {
     console.log('Refreshing recipients data...');
+    // Clear all caches when refreshing
+    clearRecipientsCache();
     loadRecipientsWithPresents();
+}
+
+// Cache management functions
+function clearRecipientsCache() {
+    window._cachedRecipients = null;
+    window._cachedIdentificationStatus = null;
+    window._dataCache = null;
+    window._dataCacheTimestamp = null;
+}
+
+function displayRecipientsData(recipients, presents, identificationStatus) {
+    // Store data globally for other functions
+    window._allPresentsByRecipient = {};
+    presents.forEach(present => {
+        if (!window._allPresentsByRecipient[present.recipient_id]) {
+            window._allPresentsByRecipient[present.recipient_id] = [];
+        }
+        window._allPresentsByRecipient[present.recipient_id].push(present);
+    });
+    
+    // Display the recipients
+    displayRecipientsWithPresents(recipients, presents);
+}
+
+function handleIdentificationLogic(recipients, identificationStatus) {
+    if (!identificationStatus.isIdentified) {
+        // Find matching recipient
+        const matchingRecipient = recipients.find(recipient => 
+            recipient.name.toLowerCase() === identificationStatus.username?.toLowerCase()
+        );
+        
+        if (matchingRecipient) {
+            setTimeout(() => {
+                identifyAsRecipient(matchingRecipient.id, matchingRecipient.name, true);
+            }, 500); // Reduced delay for faster UX
+        } else {
+            setTimeout(() => {
+                showRecipientSelectionModal();
+            }, 500); // Reduced delay for faster UX
+        }
+    }
+}
+
+function refreshRecipientsCache() {
+    return Promise.all([
+        fetch('/api/recipients').then(response => response.json()),
+        fetch('/api/user/identification').then(response => response.json())
+    ])
+    .then(([recipients, identificationStatus]) => {
+        window._cachedRecipients = recipients;
+        window._cachedIdentificationStatus = identificationStatus;
+        return { recipients, identificationStatus };
+    });
 }

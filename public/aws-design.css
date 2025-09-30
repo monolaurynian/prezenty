@@ -256,6 +256,95 @@
     }
 }
 
+/* Change Picture Button under profile picture */
+.recipients-page .change-picture-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: var(--aws-radius-md);
+    transition: all 0.2s ease;
+    background: transparent;
+    border: 2px solid var(--material-indigo);
+    color: var(--material-indigo);
+    font-weight: 500;
+    min-width: 100px;
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recipients-page .change-picture-btn:hover {
+    background: var(--material-indigo);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(63, 81, 181, 0.3);
+}
+
+.recipients-page .change-picture-btn i {
+    font-size: 11px;
+}
+
+/* Mobile change picture button - separate row below profile */
+.recipients-page .change-picture-btn-mobile {
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: var(--aws-radius-md);
+    transition: all 0.2s ease;
+    background: transparent;
+    border: 2px solid var(--material-indigo);
+    color: var(--material-indigo);
+    font-weight: 500;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.recipients-page .change-picture-btn-mobile:hover {
+    background: var(--material-indigo);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(63, 81, 181, 0.3);
+}
+
+.recipients-page .change-picture-btn-mobile i {
+    font-size: 13px;
+}
+
+/* Responsive adjustments for change picture button */
+@media (max-width: 768px) {
+    .recipients-page .change-picture-btn {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-width: 100%;
+        max-width: 100%;
+        width: 100%;
+        margin-top: 8px;
+        border-radius: var(--aws-radius-md);
+    }
+    
+    .recipients-page .change-picture-btn i {
+        font-size: 11px;
+    }
+    
+    .recipients-page .col-md-2 {
+        margin-bottom: 16px;
+    }
+    
+    /* Mobile button styling */
+    .recipients-page .change-picture-btn-mobile {
+        margin-top: 12px;
+    }
+}
+
+@media (min-width: 992px) {
+    .recipients-page .change-picture-btn {
+        font-size: 13px;
+        padding: 8px 14px;
+        min-width: 120px;
+        max-width: 160px;
+    }
+}
+
 /* AWS Container Layout */
 .recipients-page .container {
     max-width: 1200px;
@@ -341,6 +430,18 @@
     background: linear-gradient(135deg, var(--material-amber), var(--material-orange));
     box-shadow: 0 12px 35px rgba(255, 193, 7, 0.5);
     transform: scale(1.15) rotate(-5deg);
+}
+
+/* Bookmark icon specific styling */
+.recipients-page .aws-action-section .col-lg-4:nth-child(2) .aws-action-icon i.fa-bookmark {
+    color: white !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+}
+
+.recipients-page .aws-action-section .col-lg-4:nth-child(2) .aws-action-card:hover .aws-action-icon i.fa-bookmark {
+    color: white !important;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
 }
 
 /* Card 3: Dodaj Osobę - BLUE */
@@ -439,12 +540,30 @@
 }
 
 .recipients-page .aws-content-header {
-    background: linear-gradient(135deg, var(--christmas-cream) 0%, white 100%);
-    border-bottom: 3px solid var(--material-amber);
+    background: linear-gradient(135deg, var(--material-red), var(--material-pink));
+    border-bottom: 3px solid var(--material-red);
     padding: var(--aws-space-lg);
     border-radius: var(--aws-radius-lg) var(--aws-radius-lg) 0 0;
     position: relative;
+    color: white;
 }
+
+.recipients-page .aws-content-header .d-flex {
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100%;
+}
+
+.recipients-page .aws-content-header .aws-header-title {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+}
+
+
 
 .recipients-page .aws-content-header::before {
     content: '';
@@ -453,34 +572,48 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, var(--material-red), var(--material-amber), var(--material-green), var(--material-blue));
+    background: linear-gradient(90deg, var(--material-red), var(--material-pink), var(--material-red), var(--material-pink));
     border-radius: var(--aws-radius-lg) var(--aws-radius-lg) 0 0;
-    animation: material-rainbow 3s ease-in-out infinite;
+    animation: material-red-pulse 2s ease-in-out infinite;
 }
 
-@keyframes material-rainbow {
+@keyframes material-red-pulse {
     0%, 100% {
-        background: linear-gradient(90deg, var(--material-red), var(--material-amber), var(--material-green), var(--material-blue));
-    }
-    25% {
-        background: linear-gradient(90deg, var(--material-purple), var(--material-pink), var(--material-orange), var(--material-teal));
+        background: linear-gradient(90deg, var(--material-red), var(--material-pink), var(--material-red), var(--material-pink));
+        opacity: 1;
     }
     50% {
-        background: linear-gradient(90deg, var(--material-indigo), var(--material-cyan), var(--material-lime), var(--material-deep-orange));
-    }
-    75% {
-        background: linear-gradient(90deg, var(--material-blue), var(--material-green), var(--material-yellow), var(--material-red));
+        background: linear-gradient(90deg, var(--material-pink), var(--material-red), var(--material-pink), var(--material-red));
+        opacity: 0.8;
     }
 }
 
 .recipients-page .aws-header-title h5 {
-    color: var(--aws-gray-800) !important;
+    color: white !important;
     font-weight: 600;
     font-size: var(--aws-font-size-lg);
     margin: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: var(--aws-space-sm);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    text-align: center;
+}
+
+.recipients-page .aws-header-title h5 i,
+.recipients-page .aws-header-title h5 .fa-users,
+.recipients-page .aws-header-title h5 i.fas.fa-users.me-2.aws-gradient-icon {
+    color: white !important;
+    background: none !important;
+    background-image: none !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: white !important;
+    background-clip: initial !important;
+    animation: none !important;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3)) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
 }
 
 .recipients-page .aws-header-title i {
@@ -493,34 +626,38 @@
     text-shadow: 0 0 10px rgba(255, 153, 0, 0.3);
 }
 
-.recipients-page .aws-header-title i.fa-users {
-    background: linear-gradient(135deg, var(--aws-orange), var(--aws-amber));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+/* Override the gradient icon specifically for fa-users */
+.recipients-page .aws-header-title i.fa-users.aws-gradient-icon {
+    background: linear-gradient(135deg, var(--material-red), var(--material-pink)) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    filter: drop-shadow(0 0 8px rgba(244, 67, 54, 0.3)) !important;
+    background-size: 100% 100% !important;
+    animation: none !important;
+}
+
+/* Additional specificity override */
+.recipients-page .aws-content-header .aws-header-title i.fa-users.aws-gradient-icon {
+    background: linear-gradient(135deg, var(--material-red), var(--material-pink)) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    filter: drop-shadow(0 0 8px rgba(244, 67, 54, 0.3)) !important;
+    background-size: 100% 100% !important;
+    animation: none !important;
 }
 
 .recipients-page .aws-header-subtitle {
-    color: var(--aws-gray-600);
+    color: rgba(255, 255, 255, 0.9);
     font-size: var(--aws-font-size-sm);
     margin-top: var(--aws-space-xs);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 100%;
 }
 
-.recipients-page .aws-refresh-btn {
-    background: transparent;
-    border: 2px solid var(--aws-gray-400);
-    color: var(--aws-gray-800);
-    border-radius: var(--aws-radius-md);
-    padding: var(--aws-space-sm) var(--aws-space-md);
-    font-size: var(--aws-font-size-sm);
-    transition: all 0.2s ease;
-}
 
-.recipients-page .aws-refresh-btn:hover {
-    background: var(--aws-gray-100);
-    border-color: var(--material-teal);
-    color: var(--material-teal);
-}
 
 .recipients-page .aws-content-body {
     padding: var(--aws-space-lg);
@@ -534,16 +671,51 @@
     color: var(--material-blue);
     width: 3rem;
     height: 3rem;
+    border-width: 4px;
     filter: drop-shadow(0 0 15px rgba(33, 150, 243, 0.5));
-    animation: material-loading-pulse 1.5s ease-in-out infinite;
+    animation: material-loading-spin 1s linear infinite, material-loading-pulse 2s ease-in-out infinite;
+    position: relative;
+}
+
+.recipients-page .aws-loading-state .spinner-border::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 4px solid transparent;
+    border-top: 4px solid var(--material-amber);
+    border-radius: 50%;
+    animation: material-loading-spin-reverse 1.5s linear infinite;
+}
+
+@keyframes material-loading-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes material-loading-spin-reverse {
+    0% {
+        transform: rotate(360deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
 }
 
 @keyframes material-loading-pulse {
     0%, 100% {
         filter: drop-shadow(0 0 15px rgba(33, 150, 243, 0.5));
+        transform: scale(1);
     }
     50% {
         filter: drop-shadow(0 0 25px rgba(33, 150, 243, 0.8));
+        transform: scale(1.05);
     }
 }
 
@@ -710,7 +882,7 @@
 }
 
 .recipients-page .present-item .fa-bookmark {
-    color: var(--material-purple);
+    color: var(--material-amber);
 }
 
 .recipients-page .present-item .fa-check-circle {
@@ -850,7 +1022,19 @@
 }
 
 .recipients-page #reservedPresentsModal .aws-modal-title-section i {
-    color: var(--aws-teal);
+    color: white;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.recipients-page #reservedByOtherModal .modal-title i.fa-bookmark {
+    color: white !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Empty state bookmark icon in reserved presents modal */
+.recipients-page #reservedPresentsModal .fa-bookmark.fa-3x {
+    color: var(--aws-gray-400) !important;
+    opacity: 0.6;
 }
 
 .recipients-page #addRecipientModal .aws-modal-title-section i {
@@ -1497,13 +1681,41 @@
 }
 
 /* Material Design Expressive gradient icons */
-.recipients-page .aws-gradient-icon {
+.recipients-page .aws-gradient-icon:not(.fa-users) {
     background: linear-gradient(45deg, var(--material-red), var(--material-amber), var(--material-green), var(--material-blue), var(--material-purple));
     background-size: 400% 400%;
     animation: material-gradient-shift 3s ease infinite;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+/* Specific styling for fa-users icons - maximum specificity */
+.recipients-page .aws-content-header .aws-header-title .fa-users.aws-gradient-icon,
+.recipients-page .aws-gradient-icon.fa-users,
+.recipients-page i.fa-users.aws-gradient-icon,
+.recipients-page .card-header .aws-header-title i.fa-users,
+.recipients-page .aws-content-header i.fa-users {
+    background: none !important;
+    background-image: none !important;
+    color: white !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: white !important;
+    background-clip: initial !important;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3)) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    animation: none !important;
+}
+
+/* Nuclear option - override any fa-users in header area */
+.recipients-page .aws-content-header *[class*="fa-users"] {
+    background: none !important;
+    background-image: none !important;
+    color: white !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: white !important;
+    background-clip: initial !important;
+    animation: none !important;
 }
 
 @keyframes material-gradient-shift {
@@ -1789,4 +2001,22 @@
 .recipients-page .popover-body {
     color: var(--aws-gray-700);
     font-size: var(--aws-font-size-sm);
+}
+/*
+ FINAL OVERRIDE - Force fa-users icon to be white */
+.recipients-page .fas.fa-users.me-2.aws-gradient-icon,
+.recipients-page .fa-users.aws-gradient-icon,
+.recipients-page i.fa-users,
+.recipients-page .aws-content-header .fa-users,
+.recipients-page .card-header .fa-users {
+    color: white !important;
+    background: transparent !important;
+    background-image: none !important;
+    background-color: transparent !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: white !important;
+    background-clip: initial !important;
+    animation: none !important;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3)) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
 }
