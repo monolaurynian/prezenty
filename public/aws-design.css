@@ -152,6 +152,31 @@
     transform: none !important;
 }
 
+/* Mobile navbar centering */
+@media (max-width: 991px) {
+    .recipients-page .navbar .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 12px 15px;
+    }
+    
+    .recipients-page .navbar-brand {
+        margin-bottom: 8px;
+        margin-right: 0;
+    }
+    
+    .recipients-page .navbar-nav {
+        margin: 0;
+    }
+    
+    .recipients-page .navbar-nav .btn {
+        font-size: 14px;
+        padding: 6px 16px;
+    }
+}
+
 /* Improved Self Identification Modal Layout */
 .recipients-page #selfIdentificationModal .modal-footer {
     padding: var(--aws-space-xl) var(--aws-space-lg);
