@@ -115,6 +115,22 @@ Visit `https://your-app.onrender.com/health` to see:
 - Verify all environment variables are set
 - Check for syntax errors in code
 
+### Deployment Fails with "npm ci" Error
+**Error**: `npm ci` can only install packages when package.json and package-lock.json are in sync
+
+**Solution**:
+1. Delete `package-lock.json`
+2. Run `npm install` to regenerate it
+3. Commit the new `package-lock.json`
+4. Redeploy
+
+**Cause**: Package.json was modified without updating the lock file
+
+### Keep-Alive System Not Working
+- Check if `NODE_ENV=production` is set
+- Verify `RENDER=true` environment variable
+- Check logs for keep-alive ping messages
+
 ## Manual Database Setup
 
 If you need to create database tables:
