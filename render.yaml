@@ -11,10 +11,13 @@ services:
         value: production
       - key: SESSION_SECRET
         generateValue: true
-      - key: DATABASE_URL
-        value: <your_postgres_connection_string>
-    # Add a persistent disk for uploads
-    disks:
-      - name: uploads
-        mountPath: /app/public/uploads
-        sizeGB: 1 # Adjust as needed
+      - key: DB_HOST
+        value: 153.92.7.101
+      - key: DB_USER
+        value: u662139794_prezenty
+      - key: DB_PASSWORD
+        sync: false  # You'll need to set this manually in Render dashboard
+      - key: DB_NAME
+        value: u662139794_prezenty
+      - key: DB_PORT
+        value: 3306

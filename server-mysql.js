@@ -14,13 +14,13 @@ if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 
-// MySQL database configuration
+// Database configuration
 const dbConfig = {
-    host: process.env.DB_HOST || '153.92.7.101',
+    host: '153.92.7.101',
     user: process.env.DB_USER || 'u662139794_prezenty',
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME || 'u662139794_prezenty',
-    port: process.env.DB_PORT || 3306,
+    password: process.env.DB_PASSWORD || '',
+    database: 'u662139794_prezenty',
+    port: 3306,
     charset: 'utf8mb4'
 };
 
@@ -57,7 +57,10 @@ const badRequest = (res, message = 'Nieprawidłowe dane') => {
 // Helper to get user identification status
 const getUserIdentification = async (userId) => {
     try {
-        const [rows] = await pool.execute('SELECT r.* FROM recipients r WHERE r.identified_by = ?', [userId]);
+        const [rows] = await pool.execute(
+            'SELECT r.* FROM recipients r WHERE r.identified_by = ?',
+            [userId]
+        );
         return rows[0] || null;
     } catch (err) {
         throw err;
@@ -67,12 +70,13 @@ const getUserIdentification = async (userId) => {
 // Helper to get recipient by ID
 const getRecipientById = async (id) => {
     try {
-        const [rows] = await pool.execute(`
+        const [rows] = await pool.execute(
             SELECT r.*, u.username as identified_by_username 
-            FROM recipients r 
-            LEFT JOIN users u ON r.identified_by = u.id 
-            WHERE r.id = ?
-        `, [id]);
+             FROM recipients r 
+             LEFT JOIN users u ON r.identified_by = u.id 
+             WHERE r.id = ?,
+            [id]
+        );
         return rows[0] || null;
     } catch (err) {
         throw err;
@@ -82,13 +86,13 @@ const getRecipientById = async (id) => {
 // Helper to get all presents with recipient and user info
 const getAllPresents = async () => {
     try {
-        const [rows] = await pool.execute(`
+        const [rows] = await pool.execute(
             SELECT p.*, r.name as recipient_name, u.username as reserved_by_username, p.created_by
-            FROM presents p 
-            LEFT JOIN recipients r ON p.recipient_id = r.id 
-            LEFT JOIN users u ON p.reserved_by = u.id
-            ORDER BY p.created_at DESC
-        `);
+             FROM presents p 
+             LEFT JOIN recipients r ON p.recipient_id = r.id 
+             LEFT JOIN users u ON p.reserved_by = u.id
+             ORDER BY p.created_at DESC
+        );
         return rows;
     } catch (err) {
         throw err;
@@ -108,8 +112,15 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-// Create session store
-const sessionStore = new MySQLStore(dbConfig);
+// Session store configuration
+const sessionStore = new MySQLStore({
+    host: dbConfig.host,
+    port: dbConfig.port,
+    user: dbConfig.user,
+    password: dbConfig.password,
+    database: dbConfig.database,
+    charset: 'utf8mb4'
+});
 
 app.use(session({
     store: sessionStore,
@@ -119,7 +130,7 @@ app.use(session({
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
 }));
 
-// Configure multer for file uploads (store in memory for database storage)
+// Configure multer for file uploads (now for database storage)
 const storage = multer.memoryStorage();
 
 const upload = multer({ 
@@ -135,8 +146,6 @@ const upload = multer({
         }
     }
 });
-
-
 
 // Authentication middleware
 function requireAuth(req, res, next) {
@@ -227,23 +236,14 @@ app.get('/api/recipients', requireAuth, async (req, res) => {
     console.log('Getting recipients for user:', req.session.userId);
     
     try {
-        const [rows] = await pool.execute(`
+        const [rows] = await pool.execute(
             SELECT r.*, u.username as identified_by_username 
             FROM recipients r 
             LEFT JOIN users u ON r.identified_by = u.id 
             ORDER BY r.name
-        `);
-        
-        // Add profile picture URLs for recipients that have them
-        const recipients = rows.map(recipient => {
-            if (recipient.profile_picture) {
-                recipient.profile_picture = `/api/recipients/${recipient.id}/profile-picture`;
-            }
-            return recipient;
-        });
-        
-        console.log('Recipients loaded successfully:', recipients.length, 'recipients');
-        res.json(recipients);
+        );
+        console.log('Recipients loaded successfully:', rows.length, 'recipients');
+        res.json(rows);
     } catch (err) {
         console.error('Database error getting recipients:', err);
         return handleDbError(err, res, 'Błąd podczas pobierania osób');
@@ -263,7 +263,6 @@ app.post('/api/recipients', requireAuth, async (req, res) => {
     try {
         const [result] = await pool.execute('INSERT INTO recipients (name) VALUES (?)', [name.trim()]);
         console.log('[POST /api/recipients] Recipient added successfully:', result.insertId, 'Request body:', req.body, 'Session:', req.session);
-        // Return the expected structure for frontend
         res.json({ success: true, recipient: { id: result.insertId, name: name.trim() } });
     } catch (err) {
         console.error('[POST /api/recipients] Database error adding recipient:', err, 'Request body:', req.body, 'Session:', req.session);
@@ -320,6 +319,77 @@ app.get('/api/user/identification', requireAuth, async (req, res) => {
     }
 });
 
+// Profile picture handling (stored in database as BLOB)
+app.post('/api/recipients/:id/profile-picture', requireAuth, upload.single('profile_picture'), async (req, res) => {
+    const { id } = req.params;
+    const userId = req.session.userId;
+    
+    // Check if file was uploaded
+    if (!req.file) {
+        return badRequest(res, 'Brak pliku zdjęcia');
+    }
+    
+    try {
+        // Allow editing if not identified or identified by this user
+        const [rows] = await pool.execute('SELECT identified_by FROM recipients WHERE id = ?', [id]);
+        const recipient = rows[0];
+        
+        if (!recipient) {
+            return notFound(res, 'Osoba nie została znaleziona');
+        }
+        
+        if (recipient.identified_by && recipient.identified_by !== userId) {
+            return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
+        }
+        
+        // Store profile picture in database as BLOB
+        await pool.execute(
+            'UPDATE recipients SET profile_picture = ?, profile_picture_type = ? WHERE id = ?',
+            [req.file.buffer, req.file.mimetype, id]
+        );
+        
+        console.log('Profile picture updated successfully for recipient:', id);
+        res.json({ success: true, profile_picture: 'data:' + req.file.mimetype + ';base64,' + req.file.buffer.toString('base64') });
+    } catch (err) {
+        console.error('Database error updating profile picture:', err);
+        return handleDbError(err, res, 'Błąd podczas aktualizacji zdjęcia profilowego');
+    }
+});
+
+// Get profile picture
+app.get('/api/recipients/:id/profile-picture', async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        const [rows] = await pool.execute('SELECT profile_picture, profile_picture_type FROM recipients WHERE id = ?', [id]);
+        const recipient = rows[0];
+        
+        if (!recipient || !recipient.profile_picture) {
+            return notFound(res, 'Zdjęcie profilowe nie zostało znalezione');
+        }
+        
+        res.set('Content-Type', recipient.profile_picture_type);
+        res.send(recipient.profile_picture);
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas pobierania zdjęcia profilowego');
+    }
+});
+
+// Get recipient with identification info
+app.get('/api/recipients/:id', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        const recipient = await getRecipientById(id);
+        if (!recipient) {
+            return notFound(res, 'Osoba nie została znaleziona');
+        }
+        res.json(recipient);
+    } catch (err) {
+        handleDbError(err, res, 'Błąd podczas pobierania osoby');
+    }
+});
+
 // Cancel self-identification API
 app.delete('/api/recipients/:id/identify', requireAuth, async (req, res) => {
     console.log('Cancel identification request:', { id: req.params.id, userId: req.session.userId });
@@ -359,92 +429,15 @@ app.delete('/api/recipients/:id', requireAuth, async (req, res) => {
     
     try {
         const [result] = await pool.execute('DELETE FROM recipients WHERE id = ?', [id]);
-        
         if (result.affectedRows === 0) {
             console.log('Recipient not found for deletion:', id);
             return notFound(res, 'Osoba nie została znaleziona');
         }
-        
         console.log('Recipient deleted successfully:', id);
         res.json({ success: true });
     } catch (err) {
         console.error('Database error deleting recipient:', err);
         return handleDbError(err, res, 'Błąd podczas usuwania osoby');
-    }
-});
-
-app.post('/api/recipients/:id/profile-picture', requireAuth, upload.single('profile_picture'), async (req, res) => {
-    const { id } = req.params;
-    const userId = req.session.userId;
-    
-    // Check if file was uploaded
-    if (!req.file) {
-        return badRequest(res, 'Brak pliku zdjęcia');
-    }
-    
-    try {
-        // Allow editing if not identified or identified by this user
-        const [rows] = await pool.execute('SELECT identified_by FROM recipients WHERE id = ?', [id]);
-        const recipient = rows[0];
-        
-        if (!recipient) {
-            return notFound(res, 'Osoba nie została znaleziona');
-        }
-        
-        if (recipient.identified_by && recipient.identified_by !== userId) {
-            return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
-        }
-        
-        // Store image data and type in database
-        await pool.execute('UPDATE recipients SET profile_picture = ?, profile_picture_type = ? WHERE id = ?', 
-            [req.file.buffer, req.file.mimetype, id]);
-        
-        console.log('Profile picture updated successfully for recipient:', id);
-        res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
-    } catch (err) {
-        console.error('Database error updating profile picture:', err);
-        return handleDbError(err, res, 'Błąd podczas aktualizacji zdjęcia profilowego');
-    }
-});
-
-// Serve profile picture from database
-app.get('/api/recipients/:id/profile-picture', async (req, res) => {
-    const { id } = req.params;
-    
-    try {
-        const [rows] = await pool.execute('SELECT profile_picture, profile_picture_type FROM recipients WHERE id = ?', [id]);
-        const recipient = rows[0];
-        
-        if (!recipient || !recipient.profile_picture) {
-            return res.status(404).send('Profile picture not found');
-        }
-        
-        res.set('Content-Type', recipient.profile_picture_type);
-        res.send(recipient.profile_picture);
-    } catch (err) {
-        console.error('Error serving profile picture:', err);
-        res.status(500).send('Error serving profile picture');
-    }
-});
-
-// Get recipient with identification info
-app.get('/api/recipients/:id', requireAuth, async (req, res) => {
-    const { id } = req.params;
-    
-    try {
-        const recipient = await getRecipientById(id);
-        if (!recipient) {
-            return notFound(res, 'Osoba nie została znaleziona');
-        }
-        
-        // Add profile picture URL if exists
-        if (recipient.profile_picture) {
-            recipient.profile_picture = `/api/recipients/${id}/profile-picture`;
-        }
-        
-        res.json(recipient);
-    } catch (err) {
-        handleDbError(err, res, 'Błąd podczas pobierania osoby');
     }
 });
 
@@ -459,14 +452,14 @@ app.get('/api/presents', requireAuth, async (req, res) => {
         
         if (identifiedRecipient) {
             // User is identified - only show progress (checked/unchecked count) for their presents
-            const [rows] = await pool.execute(`
+            const [rows] = await pool.execute(
                 SELECT 
                     COUNT(*) as total_presents,
                     SUM(CASE WHEN is_checked = 1 THEN 1 ELSE 0 END) as checked_presents,
                     SUM(CASE WHEN is_checked = 0 THEN 1 ELSE 0 END) as unchecked_presents
                 FROM presents p 
                 WHERE p.recipient_id = ?
-            `, [identifiedRecipient.id]);
+            , [identifiedRecipient.id]);
             
             const progress = rows[0] || { total_presents: 0, checked_presents: 0, unchecked_presents: 0 };
             console.log('Progress for identified user:', progress);
@@ -493,7 +486,7 @@ app.get('/api/presents', requireAuth, async (req, res) => {
             });
         }
     } catch (err) {
-        console.error('Database error:', err);
+        console.error('Database error getting presents:', err);
         handleDbError(err, res, 'Błąd podczas pobierania prezentów');
     }
 });
@@ -586,7 +579,6 @@ app.put('/api/presents/:id', requireAuth, async (req, res) => {
         if (result.affectedRows === 0) {
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
         console.log('Present updated successfully:', id);
         res.json({ success: true });
     } catch (err) {
@@ -600,230 +592,11 @@ app.delete('/api/presents/:id', requireAuth, async (req, res) => {
     
     try {
         const [result] = await pool.execute('DELETE FROM presents WHERE id = ?', [id]);
-        
         if (result.affectedRows === 0) {
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
         res.json({ success: true });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas usuwania prezentu');
     }
 });
-
-// Reserve present
-app.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
-    const { id } = req.params;
-    const userId = req.session.userId;
-    
-    console.log('Reserve present request:', { id, userId });
-    
-    try {
-        // First check if the present exists and is not already reserved
-        const [rows] = await pool.execute('SELECT id, reserved_by FROM presents WHERE id = ?', [id]);
-        const present = rows[0];
-        
-        if (!present) {
-            console.log('No present found with id:', id);
-            return notFound(res, 'Prezent nie został znaleziony');
-        }
-        
-        if (present.reserved_by) {
-            console.log('Present already reserved by user:', present.reserved_by);
-            return conflict(res, 'Prezent jest już zarezerwowany');
-        }
-        
-        // Reserve the present
-        const [result] = await pool.execute('UPDATE presents SET reserved_by = ? WHERE id = ?', [userId, id]);
-        
-        console.log('Present reserved successfully:', { id, userId, changes: result.affectedRows });
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Database error reserving present:', err);
-        return handleDbError(err, res, 'Błąd podczas rezerwacji prezentu');
-    }
-});
-
-// Cancel reservation
-app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
-    const { id } = req.params;
-    const userId = req.session.userId;
-    
-    console.log('Cancel reservation request:', { id, userId });
-    
-    try {
-        // First check if the present exists and is reserved by this user
-        const [rows] = await pool.execute('SELECT id, reserved_by FROM presents WHERE id = ?', [id]);
-        const present = rows[0];
-        
-        if (!present) {
-            console.log('No present found with id:', id);
-            return notFound(res, 'Prezent nie został znaleziony');
-        }
-        
-        if (!present.reserved_by) {
-            console.log('Present is not reserved');
-            return conflict(res, 'Prezent nie jest zarezerwowany');
-        }
-        
-        if (present.reserved_by !== userId) {
-            console.log('Present reserved by different user:', present.reserved_by);
-            return forbidden(res, 'Nie możesz anulować rezerwacji innej osoby');
-        }
-        
-        // Cancel the reservation
-        const [result] = await pool.execute('UPDATE presents SET reserved_by = ? WHERE id = ?', [null, id]);
-        
-        console.log('Reservation canceled successfully:', { id, userId, changes: result.affectedRows });
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Database error canceling reservation:', err);
-        return handleDbError(err, res, 'Błąd podczas anulowania rezerwacji');
-    }
-});
-
-// Registration API
-app.post('/api/register', async (req, res) => {
-    console.log('Registration request received:', { username: req.body.username, hasPassword: !!req.body.password });
-    const { username, password } = req.body;
-    
-    if (!username || !password) {
-        console.log('Registration failed: missing username or password');
-        return badRequest(res, 'Wymagane jest podanie nazwy użytkownika i hasła');
-    }
-    
-    try {
-        console.log('Checking if username exists:', username);
-        const [rows] = await pool.execute('SELECT id FROM users WHERE username = ?', [username]);
-        
-        if (rows.length > 0) {
-            console.log('Registration failed: username already exists:', username);
-            return conflict(res, 'Nazwa użytkownika jest już zajęta');
-        }
-        
-        console.log('Creating new user:', username);
-        const hashedPassword = bcrypt.hashSync(password, 10);
-        const [result] = await pool.execute('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword]);
-        
-        console.log('User created successfully:', { id: result.insertId, username: username });
-        
-        // Automatycznie loguj użytkownika po rejestracji
-        req.session.userId = result.insertId;
-        req.session.username = username;
-        
-        console.log('Session created:', { userId: req.session.userId, username: req.session.username });
-        
-        res.json({ success: true, user: { id: result.insertId, username: username } });
-    } catch (err) {
-        console.error('Database error during registration:', err);
-        return handleDbError(err, res, 'Błąd podczas rejestracji');
-    }
-});
-
-
-
-// Add new recipient and identify user
-app.post('/api/user/identify', requireAuth, async (req, res) => {
-    const { name } = req.body;
-    const userId = req.session.userId;
-    
-    console.log('[POST /api/user/identify] Incoming request:', { body: req.body, session: req.session });
-    
-    if (!name || name.trim() === '') {
-        console.log('[POST /api/user/identify] Validation failed: empty name');
-        return badRequest(res, 'Imię jest wymagane');
-    }
-    
-    try {
-        // Check if user is already identified
-        const [existingRows] = await pool.execute('SELECT r.* FROM recipients r WHERE r.identified_by = ?', [userId]);
-        const existingRecipient = existingRows[0];
-        
-        if (existingRecipient) {
-            console.log('[POST /api/user/identify] User already identified as:', existingRecipient);
-            return conflict(res, 'Jesteś już zidentyfikowany jako ' + existingRecipient.name);
-        }
-        
-        // Check if recipient with this name already exists
-        const [recipientRows] = await pool.execute('SELECT * FROM recipients WHERE name = ?', [name.trim()]);
-        const recipient = recipientRows[0];
-        
-        if (recipient) {
-            // Check if this recipient is already identified by someone else
-            if (recipient.identified_by && recipient.identified_by !== userId) {
-                console.log('[POST /api/user/identify] Recipient already identified by another user:', recipient);
-                return conflict(res, 'Ta osoba została już zidentyfikowana przez innego użytkownika');
-            }
-            
-            // Update existing recipient to identify this user
-            await pool.execute('UPDATE recipients SET identified_by = ? WHERE id = ?', [userId, recipient.id]);
-            console.log('[POST /api/user/identify] Recipient identification updated:', { recipientId: recipient.id, userId });
-            res.json({ 
-                success: true, 
-                recipient: { 
-                    id: recipient.id, 
-                    name: recipient.name 
-                } 
-            });
-        } else {
-            // Create new recipient and identify user
-            const [result] = await pool.execute('INSERT INTO recipients (name, identified_by) VALUES (?, ?)', [name.trim(), userId]);
-            console.log('[POST /api/user/identify] New recipient created and identified:', { id: result.insertId, name: name.trim(), userId });
-            res.json({ 
-                success: true, 
-                recipient: { 
-                    id: result.insertId, 
-                    name: name.trim() 
-                } 
-            });
-        }
-    } catch (err) {
-        console.error('[POST /api/user/identify] Database error:', err, 'Session:', req.session);
-        return handleDbError(err, res, 'Błąd podczas identyfikacji');
-    }
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Server error:', err);
-    
-    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-        return badRequest(res, 'Nieprawidłowy format danych JSON');
-    }
-    
-    if (err.type === 'entity.too.large') {
-        return res.status(413).json({ error: 'Plik jest zbyt duży. Maksymalny rozmiar to 10MB.' });
-    }
-    
-    if (err.message === 'Tylko pliki obrazów są dozwolone') {
-        return badRequest(res, err.message);
-    }
-    
-    handleDbError(err, res, 'Błąd serwera');
-});
-
-// Initialize database and start server
-async function startServer() {
-    try {
-        // Initialize database schema
-        const { initializeDatabase } = require('./init-db.js');
-        await initializeDatabase();
-        
-        // Start server
-        app.listen(PORT, HOST, () => {
-            console.log(`Serwer Prezenty działa na porcie ${PORT}`);
-            console.log(`Dostępny pod adresem: http://${HOST}:${PORT}`);
-            console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
-            console.log(`Database: MySQL at ${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
-            console.log('Session store using MySQL');
-        }).on('error', (err) => {
-            console.error('Błąd uruchamiania serwera:', err);
-            process.exit(1);
-        });
-    } catch (err) {
-        console.error('Failed to start server:', err);
-        process.exit(1);
-    }
-}
-
-startServer(); 
