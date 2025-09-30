@@ -1,0 +1,10 @@
+version: "1.0"
+
+build:
+  builder: railpack
+  commands:
+    - npm install
+    - npm run build
+
+run:
+  command: npx serve -s dist -l 5173
