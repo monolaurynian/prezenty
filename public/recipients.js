@@ -309,10 +309,10 @@ function displayRecipientsWithPresents(recipients, presents) {
                     </div>
                     <div class="col-md-6">
                         <div class="mb-2">
-                            <h5 class="recipient-name mb-0">
-                                <i class="fas fa-user me-2"></i>
+                          <center>  <h5 class="recipient-name mb-0">
+                               
                                 ${escapeHtml(recipient.name)}
-                            </h5>
+                            </h5> </center>
                             ${!isIdentified && !hasAnyIdentification ? `
                                 <div class="mt-2">
                                     <button class="btn btn-outline-success btn-sm identify-btn" onclick="identifyAsRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')">
