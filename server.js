@@ -15,45 +15,46 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Demo mode - run without database for preview
-const DEMO_MODE = process.env.DEMO_MODE === 'true' || !process.env.DB_PASSWORD;
+let DEMO_MODE = process.env.DEMO_MODE === 'true' || !process.env.DB_PASSWORD;
 
 // MySQL database configuration
 let dbConfig;
 let pool;
 
 if (!DEMO_MODE) {
-    if (process.env.DATABASE_URL) {
-        // Use DATABASE_URL if provided (alternative connection method)
-        dbConfig = process.env.DATABASE_URL;
-    } else {
-        // Use individual environment variables
-        dbConfig = {
-            host: process.env.DB_HOST || '153.92.7.101',
-            user: process.env.DB_USER || 'u662139794_mati',
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME || 'u662139794_prezenty',
-            port: parseInt(process.env.DB_PORT) || 3306,
-            charset: 'utf8mb4',
-            connectTimeout: 60000
-        };
-    }
+    // Always use individual environment variables for better control
+    dbConfig = {
+        host: process.env.DB_HOST || '153.92.7.101',
+        user: process.env.DB_USER || 'u662139794_mati',
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME || 'u662139794_prezenty',
+        port: parseInt(process.env.DB_PORT) || 3306,
+        charset: 'utf8mb4',
+        connectTimeout: 60000,
+        acquireTimeout: 60000,
+        timeout: 60000
+    };
 
     // Debug database configuration
-    if (typeof dbConfig === 'string') {
-        console.log('Database configuration: Using DATABASE_URL connection string');
-    } else {
-        console.log('Database configuration:', {
-            host: dbConfig.host,
-            user: dbConfig.user,
-            database: dbConfig.database,
-            port: dbConfig.port,
-            hasPassword: !!dbConfig.password
-        });
-    }
+    console.log('Database configuration:', {
+        host: dbConfig.host,
+        user: dbConfig.user,
+        database: dbConfig.database,
+        port: dbConfig.port,
+        hasPassword: !!dbConfig.password
+    });
 
     // Create MySQL connection pool
     pool = mysql.createPool({
-        ...dbConfig,
+        host: dbConfig.host,
+        user: dbConfig.user,
+        password: dbConfig.password,
+        database: dbConfig.database,
+        port: dbConfig.port,
+        charset: dbConfig.charset,
+        connectTimeout: dbConfig.connectTimeout,
+        acquireTimeout: dbConfig.acquireTimeout,
+        timeout: dbConfig.timeout,
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0
@@ -184,7 +185,12 @@ function requireAuth(req, res, next) {
 
 // Routes
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+    res.status(200).json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        mode: DEMO_MODE ? 'DEMO' : 'PRODUCTION',
+        database: DEMO_MODE ? 'disabled' : 'enabled'
+    });
 });
 
 app.get('/', (req, res) => {
@@ -926,9 +932,24 @@ async function startServer() {
             // Test database connection first
             const dbConnected = await testDatabaseConnection();
             if (!dbConnected) {
-                console.error('Cannot start server: Database connection failed');
-                console.error('Please check your database configuration and ensure the database is accessible');
-                process.exit(1);
+                console.error('⚠️  Database connection failed - falling back to DEMO MODE');
+                console.error('💡 Set correct DB_PASSWORD to enable database features');
+                
+                // Fall back to demo mode
+                DEMO_MODE = true;
+                console.log('🎭 Falling back to DEMO MODE for deployment');
+                
+                // Start server in demo mode
+                app.listen(PORT, HOST, () => {
+                    console.log(`🎄 Serwer Prezenty działa na porcie ${PORT} (DEMO MODE)`);
+                    console.log(`🌐 Dostępny pod adresem: http://${HOST}:${PORT}`);
+                    console.log(`📱 DEMO MODE: Database features disabled`);
+                    console.log(`🔧 Fix database connection to enable full functionality`);
+                }).on('error', (err) => {
+                    console.error('Błąd uruchamiania serwera:', err);
+                    process.exit(1);
+                });
+                return;
             }
             
             // Skip database initialization on deployment
