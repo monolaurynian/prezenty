@@ -16,10 +16,10 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="/recipients">
-                <i class="fas fa-gift me-2"></i>Życzenia Prezentowe
+                <i class="fas fa-gift me-2 holiday-icon christmas-sparkle"></i>Życzenia Prezentowe
             </a>
             <div class="navbar-nav ms-auto">
-                <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+                <button class="btn btn-outline-light btn-sm" onclick="logout()" style="border: 2px solid white; color: white; font-weight: 500;">
                     <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
                 </button>
             </div>
@@ -34,7 +34,7 @@
                     <div class="card main-card compact-card aws-action-card" onclick="openAddPresentModal()">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <div class="aws-action-icon mb-3">
-                                <i class="fas fa-plus"></i>
+                                <i class="fas fa-gift"></i>
                             </div>
                             <h6 class="aws-action-title mb-2">Dodaj Prezent</h6>
                             <p class="text-muted aws-action-description">Dodaj nowy pomysł na prezent</p>
@@ -72,13 +72,13 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="aws-header-title">
                         <h5 class="card-title mb-0">
-                            <i class="fas fa-users me-2"></i>Lista Osób i Ich Prezenty
+                            <i class="fas fa-users me-2 aws-gradient-icon"></i>Lista Osób i Ich Prezenty
                         </h5>
                         <p class="aws-header-subtitle mb-0">Zarządzaj osobami i ich prezentami</p>
                     </div>
                     <div class="aws-header-actions">
                         <button class="btn btn-sm aws-refresh-btn" onclick="loadRecipients()">
-                            <i class="fas fa-sync-alt me-1"></i>Odśwież
+                            <i class="fas fa-sync-alt me-1" style="color: var(--aws-teal);"></i>Odśwież
                         </button>
                     </div>
                 </div>
@@ -274,17 +274,18 @@
                         <small class="text-muted d-block mt-2">Po identyfikacji będziesz mógł zarządzać swoimi prezentami</small>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>Anuluj
-                    </button>
-                    <button type="button" class="btn btn-warning" onclick="showRecipientSelectionModal()" style="background: linear-gradient(135deg, #ffc107, #e0a800); border: 2px solid #ffc107; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);">
-                        <i class="fas fa-search me-1"></i>Nie, to nie ja
-                    </button>
-                    <button type="button" class="btn btn-success" onclick="confirmSelfIdentification()" style="background: linear-gradient(135deg, #28a745, #1e7e34); border: 2px solid #28a745; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);">
-                        <i class="fas fa-check me-1"></i>Tak, to jestem ja
-                    </button>
-                
+                <div class="modal-footer justify-content-center">
+                    <div class="d-flex flex-column flex-md-row gap-3 w-100 justify-content-center align-items-center">
+                        <button type="button" class="btn btn-secondary btn-lg order-3 order-md-1" data-bs-dismiss="modal" style="min-width: 140px;">
+                            <i class="fas fa-times me-1"></i>Anuluj
+                        </button>
+                        <button type="button" class="btn btn-warning btn-lg order-2" onclick="showRecipientSelectionModal()" style="background: linear-gradient(135deg, #ffc107, #e0a800); border: 2px solid #ffc107; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3); min-width: 160px;">
+                            <i class="fas fa-search me-1"></i>Nie, to nie ja
+                        </button>
+                        <button type="button" class="btn btn-success btn-lg order-1 order-md-3" onclick="confirmSelfIdentification()" style="background: linear-gradient(135deg, #28a745, #1e7e34); border: 2px solid #28a745; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); min-width: 180px;">
+                            <i class="fas fa-check me-1"></i>Tak, to jestem ja
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

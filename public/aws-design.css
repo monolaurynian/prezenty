@@ -2,29 +2,69 @@
 
 /* AWS Color Palette */
 :root {
-    /* AWS Primary Colors */
-    --aws-orange: #FF9900;
-    --aws-blue: #232F3E;
-    --aws-light-blue: #4A90E2;
-    --aws-dark-blue: #161E2D;
+    /* Material Design Expressive Color Palette */
+    --material-red: #F44336;
+    --material-pink: #E91E63;
+    --material-purple: #9C27B0;
+    --material-deep-purple: #673AB7;
+    --material-indigo: #3F51B5;
+    --material-blue: #2196F3;
+    --material-light-blue: #03A9F4;
+    --material-cyan: #00BCD4;
+    --material-teal: #009688;
+    --material-green: #4CAF50;
+    --material-light-green: #8BC34A;
+    --material-lime: #CDDC39;
+    --material-yellow: #FFEB3B;
+    --material-amber: #FFC107;
+    --material-orange: #FF9800;
+    --material-deep-orange: #FF5722;
     
-    /* AWS UI Colors */
-    --aws-gray-50: #FAFBFC;
-    --aws-gray-100: #F2F3F3;
-    --aws-gray-200: #EAEDED;
-    --aws-gray-300: #D5DBDB;
-    --aws-gray-400: #AAB7B8;
-    --aws-gray-500: #85929E;
-    --aws-gray-600: #5D6D7E;
-    --aws-gray-700: #34495E;
-    --aws-gray-800: #2C3E50;
-    --aws-gray-900: #1B2631;
+    /* Material Design Christmas Theme */
+    --christmas-red: #F44336; /* Vibrant Material Red */
+    --christmas-green: #4CAF50; /* Vibrant Material Green */
+    --christmas-gold: #FFC107; /* Material Amber */
+    --christmas-silver: #9E9E9E; /* Material Gray */
+    --christmas-burgundy: #E91E63; /* Material Pink */
+    --christmas-forest: #009688; /* Material Teal */
+    --christmas-cream: #FFF8E1; /* Light Amber */
+    --christmas-pine: #00695C; /* Dark Teal */
     
-    /* AWS Status Colors */
-    --aws-success: #16A085;
-    --aws-warning: #F39C12;
-    --aws-danger: #E74C3C;
-    --aws-info: #3498DB;
+    /* AWS-Inspired Base Colors with Material Twist */
+    --aws-orange: #FF9800; /* Material Orange */
+    --aws-blue: #1976D2; /* Material Blue 700 */
+    --aws-light-blue: #2196F3; /* Material Blue */
+    --aws-dark-blue: #0D47A1; /* Material Blue 900 */
+    
+    /* Material Design Gray Scale - Accessibility Enhanced */
+    --aws-gray-50: #FAFAFA;
+    --aws-gray-100: #F5F5F5;
+    --aws-gray-200: #EEEEEE;
+    --aws-gray-300: #E0E0E0;
+    --aws-gray-400: #BDBDBD;
+    --aws-gray-500: #9E9E9E;
+    --aws-gray-600: #666666; /* Darkened for better contrast */
+    --aws-gray-700: #4A4A4A; /* Darkened for better contrast */
+    --aws-gray-800: #333333; /* Darkened for better contrast */
+    --aws-gray-900: #1A1A1A; /* Darkened for better contrast */
+    
+    /* Material Expressive Status Colors */
+    --aws-success: #4CAF50; /* Material Green */
+    --aws-warning: #FF9800; /* Material Orange */
+    --aws-danger: #F44336; /* Material Red */
+    --aws-info: #2196F3; /* Material Blue */
+    
+    /* Material Expressive Extended Palette */
+    --aws-purple: #9C27B0; /* Material Purple */
+    --aws-teal: #009688; /* Material Teal */
+    --aws-indigo: #3F51B5; /* Material Indigo */
+    --aws-pink: #E91E63; /* Material Pink */
+    --aws-cyan: #00BCD4; /* Material Cyan */
+    --aws-lime: #8BC34A; /* Material Light Green */
+    --aws-amber: #FFC107; /* Material Amber */
+    --aws-deep-orange: #FF5722; /* Material Deep Orange */
+    --aws-brown: #795548; /* Material Brown */
+    --aws-blue-gray: #607D8B; /* Material Blue Gray */
     
     /* AWS Spacing Scale */
     --aws-space-xs: 4px;
@@ -55,11 +95,11 @@
     --aws-font-size-3xl: 32px;
 }
 
-/* AWS Navigation Bar */
+/* Material Design Expressive Navigation Bar */
 .recipients-page .navbar {
-    background: var(--aws-blue) !important;
-    border-bottom: 1px solid var(--aws-gray-300);
-    box-shadow: var(--aws-shadow-sm);
+    background: linear-gradient(135deg, var(--material-red), var(--material-pink)) !important;
+    border-bottom: 3px solid var(--material-amber);
+    box-shadow: 0 4px 20px rgba(244, 67, 54, 0.4);
     padding: var(--aws-space-md) 0;
 }
 
@@ -70,10 +110,13 @@
     display: flex;
     align-items: center;
     gap: var(--aws-space-sm);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .recipients-page .navbar-brand i {
-    color: var(--aws-orange);
+    color: var(--material-amber);
+    text-shadow: 0 0 15px rgba(255, 193, 7, 0.6);
+    filter: drop-shadow(0 0 8px rgba(255, 193, 7, 0.4));
 }
 
 .recipients-page .btn-outline-danger {
@@ -91,6 +134,126 @@
     color: white;
     transform: none;
     box-shadow: var(--aws-shadow-sm);
+}
+
+/* Ensure logout button is always visible */
+.recipients-page .navbar-nav .btn-outline-light {
+    border: 2px solid white !important;
+    color: white !important;
+    background: transparent !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.recipients-page .navbar-nav .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: white !important;
+    color: white !important;
+    transform: none !important;
+}
+
+/* Improved Self Identification Modal Layout */
+.recipients-page #selfIdentificationModal .modal-footer {
+    padding: var(--aws-space-xl) var(--aws-space-lg);
+    background: var(--aws-gray-50);
+    border-top: 1px solid var(--aws-gray-200);
+}
+
+.recipients-page #selfIdentificationModal .modal-footer .btn-lg {
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: var(--aws-radius-md);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.recipients-page #selfIdentificationModal .modal-footer .btn-lg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive button layout for wider screens */
+@media (min-width: 768px) {
+    .recipients-page #selfIdentificationModal .modal-footer .d-flex {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .recipients-page #selfIdentificationModal .modal-footer .btn-lg {
+        flex: 0 0 auto;
+    }
+}
+
+/* Mobile optimization */
+@media (max-width: 767px) {
+    .recipients-page #selfIdentificationModal .modal-footer .btn-lg {
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto;
+    }
+}
+
+/* Improved "To jestem ja" button styling */
+.recipients-page .identify-btn {
+    min-width: 140px;
+    max-width: 200px;
+    padding: 8px 16px;
+    font-weight: 500;
+    border-radius: var(--aws-radius-md);
+    transition: all 0.2s ease;
+    background: linear-gradient(135deg, var(--material-green), var(--material-light-green));
+    border: 2px solid var(--material-green);
+    color: white;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.recipients-page .identify-btn:hover {
+    background: linear-gradient(135deg, var(--material-teal), var(--material-green));
+    border-color: var(--material-teal);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 150, 136, 0.4);
+}
+
+.recipients-page .identify-btn-modal {
+    min-width: 120px;
+    padding: 6px 12px;
+    font-weight: 500;
+    border-radius: var(--aws-radius-md);
+    transition: all 0.2s ease;
+    background: linear-gradient(135deg, var(--material-green), var(--material-light-green));
+    border: 2px solid var(--material-green);
+    color: white;
+    box-shadow: 0 3px 8px rgba(76, 175, 80, 0.3);
+}
+
+.recipients-page .identify-btn-modal:hover {
+    background: linear-gradient(135deg, var(--material-teal), var(--material-green));
+    border-color: var(--material-teal);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 150, 136, 0.4);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .recipients-page .identify-btn {
+        min-width: 120px;
+        max-width: 160px;
+        font-size: 14px;
+    }
+    
+    .recipients-page .identify-btn-modal {
+        min-width: 100px;
+        font-size: 13px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .recipients-page .identify-btn {
+        min-width: 160px;
+        max-width: 220px;
+    }
 }
 
 /* AWS Container Layout */
@@ -141,13 +304,13 @@
 .recipients-page .aws-action-icon {
     width: 48px;
     height: 48px;
-    background: var(--aws-orange);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto;
     transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .recipients-page .aws-action-icon i {
@@ -155,20 +318,52 @@
     font-size: 20px;
 }
 
-.recipients-page .aws-action-card:hover .aws-action-icon {
-    background: var(--aws-blue);
-    transform: scale(1.1);
+/* Material Design Expressive Action Cards */
+/* Card 1: Dodaj Prezent - GREEN */
+.recipients-page .aws-action-section .col-lg-4:nth-child(1) .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-green), var(--material-light-green));
+    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+}
+
+.recipients-page .aws-action-section .col-lg-4:nth-child(1) .aws-action-card:hover .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-teal), var(--material-green));
+    box-shadow: 0 12px 35px rgba(0, 150, 136, 0.5);
+    transform: scale(1.15) rotate(5deg);
+}
+
+/* Card 2: Zarezerwowane Prezenty - YELLOW */
+.recipients-page .aws-action-section .col-lg-4:nth-child(2) .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-yellow), var(--material-amber));
+    box-shadow: 0 8px 25px rgba(255, 235, 59, 0.4);
+}
+
+.recipients-page .aws-action-section .col-lg-4:nth-child(2) .aws-action-card:hover .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-amber), var(--material-orange));
+    box-shadow: 0 12px 35px rgba(255, 193, 7, 0.5);
+    transform: scale(1.15) rotate(-5deg);
+}
+
+/* Card 3: Dodaj Osobę - BLUE */
+.recipients-page .aws-action-section .col-lg-4:nth-child(3) .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-blue), var(--material-light-blue));
+    box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
+}
+
+.recipients-page .aws-action-section .col-lg-4:nth-child(3) .aws-action-card:hover .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-indigo), var(--material-blue));
+    box-shadow: 0 12px 35px rgba(63, 81, 181, 0.5);
+    transform: scale(1.15) rotate(5deg);
 }
 
 .recipients-page .aws-action-title {
-    color: var(--aws-gray-800);
+    color: var(--aws-gray-900);
     font-weight: 600;
     font-size: var(--aws-font-size-md);
     margin: 0;
 }
 
 .recipients-page .aws-action-description {
-    color: var(--aws-gray-600) !important;
+    color: var(--aws-gray-700) !important;
     font-size: var(--aws-font-size-sm);
     margin: 0;
     line-height: 1.4;
@@ -244,10 +439,38 @@
 }
 
 .recipients-page .aws-content-header {
-    background: linear-gradient(135deg, var(--aws-gray-50) 0%, white 100%);
-    border-bottom: 1px solid var(--aws-gray-200);
+    background: linear-gradient(135deg, var(--christmas-cream) 0%, white 100%);
+    border-bottom: 3px solid var(--material-amber);
     padding: var(--aws-space-lg);
     border-radius: var(--aws-radius-lg) var(--aws-radius-lg) 0 0;
+    position: relative;
+}
+
+.recipients-page .aws-content-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--material-red), var(--material-amber), var(--material-green), var(--material-blue));
+    border-radius: var(--aws-radius-lg) var(--aws-radius-lg) 0 0;
+    animation: material-rainbow 3s ease-in-out infinite;
+}
+
+@keyframes material-rainbow {
+    0%, 100% {
+        background: linear-gradient(90deg, var(--material-red), var(--material-amber), var(--material-green), var(--material-blue));
+    }
+    25% {
+        background: linear-gradient(90deg, var(--material-purple), var(--material-pink), var(--material-orange), var(--material-teal));
+    }
+    50% {
+        background: linear-gradient(90deg, var(--material-indigo), var(--material-cyan), var(--material-lime), var(--material-deep-orange));
+    }
+    75% {
+        background: linear-gradient(90deg, var(--material-blue), var(--material-green), var(--material-yellow), var(--material-red));
+    }
 }
 
 .recipients-page .aws-header-title h5 {
@@ -264,6 +487,19 @@
     color: var(--aws-orange) !important;
 }
 
+/* Colorful navigation and header icons */
+.recipients-page .navbar-brand i {
+    color: var(--aws-orange);
+    text-shadow: 0 0 10px rgba(255, 153, 0, 0.3);
+}
+
+.recipients-page .aws-header-title i.fa-users {
+    background: linear-gradient(135deg, var(--aws-orange), var(--aws-amber));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
 .recipients-page .aws-header-subtitle {
     color: var(--aws-gray-600);
     font-size: var(--aws-font-size-sm);
@@ -272,8 +508,8 @@
 
 .recipients-page .aws-refresh-btn {
     background: transparent;
-    border: 1px solid var(--aws-gray-300);
-    color: var(--aws-gray-600);
+    border: 2px solid var(--aws-gray-400);
+    color: var(--aws-gray-800);
     border-radius: var(--aws-radius-md);
     padding: var(--aws-space-sm) var(--aws-space-md);
     font-size: var(--aws-font-size-sm);
@@ -281,9 +517,9 @@
 }
 
 .recipients-page .aws-refresh-btn:hover {
-    background: var(--aws-gray-50);
-    border-color: var(--aws-orange);
-    color: var(--aws-orange);
+    background: var(--aws-gray-100);
+    border-color: var(--material-teal);
+    color: var(--material-teal);
 }
 
 .recipients-page .aws-content-body {
@@ -295,9 +531,20 @@
 }
 
 .recipients-page .aws-loading-state .spinner-border {
-    color: var(--aws-orange);
+    color: var(--material-blue);
     width: 3rem;
     height: 3rem;
+    filter: drop-shadow(0 0 15px rgba(33, 150, 243, 0.5));
+    animation: material-loading-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes material-loading-pulse {
+    0%, 100% {
+        filter: drop-shadow(0 0 15px rgba(33, 150, 243, 0.5));
+    }
+    50% {
+        filter: drop-shadow(0 0 25px rgba(33, 150, 243, 0.8));
+    }
 }
 
 .recipients-page .aws-loading-state p {
@@ -323,7 +570,7 @@
 }
 
 .recipients-page .recipient-name {
-    color: var(--aws-gray-800);
+    color: var(--aws-gray-900);
     font-weight: 600;
     font-size: var(--aws-font-size-lg);
     margin-bottom: var(--aws-space-sm);
@@ -393,6 +640,51 @@
     color: white;
 }
 
+/* Additional colorful button variants */
+.recipients-page .btn-outline-purple {
+    border: 1px solid var(--aws-purple);
+    color: var(--aws-purple);
+    background: transparent;
+}
+
+.recipients-page .btn-outline-purple:hover {
+    background: var(--aws-purple);
+    color: white;
+}
+
+.recipients-page .btn-outline-teal {
+    border: 1px solid var(--aws-teal);
+    color: var(--aws-teal);
+    background: transparent;
+}
+
+.recipients-page .btn-outline-teal:hover {
+    background: var(--aws-teal);
+    color: white;
+}
+
+.recipients-page .btn-outline-indigo {
+    border: 1px solid var(--aws-indigo);
+    color: var(--aws-indigo);
+    background: transparent;
+}
+
+.recipients-page .btn-outline-indigo:hover {
+    background: var(--aws-indigo);
+    color: white;
+}
+
+.recipients-page .btn-outline-pink {
+    border: 1px solid var(--aws-pink);
+    color: var(--aws-pink);
+    background: transparent;
+}
+
+.recipients-page .btn-outline-pink:hover {
+    background: var(--aws-pink);
+    color: white;
+}
+
 /* AWS Present Items */
 .recipients-page .present-item {
     background: var(--aws-gray-50);
@@ -401,29 +693,125 @@
     padding: var(--aws-space-md);
     margin-bottom: var(--aws-space-md);
     transition: all 0.2s ease;
+    position: relative;
 }
 
 .recipients-page .present-item:hover {
     background: white;
-    border-color: var(--aws-orange);
-    box-shadow: var(--aws-shadow-sm);
+    border-color: var(--christmas-gold);
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+}
+
+/* Material Design Expressive icons in present items */
+.recipients-page .present-item .fa-gift {
+    color: var(--material-amber);
+    text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    animation: material-pulse 2s ease-in-out infinite;
+}
+
+.recipients-page .present-item .fa-bookmark {
+    color: var(--material-purple);
+}
+
+.recipients-page .present-item .fa-check-circle {
+    color: var(--material-green);
+    animation: material-success-pulse 1.5s ease-in-out infinite;
+}
+
+.recipients-page .present-item .fa-edit {
+    color: var(--material-indigo);
+}
+
+.recipients-page .present-item .fa-trash {
+    color: var(--material-red);
+}
+
+.recipients-page .present-item .fa-share {
+    color: var(--material-cyan);
+}
+
+.recipients-page .present-item .fa-heart {
+    color: var(--material-pink);
+    animation: material-heartbeat 1.8s ease-in-out infinite;
+}
+
+.recipients-page .present-item .fa-star {
+    color: var(--material-amber);
+    text-shadow: 0 0 10px rgba(255, 193, 7, 0.6);
+    animation: material-twinkle 2.5s ease-in-out infinite;
+}
+
+@keyframes material-pulse {
+    0%, 100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    50% {
+        transform: scale(1.05);
+        filter: brightness(1.2);
+    }
+}
+
+@keyframes material-heartbeat {
+    0%, 100% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(1.15);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    75% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes material-success-pulse {
+    0%, 100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    50% {
+        transform: scale(1.1);
+        filter: brightness(1.3);
+    }
+}
+
+@keyframes material-twinkle {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        filter: brightness(1);
+    }
+    25% {
+        transform: scale(1.1) rotate(5deg);
+        filter: brightness(1.3);
+    }
+    50% {
+        transform: scale(1.05) rotate(-3deg);
+        filter: brightness(1.1);
+    }
+    75% {
+        transform: scale(1.08) rotate(2deg);
+        filter: brightness(1.2);
+    }
 }
 
 .recipients-page .present-title {
-    color: var(--aws-gray-800);
+    color: var(--aws-gray-900);
     font-weight: 600;
     font-size: var(--aws-font-size-md);
     margin-bottom: var(--aws-space-xs);
 }
 
 .recipients-page .present-comments {
-    color: var(--aws-gray-600);
+    color: var(--aws-gray-700);
     font-size: var(--aws-font-size-sm);
     margin-bottom: var(--aws-space-xs);
 }
 
 .recipients-page .present-date {
-    color: var(--aws-gray-500);
+    color: var(--aws-gray-700);
     font-size: var(--aws-font-size-xs);
 }
 
@@ -454,6 +842,35 @@
 
 .recipients-page .aws-modal-title-section i {
     color: var(--aws-orange);
+}
+
+/* Colorful icons for different modals */
+.recipients-page #addPresentModal .aws-modal-title-section i {
+    color: var(--aws-orange);
+}
+
+.recipients-page #reservedPresentsModal .aws-modal-title-section i {
+    color: var(--aws-teal);
+}
+
+.recipients-page #addRecipientModal .aws-modal-title-section i {
+    color: var(--aws-success);
+}
+
+.recipients-page #selfIdentificationModal .aws-modal-title-section i {
+    color: var(--aws-purple);
+}
+
+.recipients-page #recipientSelectionModal .aws-modal-title-section i {
+    color: var(--aws-indigo);
+}
+
+.recipients-page #profileModal .aws-modal-title-section i {
+    color: var(--aws-pink);
+}
+
+.recipients-page #changePictureModal .aws-modal-title-section i {
+    color: var(--aws-cyan);
 }
 
 .recipients-page .aws-modal-subtitle {
@@ -509,7 +926,7 @@
 }
 
 .recipients-page .aws-form-label {
-    color: var(--aws-gray-700);
+    color: var(--aws-gray-900);
     font-weight: 500;
     font-size: var(--aws-font-size-sm);
     margin-bottom: var(--aws-space-xs);
@@ -519,8 +936,44 @@
 }
 
 .recipients-page .aws-form-label i {
-    color: var(--aws-gray-500);
     font-size: var(--aws-font-size-xs);
+}
+
+/* Colorful form label icons */
+.recipients-page .aws-form-label i.fa-gift {
+    color: var(--aws-orange);
+}
+
+.recipients-page .aws-form-label i.fa-user {
+    color: var(--aws-success);
+}
+
+.recipients-page .aws-form-label i.fa-comment {
+    color: var(--aws-teal);
+}
+
+.recipients-page .aws-form-label i.fa-camera {
+    color: var(--aws-purple);
+}
+
+.recipients-page .aws-form-label i.fa-envelope {
+    color: var(--aws-indigo);
+}
+
+.recipients-page .aws-form-label i.fa-phone {
+    color: var(--aws-pink);
+}
+
+.recipients-page .aws-form-label i.fa-link {
+    color: var(--aws-cyan);
+}
+
+.recipients-page .aws-form-label i.fa-tag {
+    color: var(--aws-amber);
+}
+
+.recipients-page .aws-form-label i.fa-calendar {
+    color: var(--aws-deep-orange);
 }
 
 .recipients-page .aws-form-control {
@@ -534,13 +987,14 @@
 }
 
 .recipients-page .aws-form-control:focus {
-    border-color: var(--aws-orange);
-    box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
+    border-color: var(--material-blue);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
     outline: none;
+    transform: translateY(-1px);
 }
 
 .recipients-page .aws-form-help {
-    color: var(--aws-gray-500);
+    color: var(--aws-gray-700);
     font-size: var(--aws-font-size-xs);
     margin-top: var(--aws-space-xs);
     display: block;
@@ -548,29 +1002,47 @@
 
 /* AWS Button Styles */
 .recipients-page .aws-btn-primary {
-    background: var(--aws-orange);
+    background: linear-gradient(135deg, var(--material-red), var(--material-pink));
     color: white;
     border: none;
     border-radius: var(--aws-radius-md);
     padding: var(--aws-space-sm) var(--aws-space-lg);
     font-size: var(--aws-font-size-sm);
     font-weight: 500;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
     gap: var(--aws-space-xs);
+    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.recipients-page .aws-btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
 }
 
 .recipients-page .aws-btn-primary:hover {
-    background: #E68900;
-    box-shadow: var(--aws-shadow-sm);
-    transform: none;
+    background: linear-gradient(135deg, var(--material-amber), var(--material-orange));
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.5);
+    transform: translateY(-2px) scale(1.02);
+}
+
+.recipients-page .aws-btn-primary:hover::before {
+    left: 100%;
 }
 
 .recipients-page .aws-btn-secondary {
     background: transparent;
-    color: var(--aws-gray-600);
-    border: 1px solid var(--aws-gray-300);
+    color: var(--aws-gray-800);
+    border: 2px solid var(--aws-gray-400);
     border-radius: var(--aws-radius-md);
     padding: var(--aws-space-sm) var(--aws-space-lg);
     font-size: var(--aws-font-size-sm);
@@ -582,9 +1054,9 @@
 }
 
 .recipients-page .aws-btn-secondary:hover {
-    background: var(--aws-gray-50);
-    border-color: var(--aws-gray-400);
-    color: var(--aws-gray-700);
+    background: var(--aws-gray-100);
+    border-color: var(--aws-gray-600);
+    color: var(--aws-gray-900);
     transform: none;
 }
 
@@ -973,12 +1445,39 @@
     will-change: transform, box-shadow;
 }
 
-/* AWS Focus States */
+/* Enhanced Focus States for Accessibility */
 .recipients-page .aws-action-card:focus-visible,
 .recipients-page .btn:focus-visible,
 .recipients-page .form-control:focus-visible {
-    outline: 2px solid var(--aws-orange);
+    outline: 3px solid var(--material-blue);
     outline-offset: 2px;
+}
+
+.recipients-page .aws-action-card:focus-visible {
+    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.3);
+}
+
+.recipients-page .btn:focus-visible {
+    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.3);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .recipients-page .aws-action-title {
+        color: #000000;
+    }
+    
+    .recipients-page .aws-action-description {
+        color: #000000 !important;
+    }
+    
+    .recipients-page .present-title {
+        color: #000000;
+    }
+    
+    .recipients-page .present-comments {
+        color: #000000;
+    }
 }
 
 /* AWS Loading States */
@@ -994,6 +1493,83 @@
     }
     100% {
         background-position: -200% 0;
+    }
+}
+
+/* Material Design Expressive gradient icons */
+.recipients-page .aws-gradient-icon {
+    background: linear-gradient(45deg, var(--material-red), var(--material-amber), var(--material-green), var(--material-blue), var(--material-purple));
+    background-size: 400% 400%;
+    animation: material-gradient-shift 3s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+@keyframes material-gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+    25% {
+        background-position: 100% 50%;
+    }
+    50% {
+        background-position: 100% 100%;
+    }
+    75% {
+        background-position: 0% 100%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Material Design holiday-themed icons */
+.recipients-page .fa-gift.holiday-icon {
+    background: linear-gradient(45deg, var(--material-red), var(--material-amber), var(--material-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: material-holiday-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes material-holiday-glow {
+    0% {
+        filter: drop-shadow(0 0 10px rgba(244, 67, 54, 0.6));
+    }
+    33% {
+        filter: drop-shadow(0 0 15px rgba(255, 193, 7, 0.8));
+    }
+    66% {
+        filter: drop-shadow(0 0 12px rgba(76, 175, 80, 0.7));
+    }
+    100% {
+        filter: drop-shadow(0 0 8px rgba(244, 67, 54, 0.5));
+    }
+}
+
+/* Christmas sparkle effect */
+.recipients-page .christmas-sparkle {
+    position: relative;
+}
+
+.recipients-page .christmas-sparkle::before {
+    content: '✨';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 12px;
+    animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
     }
 }
 
@@ -1021,6 +1597,21 @@
 .recipients-page .aws-status-danger {
     background: rgba(231, 76, 60, 0.1);
     color: var(--aws-danger);
+}
+
+.recipients-page .aws-status-info {
+    background: rgba(52, 152, 219, 0.1);
+    color: var(--aws-info);
+}
+
+.recipients-page .aws-status-purple {
+    background: rgba(142, 68, 173, 0.1);
+    color: var(--aws-purple);
+}
+
+.recipients-page .aws-status-teal {
+    background: rgba(23, 162, 184, 0.1);
+    color: var(--aws-teal);
 }
 
 /* AWS Dividers */

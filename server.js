@@ -15,7 +15,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Demo mode - run without database for preview
-let DEMO_MODE = process.env.DEMO_MODE === 'true' || !process.env.DB_PASSWORD;
+let DEMO_MODE = process.env.DEMO_MODE === 'true' || 
+                process.env.OFFLINE_MODE === 'true' || 
+                !process.env.DB_PASSWORD || 
+                (process.env.NODE_ENV === 'development' && !process.env.DB_PASSWORD);
 
 // MySQL database configuration
 let dbConfig;
@@ -322,6 +325,16 @@ app.post('/api/recipients', requireAuth, async (req, res) => {
         return badRequest(res, 'Nazwa jest wymagana');
     }
     
+    if (DEMO_MODE) {
+        // Demo mode - simulate adding recipient
+        const newId = Math.max(...demoData.recipients.map(r => r.id)) + 1;
+        const newRecipient = { id: newId, name: name.trim(), identified_by: null, profile_picture: null };
+        demoData.recipients.push(newRecipient);
+        console.log('[POST /api/recipients] Demo recipient added:', newRecipient);
+        res.json({ success: true, recipient: { id: newId, name: name.trim() } });
+        return;
+    }
+    
     try {
         const [result] = await pool.execute('INSERT INTO recipients (name) VALUES (?)', [name.trim()]);
         console.log('[POST /api/recipients] Recipient added successfully:', result.insertId, 'Request body:', req.body, 'Session:', req.session);
@@ -330,7 +343,7 @@ app.post('/api/recipients', requireAuth, async (req, res) => {
     } catch (err) {
         console.error('[POST /api/recipients] Database error adding recipient:', err, 'Request body:', req.body, 'Session:', req.session);
         if (err.code === 'ER_DUP_ENTRY') {
-            return conflict(res, 'Taka osoba już istnieje!');
+            return conflict(res, 'Taka osoba já istnieje!');
         }
         return handleDbError(err, res, 'Błąd podczas dodawania osoby');
     }
@@ -366,6 +379,18 @@ app.post('/api/recipients/:id/identify', requireAuth, async (req, res) => {
 app.get('/api/user/identification', requireAuth, async (req, res) => {
     const userId = req.session.userId;
     const username = req.session.username;
+    
+    if (DEMO_MODE) {
+        // Demo mode - return demo identification status
+        res.json({
+            isIdentified: false,
+            identifiedRecipient: null,
+            username: username || 'demo',
+            userId: userId || 1,
+            name: null
+        });
+        return;
+    }
     
     try {
         const recipient = await getUserIdentification(userId);
@@ -515,6 +540,24 @@ app.get('/api/presents', requireAuth, async (req, res) => {
     console.log('Getting presents for user:', req.session.userId);
     const userId = req.session.userId;
     
+    if (DEMO_MODE) {
+        // Demo mode - return demo presents
+        const presents = demoData.presents.map(present => {
+            const recipient = demoData.recipients.find(r => r.id === present.recipient_id);
+            return {
+                ...present,
+                recipient_name: recipient ? recipient.name : null,
+                reserved_by_username: present.reserved_by ? 'demo' : null
+            };
+        });
+        console.log('Demo presents loaded:', presents.length, 'presents');
+        res.json({
+            identified: false,
+            presents: presents
+        });
+        return;
+    }
+    
     try {
         // First check if user is identified
         const identifiedRecipient = await getUserIdentification(userId);
@@ -598,6 +641,25 @@ app.post('/api/presents', requireAuth, async (req, res) => {
     
     if (!title || title.trim() === '') {
         return badRequest(res, 'Nazwa prezentu jest wymagana');
+    }
+    
+    if (DEMO_MODE) {
+        // Demo mode - simulate adding present
+        const newId = Math.max(...demoData.presents.map(p => p.id)) + 1;
+        const newPresent = {
+            id: newId,
+            title: title.trim(),
+            recipient_id: recipient_id || null,
+            comments: comments || null,
+            is_checked: false,
+            reserved_by: null,
+            created_by: userId || 1,
+            created_at: new Date()
+        };
+        demoData.presents.push(newPresent);
+        console.log('Demo present added:', newPresent);
+        res.json({ id: newId, title: title.trim(), recipient_id, comments });
+        return;
     }
     
     try {
@@ -915,15 +977,20 @@ const demoData = {
 async function startServer() {
     try {
         if (DEMO_MODE) {
-            console.log('🎭 Starting in DEMO MODE - Database features disabled');
-            console.log('💡 To enable database: Set DB_PASSWORD in .env file');
+            const reason = process.env.OFFLINE_MODE === 'true' ? 'OFFLINE_MODE enabled' :
+                          process.env.DEMO_MODE === 'true' ? 'DEMO_MODE enabled' :
+                          !process.env.DB_PASSWORD ? 'No DB_PASSWORD set' :
+                          'Development mode';
+            
+            console.log(`🎭 Starting in OFFLINE/DEMO MODE - ${reason}`);
+            console.log('💡 Database features disabled - using sample data');
             
             // Start server without database
             app.listen(PORT, HOST, () => {
                 console.log(`🎄 Serwer Prezenty działa na porcie ${PORT}`);
                 console.log(`🌐 Dostępny pod adresem: http://${HOST}:${PORT}`);
-                console.log(`📱 DEMO MODE: Database features disabled`);
-                console.log(`🔧 Set DB_PASSWORD in .env to enable full functionality`);
+                console.log(`📱 OFFLINE MODE: Using sample data`);
+                console.log(`🔧 To enable database: Set OFFLINE_MODE=false and DB_PASSWORD in .env`);
             }).on('error', (err) => {
                 console.error('Błąd uruchamiania serwera:', err);
                 process.exit(1);

@@ -59,11 +59,19 @@ The app creates the following tables:
 
 ## Local Development
 
+### Offline Mode (No Database Required)
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start in offline mode: `npm run offline` or `npm start`
+4. App runs with sample data - no database needed
+
+### Full Database Mode
 1. Clone the repository
 2. Install dependencies: `npm install`
 3. Set up environment variables in `.env` file
-4. Run database initialization: `npm run init-db`
-5. Start development server: `npm run dev`
+4. Set `OFFLINE_MODE=false` and provide `DB_PASSWORD`
+5. Run database initialization: `npm run init-db`
+6. Start development server: `npm run dev`
 
 ## Profile Pictures
 

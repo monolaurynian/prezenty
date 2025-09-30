@@ -342,8 +342,8 @@ function displayRecipientsWithPresents(recipients, presents) {
                                 <small>Zidentyfikowane przez: ${escapeHtml(recipient.identified_by_username || 'nieznany użytkownik')}</small>
                             </div>
                         ` : !isIdentified && !hasAnyIdentification ? `
-                            <div class="d-flex align-items-center mb-3">
-                                <button class="btn btn-outline-success btn-sm w-100" onclick="identifyAsRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                            <div class="d-flex justify-content-start mb-3">
+                                <button class="btn btn-outline-success btn-sm identify-btn" onclick="identifyAsRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')">
                                     <i class="fas fa-user-check me-1"></i>To jestem ja
                                 </button>
                             </div>
@@ -505,9 +505,7 @@ function showRecipientSelectionModal() {
                         <strong class="recipient-name-clickable">${escapeHtml(recipient.name)}</strong>
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-sm  btn-success" style="width: 70%; margin-right: 2%;
-                    "
-                         onclick="identifyAsRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                        <button class="btn btn-sm btn-success identify-btn-modal" onclick="identifyAsRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
                             <i class="fas fa-check me-1"></i>To jestem ja
                         </button>
                         <button class="btn btn-outline-danger btn-sm" style="width: 28%;" onclick="deleteRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
@@ -2057,4 +2055,9 @@ function getFullProfilePictureUrl(path) {
         return 'https://prezenty.matmamon.com' + path;
     }
     return path;
+}
+// Add missing loadRecipients function for the refresh button
+function loadRecipients() {
+    console.log('Refreshing recipients data...');
+    loadRecipientsWithPresents();
 }
