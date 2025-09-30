@@ -1,0 +1,1201 @@
+/* AWS Design Language System for Prezenty App */
+
+/* AWS Color Palette */
+:root {
+    /* AWS Primary Colors */
+    --aws-orange: #FF9900;
+    --aws-blue: #232F3E;
+    --aws-light-blue: #4A90E2;
+    --aws-dark-blue: #161E2D;
+    
+    /* AWS UI Colors */
+    --aws-gray-50: #FAFBFC;
+    --aws-gray-100: #F2F3F3;
+    --aws-gray-200: #EAEDED;
+    --aws-gray-300: #D5DBDB;
+    --aws-gray-400: #AAB7B8;
+    --aws-gray-500: #85929E;
+    --aws-gray-600: #5D6D7E;
+    --aws-gray-700: #34495E;
+    --aws-gray-800: #2C3E50;
+    --aws-gray-900: #1B2631;
+    
+    /* AWS Status Colors */
+    --aws-success: #16A085;
+    --aws-warning: #F39C12;
+    --aws-danger: #E74C3C;
+    --aws-info: #3498DB;
+    
+    /* AWS Spacing Scale */
+    --aws-space-xs: 4px;
+    --aws-space-sm: 8px;
+    --aws-space-md: 16px;
+    --aws-space-lg: 24px;
+    --aws-space-xl: 32px;
+    --aws-space-2xl: 48px;
+    
+    /* AWS Border Radius */
+    --aws-radius-sm: 4px;
+    --aws-radius-md: 8px;
+    --aws-radius-lg: 12px;
+    
+    /* AWS Shadows */
+    --aws-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    --aws-shadow-md: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+    --aws-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+    
+    /* AWS Typography */
+    --aws-font-family: 'Amazon Ember', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --aws-font-size-xs: 12px;
+    --aws-font-size-sm: 14px;
+    --aws-font-size-md: 16px;
+    --aws-font-size-lg: 18px;
+    --aws-font-size-xl: 20px;
+    --aws-font-size-2xl: 24px;
+    --aws-font-size-3xl: 32px;
+}
+
+/* AWS Navigation Bar */
+.recipients-page .navbar {
+    background: var(--aws-blue) !important;
+    border-bottom: 1px solid var(--aws-gray-300);
+    box-shadow: var(--aws-shadow-sm);
+    padding: var(--aws-space-md) 0;
+}
+
+.recipients-page .navbar-brand {
+    color: white !important;
+    font-weight: 600;
+    font-size: var(--aws-font-size-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--aws-space-sm);
+}
+
+.recipients-page .navbar-brand i {
+    color: var(--aws-orange);
+}
+
+.recipients-page .btn-outline-danger {
+    border: 2px solid var(--aws-danger);
+    color: var(--aws-danger);
+    background: transparent;
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-sm) var(--aws-space-md);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.recipients-page .btn-outline-danger:hover {
+    background: var(--aws-danger);
+    color: white;
+    transform: none;
+    box-shadow: var(--aws-shadow-sm);
+}
+
+/* AWS Container Layout */
+.recipients-page .container {
+    max-width: 1200px;
+    padding: var(--aws-space-lg);
+}
+
+/* AWS Action Cards */
+.recipients-page .aws-action-section {
+    margin-bottom: var(--aws-space-2xl);
+}
+
+.recipients-page .aws-action-card {
+    background: white;
+    border: 1px solid var(--aws-gray-200);
+    border-radius: var(--aws-radius-lg);
+    box-shadow: var(--aws-shadow-sm);
+    transition: all 0.2s ease;
+    height: 180px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.recipients-page .aws-action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--aws-orange);
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
+}
+
+.recipients-page .aws-action-card:hover {
+    box-shadow: var(--aws-shadow-md);
+    border-color: var(--aws-orange);
+    transform: translateY(-4px);
+}
+
+.recipients-page .aws-action-card:hover::before {
+    transform: scaleX(1);
+}
+
+.recipients-page .aws-action-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--aws-orange);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    transition: all 0.2s ease;
+}
+
+.recipients-page .aws-action-icon i {
+    color: white;
+    font-size: 20px;
+}
+
+.recipients-page .aws-action-card:hover .aws-action-icon {
+    background: var(--aws-blue);
+    transform: scale(1.1);
+}
+
+.recipients-page .aws-action-title {
+    color: var(--aws-gray-800);
+    font-weight: 600;
+    font-size: var(--aws-font-size-md);
+    margin: 0;
+}
+
+.recipients-page .aws-action-description {
+    color: var(--aws-gray-600) !important;
+    font-size: var(--aws-font-size-sm);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.recipients-page .main-card.compact-card .card-body {
+    padding: var(--aws-space-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 100%;
+}
+
+.recipients-page .action-btn {
+    border-radius: var(--aws-radius-md);
+    font-weight: 600;
+    font-size: var(--aws-font-size-sm);
+    padding: var(--aws-space-md) var(--aws-space-lg);
+    border: none;
+    transition: all 0.2s ease;
+    box-shadow: var(--aws-shadow-sm);
+    min-height: 44px;
+}
+
+.recipients-page .btn-primary.action-btn {
+    background: var(--aws-orange);
+    color: white;
+}
+
+.recipients-page .btn-primary.action-btn:hover {
+    background: #E68900;
+    box-shadow: var(--aws-shadow-md);
+    transform: none;
+}
+
+.recipients-page .btn-warning.action-btn {
+    background: var(--aws-warning);
+    color: white;
+}
+
+.recipients-page .btn-warning.action-btn:hover {
+    background: #D68910;
+    box-shadow: var(--aws-shadow-md);
+    transform: none;
+}
+
+.recipients-page .btn-success.action-btn {
+    background: var(--aws-success);
+    color: white;
+}
+
+.recipients-page .btn-success.action-btn:hover {
+    background: #138D75;
+    box-shadow: var(--aws-shadow-md);
+    transform: none;
+}
+
+.recipients-page .compact-card .text-muted {
+    color: var(--aws-gray-600) !important;
+    font-size: var(--aws-font-size-sm);
+    margin: 0;
+}
+
+/* AWS Main Content Card */
+.recipients-page .aws-main-content {
+    background: white;
+    border: 1px solid var(--aws-gray-200);
+    border-radius: var(--aws-radius-lg);
+    box-shadow: var(--aws-shadow-sm);
+    margin-top: var(--aws-space-xl);
+}
+
+.recipients-page .aws-content-header {
+    background: linear-gradient(135deg, var(--aws-gray-50) 0%, white 100%);
+    border-bottom: 1px solid var(--aws-gray-200);
+    padding: var(--aws-space-lg);
+    border-radius: var(--aws-radius-lg) var(--aws-radius-lg) 0 0;
+}
+
+.recipients-page .aws-header-title h5 {
+    color: var(--aws-gray-800) !important;
+    font-weight: 600;
+    font-size: var(--aws-font-size-lg);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--aws-space-sm);
+}
+
+.recipients-page .aws-header-title i {
+    color: var(--aws-orange) !important;
+}
+
+.recipients-page .aws-header-subtitle {
+    color: var(--aws-gray-600);
+    font-size: var(--aws-font-size-sm);
+    margin-top: var(--aws-space-xs);
+}
+
+.recipients-page .aws-refresh-btn {
+    background: transparent;
+    border: 1px solid var(--aws-gray-300);
+    color: var(--aws-gray-600);
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-sm) var(--aws-space-md);
+    font-size: var(--aws-font-size-sm);
+    transition: all 0.2s ease;
+}
+
+.recipients-page .aws-refresh-btn:hover {
+    background: var(--aws-gray-50);
+    border-color: var(--aws-orange);
+    color: var(--aws-orange);
+}
+
+.recipients-page .aws-content-body {
+    padding: var(--aws-space-lg);
+}
+
+.recipients-page .aws-loading-state {
+    padding: var(--aws-space-2xl);
+}
+
+.recipients-page .aws-loading-state .spinner-border {
+    color: var(--aws-orange);
+    width: 3rem;
+    height: 3rem;
+}
+
+.recipients-page .aws-loading-state p {
+    color: var(--aws-gray-600);
+    font-size: var(--aws-font-size-sm);
+    margin-top: var(--aws-space-md);
+}
+
+/* AWS Recipient Items */
+.recipients-page .recipient-item {
+    background: white;
+    border: 1px solid var(--aws-gray-200);
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-lg);
+    margin-bottom: var(--aws-space-lg);
+    box-shadow: var(--aws-shadow-sm);
+    transition: all 0.2s ease;
+}
+
+.recipients-page .recipient-item:hover {
+    box-shadow: var(--aws-shadow-md);
+    border-color: var(--aws-gray-300);
+}
+
+.recipients-page .recipient-name {
+    color: var(--aws-gray-800);
+    font-weight: 600;
+    font-size: var(--aws-font-size-lg);
+    margin-bottom: var(--aws-space-sm);
+}
+
+/* AWS Buttons */
+.recipients-page .btn {
+    border-radius: var(--aws-radius-md);
+    font-weight: 500;
+    font-size: var(--aws-font-size-sm);
+    padding: var(--aws-space-sm) var(--aws-space-md);
+    border: none;
+    transition: all 0.2s ease;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--aws-space-xs);
+}
+
+.recipients-page .btn:hover {
+    transform: none;
+    box-shadow: var(--aws-shadow-sm);
+}
+
+.recipients-page .btn-outline-primary {
+    border: 1px solid var(--aws-orange);
+    color: var(--aws-orange);
+    background: transparent;
+}
+
+.recipients-page .btn-outline-primary:hover {
+    background: var(--aws-orange);
+    color: white;
+}
+
+.recipients-page .btn-outline-success {
+    border: 1px solid var(--aws-success);
+    color: var(--aws-success);
+    background: transparent;
+}
+
+.recipients-page .btn-outline-success:hover {
+    background: var(--aws-success);
+    color: white;
+}
+
+.recipients-page .btn-outline-warning {
+    border: 1px solid var(--aws-warning);
+    color: var(--aws-warning);
+    background: transparent;
+}
+
+.recipients-page .btn-outline-warning:hover {
+    background: var(--aws-warning);
+    color: white;
+}
+
+.recipients-page .btn-outline-danger {
+    border: 1px solid var(--aws-danger);
+    color: var(--aws-danger);
+    background: transparent;
+}
+
+.recipients-page .btn-outline-danger:hover {
+    background: var(--aws-danger);
+    color: white;
+}
+
+/* AWS Present Items */
+.recipients-page .present-item {
+    background: var(--aws-gray-50);
+    border: 1px solid var(--aws-gray-200);
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-md);
+    margin-bottom: var(--aws-space-md);
+    transition: all 0.2s ease;
+}
+
+.recipients-page .present-item:hover {
+    background: white;
+    border-color: var(--aws-orange);
+    box-shadow: var(--aws-shadow-sm);
+}
+
+.recipients-page .present-title {
+    color: var(--aws-gray-800);
+    font-weight: 600;
+    font-size: var(--aws-font-size-md);
+    margin-bottom: var(--aws-space-xs);
+}
+
+.recipients-page .present-comments {
+    color: var(--aws-gray-600);
+    font-size: var(--aws-font-size-sm);
+    margin-bottom: var(--aws-space-xs);
+}
+
+.recipients-page .present-date {
+    color: var(--aws-gray-500);
+    font-size: var(--aws-font-size-xs);
+}
+
+/* AWS Modals */
+.recipients-page .aws-modal {
+    border: none;
+    border-radius: var(--aws-radius-lg);
+    box-shadow: var(--aws-shadow-lg);
+    overflow: hidden;
+}
+
+.recipients-page .aws-modal-header {
+    background: linear-gradient(135deg, var(--aws-gray-50) 0%, white 100%);
+    border-bottom: 1px solid var(--aws-gray-200);
+    padding: var(--aws-space-lg);
+    border-radius: var(--aws-radius-lg) var(--aws-radius-lg) 0 0;
+}
+
+.recipients-page .aws-modal-title-section .modal-title {
+    color: var(--aws-gray-800);
+    font-weight: 600;
+    font-size: var(--aws-font-size-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--aws-space-sm);
+    margin-bottom: var(--aws-space-xs);
+}
+
+.recipients-page .aws-modal-title-section i {
+    color: var(--aws-orange);
+}
+
+.recipients-page .aws-modal-subtitle {
+    color: var(--aws-gray-600);
+    font-size: var(--aws-font-size-sm);
+    margin: 0;
+}
+
+.recipients-page .aws-close-btn {
+    background: none;
+    border: none;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+    padding: var(--aws-space-sm);
+    border-radius: var(--aws-radius-sm);
+}
+
+.recipients-page .aws-close-btn:hover {
+    opacity: 1;
+    background: var(--aws-gray-100);
+}
+
+.recipients-page .aws-modal-body {
+    padding: var(--aws-space-lg);
+    background: white;
+}
+
+.recipients-page .aws-modal-footer {
+    background: var(--aws-gray-50);
+    border-top: 1px solid var(--aws-gray-200);
+    padding: var(--aws-space-lg);
+    border-radius: 0 0 var(--aws-radius-lg) var(--aws-radius-lg);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--aws-space-md);
+}
+
+/* AWS Form Styles */
+.recipients-page .aws-form {
+    width: 100%;
+}
+
+.recipients-page .aws-form-section {
+    margin-bottom: var(--aws-space-lg);
+}
+
+.recipients-page .aws-form-section:last-child {
+    margin-bottom: 0;
+}
+
+.recipients-page .aws-form-group {
+    margin-bottom: var(--aws-space-md);
+}
+
+.recipients-page .aws-form-label {
+    color: var(--aws-gray-700);
+    font-weight: 500;
+    font-size: var(--aws-font-size-sm);
+    margin-bottom: var(--aws-space-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--aws-space-xs);
+}
+
+.recipients-page .aws-form-label i {
+    color: var(--aws-gray-500);
+    font-size: var(--aws-font-size-xs);
+}
+
+.recipients-page .aws-form-control {
+    border: 1px solid var(--aws-gray-300);
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-sm) var(--aws-space-md);
+    font-size: var(--aws-font-size-sm);
+    transition: all 0.2s ease;
+    background: white;
+    width: 100%;
+}
+
+.recipients-page .aws-form-control:focus {
+    border-color: var(--aws-orange);
+    box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
+    outline: none;
+}
+
+.recipients-page .aws-form-help {
+    color: var(--aws-gray-500);
+    font-size: var(--aws-font-size-xs);
+    margin-top: var(--aws-space-xs);
+    display: block;
+}
+
+/* AWS Button Styles */
+.recipients-page .aws-btn-primary {
+    background: var(--aws-orange);
+    color: white;
+    border: none;
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-sm) var(--aws-space-lg);
+    font-size: var(--aws-font-size-sm);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--aws-space-xs);
+}
+
+.recipients-page .aws-btn-primary:hover {
+    background: #E68900;
+    box-shadow: var(--aws-shadow-sm);
+    transform: none;
+}
+
+.recipients-page .aws-btn-secondary {
+    background: transparent;
+    color: var(--aws-gray-600);
+    border: 1px solid var(--aws-gray-300);
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-sm) var(--aws-space-lg);
+    font-size: var(--aws-font-size-sm);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--aws-space-xs);
+}
+
+.recipients-page .aws-btn-secondary:hover {
+    background: var(--aws-gray-50);
+    border-color: var(--aws-gray-400);
+    color: var(--aws-gray-700);
+    transform: none;
+}
+
+/* AWS Alert Styles */
+.recipients-page .aws-alert {
+    border: none;
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-md);
+    font-size: var(--aws-font-size-sm);
+    border-left: 4px solid;
+}
+
+.recipients-page .aws-alert.alert-success {
+    background: #D5F4E6;
+    color: var(--aws-success);
+    border-left-color: var(--aws-success);
+}
+
+.recipients-page .aws-alert.alert-danger {
+    background: #FADBD8;
+    color: var(--aws-danger);
+    border-left-color: var(--aws-danger);
+}
+
+.recipients-page .aws-alert.alert-warning {
+    background: #FCF3CF;
+    color: var(--aws-warning);
+    border-left-color: var(--aws-warning);
+}
+
+.recipients-page .aws-alert.alert-info {
+    background: #D6EAF8;
+    color: var(--aws-info);
+    border-left-color: var(--aws-info);
+}
+
+/* AWS Form Controls */
+.recipients-page .form-control,
+.recipients-page .form-select {
+    border: 1px solid var(--aws-gray-300);
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-sm) var(--aws-space-md);
+    font-size: var(--aws-font-size-sm);
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.recipients-page .form-control:focus,
+.recipients-page .form-select:focus {
+    border-color: var(--aws-orange);
+    box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
+    outline: none;
+}
+
+.recipients-page .form-label {
+    color: var(--aws-gray-700);
+    font-weight: 500;
+    font-size: var(--aws-font-size-sm);
+    margin-bottom: var(--aws-space-xs);
+}
+
+/* AWS Alerts */
+.recipients-page .alert {
+    border: none;
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-md);
+    font-size: var(--aws-font-size-sm);
+}
+
+.recipients-page .alert-success {
+    background: #D5F4E6;
+    color: var(--aws-success);
+    border-left: 4px solid var(--aws-success);
+}
+
+.recipients-page .alert-danger {
+    background: #FADBD8;
+    color: var(--aws-danger);
+    border-left: 4px solid var(--aws-danger);
+}
+
+.recipients-page .alert-warning {
+    background: #FCF3CF;
+    color: var(--aws-warning);
+    border-left: 4px solid var(--aws-warning);
+}
+
+.recipients-page .alert-info {
+    background: #D6EAF8;
+    color: var(--aws-info);
+    border-left: 4px solid var(--aws-info);
+}
+
+/* AWS Progress Bars */
+.recipients-page .progress {
+    height: 8px;
+    background: var(--aws-gray-200);
+    border-radius: var(--aws-radius-sm);
+    overflow: hidden;
+}
+
+.recipients-page .progress-bar {
+    background: var(--aws-success);
+    border-radius: var(--aws-radius-sm);
+    transition: width 0.3s ease;
+}
+
+/* AWS Badges */
+.recipients-page .badge {
+    border-radius: var(--aws-radius-sm);
+    padding: var(--aws-space-xs) var(--aws-space-sm);
+    font-size: var(--aws-font-size-xs);
+    font-weight: 500;
+}
+
+.recipients-page .badge.bg-success {
+    background: var(--aws-success) !important;
+    color: white !important;
+}
+
+.recipients-page .badge.bg-warning {
+    background: var(--aws-warning) !important;
+    color: white !important;
+}
+
+.recipients-page .badge.bg-danger {
+    background: var(--aws-danger) !important;
+    color: white !important;
+}
+
+/* AWS Search Controls */
+.recipients-page .search-controls {
+    display: flex;
+    gap: var(--aws-space-md);
+    align-items: center;
+    margin-bottom: var(--aws-space-lg);
+    flex-wrap: wrap;
+}
+
+.recipients-page .search-input {
+    border: 1px solid var(--aws-gray-300);
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-sm) var(--aws-space-md);
+    font-size: var(--aws-font-size-sm);
+    flex: 1;
+    min-width: 200px;
+}
+
+.recipients-page .search-input:focus {
+    border-color: var(--aws-orange);
+    box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
+    outline: none;
+}
+
+.recipients-page .sort-button {
+    background: var(--aws-blue);
+    color: white;
+    border: none;
+    border-radius: var(--aws-radius-md);
+    padding: var(--aws-space-sm) var(--aws-space-md);
+    font-size: var(--aws-font-size-sm);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: var(--aws-space-xs);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.recipients-page .sort-button:hover {
+    background: var(--aws-dark-blue);
+    box-shadow: var(--aws-shadow-sm);
+}
+
+/* AWS Profile Pictures */
+.recipients-page .profile-picture-wrapper img {
+    border: 2px solid var(--aws-gray-200);
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.recipients-page .profile-picture-wrapper:hover img {
+    border-color: var(--aws-orange);
+    box-shadow: var(--aws-shadow-sm);
+}
+
+/* AWS List Groups */
+.recipients-page .list-group {
+    border-radius: var(--aws-radius-md);
+    overflow: hidden;
+    border: 1px solid var(--aws-gray-200);
+}
+
+.recipients-page .list-group-item {
+    border: none;
+    border-bottom: 1px solid var(--aws-gray-200);
+    padding: var(--aws-space-md);
+    transition: all 0.2s ease;
+}
+
+.recipients-page .list-group-item:hover {
+    background: var(--aws-gray-50);
+}
+
+.recipients-page .list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* AWS Share Buttons */
+.recipients-page .share-buttons {
+    display: flex;
+    gap: var(--aws-space-sm);
+    margin-top: var(--aws-space-md);
+    flex-wrap: wrap;
+}
+
+.recipients-page .share-btn {
+    padding: var(--aws-space-xs) var(--aws-space-sm);
+    border-radius: var(--aws-radius-sm);
+    text-decoration: none;
+    font-size: var(--aws-font-size-xs);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--aws-space-xs);
+}
+
+.recipients-page .share-btn:hover {
+    transform: none;
+    box-shadow: var(--aws-shadow-sm);
+    text-decoration: none;
+}
+
+/* AWS Responsive Design */
+@media (max-width: 768px) {
+    .recipients-page .container {
+        padding: var(--aws-space-md);
+    }
+    
+    .recipients-page .aws-action-card {
+        height: 160px;
+    }
+    
+    .recipients-page .aws-action-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .recipients-page .aws-action-icon i {
+        font-size: 18px;
+    }
+    
+    .recipients-page .aws-action-title {
+        font-size: var(--aws-font-size-sm);
+    }
+    
+    .recipients-page .aws-action-description {
+        font-size: var(--aws-font-size-xs);
+    }
+    
+    .recipients-page .recipient-item {
+        padding: var(--aws-space-md);
+    }
+    
+    .recipients-page .search-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .recipients-page .search-input {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .recipients-page .aws-content-header {
+        padding: var(--aws-space-md);
+    }
+    
+    .recipients-page .aws-header-title h5 {
+        font-size: var(--aws-font-size-md);
+    }
+    
+    .recipients-page .aws-modal-body {
+        padding: var(--aws-space-md);
+    }
+    
+    .recipients-page .aws-modal-footer {
+        padding: var(--aws-space-md);
+        flex-direction: column;
+        gap: var(--aws-space-sm);
+    }
+    
+    .recipients-page .aws-modal-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .recipients-page .aws-action-section .row {
+        flex-direction: column;
+    }
+    
+    .recipients-page .aws-action-card {
+        margin-bottom: var(--aws-space-md);
+    }
+    
+    .recipients-page .navbar-brand {
+        font-size: var(--aws-font-size-md);
+    }
+    
+    .recipients-page .aws-header-actions {
+        display: none;
+    }
+}
+
+/* AWS Loading States */
+.recipients-page .spinner-border {
+    color: var(--aws-orange);
+    width: 2rem;
+    height: 2rem;
+}
+
+/* AWS Table Styles */
+.recipients-page .table {
+    border-radius: var(--aws-radius-md);
+    overflow: hidden;
+    border: 1px solid var(--aws-gray-200);
+}
+
+.recipients-page .table th {
+    background: var(--aws-gray-50);
+    color: var(--aws-gray-700);
+    font-weight: 600;
+    font-size: var(--aws-font-size-sm);
+    border-bottom: 1px solid var(--aws-gray-200);
+    padding: var(--aws-space-md);
+}
+
+.recipients-page .table td {
+    padding: var(--aws-space-md);
+    border-bottom: 1px solid var(--aws-gray-200);
+    font-size: var(--aws-font-size-sm);
+}
+
+.recipients-page .table tbody tr:hover {
+    background: var(--aws-gray-50);
+}
+
+/* AWS Checkbox Styles */
+.recipients-page .form-check-input {
+    border: 1px solid var(--aws-gray-300);
+    border-radius: var(--aws-radius-sm);
+}
+
+.recipients-page .form-check-input:checked {
+    background-color: var(--aws-orange);
+    border-color: var(--aws-orange);
+}
+
+.recipients-page .form-check-input:focus {
+    box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
+}
+
+/* AWS Typography */
+.recipients-page {
+    font-family: var(--aws-font-family);
+    color: var(--aws-gray-800);
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+}
+
+.recipients-page h1, .recipients-page h2, .recipients-page h3, 
+.recipients-page h4, .recipients-page h5, .recipients-page h6 {
+    color: var(--aws-gray-800);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+/* AWS Micro-interactions */
+.recipients-page .aws-action-card,
+.recipients-page .aws-modal,
+.recipients-page .recipient-item,
+.recipients-page .present-item {
+    will-change: transform, box-shadow;
+}
+
+/* AWS Focus States */
+.recipients-page .aws-action-card:focus-visible,
+.recipients-page .btn:focus-visible,
+.recipients-page .form-control:focus-visible {
+    outline: 2px solid var(--aws-orange);
+    outline-offset: 2px;
+}
+
+/* AWS Loading States */
+.recipients-page .aws-skeleton {
+    background: linear-gradient(90deg, var(--aws-gray-100) 25%, var(--aws-gray-50) 50%, var(--aws-gray-100) 75%);
+    background-size: 200% 100%;
+    animation: aws-skeleton-loading 1.5s infinite;
+}
+
+@keyframes aws-skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* AWS Status Indicators */
+.recipients-page .aws-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--aws-space-xs);
+    font-size: var(--aws-font-size-xs);
+    font-weight: 500;
+    padding: var(--aws-space-xs) var(--aws-space-sm);
+    border-radius: var(--aws-radius-sm);
+}
+
+.recipients-page .aws-status-success {
+    background: rgba(22, 160, 133, 0.1);
+    color: var(--aws-success);
+}
+
+.recipients-page .aws-status-warning {
+    background: rgba(243, 156, 18, 0.1);
+    color: var(--aws-warning);
+}
+
+.recipients-page .aws-status-danger {
+    background: rgba(231, 76, 60, 0.1);
+    color: var(--aws-danger);
+}
+
+/* AWS Dividers */
+.recipients-page .aws-divider {
+    height: 1px;
+    background: var(--aws-gray-200);
+    margin: var(--aws-space-lg) 0;
+}
+
+.recipients-page .aws-divider-vertical {
+    width: 1px;
+    background: var(--aws-gray-200);
+    margin: 0 var(--aws-space-md);
+}
+
+/* AWS Empty States */
+.recipients-page .aws-empty-state {
+    text-align: center;
+    padding: var(--aws-space-2xl);
+    color: var(--aws-gray-600);
+}
+
+.recipients-page .aws-empty-state i {
+    font-size: 48px;
+    color: var(--aws-gray-400);
+    margin-bottom: var(--aws-space-md);
+}
+
+.recipients-page .aws-empty-state h6 {
+    color: var(--aws-gray-700);
+    margin-bottom: var(--aws-space-sm);
+}
+
+.recipients-page .aws-empty-state p {
+    font-size: var(--aws-font-size-sm);
+    margin-bottom: var(--aws-space-lg);
+}
+
+/* AWS Utility Classes */
+.recipients-page .aws-text-primary {
+    color: var(--aws-orange) !important;
+}
+
+.recipients-page .aws-text-secondary {
+    color: var(--aws-gray-600) !important;
+}
+
+.recipients-page .aws-text-muted {
+    color: var(--aws-gray-500) !important;
+}
+
+.recipients-page .aws-bg-light {
+    background-color: var(--aws-gray-50) !important;
+}
+
+.recipients-page .aws-border {
+    border: 1px solid var(--aws-gray-200) !important;
+}
+
+.recipients-page .aws-border-radius {
+    border-radius: var(--aws-radius-md) !important;
+}
+
+.recipients-page .aws-shadow {
+    box-shadow: var(--aws-shadow-sm) !important;
+}
+
+.recipients-page .aws-shadow-lg {
+    box-shadow: var(--aws-shadow-lg) !important;
+}
+
+/* AWS Close Button */
+.recipients-page .btn-close {
+    background: none;
+    border: none;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.recipients-page .btn-close:hover {
+    opacity: 1;
+}
+
+/* AWS Input Groups */
+.recipients-page .input-group-text {
+    background: var(--aws-gray-100);
+    border: 1px solid var(--aws-gray-300);
+    color: var(--aws-gray-600);
+    border-radius: var(--aws-radius-md) 0 0 var(--aws-radius-md);
+}
+
+.recipients-page .input-group .form-control {
+    border-left: none;
+    border-radius: 0 var(--aws-radius-md) var(--aws-radius-md) 0;
+}
+
+.recipients-page .input-group .form-control:focus {
+    border-left: 1px solid var(--aws-orange);
+}
+
+/* AWS Dropdown Menus */
+.recipients-page .dropdown-menu {
+    border: 1px solid var(--aws-gray-200);
+    border-radius: var(--aws-radius-md);
+    box-shadow: var(--aws-shadow-md);
+    padding: var(--aws-space-xs) 0;
+}
+
+.recipients-page .dropdown-item {
+    padding: var(--aws-space-sm) var(--aws-space-md);
+    font-size: var(--aws-font-size-sm);
+    color: var(--aws-gray-700);
+    transition: all 0.2s ease;
+}
+
+.recipients-page .dropdown-item:hover {
+    background: var(--aws-gray-50);
+    color: var(--aws-gray-800);
+}
+
+.recipients-page .dropdown-item:active {
+    background: var(--aws-orange);
+    color: white;
+}
+
+/* AWS Pagination */
+.recipients-page .pagination {
+    gap: var(--aws-space-xs);
+}
+
+.recipients-page .page-link {
+    border: 1px solid var(--aws-gray-300);
+    color: var(--aws-gray-700);
+    padding: var(--aws-space-sm) var(--aws-space-md);
+    border-radius: var(--aws-radius-md);
+    font-size: var(--aws-font-size-sm);
+    transition: all 0.2s ease;
+}
+
+.recipients-page .page-link:hover {
+    background: var(--aws-gray-50);
+    border-color: var(--aws-orange);
+    color: var(--aws-orange);
+}
+
+.recipients-page .page-item.active .page-link {
+    background: var(--aws-orange);
+    border-color: var(--aws-orange);
+    color: white;
+}
+
+/* AWS Tooltips */
+.recipients-page .tooltip-inner {
+    background: var(--aws-gray-800);
+    color: white;
+    border-radius: var(--aws-radius-sm);
+    font-size: var(--aws-font-size-xs);
+    padding: var(--aws-space-xs) var(--aws-space-sm);
+}
+
+/* AWS Popovers */
+.recipients-page .popover {
+    border: 1px solid var(--aws-gray-200);
+    border-radius: var(--aws-radius-md);
+    box-shadow: var(--aws-shadow-md);
+}
+
+.recipients-page .popover-header {
+    background: var(--aws-gray-50);
+    border-bottom: 1px solid var(--aws-gray-200);
+    color: var(--aws-gray-800);
+    font-weight: 600;
+}
+
+.recipients-page .popover-body {
+    color: var(--aws-gray-700);
+    font-size: var(--aws-font-size-sm);
+}

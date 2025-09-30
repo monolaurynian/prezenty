@@ -14,33 +14,51 @@ if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 
+// Demo mode - run without database for preview
+const DEMO_MODE = process.env.DEMO_MODE === 'true' || !process.env.DB_PASSWORD;
+
 // MySQL database configuration
-const dbConfig = {
-    host: process.env.DB_HOST || '153.92.7.101',
-    user: process.env.DB_USER || 'u662139794_mati',
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME || 'u662139794_prezenty',
-    port: parseInt(process.env.DB_PORT) || 3306,
-    charset: 'utf8mb4',
-    connectTimeout: 60000
-};
+let dbConfig;
+let pool;
 
-// Debug database configuration
-console.log('Database configuration:', {
-    host: dbConfig.host,
-    user: dbConfig.user,
-    database: dbConfig.database,
-    port: dbConfig.port,
-    hasPassword: !!dbConfig.password
-});
+if (!DEMO_MODE) {
+    if (process.env.DATABASE_URL) {
+        // Use DATABASE_URL if provided (alternative connection method)
+        dbConfig = process.env.DATABASE_URL;
+    } else {
+        // Use individual environment variables
+        dbConfig = {
+            host: process.env.DB_HOST || '153.92.7.101',
+            user: process.env.DB_USER || 'u662139794_mati',
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME || 'u662139794_prezenty',
+            port: parseInt(process.env.DB_PORT) || 3306,
+            charset: 'utf8mb4',
+            connectTimeout: 60000
+        };
+    }
 
-// Create MySQL connection pool
-const pool = mysql.createPool({
-    ...dbConfig,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+    // Debug database configuration
+    if (typeof dbConfig === 'string') {
+        console.log('Database configuration: Using DATABASE_URL connection string');
+    } else {
+        console.log('Database configuration:', {
+            host: dbConfig.host,
+            user: dbConfig.user,
+            database: dbConfig.database,
+            port: dbConfig.port,
+            hasPassword: !!dbConfig.password
+        });
+    }
+
+    // Create MySQL connection pool
+    pool = mysql.createPool({
+        ...dbConfig,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0
+    });
+}
 
 // Helper functions to reduce code duplication
 const handleDbError = (err, res, message = 'Błąd serwera') => {
@@ -119,15 +137,19 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
 // Create session store
-const sessionStore = new MySQLStore(dbConfig);
-
-app.use(session({
-    store: sessionStore,
+let sessionConfig = {
     secret: process.env.SESSION_SECRET || 'prezenty_secret',
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
-}));
+};
+
+if (!DEMO_MODE && dbConfig) {
+    const sessionStore = new MySQLStore(dbConfig);
+    sessionConfig.store = sessionStore;
+}
+
+app.use(session(sessionConfig));
 
 // Configure multer for file uploads (store in memory for database storage)
 const storage = multer.memoryStorage();
@@ -194,6 +216,19 @@ app.post('/api/login', async (req, res) => {
     console.log('Login request received:', { username: req.body.username, hasPassword: !!req.body.password });
     const { username, password } = req.body;
     
+    if (DEMO_MODE) {
+        // Demo mode - accept any login
+        if (username && password) {
+            console.log('Demo login successful for user:', username);
+            req.session.userId = 1;
+            req.session.username = username;
+            res.json({ success: true, user: { id: 1, username: username } });
+        } else {
+            return res.status(401).json({ error: 'Wprowadź nazwę użytkownika i hasło' });
+        }
+        return;
+    }
+    
     try {
         const [rows] = await pool.execute('SELECT * FROM users WHERE username = ?', [username]);
         const user = rows[0];
@@ -235,6 +270,17 @@ app.get('/api/auth', (req, res) => {
 // Recipients API
 app.get('/api/recipients', requireAuth, async (req, res) => {
     console.log('Getting recipients for user:', req.session.userId);
+    
+    if (DEMO_MODE) {
+        // Demo mode - return demo data
+        const recipients = demoData.recipients.map(recipient => ({
+            ...recipient,
+            identified_by_username: recipient.identified_by ? 'demo' : null
+        }));
+        console.log('Demo recipients loaded:', recipients.length, 'recipients');
+        res.json(recipients);
+        return;
+    }
     
     try {
         const [rows] = await pool.execute(`
@@ -511,6 +557,21 @@ app.get('/api/presents', requireAuth, async (req, res) => {
 // Get all presents without identification logic (for recipients view)
 app.get('/api/presents/all', requireAuth, async (req, res) => {
     console.log('Getting all presents for recipients view');
+    
+    if (DEMO_MODE) {
+        // Demo mode - return demo presents with recipient names
+        const presents = demoData.presents.map(present => {
+            const recipient = demoData.recipients.find(r => r.id === present.recipient_id);
+            return {
+                ...present,
+                recipient_name: recipient ? recipient.name : null,
+                reserved_by_username: present.reserved_by ? 'demo' : null
+            };
+        });
+        console.log('Demo presents loaded:', presents.length, 'presents');
+        res.json(presents);
+        return;
+    }
     
     try {
         const presents = await getAllPresents();
@@ -827,32 +888,66 @@ async function testDatabaseConnection() {
     }
 }
 
+// Demo data for preview
+const demoData = {
+    users: [
+        { id: 1, username: 'demo', password: '$2a$10$demo.hash.for.preview.only' }
+    ],
+    recipients: [
+        { id: 1, name: 'Anna Kowalska', identified_by: null, profile_picture: null },
+        { id: 2, name: 'Jan Nowak', identified_by: 1, profile_picture: null },
+        { id: 3, name: 'Maria Wiśniewska', identified_by: null, profile_picture: null }
+    ],
+    presents: [
+        { id: 1, title: 'Książka o gotowaniu', recipient_id: 1, comments: 'Coś o kuchni włoskiej', is_checked: false, reserved_by: null, created_by: 1, created_at: new Date() },
+        { id: 2, title: 'Słuchawki bezprzewodowe', recipient_id: 2, comments: 'Najlepiej Sony lub Bose', is_checked: true, reserved_by: 1, created_by: 1, created_at: new Date() },
+        { id: 3, title: 'Roślina doniczkowa', recipient_id: 3, comments: 'Monstera lub fikus', is_checked: false, reserved_by: null, created_by: 1, created_at: new Date() }
+    ]
+};
+
 // Initialize database and start server
 async function startServer() {
     try {
-        // Test database connection first
-        const dbConnected = await testDatabaseConnection();
-        if (!dbConnected) {
-            console.error('Cannot start server: Database connection failed');
-            console.error('Please check your database configuration and ensure the database is accessible');
-            process.exit(1);
+        if (DEMO_MODE) {
+            console.log('🎭 Starting in DEMO MODE - Database features disabled');
+            console.log('💡 To enable database: Set DB_PASSWORD in .env file');
+            
+            // Start server without database
+            app.listen(PORT, HOST, () => {
+                console.log(`🎄 Serwer Prezenty działa na porcie ${PORT}`);
+                console.log(`🌐 Dostępny pod adresem: http://${HOST}:${PORT}`);
+                console.log(`📱 DEMO MODE: Database features disabled`);
+                console.log(`🔧 Set DB_PASSWORD in .env to enable full functionality`);
+            }).on('error', (err) => {
+                console.error('Błąd uruchamiania serwera:', err);
+                process.exit(1);
+            });
+        } else {
+            // Test database connection first
+            const dbConnected = await testDatabaseConnection();
+            if (!dbConnected) {
+                console.error('Cannot start server: Database connection failed');
+                console.error('Please check your database configuration and ensure the database is accessible');
+                process.exit(1);
+            }
+            
+            // Skip database initialization on deployment
+            console.log('⚠️  Database schema initialization skipped');
+            console.log('💡 Run "npm run init-db" manually if you need to create tables');
+            
+            // Start server
+            app.listen(PORT, HOST, () => {
+                console.log(`Serwer Prezenty działa na porcie ${PORT}`);
+                console.log(`Dostępny pod adresem: http://${HOST}:${PORT}`);
+                console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+                console.log(`Database: MySQL at ${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
+                console.log('Session store using MySQL');
+                console.log('📋 Database tables assumed to exist - run "npm run init-db" if needed');
+            }).on('error', (err) => {
+                console.error('Błąd uruchamiania serwera:', err);
+                process.exit(1);
+            });
         }
-        
-        // Initialize database schema
-        const { initializeDatabase } = require('./init-db.js');
-        await initializeDatabase();
-        
-        // Start server
-        app.listen(PORT, HOST, () => {
-            console.log(`Serwer Prezenty działa na porcie ${PORT}`);
-            console.log(`Dostępny pod adresem: http://${HOST}:${PORT}`);
-            console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
-            console.log(`Database: MySQL at ${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
-            console.log('Session store using MySQL');
-        }).on('error', (err) => {
-            console.error('Błąd uruchamiania serwera:', err);
-            process.exit(1);
-        });
     } catch (err) {
         console.error('Failed to start server:', err);
         if (err.code === 'ENOTFOUND') {

@@ -9,7 +9,8 @@
     "build": "echo 'No build step required'",
     "test": "echo 'No tests specified'",
     "postinstall": "echo 'Dependencies installed successfully'",
-    "init-db": "node init-db.js"
+    "init-db": "node init-db.js",
+    "test-db": "node test-db.js"
   },
   "keywords": [
     "christmas",

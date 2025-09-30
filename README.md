@@ -40,10 +40,14 @@ NODE_ENV=production
    - Other variables are already configured in render.yaml
 3. Deploy the service
 
-The app will automatically:
+The app will:
 - Install dependencies
-- Initialize the database schema on first run
-- Start the server
+- Start the server (database schema initialization is skipped)
+
+**Important**: Database tables must exist before deployment. If needed, run database initialization manually:
+```bash
+npm run init-db
+```
 
 ## Database Schema
 
