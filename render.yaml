@@ -14,7 +14,7 @@ services:
       - key: DB_HOST
         value: 153.92.7.101
       - key: DB_USER
-        value: u662139794_prezenty
+        value: u662139794_mati
       - key: DB_PASSWORD
         sync: false  # You'll need to set this manually in Render dashboard
       - key: DB_NAME

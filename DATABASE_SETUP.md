@@ -4,14 +4,14 @@
 
 ✅ **Database Host**: Reachable at `153.92.7.101`
 ✅ **Database Name**: `u662139794_prezenty` 
-✅ **Username**: `u662139794_prezenty`
+✅ **Username**: `u662139794_mati`
 ❌ **Password**: Not set or incorrect
 
 ## Issue Identified
 
 The database connection test shows:
 ```
-❌ Database connection failed: Access denied for user 'u662139794_prezenty'@'80.233.53.170' (using password: YES)
+❌ Database connection failed: Access denied for user 'u662139794_mati'@'80.233.53.170' (using password: YES)
 Error code: ER_ACCESS_DENIED_ERROR
 ```
 
@@ -31,7 +31,7 @@ DB_PASSWORD=your_actual_database_password
 
 ### 2. Verify Database User Permissions
 
-The database user `u662139794_prezenty` needs:
+The database user `u662139794_mati` needs:
 - `SELECT`, `INSERT`, `UPDATE`, `DELETE` permissions on the database
 - `CREATE`, `ALTER`, `DROP` permissions for schema initialization
 - Access from your current IP address (`80.233.53.170`)
@@ -64,7 +64,7 @@ Current settings:
 - **Host**: 153.92.7.101
 - **Port**: 3306
 - **Database**: u662139794_prezenty
-- **User**: u662139794_prezenty
+- **User**: u662139794_mati
 - **Charset**: utf8mb4
 - **Connection Timeout**: 60 seconds
 
@@ -76,7 +76,7 @@ If you continue to have issues:
 2. **Verify IP whitelist** - your IP `80.233.53.170` needs access
 3. **Test from command line**:
    ```bash
-   mysql -h 153.92.7.101 -u u662139794_prezenty -p u662139794_prezenty
+   mysql -h 153.92.7.101 -u u662139794_mati -p u662139794_prezenty
    ```
 
 ## Next Steps

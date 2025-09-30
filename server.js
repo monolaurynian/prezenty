@@ -17,7 +17,7 @@ if (process.env.NODE_ENV !== 'production') {
 // MySQL database configuration
 const dbConfig = {
     host: process.env.DB_HOST || '153.92.7.101',
-    user: process.env.DB_USER || 'u662139794_prezenty',
+    user: process.env.DB_USER || 'u662139794_mati',
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME || 'u662139794_prezenty',
     port: parseInt(process.env.DB_PORT) || 3306,
