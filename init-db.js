@@ -1,18 +1,33 @@
 const mysql = require("mysql2/promise");
 
-// Database configuration
+// Load .env file in development
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+
+// Database configuration - same as server.js
 const dbConfig = {
-    host: "153.92.7.101",
-    user: process.env.DB_USER || "u662139794_prezenty",
-    password: process.env.DB_PASSWORD || "",
-    database: "u662139794_prezenty",
-    port: 3306
+    host: process.env.DB_HOST || '153.92.7.101',
+    user: process.env.DB_USER || 'u662139794_prezenty',
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME || 'u662139794_prezenty',
+    port: parseInt(process.env.DB_PORT) || 3306,
+    charset: 'utf8mb4',
+    connectTimeout: 60000
 };
 
 async function initializeDatabase() {
     let connection;
     
     try {
+        console.log("Database configuration:", {
+            host: dbConfig.host,
+            user: dbConfig.user,
+            database: dbConfig.database,
+            port: dbConfig.port,
+            hasPassword: !!dbConfig.password
+        });
+        
         console.log("Connecting to MySQL database...");
         connection = await mysql.createConnection(dbConfig);
         console.log("Connected to MySQL database successfully!");

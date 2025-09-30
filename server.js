@@ -20,9 +20,19 @@ const dbConfig = {
     user: process.env.DB_USER || 'u662139794_prezenty',
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME || 'u662139794_prezenty',
-    port: process.env.DB_PORT || 3306,
-    charset: 'utf8mb4'
+    port: parseInt(process.env.DB_PORT) || 3306,
+    charset: 'utf8mb4',
+    connectTimeout: 60000
 };
+
+// Debug database configuration
+console.log('Database configuration:', {
+    host: dbConfig.host,
+    user: dbConfig.user,
+    database: dbConfig.database,
+    port: dbConfig.port,
+    hasPassword: !!dbConfig.password
+});
 
 // Create MySQL connection pool
 const pool = mysql.createPool({
@@ -802,9 +812,32 @@ app.use((err, req, res, next) => {
     handleDbError(err, res, 'Błąd serwera');
 });
 
+// Test database connection
+async function testDatabaseConnection() {
+    try {
+        console.log('Testing database connection...');
+        const connection = await pool.getConnection();
+        await connection.ping();
+        connection.release();
+        console.log('Database connection test successful!');
+        return true;
+    } catch (err) {
+        console.error('Database connection test failed:', err);
+        return false;
+    }
+}
+
 // Initialize database and start server
 async function startServer() {
     try {
+        // Test database connection first
+        const dbConnected = await testDatabaseConnection();
+        if (!dbConnected) {
+            console.error('Cannot start server: Database connection failed');
+            console.error('Please check your database configuration and ensure the database is accessible');
+            process.exit(1);
+        }
+        
         // Initialize database schema
         const { initializeDatabase } = require('./init-db.js');
         await initializeDatabase();
@@ -822,6 +855,13 @@ async function startServer() {
         });
     } catch (err) {
         console.error('Failed to start server:', err);
+        if (err.code === 'ENOTFOUND') {
+            console.error('Database host not found. Please check your DB_HOST configuration.');
+        } else if (err.code === 'ECONNREFUSED') {
+            console.error('Database connection refused. Please check if the database server is running.');
+        } else if (err.code === 'ER_ACCESS_DENIED_ERROR') {
+            console.error('Database access denied. Please check your username and password.');
+        }
         process.exit(1);
     }
 }
