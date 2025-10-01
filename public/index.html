@@ -8,6 +8,7 @@
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#F44336">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Życzenia Prezentowe">
     <meta name="description" content="Aplikacja do zarządzania pomysłami na prezenty świąteczne">
@@ -86,6 +87,13 @@
                     </a>
                 </div>
                 
+                <!-- PWA Install Button -->
+                <div class="text-center mt-4" id="installButtonContainer" style="display: none;">
+                    <button id="installButton" class="btn btn-outline-light btn-sm" style="backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); transition: all 0.3s ease;">
+                        <i class="fas fa-download me-2"></i>Zainstaluj aplikację
+                    </button>
+                </div>
+                
                 <div id="loginMessage" class="alert mt-3" style="display: none;"></div>
             </div>
         </div>
@@ -110,65 +118,44 @@
             });
         }
 
-        // PWA Install Prompt
+        // PWA Install functionality
         let deferredPrompt;
-        let installButton;
+        const installButton = document.getElementById('installButton');
+        const installButtonContainer = document.getElementById('installButtonContainer');
 
         window.addEventListener('beforeinstallprompt', (e) => {
             console.log('PWA install prompt triggered');
-            // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault();
-            // Stash the event so it can be triggered later
             deferredPrompt = e;
             
-            // Show install button
-            showInstallButton();
+            // Show the install button
+            if (installButtonContainer) {
+                installButtonContainer.style.display = 'block';
+            }
         });
 
-        function showInstallButton() {
-            // Create install button if it doesn't exist
-            if (!installButton) {
-                installButton = document.createElement('button');
-                installButton.innerHTML = '<i class="fas fa-download me-2"></i>Zainstaluj aplikację';
-                installButton.className = 'btn btn-outline-light btn-sm position-fixed';
-                installButton.style.cssText = `
-                    top: 20px;
-                    right: 20px;
-                    z-index: 1000;
-                    backdrop-filter: blur(10px);
-                    background: rgba(255, 255, 255, 0.1);
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                    transition: all 0.3s ease;
-                `;
-                
-                installButton.addEventListener('click', installPWA);
-                document.body.appendChild(installButton);
-            }
-            
-            installButton.style.display = 'block';
-        }
-
-        function installPWA() {
-            if (deferredPrompt) {
-                // Show the prompt
-                deferredPrompt.prompt();
-                
-                // Wait for the user to respond to the prompt
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
+        // Install button click handler
+        if (installButton) {
+            installButton.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    
+                    if (outcome === 'accepted') {
                         console.log('User accepted the PWA install prompt');
                         hideInstallButton();
                     } else {
                         console.log('User dismissed the PWA install prompt');
                     }
+                    
                     deferredPrompt = null;
-                });
-            }
+                }
+            });
         }
 
         function hideInstallButton() {
-            if (installButton) {
-                installButton.style.display = 'none';
+            if (installButtonContainer) {
+                installButtonContainer.style.display = 'none';
             }
         }
 
