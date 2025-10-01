@@ -296,7 +296,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                             ${recipient.profile_picture && recipient.profile_picture.trim() !== '' ? 
                                 `<img src="${getFullProfilePictureUrl(escapeHtml(recipient.profile_picture))}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
                                 `<div class="profile-picture-placeholder" onclick="openProfileModal(${recipient.id})" style="cursor: pointer;">
-                                    <i class="fas fa-user"></i>
+                                   
                                 </div>`
                             }
                         </div>
@@ -310,10 +310,10 @@ function displayRecipientsWithPresents(recipients, presents) {
                     </div>
                     <div class="col-md-6">
                         <div class="mb-2">
-                            <h5 class="recipient-name mb-0">
-                                <i class="fas fa-user me-2"></i>
+                          <center>  <h5 class="recipient-name mb-0">
+                               
                                 ${escapeHtml(recipient.name)}
-                            </h5>
+                            </h5> </center>
                             ${!isIdentified && !hasAnyIdentification ? `
                                 <div class="mt-2">
                                     <button class="btn btn-outline-success btn-sm identify-btn" onclick="identifyAsRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')">
@@ -2113,6 +2113,7 @@ function refreshRecipientsCache() {
         return { recipients, identificationStatus };
     });
 }
+<<<<<<< HEAD
 
 // PWA Installation functionality
 let deferredPrompt;
@@ -2289,3 +2290,5 @@ window.addEventListener('appinstalled', (evt) => {
     console.log('PWA was installed successfully');
     showSuccessMessage('Aplikacja została zainstalowana pomyślnie! 🎉');
 });
+=======
+>>>>>>> e204ac1e9ea4cd9e957e1b852fc85f7006ee96fb
