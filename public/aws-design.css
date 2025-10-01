@@ -131,8 +131,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 80px;
-    height: 80px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--material-red), var(--material-pink));
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
@@ -148,8 +148,8 @@
 }
 
 .recipients-page .brand-logo {
-    width: 64px;
-    height: 64px;
+    width: 96px;
+    height: 96px;
     border-radius: 50%;
     object-fit: cover;
     filter: brightness(1.1) contrast(1.1);
@@ -230,15 +230,15 @@
     }
     
     .recipients-page .brand-logo-container {
-        width: 70px;
-        height: 70px;
+        width: 100px;
+        height: 100px;
         padding: 3px;
         margin: 6px;
     }
     
     .recipients-page .brand-logo {
-        width: 56px;
-        height: 56px;
+        width: 80px;
+        height: 80px;
     }
     
     .recipients-page .brand-text {
