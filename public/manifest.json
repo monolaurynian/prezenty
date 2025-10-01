@@ -57,10 +57,10 @@
       "purpose": "any"
     },
     {
-      "src": "favicon.svg",
+      "src": "pwa-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "maskable"
+      "purpose": "maskable any"
     }
   ],
   "categories": ["lifestyle", "productivity"],

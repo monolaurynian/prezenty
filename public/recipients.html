@@ -562,6 +562,90 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- PWA Install Script -->
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        let installButton;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('PWA install prompt triggered');
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallButton();
+        });
+
+        function showInstallButton() {
+            if (!installButton) {
+                installButton = document.createElement('button');
+                installButton.innerHTML = '<i class="fas fa-download me-2"></i>Zainstaluj';
+                installButton.className = 'btn btn-outline-light btn-sm position-fixed';
+                installButton.style.cssText = `
+                    top: 20px;
+                    right: 20px;
+                    z-index: 1000;
+                    backdrop-filter: blur(10px);
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    transition: all 0.3s ease;
+                `;
+                
+                installButton.addEventListener('click', installPWA);
+                document.body.appendChild(installButton);
+            }
+            
+            installButton.style.display = 'block';
+        }
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the PWA install prompt');
+                        hideInstallButton();
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        function hideInstallButton() {
+            if (installButton) {
+                installButton.style.display = 'none';
+            }
+        }
+
+        // Hide install button if app is already installed
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('PWA was installed');
+            hideInstallButton();
+        });
+
+        // Manual install prompt function (can be called from logo click)
+        function showInstallPrompt() {
+            if (deferredPrompt) {
+                installPWA();
+            } else {
+                console.log('Install prompt not available');
+            }
+        }
+    </script>
+    
     <script src="recipients.js"></script>
 </body>
 </html> 
