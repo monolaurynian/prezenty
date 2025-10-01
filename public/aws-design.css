@@ -223,8 +223,8 @@
     padding: 8px 20px;
 }
 
-/* Mobile adjustments */
-@media (max-width: 991px) {
+/* Mobile and tablet adjustments */
+@media (max-width: 1199px) {
     .recipients-page .navbar .container {
         padding: 12px 15px;
     }
@@ -248,6 +248,51 @@
     .recipients-page .navbar-nav .btn {
         font-size: 14px;
         padding: 6px 16px;
+    }
+    
+    /* Profile name centering for mobile and tablet */
+    .recipients-page .recipient-name {
+        text-align: center !important;
+        display: block !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+    }
+    
+    .recipients-page .recipient-item .col-md-6 h5.recipient-name {
+        text-align: center !important;
+        display: block !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+    }
+    
+    .recipients-page .recipient-item .col-md-6 center {
+        display: block !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+    
+    .recipients-page .recipient-item .col-md-6 center h5 {
+        text-align: center !important;
+        margin: 0 auto !important;
+        display: block !important;
+        width: 100% !important;
+    }
+    
+    .recipients-page .recipient-item .col-md-6 {
+        text-align: center !important;
+    }
+    
+    .recipients-page .recipient-item .col-md-6 .mb-2 {
+        text-align: center !important;
+        width: 100% !important;
+    }
+    
+    .recipients-page .change-picture-btn {
+        font-size: 12px;
+        padding: 8px 12px;
+        white-space: nowrap;
+        min-width: 110px;
+        max-width: 160px;
     }
 }
 
@@ -273,8 +318,16 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-/* Responsive button layout for wider screens */
-@media (min-width: 768px) {
+/* Modal responsive layout */
+@media (max-width: 1199px) {
+    .recipients-page #selfIdentificationModal .modal-footer .btn-lg {
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto;
+    }
+}
+
+@media (min-width: 1200px) {
     .recipients-page #selfIdentificationModal .modal-footer .d-flex {
         max-width: 600px;
         margin: 0 auto;
@@ -282,15 +335,6 @@
     
     .recipients-page #selfIdentificationModal .modal-footer .btn-lg {
         flex: 0 0 auto;
-    }
-}
-
-/* Mobile optimization */
-@media (max-width: 767px) {
-    .recipients-page #selfIdentificationModal .modal-footer .btn-lg {
-        width: 100%;
-        max-width: 280px;
-        margin: 0 auto;
     }
 }
 
@@ -334,8 +378,8 @@
     box-shadow: 0 4px 12px rgba(0, 150, 136, 0.4);
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
+/* Button responsive adjustments */
+@media (max-width: 1199px) {
     .recipients-page .identify-btn {
         min-width: 120px;
         max-width: 160px;
@@ -409,8 +453,8 @@
     font-size: 13px;
 }
 
-/* Responsive adjustments for change picture button */
-@media (max-width: 768px) {
+/* Mobile-specific adjustments */
+@media (max-width: 767px) {
     .recipients-page .change-picture-btn {
         font-size: 12px;
         padding: 8px 12px;
@@ -429,18 +473,220 @@
         margin-bottom: 16px;
     }
     
-    /* Mobile button styling */
     .recipients-page .change-picture-btn-mobile {
         margin-top: 12px;
     }
+    
+    /* Center present date on mobile */
+    .recipients-page .present-item .text-muted {
+        text-align: center !important;
+    }
+    
+    .recipients-page .present-item .small {
+        text-align: center !important;
+        display: block;
+        margin: 5px 0;
+    }
 }
 
-@media (min-width: 992px) {
+/* Tablet-specific adjustments */
+@media (min-width: 768px) and (max-width: 1199px) {
+    /* Optimized layout - profile 35%, presents 65% */
+    .recipients-page .recipient-item .col-md-6:first-child,
+    .recipients-page .recipient-item .col-lg-2 {
+        flex: 0 0 35%;
+        max-width: 35%;
+    }
+    
+    .recipients-page .recipient-item .col-md-6:nth-child(2),
+    .recipients-page .recipient-item .col-lg-4 {
+        flex: 0 0 65%;
+        max-width: 65%;
+    }
+    
+    .recipients-page .recipient-item .col-md-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-top: 15px;
+        text-align: left !important;
+    }
+    
+    .recipients-page .recipient-item {
+        padding: 15px 20px;
+    }
+    
+    /* Presents list optimization */
+    .recipients-page .presents-list-container {
+        width: 100%;
+        margin-top: 15px;
+    }
+    
+    .recipients-page .presents-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: none;
+    }
+    
+    .recipients-page .present-item {
+        width: 100%;
+        margin-bottom: 8px;
+        padding: 12px 16px;
+    }
+    
+    .recipients-page .present-item .btn {
+        min-width: 40px;
+        padding: 6px 12px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+    
+    .recipients-page .present-item .btn-outline-danger {
+        font-size: 12px;
+        padding: 6px 10px;
+        min-width: 90px;
+    }
+    
+    .recipients-page .present-item .d-flex {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+/* Desktop adjustments */
+@media (min-width: 1200px) {
     .recipients-page .change-picture-btn {
         font-size: 13px;
         padding: 8px 14px;
         min-width: 120px;
         max-width: 160px;
+    }
+    
+    /* Show profile name and progress in profile section on desktop */
+    .recipients-page .recipient-name-in-profile {
+        display: block !important;
+        text-align: center;
+        margin-top: 12px;
+    }
+    
+    .recipients-page .recipient-name-in-profile h6 {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--aws-gray-800);
+        margin-bottom: 8px;
+        text-align: center;
+    }
+    
+    .recipients-page .recipient-name-in-profile .progress {
+        margin: 4px auto 0;
+        max-width: 120px;
+    }
+    
+    .recipients-page .recipient-name-in-profile small {
+        font-size: 11px;
+        text-align: center;
+        display: block;
+    }
+    
+    /* Profile checkmark button styling - override all Bootstrap styles */
+    .recipients-page .profile-check-btn {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        min-height: 24px !important;
+        max-width: 24px !important;
+        max-height: 24px !important;
+        border-radius: 50% !important;
+        border: 2px solid var(--material-green) !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        color: var(--material-green) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-size: 12px !important;
+        line-height: 1 !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        flex-shrink: 0 !important;
+        box-sizing: border-box !important;
+        outline: none !important;
+        box-shadow: none !important;
+        text-decoration: none !important;
+        vertical-align: baseline !important;
+        font-weight: normal !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+        user-select: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+    }
+    
+    /* Profile check button inline with name */
+    .recipients-page .profile-check-btn {
+        margin-top: 8px !important;
+        background: white !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .recipients-page .profile-check-btn.identified {
+        background: var(--material-green) !important;
+        background-color: var(--material-green) !important;
+        box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3) !important;
+    }
+    
+    .recipients-page .profile-check-btn:hover {
+        background: var(--material-green) !important;
+        background-color: var(--material-green) !important;
+        color: white !important;
+        transform: scale(1.1) !important;
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
+        border-color: var(--material-green) !important;
+    }
+    
+    .recipients-page .profile-check-btn.identified {
+        background: var(--material-green) !important;
+        background-color: var(--material-green) !important;
+        color: white !important;
+        border-color: var(--material-green) !important;
+    }
+    
+    .recipients-page .profile-check-btn.identified:hover {
+        background: var(--material-teal) !important;
+        background-color: var(--material-teal) !important;
+        border-color: var(--material-teal) !important;
+        color: white !important;
+        transform: scale(1.1) !important;
+        box-shadow: 0 2px 8px rgba(0, 150, 136, 0.3) !important;
+    }
+    
+    .recipients-page .profile-check-btn:focus,
+    .recipients-page .profile-check-btn:active,
+    .recipients-page .profile-check-btn:focus-visible {
+        outline: none !important;
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3) !important;
+        border-color: var(--material-green) !important;
+    }
+    
+    .recipients-page .profile-name-with-check {
+        gap: 8px;
+    }
+    
+    .recipients-page .profile-name-with-check h6 {
+        margin-top: 8px !important;
+        margin-bottom: 0 !important;
+    }
+    
+    /* Ensure middle column content is left-aligned on desktop */
+    .recipients-page .recipient-item .col-lg-6 {
+        text-align: left !important;
+    }
+    
+    .recipients-page .recipient-item .col-lg-6 .mb-2 {
+        text-align: left !important;
     }
 }
 
@@ -960,6 +1206,20 @@
     background: white;
     border-color: var(--christmas-gold);
     box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+}
+
+/* Prevent button text from being cut off */
+.recipients-page .present-item .btn {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: fit-content;
+}
+
+/* General button text improvements */
+.recipients-page .present-item .btn-outline-danger {
+    font-size: 13px;
+    padding: 6px 10px;
 }
 
 /* Material Design Expressive icons in present items */
@@ -1563,14 +1823,15 @@
     text-decoration: none;
 }
 
-/* AWS Responsive Design */
-@media (max-width: 768px) {
+/* Mobile and tablet responsive design */
+@media (max-width: 1199px) {
     .recipients-page .container {
         padding: var(--aws-space-md);
     }
     
     .recipients-page .aws-action-card {
-        height: 160px;
+        height: 150px;
+        margin-bottom: var(--aws-space-md);
     }
     
     .recipients-page .aws-action-icon {
@@ -1583,15 +1844,11 @@
     }
     
     .recipients-page .aws-action-title {
-        font-size: var(--aws-font-size-sm);
+        font-size: 14px;
     }
     
     .recipients-page .aws-action-description {
-        font-size: var(--aws-font-size-xs);
-    }
-    
-    .recipients-page .recipient-item {
-        padding: var(--aws-space-md);
+        font-size: 12px;
     }
     
     .recipients-page .search-controls {
@@ -1628,13 +1885,31 @@
     }
 }
 
-@media (max-width: 576px) {
+/* Mobile-only specific adjustments */
+@media (max-width: 767px) {
     .recipients-page .aws-action-section .row {
         flex-direction: column;
     }
     
     .recipients-page .aws-action-card {
-        margin-bottom: var(--aws-space-md);
+        height: 140px;
+    }
+    
+    .recipients-page .aws-action-icon {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .recipients-page .aws-action-icon i {
+        font-size: 16px;
+    }
+    
+    .recipients-page .aws-action-title {
+        font-size: 13px;
+    }
+    
+    .recipients-page .aws-action-description {
+        font-size: 11px;
     }
     
     .recipients-page .navbar-brand {
@@ -1643,6 +1918,29 @@
     
     .recipients-page .aws-header-actions {
         display: none;
+    }
+    
+    /* Center present dates and metadata on mobile */
+    .recipients-page .present-item .d-flex .text-muted,
+    .recipients-page .present-item .d-flex .small {
+        text-align: center !important;
+        width: 100%;
+        justify-self: center;
+    }
+    
+    .recipients-page .present-item .d-flex {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .recipients-page .present-item .d-flex > div {
+        text-align: center;
+        width: 100%;
+    }
+    
+    .recipients-page .recipient-item {
+        padding: var(--aws-space-md);
     }
 }
 

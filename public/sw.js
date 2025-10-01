@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v5';
+const CACHE_NAME = 'prezenty-v6';
 const urlsToCache = [
   '/manifest.json',
   '/favicon.svg',
@@ -80,4 +80,68 @@ self.addEventListener('activate', function(event) {
       );
     })
   );
+});
+
+// Push notification event listener
+self.addEventListener('push', function(event) {
+  console.log('Push notification received:', event);
+  
+  let notificationData = {
+    title: 'Życzenia Prezentowe',
+    body: 'Nowy prezent został dodany!',
+    icon: '/seba_logo.png',
+    badge: '/seba_logo.png',
+    tag: 'new-present',
+    requireInteraction: false,
+    actions: [
+      {
+        action: 'view',
+        title: 'Zobacz',
+        icon: '/seba_logo.png'
+      }
+    ]
+  };
+
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      notificationData = {
+        ...notificationData,
+        title: data.title || notificationData.title,
+        body: data.body || notificationData.body,
+        data: data
+      };
+    } catch (e) {
+      console.error('Error parsing push data:', e);
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, notificationData)
+  );
+});
+
+// Notification click event listener
+self.addEventListener('notificationclick', function(event) {
+  console.log('Notification clicked:', event);
+  
+  event.notification.close();
+  
+  if (event.action === 'view' || !event.action) {
+    event.waitUntil(
+      clients.matchAll({ type: 'window' }).then(function(clientList) {
+        // If app is already open, focus it
+        for (let client of clientList) {
+          if (client.url.includes('/recipients') && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        
+        // If app is not open, open it
+        if (clients.openWindow) {
+          return clients.openWindow('/recipients');
+        }
+      })
+    );
+  }
 });

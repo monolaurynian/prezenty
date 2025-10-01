@@ -10,11 +10,19 @@ const mysql = require('mysql2/promise');
 const MySQLStore = require('express-mysql-session')(session);
 const cron = require('cron');
 const https = require('https');
+const webpush = require('web-push');
 
 // Load .env file in development, but not in production
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
+
+// Configure web-push
+webpush.setVapidDetails(
+    'mailto:your-email@example.com',
+    'BEl62iUYgUivxIkv69yViEuiBIa40HI80YmqRcU_d2qcWAh2U5cp7C6_8AT7pRxVxIiNuSOhapA_GTfXRqXWkOU', // Public key
+    'dBnqwHzhfBibnwdBVVHzlEi9Oi1Ab8RqrkDdrgkjP-g' // Private key
+);
 
 // Demo mode - run without database for preview
 let DEMO_MODE = process.env.DEMO_MODE === 'true' || 
@@ -906,6 +914,28 @@ app.post('/api/presents', requireAuth, async (req, res) => {
         // Invalidate cache when data changes
         cache.invalidatePresents();
         
+        // Get recipient name for notification
+        let recipientName = 'kogoś';
+        if (recipient_id) {
+            try {
+                const [recipientRows] = await pool.execute('SELECT name FROM recipients WHERE id = ?', [recipient_id]);
+                if (recipientRows.length > 0) {
+                    recipientName = recipientRows[0].name;
+                }
+            } catch (err) {
+                console.error('Error getting recipient name:', err);
+            }
+        }
+        
+        // Send notification to other users
+        const notificationTitle = 'Nowy prezent!';
+        const notificationBody = `Dodano nowy prezent "${title.trim()}" dla ${recipientName}`;
+        sendNotificationToUsers(userId, notificationTitle, notificationBody, {
+            presentId: result.insertId,
+            presentTitle: title.trim(),
+            recipientName: recipientName
+        });
+        
         res.json({ id: result.insertId, title: title.trim(), recipient_id, comments });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas dodawania prezentu');
@@ -1098,6 +1128,102 @@ app.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
         return handleDbError(err, res, 'Błąd podczas rezerwacji prezentu');
     }
 });
+
+// Notification subscription endpoint
+app.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
+    const userId = req.session.userId;
+    const subscription = req.body;
+    
+    if (DEMO_MODE) {
+        console.log('Demo mode - notification subscription saved:', { userId, subscription });
+        res.json({ success: true });
+        return;
+    }
+    
+    try {
+        // Create notifications table if it doesn't exist
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS push_subscriptions (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                endpoint TEXT NOT NULL,
+                p256dh TEXT NOT NULL,
+                auth TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_endpoint (user_id, endpoint(255))
+            )
+        `);
+        
+        // Save subscription
+        await pool.execute(`
+            INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) 
+            VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE 
+                p256dh = VALUES(p256dh),
+                auth = VALUES(auth),
+                created_at = CURRENT_TIMESTAMP
+        `, [
+            userId,
+            subscription.endpoint,
+            subscription.keys.p256dh,
+            subscription.keys.auth
+        ]);
+        
+        console.log('Push subscription saved for user:', userId);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error saving push subscription:', err);
+        res.status(500).json({ error: 'Failed to save subscription' });
+    }
+});
+
+// Function to send notifications to all users except the sender
+async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
+    if (DEMO_MODE) {
+        console.log('Demo mode - would send notification:', { excludeUserId, title, body, data });
+        return;
+    }
+    
+    try {
+        const [subscriptions] = await pool.execute(`
+            SELECT * FROM push_subscriptions 
+            WHERE user_id != ?
+        `, [excludeUserId]);
+        
+        const notificationPayload = JSON.stringify({
+            title,
+            body,
+            icon: '/seba_logo.png',
+            badge: '/seba_logo.png',
+            tag: 'new-present',
+            data
+        });
+        
+        const promises = subscriptions.map(async (sub) => {
+            try {
+                await webpush.sendNotification({
+                    endpoint: sub.endpoint,
+                    keys: {
+                        p256dh: sub.p256dh,
+                        auth: sub.auth
+                    }
+                }, notificationPayload);
+                console.log('Notification sent to user:', sub.user_id);
+            } catch (error) {
+                console.error('Failed to send notification to user:', sub.user_id, error);
+                // Remove invalid subscription
+                if (error.statusCode === 410) {
+                    await pool.execute('DELETE FROM push_subscriptions WHERE id = ?', [sub.id]);
+                }
+            }
+        });
+        
+        await Promise.all(promises);
+        console.log(`Sent notifications to ${subscriptions.length} users`);
+    } catch (err) {
+        console.error('Error sending notifications:', err);
+    }
+}
 
 // Cancel reservation
 app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {

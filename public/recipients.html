@@ -47,6 +47,9 @@
                 </div>
             </a>
             <div class="navbar-nav ms-auto">
+                <button id="notificationButton" class="btn btn-outline-light btn-sm me-2" onclick="requestNotificationPermission()" style="border: 2px solid white; color: white; font-weight: 500; display: none;">
+                    <i class="fas fa-bell me-1"></i>Powiadomienia
+                </button>
                 <button class="btn btn-outline-light btn-sm" onclick="logout()" style="border: 2px solid white; color: white; font-weight: 500;">
                     <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
                 </button>
@@ -611,7 +614,7 @@
         }
         
         function showManualInstallInstructions() {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             const isAndroid = /Android/.test(navigator.userAgent);
             const isChrome = /Chrome/.test(navigator.userAgent);
             const isEdge = /Edg/.test(navigator.userAgent);
@@ -626,10 +629,25 @@
                         <i class="fab fa-safari fa-3x text-primary mb-2"></i>
                         <h6>Safari na iOS</h6>
                     </div>
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Ważne:</strong> Musisz używać przeglądarki Safari
+                    </div>
                     <ol class="text-start">
-                        <li class="mb-2">Naciśnij przycisk <strong>Udostępnij</strong> <i class="fas fa-share"></i> w Safari</li>
-                        <li class="mb-2">Przewiń w dół i wybierz <strong>"Dodaj do ekranu głównego"</strong> <i class="fas fa-plus-square"></i></li>
-                        <li class="mb-2">Naciśnij <strong>"Dodaj"</strong> w prawym górnym rogu</li>
+                        <li class="mb-3">
+                            <strong>Krok 1:</strong> Naciśnij przycisk <strong>Udostępnij</strong> 
+                            <i class="fas fa-share text-primary"></i> na dole ekranu w Safari
+                        </li>
+                        <li class="mb-3">
+                            <strong>Krok 2:</strong> Przewiń w dół i znajdź opcję 
+                            <strong>"Dodaj do ekranu głównego"</strong> <i class="fas fa-plus-square text-success"></i>
+                        </li>
+                        <li class="mb-3">
+                            <strong>Krok 3:</strong> Naciśnij <strong>"Dodaj"</strong> w prawym górnym rogu
+                        </li>
+                        <li class="mb-2">
+                            <strong>Gotowe!</strong> Aplikacja pojawi się na ekranie głównym
+                        </li>
                     </ol>
                 `;
             } else if (isAndroid && isChrome) {
@@ -713,6 +731,8 @@
         // Hide install button if app is already installed
         window.addEventListener('appinstalled', (evt) => {
             console.log('PWA was installed');
+            // Request notification permission after app installation
+            requestNotificationPermission();
         });
 
         // Check if app is already installed and update logo tooltip
@@ -721,7 +741,104 @@
             if (logoContainer) {
                 logoContainer.title = 'Aplikacja jest już zainstalowana';
             }
+            // Request notification permission for installed app
+            requestNotificationPermission();
         }
+
+        // Push notification functions
+        function requestNotificationPermission() {
+            const notificationButton = document.getElementById('notificationButton');
+            
+            if ('Notification' in window && 'serviceWorker' in navigator) {
+                Notification.requestPermission().then(function(permission) {
+                    console.log('Notification permission:', permission);
+                    if (permission === 'granted') {
+                        subscribeToNotifications();
+                        if (notificationButton) {
+                            notificationButton.style.display = 'none';
+                        }
+                    } else if (permission === 'denied') {
+                        if (notificationButton) {
+                            notificationButton.innerHTML = '<i class="fas fa-bell-slash me-1"></i>Zablokowane';
+                            notificationButton.disabled = true;
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Check notification permission status and show button if needed
+        function checkNotificationStatus() {
+            const notificationButton = document.getElementById('notificationButton');
+            
+            if ('Notification' in window && 'serviceWorker' in navigator) {
+                if (Notification.permission === 'default') {
+                    if (notificationButton) {
+                        notificationButton.style.display = 'inline-block';
+                    }
+                } else if (Notification.permission === 'granted') {
+                    subscribeToNotifications();
+                    if (notificationButton) {
+                        notificationButton.style.display = 'none';
+                    }
+                } else if (Notification.permission === 'denied') {
+                    if (notificationButton) {
+                        notificationButton.innerHTML = '<i class="fas fa-bell-slash me-1"></i>Zablokowane';
+                        notificationButton.disabled = true;
+                        notificationButton.style.display = 'inline-block';
+                    }
+                }
+            }
+        }
+
+        function subscribeToNotifications() {
+            navigator.serviceWorker.ready.then(function(registration) {
+                return registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array('BEl62iUYgUivxIkv69yViEuiBIa40HI80YmqRcU_d2qcWAh2U5cp7C6_8AT7pRxVxIiNuSOhapA_GTfXRqXWkOU')
+                });
+            }).then(function(subscription) {
+                console.log('Push subscription successful:', subscription);
+                sendSubscriptionToServer(subscription);
+            }).catch(function(error) {
+                console.error('Push subscription failed:', error);
+            });
+        }
+
+        function sendSubscriptionToServer(subscription) {
+            fetch('/api/notifications/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(subscription)
+            }).then(response => response.json())
+            .then(data => {
+                console.log('Subscription sent to server:', data);
+            }).catch(error => {
+                console.error('Error sending subscription to server:', error);
+            });
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/-/g, '+')
+                .replace(/_/g, '/');
+
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        // Check notification status when page loads
+        setTimeout(() => {
+            checkNotificationStatus();
+        }, 1000); // Wait 1 second after page load
 
         // Debug PWA installation criteria
         console.log('PWA Debug Info:', {

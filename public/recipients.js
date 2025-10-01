@@ -340,7 +340,7 @@ function displayRecipientsWithPresents(recipients, presents) {
         return `
             <div class="recipient-item" data-id="${recipient.id}" id="recipient-${recipient.id}">
                 <div class="row">
-                    <div class="col-md-2 text-center">
+                    <div class="col-lg-2 col-md-6 text-center">
                         <div class="recipient-avatar">
                             ${recipient.profile_picture && recipient.profile_picture.trim() !== '' ? 
                                 `<img src="${getFullProfilePictureUrl(escapeHtml(recipient.profile_picture))}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
@@ -349,16 +349,50 @@ function displayRecipientsWithPresents(recipients, presents) {
                                 </div>`
                             }
                         </div>
-                        ${!isIdentifiedByOther ? `
-                            <div class="mt-2 d-none d-md-block">
-                                <button class="btn btn-outline-primary btn-sm change-picture-btn" onclick="openChangePictureModal(${recipient.id})">
-                                    <i class="fas fa-camera me-1"></i>Zmień zdjęcie
-                                </button>
+                        
+                        <!-- Name shown in profile section for wider screens -->
+                        <div class="recipient-name-in-profile d-none d-lg-block">
+                            <div class="profile-name-with-check d-flex align-items-center justify-content-center">
+                                <h6 class="mt-2 mb-1 me-2">${escapeHtml(recipient.name)}</h6>
+                                ${!isIdentified && !hasAnyIdentification ? `
+                                    <button class="btn profile-check-btn d-none d-lg-block" onclick="identifyAsRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')" title="To jestem ja">
+                                        <i class="fas fa-user-check"></i>
+                                    </button>
+                                ` : isIdentified ? `
+                                    <button class="btn profile-check-btn identified d-none d-lg-block" onclick="cancelIdentification(${recipient.id}, '${escapeHtml(recipient.name)}')" title="To jest Twój profil">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                ` : ''}
                             </div>
-                        ` : ''}
+                            ${!isIdentified ? `
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-gift me-1"></i>
+                                        Prezenty: ${checkedPresents}/${totalPresents} zakupione
+                                    </small>
+                                    ${totalPresents > 0 ? `
+                                        <div class="progress mt-1" style="height: 6px;">
+                                            <div class="progress-bar bg-success" style="width: ${(checkedPresents / totalPresents) * 100}%"></div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Buttons in profile section -->
+                        <div class="profile-buttons">
+                            
+                            ${!isIdentifiedByOther ? `
+                                <div class="mt-2 d-none d-md-block">
+                                    <button class="btn btn-outline-primary btn-sm change-picture-btn" onclick="openChangePictureModal(${recipient.id})">
+                                        <i class="fas fa-camera me-1"></i>Zmień zdjęcie
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-2">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="mb-2 d-lg-none">
                           <center>  <h5 class="recipient-name mb-0">
                                
                                 ${escapeHtml(recipient.name)}
@@ -391,7 +425,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                             </div>
                         ` : ''}
                         ${!isIdentified ? `
-                        <div class="mb-3">
+                        <div class="mb-3 d-lg-none">
                             <small class="text-muted">
                                 <i class="fas fa-gift me-1"></i>
                                 Prezenty: ${checkedPresents}/${totalPresents} zakupione
@@ -407,7 +441,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                             ${presentsHTML}
                         </div>
                     </div>
-                    <div class="col-md-4 text-end">
+                    <div class="col-lg-4 col-md-12 text-end">
                         <div class="btn-group-vertical w-100">
                             <!-- Other action buttons can be added here if needed -->
                         </div>
