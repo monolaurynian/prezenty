@@ -1,11 +1,9 @@
-const CACHE_NAME = 'prezenty-v3';
+const CACHE_NAME = 'prezenty-v4';
 const urlsToCache = [
   '/manifest.json',
   '/favicon.svg',
   '/seba_logo.png',
-  '/pwa-icon.svg',
   '/styles.deduped.min.css',
-  '/recipients.js',
   '/aws-design.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
@@ -16,7 +14,15 @@ self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function(cache) {
-        return cache.addAll(urlsToCache);
+        // Cache files individually to handle failures gracefully
+        return Promise.allSettled(
+          urlsToCache.map(url => 
+            cache.add(url).catch(err => {
+              console.warn('Failed to cache:', url, err);
+              return null;
+            })
+          )
+        );
       })
   );
 });
