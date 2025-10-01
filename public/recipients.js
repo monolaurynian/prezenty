@@ -2113,7 +2113,6 @@ function refreshRecipientsCache() {
         return { recipients, identificationStatus };
     });
 }
-<<<<<<< HEAD
 
 // PWA Installation functionality
 let deferredPrompt;
@@ -2290,5 +2289,3 @@ window.addEventListener('appinstalled', (evt) => {
     console.log('PWA was installed successfully');
     showSuccessMessage('Aplikacja została zainstalowana pomyślnie! 🎉');
 });
-=======
->>>>>>> e204ac1e9ea4cd9e957e1b852fc85f7006ee96fb
