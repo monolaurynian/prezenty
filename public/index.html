@@ -157,6 +157,9 @@
                     }
                     
                     deferredPrompt = null;
+                } else {
+                    // Show install instructions if prompt not available
+                    alert('Aby zainstalować aplikację:\n\n• Chrome/Edge: Szukaj ikony "Zainstaluj" w pasku adresu\n• Safari (iOS): Udostępnij → Dodaj do ekranu głównego\n• Android: Menu → Dodaj do ekranu głównego');
                 }
             });
         }

@@ -39,6 +39,15 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuth().then(() => {
         // Load recipients with their presents after auth is confirmed
         loadRecipientsWithPresents();
+        
+        // Set up periodic auth check to detect session expiry
+        setInterval(() => {
+            checkAuth().catch(() => {
+                console.warn('Session expired, redirecting to login');
+                window.location.href = '/';
+            });
+        }, 5 * 60 * 1000); // Check every 5 minutes
+        
     }).catch(error => {
         console.error('Auth failed:', error);
         window.location.href = '/';
@@ -98,10 +107,18 @@ function initializeAnimations() {
 }
 
 function checkAuth() {
-    return fetch('/api/auth')
-    .then(response => response.json())
+    console.log('Checking authentication...');
+    return fetch('/api/auth', {
+        credentials: 'include' // Ensure cookies are sent
+    })
+    .then(response => {
+        console.log('Auth response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Auth response data:', data);
         if (!data.authenticated) {
+            console.warn('User not authenticated, redirecting to login');
             throw new Error('Not authenticated');
         } else {
             currentUserId = data.user.id;
@@ -196,7 +213,7 @@ function loadRecipientsWithPresents() {
         displayRecipientsWithPresents(validRecipients, validPresents);
         
         // Handle identification logic
-        handleIdentificationLogic(recipients, identificationStatus);
+        handleIdentificationLogic(validRecipients, identificationStatus);
     })
     .catch(error => {
         console.error('Error loading data:', error);
@@ -2102,21 +2119,55 @@ function displayRecipientsData(recipients, presents, identificationStatus) {
 }
 
 function handleIdentificationLogic(recipients, identificationStatus) {
-    if (!identificationStatus.isIdentified) {
-        // Find matching recipient
-        const matchingRecipient = recipients.find(recipient => 
-            recipient.name.toLowerCase() === identificationStatus.username?.toLowerCase()
-        );
-        
-        if (matchingRecipient) {
-            setTimeout(() => {
-                identifyAsRecipient(matchingRecipient.id, matchingRecipient.name, true);
-            }, 500); // Reduced delay for faster UX
-        } else {
-            setTimeout(() => {
-                showRecipientSelectionModal();
-            }, 500); // Reduced delay for faster UX
-        }
+    console.log('handleIdentificationLogic called with:', {
+        currentUserId,
+        recipients: recipients.map(r => ({ id: r.id, name: r.name, identified_by: r.identified_by })),
+        identificationStatus
+    });
+    
+    // Ensure currentUserId is set
+    if (!currentUserId) {
+        console.warn('currentUserId not set, skipping identification logic');
+        return;
+    }
+    
+    // First check the identification status from the API
+    if (identificationStatus.isIdentified && identificationStatus.identifiedRecipient) {
+        console.log('User is already identified according to API:', identificationStatus.identifiedRecipient.name, '- skipping identification flow');
+        return;
+    }
+    
+    // Also check if user is already identified as any recipient in the recipients list
+    const alreadyIdentified = recipients.find(recipient => 
+        recipient.identified_by === currentUserId
+    );
+    
+    console.log('Already identified check:', { currentUserId, alreadyIdentified });
+    
+    if (alreadyIdentified) {
+        console.log('User is already identified as:', alreadyIdentified.name, '- skipping identification flow');
+        return; // Don't show any identification modals
+    }
+    
+    // Only show identification flow if user is not identified at all
+    console.log('User is not identified, checking for identification options...');
+    
+    // Find matching recipient by username (for first-time identification)
+    const matchingRecipient = recipients.find(recipient => 
+        recipient.name.toLowerCase() === identificationStatus.username?.toLowerCase() &&
+        !recipient.identified_by
+    );
+    
+    if (matchingRecipient) {
+        console.log('Found matching unidentified recipient:', matchingRecipient.name);
+        setTimeout(() => {
+            identifyAsRecipient(matchingRecipient.id, matchingRecipient.name, true);
+        }, 500);
+    } else {
+        console.log('No matching recipient found, showing selection modal');
+        setTimeout(() => {
+            showRecipientSelectionModal();
+        }, 500);
     }
 }
 

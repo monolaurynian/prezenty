@@ -38,7 +38,7 @@
         <div class="container">
             <a class="navbar-brand" href="/recipients">
                 <div class="brand-container">
-                    <div class="brand-logo-container" onclick="installPWA()" title="Kliknij aby zainstalować aplikację">
+                    <div class="brand-logo-container" title="Kliknij aby zobaczyć instrukcje instalacji aplikacji">
                         <img src="seba_logo.png" alt="Logo" class="brand-logo">
                     </div>
                     <span class="brand-text">
@@ -47,10 +47,6 @@
                 </div>
             </a>
             <div class="navbar-nav ms-auto">
-                <!-- PWA Install Button -->
-                <button id="pwaInstallButton" class="btn btn-outline-light btn-sm me-2" onclick="installPWA()" style="border: 2px solid white; color: white; font-weight: 500; display: none;">
-                    <i class="fas fa-download me-1"></i>Zainstaluj
-                </button>
                 <button class="btn btn-outline-light btn-sm" onclick="logout()" style="border: 2px solid white; color: white; font-weight: 500;">
                     <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
                 </button>
@@ -571,54 +567,160 @@
     <!-- PWA Install Script -->
     <script>
         let recipientsDeferredPrompt;
-        const pwaInstallButton = document.getElementById('pwaInstallButton');
+        
+        // Add click event listener to logo
+        const logoContainer = document.querySelector('.brand-logo-container');
+        if (logoContainer) {
+            logoContainer.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                showInstallInstructions();
+            });
+        }
 
         window.addEventListener('beforeinstallprompt', (e) => {
             console.log('PWA install prompt available');
             e.preventDefault();
             recipientsDeferredPrompt = e;
-            
-            // Show the install button
-            if (pwaInstallButton) {
-                pwaInstallButton.style.display = 'inline-block';
-            }
         });
 
-        function installPWA() {
+
+
+        function showInstallInstructions() {
+            console.log('showInstallInstructions() called');
+            
+            // Try native prompt first if available
             if (recipientsDeferredPrompt) {
+                console.log('Using native PWA install prompt');
                 recipientsDeferredPrompt.prompt();
                 recipientsDeferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
                         console.log('User accepted the PWA install prompt');
-                        hideInstallButton();
                     } else {
                         console.log('User dismissed the PWA install prompt');
+                        // Show manual instructions if they dismissed the native prompt
+                        showManualInstallInstructions();
                     }
                     recipientsDeferredPrompt = null;
                 });
-            } else {
-                console.log('PWA install prompt not available');
-                // Show a message to the user
-                alert('Instalacja aplikacji nie jest dostępna w tej przeglądarce. Spróbuj użyć Chrome lub Edge.');
+                return;
             }
+            
+            // Show manual instructions if native prompt not available
+            showManualInstallInstructions();
         }
-
-        function hideInstallButton() {
-            if (pwaInstallButton) {
-                pwaInstallButton.style.display = 'none';
+        
+        function showManualInstallInstructions() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+            const isChrome = /Chrome/.test(navigator.userAgent);
+            const isEdge = /Edg/.test(navigator.userAgent);
+            
+            let instructions = '';
+            let title = 'Zainstaluj aplikację';
+            
+            if (isIOS) {
+                title = 'Dodaj do ekranu głównego';
+                instructions = `
+                    <div class="text-center mb-3">
+                        <i class="fab fa-safari fa-3x text-primary mb-2"></i>
+                        <h6>Safari na iOS</h6>
+                    </div>
+                    <ol class="text-start">
+                        <li class="mb-2">Naciśnij przycisk <strong>Udostępnij</strong> <i class="fas fa-share"></i> w Safari</li>
+                        <li class="mb-2">Przewiń w dół i wybierz <strong>"Dodaj do ekranu głównego"</strong> <i class="fas fa-plus-square"></i></li>
+                        <li class="mb-2">Naciśnij <strong>"Dodaj"</strong> w prawym górnym rogu</li>
+                    </ol>
+                `;
+            } else if (isAndroid && isChrome) {
+                instructions = `
+                    <div class="text-center mb-3">
+                        <i class="fab fa-chrome fa-3x text-success mb-2"></i>
+                        <h6>Chrome na Android</h6>
+                    </div>
+                    <ol class="text-start">
+                        <li class="mb-2">Naciśnij menu <strong>⋮</strong> w prawym górnym rogu</li>
+                        <li class="mb-2">Wybierz <strong>"Dodaj do ekranu głównego"</strong> lub <strong>"Zainstaluj aplikację"</strong></li>
+                        <li class="mb-2">Potwierdź instalację</li>
+                    </ol>
+                `;
+            } else if (isChrome || isEdge) {
+                const browserName = isEdge ? 'Edge' : 'Chrome';
+                const browserIcon = isEdge ? 'fab fa-edge' : 'fab fa-chrome';
+                instructions = `
+                    <div class="text-center mb-3">
+                        <i class="${browserIcon} fa-3x text-primary mb-2"></i>
+                        <h6>${browserName} na komputerze</h6>
+                    </div>
+                    <ol class="text-start">
+                        <li class="mb-2">Poszukaj ikony <strong>"Zainstaluj"</strong> <i class="fas fa-download"></i> w pasku adresu</li>
+                        <li class="mb-2">Lub naciśnij menu <strong>⋮</strong> → <strong>"Zainstaluj Życzenia Prezentowe"</strong></li>
+                        <li class="mb-2">Potwierdź instalację w oknie dialogowym</li>
+                    </ol>
+                `;
+            } else {
+                instructions = `
+                    <div class="text-center mb-3">
+                        <i class="fas fa-mobile-alt fa-3x text-warning mb-2"></i>
+                        <h6>Instalacja niedostępna</h6>
+                    </div>
+                    <p class="text-center">
+                        Aby zainstalować aplikację, użyj jednej z obsługiwanych przeglądarek:
+                    </p>
+                    <ul class="text-start">
+                        <li><strong>Chrome</strong> (Android, Windows, Mac)</li>
+                        <li><strong>Safari</strong> (iOS, Mac)</li>
+                        <li><strong>Edge</strong> (Windows, Mac)</li>
+                    </ul>
+                `;
             }
+            
+            // Create and show modal
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-download me-2"></i>${title}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${instructions}
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                                <i class="fas fa-check me-1"></i>Rozumiem
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+            
+            // Remove modal from DOM when hidden
+            modal.addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(modal);
+            });
         }
 
         // Hide install button if app is already installed
         window.addEventListener('appinstalled', (evt) => {
             console.log('PWA was installed');
-            hideInstallButton();
         });
 
-        // Check if app is already installed
+        // Check if app is already installed and update logo tooltip
         if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
             console.log('App is already installed');
-            hideInstallButton();
+            if (logoContainer) {
+                logoContainer.title = 'Aplikacja jest już zainstalowana';
+            }
         }
 
         // Debug PWA installation criteria

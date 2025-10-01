@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v4';
+const CACHE_NAME = 'prezenty-v5';
 const urlsToCache = [
   '/manifest.json',
   '/favicon.svg',
@@ -28,8 +28,8 @@ self.addEventListener('install', function(event) {
 });
 
 self.addEventListener('fetch', function(event) {
-  // Skip caching for non-GET requests
-  if (event.request.method !== 'GET') {
+  // Skip caching for non-GET requests and API endpoints
+  if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
     return;
   }
 
