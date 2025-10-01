@@ -1,4 +1,4 @@
-console.log('Recipients.js loading... v3.0');
+console.log('Recipients.js loading... v7.0 - Reverted to separate API calls');
 
 // Global logout function - ensure it's always available
 function logout() {
@@ -131,7 +131,7 @@ function loadRecipientsWithPresents() {
     
     // Use cached data if available and fresh
     const now = Date.now();
-    const cacheExpiry = 30000; // 30 seconds
+    const cacheExpiry = 15000; // 15 seconds (reduced for better UX)
     
     if (window._dataCache && 
         window._dataCacheTimestamp && 
@@ -141,7 +141,7 @@ function loadRecipientsWithPresents() {
         return;
     }
     
-    // Load data with optimized parallel requests
+    // Load data with optimized single request
     const startTime = performance.now();
     
     Promise.all([
@@ -172,28 +172,28 @@ function loadRecipientsWithPresents() {
             return response.json();
         })
     ])
-    .then(([recipientsResponse, presentsResponse, identificationStatus]) => {
+    .then(([recipients, presentsData, identificationStatus]) => {
         const endTime = performance.now();
         console.log(`Data loaded in ${(endTime - startTime).toFixed(2)}ms`);
         
-        // Extract and validate data
-        const recipients = Array.isArray(recipientsResponse) ? recipientsResponse : (recipientsResponse.recipients || []);
-        const presents = Array.isArray(presentsResponse) ? presentsResponse : [];
+        // Validate data
+        const validRecipients = Array.isArray(recipients) ? recipients : [];
+        const validPresents = Array.isArray(presentsData) ? presentsData : [];
         
-        if (!recipients || !presents) {
+        if (!validRecipients || !validPresents) {
             throw new Error('Invalid data received from server');
         }
         
         // Cache the data
-        window._dataCache = { recipients, presents, identificationStatus };
+        window._dataCache = { recipients: validRecipients, presents: validPresents, identificationStatus };
         window._dataCacheTimestamp = Date.now();
         
         // Update modal cache as well
-        window._cachedRecipients = recipients;
+        window._cachedRecipients = validRecipients;
         window._cachedIdentificationStatus = identificationStatus;
         
         // Display data
-        displayRecipientsWithPresents(recipients, presents);
+        displayRecipientsWithPresents(validRecipients, validPresents);
         
         // Handle identification logic
         handleIdentificationLogic(recipients, identificationStatus);

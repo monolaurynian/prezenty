@@ -2,7 +2,7 @@
   "name": "Życzenia Prezentowe",
   "short_name": "Prezenty",
   "description": "Aplikacja do zarządzania pomysłami na prezenty świąteczne",
-  "start_url": "/recipients",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#F44336",

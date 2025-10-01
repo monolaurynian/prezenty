@@ -134,6 +134,14 @@
             }
         });
 
+        // Check if app is already installed
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            console.log('App is already installed');
+            if (installButtonContainer) {
+                installButtonContainer.style.display = 'none';
+            }
+        }
+
         // Install button click handler
         if (installButton) {
             installButton.addEventListener('click', async () => {

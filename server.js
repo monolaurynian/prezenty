@@ -113,16 +113,67 @@ const getRecipientById = async (id) => {
     }
 };
 
+// Simple in-memory cache for database queries
+const cache = {
+    data: new Map(),
+    timestamps: new Map(),
+    TTL: 10000, // 10 seconds
+    
+    get(key) {
+        const timestamp = this.timestamps.get(key);
+        if (timestamp && (Date.now() - timestamp) < this.TTL) {
+            return this.data.get(key);
+        }
+        this.data.delete(key);
+        this.timestamps.delete(key);
+        return null;
+    },
+    
+    set(key, value) {
+        this.data.set(key, value);
+        this.timestamps.set(key, Date.now());
+    },
+    
+    clear() {
+        this.data.clear();
+        this.timestamps.clear();
+    },
+    
+    invalidatePresents() {
+        this.data.delete('all_presents');
+        this.data.delete('recipients_with_presents');
+        this.timestamps.delete('all_presents');
+        this.timestamps.delete('recipients_with_presents');
+    },
+    
+    invalidateRecipients() {
+        this.data.delete('all_recipients');
+        this.data.delete('recipients_with_presents');
+        this.timestamps.delete('all_recipients');
+        this.timestamps.delete('recipients_with_presents');
+    }
+};
+
 // Helper to get all presents with recipient and user info
 const getAllPresents = async () => {
+    const cacheKey = 'all_presents';
+    const cached = cache.get(cacheKey);
+    if (cached) {
+        console.log('Using cached presents data');
+        return cached;
+    }
+    
     try {
         const [rows] = await pool.execute(`
-            SELECT p.*, r.name as recipient_name, u.username as reserved_by_username, p.created_by
+            SELECT p.id, p.title, p.recipient_id, p.comments, p.is_checked, p.reserved_by, p.created_by, p.created_at,
+                   r.name as recipient_name, u.username as reserved_by_username
             FROM presents p 
             LEFT JOIN recipients r ON p.recipient_id = r.id 
             LEFT JOIN users u ON p.reserved_by = u.id
-            ORDER BY p.created_at DESC
+            ORDER BY p.id DESC
         `);
+        
+        cache.set(cacheKey, rows);
         return rows;
     } catch (err) {
         throw err;
@@ -759,6 +810,66 @@ app.get('/api/presents/all', requireAuth, async (req, res) => {
     }
 });
 
+// Combined endpoint for recipients and presents (optimized)
+app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
+    console.log('Getting recipients with presents for user:', req.session.userId);
+    
+    if (DEMO_MODE) {
+        // Demo mode - return combined demo data
+        const recipients = demoData.recipients.map(recipient => ({
+            ...recipient,
+            identified_by_username: recipient.identified_by ? 'demo' : null
+        }));
+        
+        const presents = demoData.presents.map(present => {
+            const recipient = demoData.recipients.find(r => r.id === present.recipient_id);
+            return {
+                ...present,
+                recipient_name: recipient ? recipient.name : null,
+                reserved_by_username: present.reserved_by ? 'demo' : null
+            };
+        });
+        
+        console.log('Demo data loaded:', recipients.length, 'recipients,', presents.length, 'presents');
+        res.json({ recipients, presents });
+        return;
+    }
+    
+    try {
+        // Execute both queries in parallel for better performance
+        const [recipientsResult, presentsResult] = await Promise.all([
+            pool.execute(`
+                SELECT r.*, u.username as identified_by_username 
+                FROM recipients r 
+                LEFT JOIN users u ON r.identified_by = u.id 
+                ORDER BY r.name
+            `),
+            pool.execute(`
+                SELECT p.*, r.name as recipient_name, u.username as reserved_by_username, p.created_by
+                FROM presents p 
+                LEFT JOIN recipients r ON p.recipient_id = r.id 
+                LEFT JOIN users u ON p.reserved_by = u.id
+                ORDER BY p.created_at DESC
+            `)
+        ]);
+        
+        const recipients = recipientsResult[0].map(recipient => {
+            if (recipient.profile_picture) {
+                recipient.profile_picture = `/api/recipients/${recipient.id}/profile-picture`;
+            }
+            return recipient;
+        });
+        
+        const presents = presentsResult[0];
+        
+        console.log('Combined data loaded successfully:', recipients.length, 'recipients,', presents.length, 'presents');
+        res.json({ recipients, presents });
+    } catch (err) {
+        console.error('Database error getting combined data:', err);
+        handleDbError(err, res, 'Błąd podczas pobierania danych');
+    }
+});
+
 app.post('/api/presents', requireAuth, async (req, res) => {
     const { title, recipient_id, comments } = req.body;
     const userId = req.session.userId;
@@ -791,6 +902,10 @@ app.post('/api/presents', requireAuth, async (req, res) => {
             'INSERT INTO presents (title, recipient_id, comments, created_by) VALUES (?, ?, ?, ?)',
             [title.trim(), recipient_id || null, comments || null, userId]
         );
+        
+        // Invalidate cache when data changes
+        cache.invalidatePresents();
+        
         res.json({ id: result.insertId, title: title.trim(), recipient_id, comments });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas dodawania prezentu');

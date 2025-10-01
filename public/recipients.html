@@ -38,7 +38,7 @@
         <div class="container">
             <a class="navbar-brand" href="/recipients">
                 <div class="brand-container">
-                    <div class="brand-logo-container" onclick="installPWA()">
+                    <div class="brand-logo-container" onclick="installPWA()" title="Kliknij aby zainstalować aplikację">
                         <img src="seba_logo.png" alt="Logo" class="brand-logo">
                     </div>
                     <span class="brand-text">
@@ -47,6 +47,10 @@
                 </div>
             </a>
             <div class="navbar-nav ms-auto">
+                <!-- PWA Install Button -->
+                <button id="pwaInstallButton" class="btn btn-outline-light btn-sm me-2" onclick="installPWA()" style="border: 2px solid white; color: white; font-weight: 500; display: none;">
+                    <i class="fas fa-download me-1"></i>Zainstaluj
+                </button>
                 <button class="btn btn-outline-light btn-sm" onclick="logout()" style="border: 2px solid white; color: white; font-weight: 500;">
                     <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
                 </button>
@@ -567,10 +571,17 @@
     <!-- PWA Install Script -->
     <script>
         let recipientsDeferredPrompt;
+        const pwaInstallButton = document.getElementById('pwaInstallButton');
 
         window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('PWA install prompt available');
             e.preventDefault();
             recipientsDeferredPrompt = e;
+            
+            // Show the install button
+            if (pwaInstallButton) {
+                pwaInstallButton.style.display = 'inline-block';
+            }
         });
 
         function installPWA() {
@@ -579,15 +590,47 @@
                 recipientsDeferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
                         console.log('User accepted the PWA install prompt');
+                        hideInstallButton();
+                    } else {
+                        console.log('User dismissed the PWA install prompt');
                     }
                     recipientsDeferredPrompt = null;
                 });
             } else {
                 console.log('PWA install prompt not available');
+                // Show a message to the user
+                alert('Instalacja aplikacji nie jest dostępna w tej przeglądarce. Spróbuj użyć Chrome lub Edge.');
             }
         }
+
+        function hideInstallButton() {
+            if (pwaInstallButton) {
+                pwaInstallButton.style.display = 'none';
+            }
+        }
+
+        // Hide install button if app is already installed
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('PWA was installed');
+            hideInstallButton();
+        });
+
+        // Check if app is already installed
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            console.log('App is already installed');
+            hideInstallButton();
+        }
+
+        // Debug PWA installation criteria
+        console.log('PWA Debug Info:', {
+            isSecure: location.protocol === 'https:' || location.hostname === 'localhost',
+            hasManifest: !!document.querySelector('link[rel="manifest"]'),
+            hasServiceWorker: 'serviceWorker' in navigator,
+            isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+            userAgent: navigator.userAgent
+        });
     </script>
     
-    <script src="recipients.js?v=3"></script>
+    <script src="recipients.js?v=7&t=1111111111"></script>
 </body>
 </html> 
