@@ -89,7 +89,8 @@ function loadRecipientsWithPresents() {
     const recipientsList = document.getElementById('recipientsList');
     recipientsList.innerHTML = `
         <div class="text-center aws-loading-state">
-            <div class="spinner-border" role="status">
+            <div class="logo-spinner" role="status">
+                <img src="seba_logo.png" alt="Loading..." class="spinning-logo">
                 <span class="visually-hidden">Ładowanie...</span>
             </div>
             <p class="mt-3 text-muted">Ładowanie danych...</p>
@@ -2112,3 +2113,179 @@ function refreshRecipientsCache() {
         return { recipients, identificationStatus };
     });
 }
+
+// PWA Installation functionality
+let deferredPrompt;
+let installPromptShown = false;
+
+// Listen for the beforeinstallprompt event
+window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('PWA install prompt available');
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later
+    deferredPrompt = e;
+});
+
+// Function to show install prompt when logo is clicked
+function showInstallPrompt() {
+    console.log('Logo clicked - checking PWA install options');
+    
+    // Check if app is already installed
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+        console.log('App is already installed');
+        showSuccessMessage('Aplikacja jest już zainstalowana! 🎄');
+        return;
+    }
+    
+    // Check if we have a deferred prompt (Android Chrome)
+    if (deferredPrompt) {
+        console.log('Showing Android install prompt');
+        deferredPrompt.prompt();
+        
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+                showSuccessMessage('Dziękujemy za zainstalowanie aplikacji! 🎁');
+            } else {
+                console.log('User dismissed the install prompt');
+            }
+            deferredPrompt = null;
+        });
+        return;
+    }
+    
+    // For iOS Safari or other browsers without install prompt
+    if (isIOS()) {
+        showIOSInstallInstructions();
+    } else if (!installPromptShown) {
+        showGenericInstallInstructions();
+        installPromptShown = true;
+    } else {
+        showSuccessMessage('Kliknij logo ponownie aby zobaczyć instrukcje instalacji 📱');
+        installPromptShown = false;
+    }
+}
+
+// Check if device is iOS
+function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+// Show iOS-specific install instructions
+function showIOSInstallInstructions() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fab fa-apple me-2"></i>Dodaj do ekranu głównego
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+                    </div>
+                    <p class="mb-3">Aby dodać aplikację do ekranu głównego:</p>
+                    <ol class="text-start">
+                        <li class="mb-2">
+                            <i class="fas fa-share me-2 text-primary"></i>
+                            Naciśnij przycisk <strong>Udostępnij</strong> w Safari
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-plus-square me-2 text-success"></i>
+                            Wybierz <strong>"Dodaj do ekranu głównego"</strong>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check me-2 text-success"></i>
+                            Naciśnij <strong>"Dodaj"</strong>
+                        </li>
+                    </ol>
+                    <p class="text-muted mt-3">
+                        <i class="fas fa-gift me-1"></i>
+                        Aplikacja będzie dostępna jak natywna aplikacja!
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        <i class="fas fa-thumbs-up me-1"></i>Rozumiem
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+    
+    // Remove modal from DOM when hidden
+    modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+    });
+}
+
+// Show generic install instructions for other browsers
+function showGenericInstallInstructions() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-download me-2"></i>Zainstaluj aplikację
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+                    </div>
+                    <p class="mb-3">Dodaj aplikację do ekranu głównego:</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fab fa-android me-2 text-success"></i>Android</h6>
+                            <p class="small text-muted">
+                                Menu przeglądarki → "Dodaj do ekranu głównego"
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fab fa-chrome me-2 text-primary"></i>Chrome</h6>
+                            <p class="small text-muted">
+                                Menu → "Zainstaluj aplikację"
+                            </p>
+                        </div>
+                    </div>
+                    <p class="text-muted mt-3">
+                        <i class="fas fa-gift me-1"></i>
+                        Szybki dostęp do swoich prezentów!
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        <i class="fas fa-thumbs-up me-1"></i>Rozumiem
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+    
+    // Remove modal from DOM when hidden
+    modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+    });
+}
+
+// Listen for successful app installation
+window.addEventListener('appinstalled', (evt) => {
+    console.log('PWA was installed successfully');
+    showSuccessMessage('Aplikacja została zainstalowana pomyślnie! 🎉');
+});
