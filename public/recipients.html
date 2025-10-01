@@ -38,7 +38,7 @@
         <div class="container">
             <a class="navbar-brand" href="/recipients">
                 <div class="brand-container">
-                    <div class="brand-logo-container" onclick="showInstallPrompt()">
+                    <div class="brand-logo-container" onclick="installPWA()">
                         <img src="seba_logo.png" alt="Logo" class="brand-logo">
                     </div>
                     <span class="brand-text">
@@ -564,7 +564,29 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- PWA Install Script -->
+    <script>
+        let deferredPrompt;
 
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the PWA install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                console.log('PWA install prompt not available');
+            }
+        }
+    </script>
     
     <script src="recipients.js"></script>
 </body>
