@@ -1,4 +1,4 @@
-console.log('Recipients.js loading...');
+console.log('Recipients.js loading... v3.0');
 
 // Global logout function - ensure it's always available
 function logout() {
