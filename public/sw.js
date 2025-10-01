@@ -1,10 +1,9 @@
-const CACHE_NAME = 'prezenty-v1';
+const CACHE_NAME = 'prezenty-v3';
 const urlsToCache = [
-  '/',
-  '/recipients',
   '/manifest.json',
   '/favicon.svg',
   '/seba_logo.png',
+  '/pwa-icon.svg',
   '/styles.deduped.min.css',
   '/recipients.js',
   '/aws-design.css',
@@ -23,13 +22,43 @@ self.addEventListener('install', function(event) {
 });
 
 self.addEventListener('fetch', function(event) {
+  // Skip caching for non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      }
-    )
+        // Return cached version if available
+        if (response) {
+          return response;
+        }
+
+        // Fetch from network
+        return fetch(event.request).then(function(response) {
+          // Don't cache redirected responses or error responses
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+
+          // Clone the response for caching
+          const responseToCache = response.clone();
+
+          caches.open(CACHE_NAME)
+            .then(function(cache) {
+              cache.put(event.request, responseToCache);
+            });
+
+          return response;
+        }).catch(function() {
+          // Return a fallback response for navigation requests
+          if (event.request.mode === 'navigate') {
+            return caches.match('/');
+          }
+          return new Response('Network error', { status: 503 });
+        });
+      })
   );
 });
 

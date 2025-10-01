@@ -566,21 +566,21 @@
     
     <!-- PWA Install Script -->
     <script>
-        let deferredPrompt;
+        let recipientsDeferredPrompt;
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
-            deferredPrompt = e;
+            recipientsDeferredPrompt = e;
         });
 
         function installPWA() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
+            if (recipientsDeferredPrompt) {
+                recipientsDeferredPrompt.prompt();
+                recipientsDeferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
                         console.log('User accepted the PWA install prompt');
                     }
-                    deferredPrompt = null;
+                    recipientsDeferredPrompt = null;
                 });
             } else {
                 console.log('PWA install prompt not available');

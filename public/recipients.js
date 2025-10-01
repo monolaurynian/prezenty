@@ -1,3 +1,22 @@
+console.log('Recipients.js loading...');
+
+// Global logout function - ensure it's always available
+function logout() {
+    fetch('/api/logout', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/';
+        }
+    })
+    .catch(error => {
+        console.error('Logout error:', error);
+        window.location.href = '/';
+    });
+}
+
 let currentUserId = null;
 let currentRecipientId = null;
 let pendingIdentificationRecipientId = null;
@@ -14,23 +33,6 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-
-// Global logout function - ensure it's always available
-window.logout = function() {
-    fetch('/api/logout', {
-        method: 'POST'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = '/';
-        }
-    })
-    .catch(error => {
-        console.error('Logout error:', error);
-        window.location.href = '/';
-    });
-};
 
 document.addEventListener('DOMContentLoaded', function() {
     // Check authentication first, then load data
