@@ -2919,10 +2919,7 @@ button, .btn, .card, .present-item, .recipient-item {
         display: block;
     }
     
-    /* Hide action cards on mobile, use FAB instead */
-    .aws-action-section {
-        display: none;
-    }
+    /* Keep action cards visible on mobile */
 }
 
 .fab-main {
