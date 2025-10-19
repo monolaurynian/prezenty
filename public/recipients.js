@@ -58,6 +58,13 @@ function initializeSearchAndFilter() {
                 performSearch(query);
             }, 300);
         });
+        
+        // Keep dropdown open when clicking inside search box
+        searchInput.addEventListener('focus', function() {
+            if (this.value) {
+                performSearch(this.value);
+            }
+        });
     }
     
     if (clearSearch) {
@@ -76,38 +83,82 @@ function initializeSearchAndFilter() {
             applyFilter();
         });
     });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const searchBox = document.querySelector('.search-box');
+        const dropdown = document.getElementById('searchResults');
+        
+        if (searchBox && dropdown && !searchBox.contains(e.target)) {
+            hideSearchDropdown();
+        }
+    });
 }
 
 function performSearch(query) {
     const recipientItems = document.querySelectorAll('.recipient-item');
     const lowerQuery = query.toLowerCase();
+    const searchResults = [];
+    
+    if (!query) {
+        // Clear search - show everything
+        recipientItems.forEach(item => {
+            item.style.display = '';
+            const presents = Array.from(item.querySelectorAll('.present-item'));
+            presents.forEach(present => {
+                present.style.display = '';
+            });
+        });
+        hideSearchDropdown();
+        hideNoResultsMessage();
+        return;
+    }
     
     recipientItems.forEach(item => {
-        const recipientName = item.querySelector('.recipient-name')?.textContent.toLowerCase() || '';
+        const recipientName = item.querySelector('.recipient-name')?.textContent || '';
+        const recipientId = item.getAttribute('data-id');
+        const lowerRecipientName = recipientName.toLowerCase();
         const presents = Array.from(item.querySelectorAll('.present-item'));
         
-        let hasMatch = recipientName.includes(lowerQuery);
+        let hasMatch = lowerRecipientName.includes(lowerQuery);
+        
+        // Check if recipient name matches
+        if (hasMatch) {
+            searchResults.push({
+                type: 'recipient',
+                name: recipientName,
+                id: recipientId,
+                element: item
+            });
+        }
         
         // Check presents
         presents.forEach(present => {
+            const presentTitle = present.querySelector('.present-name')?.textContent || '';
             const presentText = present.textContent.toLowerCase();
             const presentMatches = presentText.includes(lowerQuery);
             
-            if (query) {
-                present.style.display = presentMatches ? '' : 'none';
-            } else {
-                present.style.display = '';
+            if (presentMatches) {
+                searchResults.push({
+                    type: 'present',
+                    name: presentTitle,
+                    recipient: recipientName,
+                    element: present
+                });
+                hasMatch = true;
             }
             
-            if (presentMatches) hasMatch = true;
+            present.style.display = presentMatches ? '' : 'none';
         });
         
         item.style.display = hasMatch ? '' : 'none';
     });
     
+    // Show search results dropdown
+    showSearchDropdown(searchResults, query);
+    
     // Show "no results" message if needed
-    const visibleItems = Array.from(recipientItems).filter(item => item.style.display !== 'none');
-    if (visibleItems.length === 0 && query) {
+    if (searchResults.length === 0) {
         showNoResultsMessage();
     } else {
         hideNoResultsMessage();
@@ -147,6 +198,112 @@ function applyFilter() {
         // Hide recipient if no presents match filter
         item.style.display = hasVisiblePresent ? '' : 'none';
     });
+}
+
+function showSearchDropdown(results, query) {
+    const dropdown = document.getElementById('searchResults');
+    const resultsList = dropdown.querySelector('.search-results-list');
+    const resultsCount = dropdown.querySelector('.results-count');
+    
+    if (!dropdown || !resultsList) return;
+    
+    // Update count
+    resultsCount.textContent = `Znaleziono: ${results.length}`;
+    
+    // Group results by type
+    const recipients = results.filter(r => r.type === 'recipient');
+    const presents = results.filter(r => r.type === 'present');
+    
+    let html = '';
+    
+    if (recipients.length > 0) {
+        html += '<div class="search-results-section">';
+        html += '<div class="search-results-section-title"><i class="fas fa-user me-2"></i>Osoby</div>';
+        recipients.slice(0, 5).forEach(result => {
+            const highlighted = highlightText(result.name, query);
+            html += `
+                <div class="search-result-item" onclick="scrollToElement('recipient-${result.id}')">
+                    <i class="fas fa-user-circle me-2"></i>
+                    <span>${highlighted}</span>
+                </div>
+            `;
+        });
+        if (recipients.length > 5) {
+            html += `<div class="search-results-more">+${recipients.length - 5} więcej</div>`;
+        }
+        html += '</div>';
+    }
+    
+    if (presents.length > 0) {
+        html += '<div class="search-results-section">';
+        html += '<div class="search-results-section-title"><i class="fas fa-gift me-2"></i>Prezenty</div>';
+        presents.slice(0, 5).forEach(result => {
+            const highlighted = highlightText(result.name, query);
+            html += `
+                <div class="search-result-item" onclick="scrollToPresent(this)" data-present-name="${escapeHtml(result.name)}">
+                    <i class="fas fa-gift me-2"></i>
+                    <div>
+                        <div>${highlighted}</div>
+                        <small class="text-muted">dla: ${escapeHtml(result.recipient)}</small>
+                    </div>
+                </div>
+            `;
+        });
+        if (presents.length > 5) {
+            html += `<div class="search-results-more">+${presents.length - 5} więcej</div>`;
+        }
+        html += '</div>';
+    }
+    
+    resultsList.innerHTML = html;
+    dropdown.style.display = 'block';
+}
+
+function hideSearchDropdown() {
+    const dropdown = document.getElementById('searchResults');
+    if (dropdown) {
+        dropdown.style.display = 'none';
+    }
+}
+
+function highlightText(text, query) {
+    if (!query) return escapeHtml(text);
+    const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+    return escapeHtml(text).replace(regex, '<mark>$1</mark>');
+}
+
+function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function scrollToElement(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('highlight-flash');
+        setTimeout(() => {
+            element.classList.remove('highlight-flash');
+        }, 2000);
+    }
+    hideSearchDropdown();
+}
+
+function scrollToPresent(element) {
+    const presentName = element.getAttribute('data-present-name');
+    const presents = document.querySelectorAll('.present-item');
+    
+    for (let present of presents) {
+        const name = present.querySelector('.present-name')?.textContent;
+        if (name === presentName) {
+            present.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            present.classList.add('highlight-flash');
+            setTimeout(() => {
+                present.classList.remove('highlight-flash');
+            }, 2000);
+            break;
+        }
+    }
+    hideSearchDropdown();
 }
 
 function showNoResultsMessage() {
@@ -2184,11 +2341,11 @@ function reservePresentFromRecipients(presentId, button, originalHTML) {
                             overlappedCard.classList.add('fading');
                             setTimeout(() => {
                                 overlappedCard.classList.remove('fading');
-                            }, 800);
+                            }, 300);
                         }
                         setTimeout(() => {
                             presentItem.classList.remove('smooth-slide-up');
-                        }, 800);
+                        }, 300);
                     }
                 }
             }
@@ -2260,12 +2417,12 @@ function cancelReservationFromRecipients(presentId, button, originalHTML) {
                                 overlappedCard.classList.add('fading');
                                 setTimeout(() => {
                                     overlappedCard.classList.remove('fading');
-                                }, 800);
+                                }, 300);
                             }
                         }
                         setTimeout(() => {
                             presentItem.classList.remove('smooth-slide-down');
-                        }, 800);
+                        }, 300);
                     }
                 }
             }

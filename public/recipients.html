@@ -117,10 +117,19 @@
                                class="form-control search-input" 
                                id="searchInput" 
                                placeholder="Szukaj osoby lub prezentu... (Ctrl+F)"
-                               autocomplete="off">
+                               autocomplete="off"
+                               aria-autocomplete="list"
+                               aria-controls="searchResults">
                         <button class="btn btn-sm btn-link clear-search" id="clearSearch" style="display: none;">
                             <i class="fas fa-times"></i>
                         </button>
+                        <!-- Search results dropdown -->
+                        <div class="search-results-dropdown" id="searchResults" style="display: none;">
+                            <div class="search-results-header">
+                                <span class="results-count"></span>
+                            </div>
+                            <div class="search-results-list"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-6 col-md-12">

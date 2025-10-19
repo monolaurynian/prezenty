@@ -2760,7 +2760,7 @@ button, .btn, .card, .present-item, .recipient-item {
 
 /* Faster, more prominent logo spinner */
 .logo-spinner {
-    animation: logo-spin-fast 1s ease-in-out infinite, logo-pulse-prominent 1.5s ease-in-out infinite;
+    animation: logo-spin-fast 1.2s ease-in-out infinite, logo-pulse-prominent 0.8s ease-in-out infinite;
 }
 
 @keyframes logo-spin-fast {
@@ -2768,7 +2768,7 @@ button, .btn, .card, .present-item, .recipient-item {
         transform: rotate(0deg) scale(1);
     }
     50% {
-        transform: rotate(180deg) scale(1.1);
+        transform: rotate(180deg) scale(1.15);
     }
     100% {
         transform: rotate(360deg) scale(1);
@@ -2777,10 +2777,12 @@ button, .btn, .card, .present-item, .recipient-item {
 
 @keyframes logo-pulse-prominent {
     0%, 100% {
-        box-shadow: 0 8px 25px rgba(244, 67, 54, 0.4);
+        box-shadow: 0 8px 25px rgba(244, 67, 54, 0.3);
+        filter: brightness(1);
     }
     50% {
-        box-shadow: 0 12px 40px rgba(244, 67, 54, 0.8);
+        box-shadow: 0 16px 50px rgba(244, 67, 54, 1);
+        filter: brightness(1.2);
     }
 }
 
@@ -2878,6 +2880,9 @@ button, .btn, .card, .present-item, .recipient-item {
     font-weight: 500;
     transition: all 0.2s ease;
     border-width: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .filter-btn.active {
@@ -2898,10 +2903,28 @@ button, .btn, .card, .present-item, .recipient-item {
     }
     
     .filter-btn {
-        flex: 1;
+        flex: 1 1 auto;
         min-width: 0;
-        font-size: 13px;
-        padding: 6px 12px;
+        font-size: 12px;
+        padding: 6px 10px;
+        white-space: nowrap;
+    }
+}
+
+/* Extra small screens - stack buttons */
+@media (max-width: 576px) {
+    .filter-buttons {
+        flex-direction: column;
+        gap: 8px !important;
+    }
+    
+    .filter-btn {
+        width: 100%;
+        flex: none;
+        font-size: 14px;
+        padding: 10px 16px;
+        white-space: normal;
+        text-align: center;
     }
 }
 
@@ -3064,4 +3087,242 @@ button, .btn, .card, .present-item, .recipient-item {
 
 .filter-btn.active .badge {
     background: rgba(255, 255, 255, 0.4);
+}
+
+/* Search Results Dropdown */
+.search-results-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 8px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    animation: dropdown-slide-in 0.2s ease;
+}
+
+@keyframes dropdown-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.search-results-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--aws-gray-200);
+    background: var(--aws-gray-50);
+    border-radius: 12px 12px 0 0;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--aws-gray-700);
+}
+
+.results-count {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.results-count::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--material-green);
+    border-radius: 50%;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+.search-results-list {
+    padding: 8px 0;
+}
+
+.search-results-section {
+    margin-bottom: 8px;
+}
+
+.search-results-section-title {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--aws-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.search-result-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--aws-gray-800);
+}
+
+.search-result-item:hover {
+    background: var(--aws-gray-50);
+    padding-left: 20px;
+}
+
+.search-result-item i {
+    color: var(--material-blue);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.search-result-item mark {
+    background-color: rgba(255, 235, 59, 0.5);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.search-result-item small {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+}
+
+.search-results-more {
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--aws-gray-500);
+    font-style: italic;
+}
+
+/* Highlight flash animation for scrolled-to elements */
+.highlight-flash {
+    animation: highlight-pulse 2s ease;
+}
+
+@keyframes highlight-pulse {
+    0%, 100% {
+        background-color: transparent;
+    }
+    10%, 30% {
+        background-color: rgba(255, 235, 59, 0.3);
+    }
+    20%, 40% {
+        background-color: rgba(255, 235, 59, 0.5);
+    }
+}
+
+/* Close dropdown when clicking outside */
+.search-box {
+    position: relative;
+}
+
+/* Mobile adjustments for search dropdown */
+@media (max-width: 767px) {
+    .search-results-dropdown {
+        max-height: 300px;
+        font-size: 14px;
+    }
+    
+    .search-result-item {
+        padding: 12px 16px;
+    }
+    
+    .search-result-item:hover {
+        padding-left: 16px;
+    }
+}
+
+/* Scrollbar styling for search results */
+.search-results-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-results-dropdown::-webkit-scrollbar-track {
+    background: var(--aws-gray-100);
+    border-radius: 0 12px 12px 0;
+}
+
+.search-results-dropdown::-webkit-scrollbar-thumb {
+    background: var(--aws-gray-400);
+    border-radius: 3px;
+}
+
+.search-results-dropdown::-webkit-scrollbar-thumb:hover {
+    background: var(--aws-gray-500);
+}
+
+/* Faster reserve/unreserve animations */
+.smooth-slide-up {
+    animation: slide-up 0.3s ease-out;
+}
+
+.smooth-slide-down {
+    animation: slide-down 0.3s ease-out;
+}
+
+.fading {
+    animation: fade-out 0.3s ease-out;
+}
+
+@keyframes slide-up {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-20px);
+        opacity: 0.5;
+    }
+}
+
+@keyframes slide-down {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(20px);
+        opacity: 0.5;
+    }
+}
+
+@keyframes fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0.3;
+    }
+}
+
+/* More visible pulsating for progress indicators */
+.progress-bar {
+    animation: progress-pulse 2s ease-in-out infinite;
+}
+
+@keyframes progress-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+        box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+    }
 }
