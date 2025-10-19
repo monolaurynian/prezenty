@@ -2911,20 +2911,96 @@ button, .btn, .card, .present-item, .recipient-item {
     }
 }
 
-/* Extra small screens - stack buttons */
-@media (max-width: 576px) {
+/* Mobile - 2 column grid for search and actions */
+@media (max-width: 767px) {
+    .search-filter-bar .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    
+    .search-filter-bar .col-lg-6,
+    .search-filter-bar .col-md-12 {
+        grid-column: 1 / -1; /* Search takes full width */
+    }
+    
     .filter-buttons {
-        flex-direction: column;
-        gap: 8px !important;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
     }
     
     .filter-btn {
         width: 100%;
         flex: none;
-        font-size: 14px;
-        padding: 10px 16px;
+        font-size: 13px;
+        padding: 10px 12px;
         white-space: normal;
         text-align: center;
+        line-height: 1.3;
+    }
+    
+    /* Action cards in 2 columns on mobile */
+    .aws-action-section .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    
+    .aws-action-section .col-lg-4,
+    .aws-action-section .col-md-6 {
+        grid-column: span 1;
+    }
+    
+    /* Make third card span full width or adjust as needed */
+    .aws-action-section .col-lg-4:nth-child(3),
+    .aws-action-section .col-md-6:nth-child(3) {
+        grid-column: 1 / -1; /* Full width for third card */
+    }
+    
+    .aws-action-card {
+        height: 140px;
+    }
+    
+    .aws-action-title {
+        font-size: 13px;
+    }
+    
+    .aws-action-description {
+        font-size: 11px;
+    }
+}
+
+/* Extra small screens - optimize further */
+@media (max-width: 480px) {
+    .filter-btn {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+    
+    .aws-action-card {
+        height: 120px;
+    }
+    
+    .aws-action-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+        max-width: 32px;
+        max-height: 32px;
+    }
+    
+    .aws-action-icon i {
+        font-size: 14px;
+    }
+    
+    .aws-action-title {
+        font-size: 12px;
+    }
+    
+    .aws-action-description {
+        font-size: 10px;
     }
 }
 
