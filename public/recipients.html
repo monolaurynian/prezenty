@@ -186,6 +186,69 @@
         </div>
     </div>
 
+    <!-- Edit Present Modal -->
+    <div class="modal fade" id="editPresentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content aws-modal">
+                <div class="modal-header aws-modal-header">
+                    <div class="aws-modal-title-section">
+                        <h5 class="modal-title">
+                            <i class="fas fa-edit me-2"></i>Edytuj Prezent
+                        </h5>
+                        <p class="aws-modal-subtitle">Zmień informacje o prezencie</p>
+                    </div>
+                    <button type="button" class="btn-close aws-close-btn" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body aws-modal-body">
+                    <form id="editPresentForm" class="aws-form">
+                        <input type="hidden" id="editPresentId">
+                        <div class="aws-form-section">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="aws-form-group">
+                                        <label for="editPresentTitle" class="form-label aws-form-label">
+                                            <i class="fas fa-gift me-1"></i>Jaki prezent?
+                                        </label>
+                                        <input type="text" class="form-control aws-form-control" id="editPresentTitle" 
+                                               placeholder="Wprowadź nazwę prezentu" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="aws-form-group">
+                                        <label for="editRecipientSelect" class="form-label aws-form-label">
+                                            <i class="fas fa-user me-1"></i>Dla kogo?
+                                        </label>
+                                        <select class="form-control aws-form-control" id="editRecipientSelect" required>
+                                            <option value="">Wybierz osobę</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="aws-form-section">
+                            <div class="aws-form-group">
+                                <label for="editPresentComments" class="form-label aws-form-label">
+                                    <i class="fas fa-comment me-1"></i>Dodatkowe informacje
+                                </label>
+                                <textarea class="form-control aws-form-control" id="editPresentComments" rows="3" 
+                                          placeholder="Opis, linki, uwagi, gdzie kupić..."></textarea>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="editPresentMessage" class="alert aws-alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer aws-modal-footer">
+                    <button type="button" class="btn aws-btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Anuluj
+                    </button>
+                    <button type="button" class="btn aws-btn-primary" onclick="saveEditedPresent()">
+                        <i class="fas fa-save me-1"></i>Zapisz zmiany
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Reserved Presents Modal -->
     <div class="modal fade" id="reservedPresentsModal" tabindex="-1">
         <div class="modal-dialog modal-xl">

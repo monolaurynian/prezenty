@@ -377,6 +377,7 @@ app.get('/api/recipients', requireAuth, async (req, res) => {
 });
 
 app.post('/api/recipients', requireAuth, async (req, res) => {
+    clearCombinedDataCache();
     const { name } = req.body;
     
     console.log('[POST /api/recipients] Incoming request:', { body: req.body, session: req.session });
@@ -412,6 +413,7 @@ app.post('/api/recipients', requireAuth, async (req, res) => {
 
 // User identification API
 app.post('/api/recipients/:id/identify', requireAuth, async (req, res) => {
+    clearCombinedDataCache();
     const { id } = req.params;
     const userId = req.session.userId;
     
@@ -494,6 +496,7 @@ app.get('/api/user/identification', requireAuth, async (req, res) => {
 
 // Cancel self-identification API
 app.delete('/api/recipients/:id/identify', requireAuth, async (req, res) => {
+    clearCombinedDataCache();
     console.log('Cancel identification request:', { id: req.params.id, userId: req.session.userId });
     const { id } = req.params;
     const userId = req.session.userId;
@@ -551,6 +554,7 @@ app.delete('/api/recipients/:id/identify', requireAuth, async (req, res) => {
 });
 
 app.delete('/api/recipients/:id', requireAuth, async (req, res) => {
+    clearCombinedDataCache();
     console.log('Delete recipient request:', { id: req.params.id, userId: req.session.userId });
     const { id } = req.params;
     
@@ -818,9 +822,20 @@ app.get('/api/presents/all', requireAuth, async (req, res) => {
     }
 });
 
-// Combined endpoint for recipients and presents (optimized)
+// Combined endpoint for recipients and presents (optimized with caching)
+const combinedDataCache = new Map();
+const COMBINED_CACHE_TTL = 5000; // 5 seconds cache
+
 app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
     console.log('Getting recipients with presents for user:', req.session.userId);
+    
+    // Check cache first
+    const cacheKey = 'combined-data';
+    const cached = combinedDataCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < COMBINED_CACHE_TTL) {
+        console.log('Returning cached combined data');
+        return res.json(cached.data);
+    }
     
     if (DEMO_MODE) {
         // Demo mode - return combined demo data
@@ -839,7 +854,9 @@ app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
         });
         
         console.log('Demo data loaded:', recipients.length, 'recipients,', presents.length, 'presents');
-        res.json({ recipients, presents });
+        const result = { recipients, presents };
+        combinedDataCache.set(cacheKey, { data: result, timestamp: Date.now() });
+        res.json(result);
         return;
     }
     
@@ -871,14 +888,26 @@ app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
         const presents = presentsResult[0];
         
         console.log('Combined data loaded successfully:', recipients.length, 'recipients,', presents.length, 'presents');
-        res.json({ recipients, presents });
+        const result = { recipients, presents };
+        
+        // Cache the result
+        combinedDataCache.set(cacheKey, { data: result, timestamp: Date.now() });
+        
+        res.json(result);
     } catch (err) {
         console.error('Database error getting combined data:', err);
         handleDbError(err, res, 'Błąd podczas pobierania danych');
     }
 });
 
+// Clear combined data cache when data changes
+function clearCombinedDataCache() {
+    combinedDataCache.clear();
+    console.log('Combined data cache cleared');
+}
+
 app.post('/api/presents', requireAuth, async (req, res) => {
+    clearCombinedDataCache();
     const { title, recipient_id, comments } = req.body;
     const userId = req.session.userId;
     
@@ -943,6 +972,7 @@ app.post('/api/presents', requireAuth, async (req, res) => {
 });
 
 app.put('/api/presents/:id/check', requireAuth, async (req, res) => {
+    clearCombinedDataCache();
     const { id } = req.params;
     const { is_checked } = req.body;
     
@@ -1001,6 +1031,7 @@ app.put('/api/presents/:id/check', requireAuth, async (req, res) => {
 });
 
 app.put('/api/presents/:id', requireAuth, async (req, res) => {
+    clearCombinedDataCache();
     const { id } = req.params;
     const { title, recipient_id, comments } = req.body;
     
@@ -1045,6 +1076,7 @@ app.put('/api/presents/:id', requireAuth, async (req, res) => {
 });
 
 app.delete('/api/presents/:id', requireAuth, async (req, res) => {
+    clearCombinedDataCache();
     const { id } = req.params;
     
     if (DEMO_MODE) {
@@ -1077,6 +1109,7 @@ app.delete('/api/presents/:id', requireAuth, async (req, res) => {
 
 // Reserve present
 app.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
+    clearCombinedDataCache();
     const { id } = req.params;
     const userId = req.session.userId;
     
@@ -1227,6 +1260,7 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
 
 // Cancel reservation
 app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
+    clearCombinedDataCache();
     const { id } = req.params;
     const userId = req.session.userId;
     

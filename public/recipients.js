@@ -162,23 +162,13 @@ function loadRecipientsWithPresents() {
     const startTime = performance.now();
     
     Promise.all([
-        fetch('/api/recipients').then(response => {
+        fetch('/api/recipients-with-presents').then(response => {
             if (!response.ok) {
                 if (response.status === 401) {
                     window.location.href = '/';
                     throw new Error('Unauthorized');
                 }
-                throw new Error('Recipients API error');
-            }
-            return response.json();
-        }),
-        fetch('/api/presents/all').then(response => {
-            if (!response.ok) {
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    throw new Error('Unauthorized');
-                }
-                throw new Error('Presents API error');
+                throw new Error('Combined API error');
             }
             return response.json();
         }),
@@ -189,9 +179,12 @@ function loadRecipientsWithPresents() {
             return response.json();
         })
     ])
-    .then(([recipients, presentsData, identificationStatus]) => {
+    .then(([combinedData, identificationStatus]) => {
         const endTime = performance.now();
         console.log(`Data loaded in ${(endTime - startTime).toFixed(2)}ms`);
+        
+        const recipients = combinedData.recipients || [];
+        const presentsData = combinedData.presents || [];
         
         // Validate data
         const validRecipients = Array.isArray(recipients) ? recipients : [];
@@ -315,8 +308,13 @@ function displayRecipientsWithPresents(recipients, presents) {
                       <li class="list-group-item">
                         <div class="d-flex align-items-center flex-wrap flex-md-nowrap">
                           <span class="flex-grow-1">${escapeHtml(p.title)}</span>
-                          <div class="d-flex justify-content-center justify-content-md-end w-100 w-md-auto">
-                            <button class="btn btn-sm btn-danger ms-0 ms-md-2 mt-2 mt-md-0 w-100 w-md-auto"
+                          <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto">
+                            <button class="btn btn-sm btn-outline-primary mt-2 mt-md-0 w-100 w-md-auto"
+                              onclick="editPresent(${p.id}, '${escapeHtml(p.title)}', ${p.recipient_id}, '${escapeHtml(p.comments || '')}')"
+                              style="max-width:50px;">
+                              <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger mt-2 mt-md-0 w-100 w-md-auto"
                               onclick="deletePresent(${p.id}, '${escapeHtml(p.title)}', ${recipient.id})"
                               style="max-width:50px;">
                               <i class="fas fa-trash-alt"></i>
@@ -2004,6 +2002,105 @@ function openProfilePicturePreview(recipientId) {
         
         const bootstrapModal = new bootstrap.Modal(modal);
         bootstrapModal.show();
+    }
+}
+
+// Edit present function
+function editPresent(presentId, title, recipientId, comments) {
+    console.log('Editing present:', { presentId, title, recipientId, comments });
+    
+    // Set the form values
+    document.getElementById('editPresentId').value = presentId;
+    document.getElementById('editPresentTitle').value = title;
+    document.getElementById('editPresentComments').value = comments || '';
+    
+    // Populate recipient select
+    populateEditRecipientSelect(recipientId);
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('editPresentModal'));
+    modal.show();
+}
+
+function populateEditRecipientSelect(selectedRecipientId) {
+    const select = document.getElementById('editRecipientSelect');
+    select.innerHTML = '<option value="">Wybierz osobę</option>';
+    
+    // Use cached recipients if available
+    const recipients = window._cachedRecipients || [];
+    
+    recipients.forEach(recipient => {
+        const option = document.createElement('option');
+        option.value = recipient.id;
+        option.textContent = recipient.name;
+        if (recipient.id === selectedRecipientId) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+}
+
+function saveEditedPresent() {
+    const presentId = document.getElementById('editPresentId').value;
+    const title = document.getElementById('editPresentTitle').value.trim();
+    const recipientId = document.getElementById('editRecipientSelect').value;
+    const comments = document.getElementById('editPresentComments').value.trim();
+    
+    if (!title) {
+        showEditPresentMessage('Nazwa prezentu jest wymagana', 'danger');
+        return;
+    }
+    
+    if (!recipientId) {
+        showEditPresentMessage('Wybierz osobę', 'danger');
+        return;
+    }
+    
+    // Show loading state
+    showEditPresentMessage('Zapisywanie...', 'info');
+    
+    fetch(`/api/presents/${presentId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            title,
+            recipient_id: recipientId,
+            comments: comments || null
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showEditPresentMessage('Prezent został zaktualizowany!', 'success');
+            
+            // Refresh the list
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editPresentModal'));
+                modal.hide();
+                loadRecipientsWithPresents();
+            }, 1000);
+        } else {
+            showEditPresentMessage(data.error || 'Błąd podczas aktualizacji prezentu', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating present:', error);
+        showEditPresentMessage('Błąd podczas aktualizacji prezentu', 'danger');
+    });
+}
+
+function showEditPresentMessage(message, type) {
+    const messageDiv = document.getElementById('editPresentMessage');
+    messageDiv.className = `alert alert-${type} mt-3`;
+    messageDiv.textContent = message;
+    messageDiv.style.display = 'block';
+    
+    if (type === 'success') {
+        setTimeout(() => {
+            messageDiv.style.display = 'none';
+        }, 3000);
     }
 }
 
