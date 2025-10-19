@@ -34,11 +34,52 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + K - Add present
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        openAddPresentModal();
+    }
+    
+    // Ctrl/Cmd + P - Add person
+    if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault();
+        openAddRecipientModal();
+    }
+    
+    // Ctrl/Cmd + Shift + R - Refresh
+    if ((e.ctrlKey || e.metaKey) && e.key === 'R' && e.shiftKey) {
+        e.preventDefault();
+        loadRecipients();
+    }
+    
+    // Ctrl/Cmd + B - Reserved presents
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        openReservedPresentsModal();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Check authentication first, then load data
     checkAuth().then(() => {
         // Load recipients with their presents after auth is confirmed
         loadRecipientsWithPresents();
+        
+        // Initialize Bootstrap tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Show keyboard shortcuts hint on first load
+        setTimeout(() => {
+            if (!localStorage.getItem('keyboardHintShown')) {
+                showInfoToast('💡 Wskazówka: Użyj Ctrl+K aby szybko dodać prezent');
+                localStorage.setItem('keyboardHintShown', 'true');
+            }
+        }, 2000);
         
         // Set up periodic auth check to detect session expiry
         setInterval(() => {
@@ -131,31 +172,34 @@ function checkAuth() {
     });
 }
 
-function loadRecipientsWithPresents() {
-    console.log('Loading recipients and presents...');
+function loadRecipientsWithPresents(forceReload = false) {
+    console.log('Loading recipients and presents...', forceReload ? '(forced)' : '');
     
-    // Show loading state immediately
-    const recipientsList = document.getElementById('recipientsList');
-    recipientsList.innerHTML = `
-        <div class="text-center aws-loading-state">
-            <div class="logo-spinner" role="status">
-                <img src="seba_logo.png" alt="Loading..." class="spinning-logo">
-                <span class="visually-hidden">Ładowanie...</span>
-            </div>
-            <p class="mt-3 text-muted">Ładowanie danych...</p>
-        </div>
-    `;
-    
-    // Use cached data if available and fresh
+    // Use cached data if available and fresh (unless forced reload)
     const now = Date.now();
-    const cacheExpiry = 15000; // 15 seconds (reduced for better UX)
+    const cacheExpiry = 30000; // 30 seconds cache (increased for better performance)
     
-    if (window._dataCache && 
+    if (!forceReload && 
+        window._dataCache && 
         window._dataCacheTimestamp && 
         (now - window._dataCacheTimestamp) < cacheExpiry) {
-        console.log('Using cached data');
+        console.log('Using cached data (age:', Math.round((now - window._dataCacheTimestamp) / 1000), 'seconds)');
         displayRecipientsData(window._dataCache.recipients, window._dataCache.presents, window._dataCache.identificationStatus);
         return;
+    }
+    
+    // Show loading state only if no cache available
+    if (!window._dataCache) {
+        const recipientsList = document.getElementById('recipientsList');
+        recipientsList.innerHTML = `
+            <div class="text-center aws-loading-state">
+                <div class="logo-spinner" role="status">
+                    <img src="seba_logo.png" alt="Loading..." class="spinning-logo">
+                    <span class="visually-hidden">Ładowanie...</span>
+                </div>
+                <p class="mt-3 text-muted">Ładowanie danych...</p>
+            </div>
+        `;
     }
     
     // Load data with optimized single request
@@ -498,7 +542,7 @@ function confirmSelfIdentification() {
         if (data.success) {
             showSuccessMessage('Pomyślnie zidentyfikowano!');
             clearRecipientsCache();
-            loadRecipientsWithPresents();
+            softReloadRecipients();
             
             // Close the modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('selfIdentificationModal'));
@@ -653,7 +697,7 @@ function identifyAsRecipientFromSelection(recipientId, recipientName) {
     .then(data => {
         if (data.success) {
             showSuccessMessage(`Pomyślnie zidentyfikowano jako ${recipientName}!`);
-            loadRecipientsWithPresents();
+            softReloadRecipients();
         } else {
             showErrorModal(data.error || 'Błąd podczas identyfikacji');
         }
@@ -691,7 +735,7 @@ function addNewRecipientAndIdentify() {
             
             showSuccessMessage(`Pomyślnie dodano i zidentyfikowano jako ${newRecipientName}!`);
             clearRecipientsCache();
-            loadRecipientsWithPresents();
+            softReloadRecipients();
         } else {
             throw new Error(data.error || 'Błąd podczas dodawania osoby');
         }
@@ -723,7 +767,7 @@ function confirmCancelIdentification() {
     .then(data => {
         if (data.success) {
             showSuccessMessage('Identyfikacja została anulowana!');
-            loadRecipientsWithPresents();
+            softReloadRecipients();
             
             // Close the modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('cancelIdentificationModal'));
@@ -870,7 +914,7 @@ function saveImageToServer(imageData) {
     .then(data => {
         if (data.success) {
             showSuccessMessage('Zdjęcie profilowe zostało zapisane!');
-            loadRecipientsWithPresents();
+            softReloadRecipients();
             
             // Close the modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('profilePictureModal'));
@@ -974,8 +1018,20 @@ function togglePresentFromRecipients(id, isChecked) {
 
 // Separate function to update the server after animation
 function updatePresentCheckStatus(id, isChecked, presentItem) {
-    // Add updating state
-    presentItem.classList.add('updating');
+    // Optimistically update the cached data
+    if (window._dataCache && window._dataCache.presents) {
+        const present = window._dataCache.presents.find(p => p.id === id);
+        if (present) {
+            present.is_checked = isChecked;
+        }
+    }
+    
+    // Update the UI immediately
+    if (isChecked) {
+        presentItem.classList.add('checked');
+    } else {
+        presentItem.classList.remove('checked');
+    }
 
     fetch(`/api/presents/${id}/check`, {
         method: 'PUT',
@@ -987,23 +1043,89 @@ function updatePresentCheckStatus(id, isChecked, presentItem) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Remove updating state
+            // Update progress bar without full reload
+            updateProgressBar(presentItem);
             presentItem.classList.remove('updating');
             presentItem.classList.remove('animating');
-            
-            // Refresh the list to show the final state
-            loadRecipientsWithPresents();
         } else {
             console.error('Failed to toggle present:', data.error);
+            // Revert optimistic update on error
+            if (window._dataCache && window._dataCache.presents) {
+                const present = window._dataCache.presents.find(p => p.id === id);
+                if (present) {
+                    present.is_checked = !isChecked;
+                }
+            }
+            // Revert UI
+            if (isChecked) {
+                presentItem.classList.remove('checked');
+            } else {
+                presentItem.classList.add('checked');
+            }
+            // Revert checkbox
+            const checkbox = presentItem.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = !isChecked;
+            }
             presentItem.classList.remove('updating');
             presentItem.classList.remove('animating');
         }
     })
     .catch(error => {
         console.error('Error toggling present:', error);
+        // Revert optimistic update on error
+        if (window._dataCache && window._dataCache.presents) {
+            const present = window._dataCache.presents.find(p => p.id === id);
+            if (present) {
+                present.is_checked = !isChecked;
+            }
+        }
+        // Revert UI
+        if (isChecked) {
+            presentItem.classList.remove('checked');
+        } else {
+            presentItem.classList.add('checked');
+        }
+        // Revert checkbox
+        const checkbox = presentItem.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            checkbox.checked = !isChecked;
+        }
         presentItem.classList.remove('updating');
         presentItem.classList.remove('animating');
     });
+}
+
+// Update progress bar for a specific recipient
+function updateProgressBar(presentItem) {
+    // Find the recipient container
+    const recipientItem = presentItem.closest('.recipient-item');
+    if (!recipientItem) return;
+    
+    const recipientId = recipientItem.getAttribute('data-id');
+    if (!recipientId) return;
+    
+    // Get all presents for this recipient from cache
+    if (!window._dataCache || !window._dataCache.presents) return;
+    
+    const recipientPresents = window._dataCache.presents.filter(p => p.recipient_id == recipientId);
+    const checkedPresents = recipientPresents.filter(p => p.is_checked).length;
+    const totalPresents = recipientPresents.length;
+    
+    // Update the progress bar
+    const progressBar = recipientItem.querySelector('.progress-bar');
+    if (progressBar && totalPresents > 0) {
+        const percentage = (checkedPresents / totalPresents) * 100;
+        progressBar.style.width = `${percentage}%`;
+    }
+    
+    // Update the text
+    const progressText = recipientItem.querySelector('.text-muted');
+    if (progressText) {
+        const icon = progressText.querySelector('i');
+        const iconHTML = icon ? icon.outerHTML : '<i class="fas fa-gift me-1"></i>';
+        progressText.innerHTML = `${iconHTML}Prezenty: ${checkedPresents}/${totalPresents} zakupione`;
+    }
 }
 
 // Helper function to animate present transitions
@@ -1143,7 +1265,7 @@ function addRecipient() {
         if (data.id) {
             showSuccessMessage('Osoba została dodana!');
             document.getElementById('recipientForm').reset();
-            loadRecipientsWithPresents();
+            softReloadRecipients();
         } else {
             showErrorModal(data.error || 'Błąd podczas dodawania osoby');
         }
@@ -1176,7 +1298,7 @@ function deleteRecipientConfirmed() {
         if (data.success) {
             modal.hide();
             showSuccessMessage('Osoba została usunięta!');
-            loadRecipientsWithPresents();
+            softReloadRecipients();
         } else {
             modal.hide();
             showErrorModal(data.error || 'Błąd podczas usuwania osoby');
@@ -1322,7 +1444,7 @@ function addPresentFromModal() {
             document.getElementById('addPresentForm').reset();
             
             // Refresh the recipients list to show the new present
-            loadRecipientsWithPresents();
+            softReloadRecipients();
             
             // Close modal after 1 second
             setTimeout(() => {
@@ -1499,8 +1621,20 @@ function togglePresentFromModal(id, isChecked) {
 
 // Separate function to update the server after modal animation
 function updateModalPresentCheckStatus(id, isChecked, presentItem) {
-    // Add updating state
-    presentItem.classList.add('updating');
+    // Optimistically update the cached data
+    if (window._dataCache && window._dataCache.presents) {
+        const present = window._dataCache.presents.find(p => p.id === id);
+        if (present) {
+            present.is_checked = isChecked;
+        }
+    }
+    
+    // Update the UI immediately
+    if (isChecked) {
+        presentItem.classList.add('checked');
+    } else {
+        presentItem.classList.remove('checked');
+    }
 
     fetch(`/api/presents/${id}/check`, {
         method: 'PUT',
@@ -1516,24 +1650,76 @@ function updateModalPresentCheckStatus(id, isChecked, presentItem) {
             presentItem.classList.remove('updating');
             presentItem.classList.remove('animating');
             
-            // Refresh the reserved presents modal to show updated categories
-            setTimeout(() => {
-                openReservedPresentsModal();
-            }, 300);
-            
-            // Also refresh the main recipients list to sync checkboxes
-            loadRecipientsWithPresents();
+            // Update badge counts without full reload
+            updateModalBadgeCounts();
         } else {
             console.error('Failed to toggle present:', data.error);
+            // Revert optimistic update on error
+            if (window._dataCache && window._dataCache.presents) {
+                const present = window._dataCache.presents.find(p => p.id === id);
+                if (present) {
+                    present.is_checked = !isChecked;
+                }
+            }
+            // Revert UI
+            if (isChecked) {
+                presentItem.classList.remove('checked');
+            } else {
+                presentItem.classList.add('checked');
+            }
+            // Revert checkbox
+            const checkbox = presentItem.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = !isChecked;
+            }
             presentItem.classList.remove('updating');
             presentItem.classList.remove('animating');
         }
     })
     .catch(error => {
         console.error('Error toggling present:', error);
+        // Revert optimistic update on error
+        if (window._dataCache && window._dataCache.presents) {
+            const present = window._dataCache.presents.find(p => p.id === id);
+            if (present) {
+                present.is_checked = !isChecked;
+            }
+        }
+        // Revert UI
+        if (isChecked) {
+            presentItem.classList.remove('checked');
+        } else {
+            presentItem.classList.add('checked');
+        }
+        // Revert checkbox
+        const checkbox = presentItem.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            checkbox.checked = !isChecked;
+        }
         presentItem.classList.remove('updating');
         presentItem.classList.remove('animating');
     });
+}
+
+// Update badge counts in modal without full reload
+function updateModalBadgeCounts() {
+    if (!window._dataCache || !window._dataCache.presents) return;
+    
+    const currentUserId = window._currentUserId;
+    const reservedPresents = window._dataCache.presents.filter(p => p.reserved_by === currentUserId);
+    const uncheckedPresents = reservedPresents.filter(p => !p.is_checked);
+    const checkedPresents = reservedPresents.filter(p => p.is_checked);
+    
+    // Update badges
+    const uncheckedBadge = document.querySelector('#reservedPresentsModal .card-header .badge.bg-warning');
+    const checkedBadge = document.querySelector('#reservedPresentsModal .card-header .badge.bg-success');
+    
+    if (uncheckedBadge) {
+        uncheckedBadge.textContent = uncheckedPresents.length;
+    }
+    if (checkedBadge) {
+        checkedBadge.textContent = checkedPresents.length;
+    }
 }
 
 // Helper function to animate present transitions in modal
@@ -1649,7 +1835,7 @@ function addRecipientFromModal() {
                 
                 // Clear cache and refresh the recipients list to show the new person
                 clearRecipientsCache();
-                loadRecipientsWithPresents();
+                softReloadRecipients();
                 
                 // Close modal after 1 second
                 setTimeout(() => {
@@ -1762,7 +1948,7 @@ function reservePresentFromRecipients(presentId) {
                 }
             }
             // Refresh the recipients list to show updated state
-            loadRecipientsWithPresents();
+            softReloadRecipients();
         }
     });
 }
@@ -1972,7 +2158,7 @@ function saveNewProfilePicture() {
             bootstrapModal.hide();
             
             // Refresh the recipients list
-            loadRecipientsWithPresents();
+            softReloadRecipients();
             
             // Show success message
             alert('Zdjęcie profilowe zostało zaktualizowane');
@@ -2079,7 +2265,7 @@ function saveEditedPresent() {
             setTimeout(() => {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('editPresentModal'));
                 modal.hide();
-                loadRecipientsWithPresents();
+                softReloadRecipients();
             }, 1000);
         } else {
             showEditPresentMessage(data.error || 'Błąd podczas aktualizacji prezentu', 'danger');
@@ -2113,7 +2299,7 @@ if (typeof window.deletePresent !== 'function') {
       .then(data => {
         if (data.success) {
           showSuccessMessage('Prezent został usunięty.');
-          loadRecipientsWithPresents();
+          softReloadRecipients();
         } else {
           showErrorModal(data.error || 'Błąd podczas usuwania prezentu');
         }
@@ -2219,12 +2405,85 @@ function getFullProfilePictureUrl(path) {
     }
     return path;
 }
+// Soft reload - only updates cache without showing loading state
+function softReloadRecipients() {
+    console.log('Soft reloading recipients data...');
+    
+    const startTime = performance.now();
+    
+    Promise.all([
+        fetch('/api/recipients-with-presents').then(response => {
+            if (!response.ok) throw new Error('API error');
+            return response.json();
+        }),
+        fetch('/api/user/identification').then(response => {
+            if (!response.ok) throw new Error('Identification API error');
+            return response.json();
+        })
+    ])
+    .then(([combinedData, identificationStatus]) => {
+        const endTime = performance.now();
+        console.log(`Soft reload completed in ${(endTime - startTime).toFixed(2)}ms`);
+        
+        const recipients = combinedData.recipients || [];
+        const presentsData = combinedData.presents || [];
+        
+        // Update cache
+        window._dataCache = { recipients, presents: presentsData, identificationStatus };
+        window._dataCacheTimestamp = Date.now();
+        window._cachedRecipients = recipients;
+        window._cachedIdentificationStatus = identificationStatus;
+        
+        // Update display without loading state
+        displayRecipientsWithPresents(recipients, presentsData);
+        handleIdentificationLogic(recipients, identificationStatus);
+    })
+    .catch(error => {
+        console.error('Error in soft reload:', error);
+        // Fallback to cached data if available
+        if (window._dataCache) {
+            console.log('Using cached data after soft reload error');
+        }
+    });
+}
+
+// Toast notification system
+function showToast(message, type = 'success') {
+    const toastId = `${type}Toast`;
+    const messageId = `${type}ToastMessage`;
+    
+    const toastElement = document.getElementById(toastId);
+    const messageElement = document.getElementById(messageId);
+    
+    if (toastElement && messageElement) {
+        messageElement.textContent = message;
+        const toast = new bootstrap.Toast(toastElement, {
+            autohide: true,
+            delay: type === 'error' ? 5000 : 3000
+        });
+        toast.show();
+    }
+}
+
+function showSuccessToast(message) {
+    showToast(message, 'success');
+}
+
+function showErrorToast(message) {
+    showToast(message, 'error');
+}
+
+function showInfoToast(message) {
+    showToast(message, 'info');
+}
+
 // Add missing loadRecipients function for the refresh button
 function loadRecipients() {
     console.log('Refreshing recipients data...');
+    showInfoToast('Odświeżanie danych...');
     // Clear all caches when refreshing
     clearRecipientsCache();
-    loadRecipientsWithPresents();
+    loadRecipientsWithPresents(true); // Force reload
 }
 
 // Cache management functions

@@ -57,12 +57,44 @@
         </div>
     </nav>
 
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span id="successToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="errorToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="infoToast" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span id="infoToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
     <div class="container mt-4">
         <!-- AWS-Style Action Cards -->
         <div class="aws-action-section mb-4">
             <div class="row g-3">
                 <div class="col-lg-4 col-md-6">
-                    <div class="card main-card compact-card aws-action-card" onclick="openAddPresentModal()">
+                    <div class="card main-card compact-card aws-action-card" onclick="openAddPresentModal()" 
+                         data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+K">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <div class="aws-action-icon mb-3">
                                 <i class="fas fa-gift"></i>
@@ -73,7 +105,8 @@
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="card main-card compact-card aws-action-card" onclick="openReservedPresentsModal()">
+                    <div class="card main-card compact-card aws-action-card" onclick="openReservedPresentsModal()"
+                         data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+B">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <div class="aws-action-icon mb-3">
                                 <i class="fas fa-bookmark"></i>
@@ -84,7 +117,8 @@
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="card main-card compact-card aws-action-card" onclick="openAddRecipientModal()">
+                    <div class="card main-card compact-card aws-action-card" onclick="openAddRecipientModal()"
+                         data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+P">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <div class="aws-action-icon mb-3">
                                 <i class="fas fa-user-plus"></i>
