@@ -175,32 +175,49 @@ function checkAuth() {
 function loadRecipientsWithPresents(forceReload = false) {
     console.log('Loading recipients and presents...', forceReload ? '(forced)' : '');
     
-    // Use cached data if available and fresh (unless forced reload)
     const now = Date.now();
-    const cacheExpiry = 30000; // 30 seconds cache (increased for better performance)
+    const cacheExpiry = 60000; // 60 seconds cache
     
+    // Try to load from localStorage first (persistent cache)
+    if (!forceReload && !window._dataCache) {
+        const persistentCache = loadFromPersistentCache();
+        if (persistentCache) {
+            console.log('Using persistent cache from localStorage');
+            window._dataCache = persistentCache.data;
+            window._dataCacheTimestamp = persistentCache.timestamp;
+            displayRecipientsData(persistentCache.data.recipients, persistentCache.data.presents, persistentCache.data.identificationStatus);
+            
+            // Refresh in background if cache is older than 30 seconds
+            if ((now - persistentCache.timestamp) > 30000) {
+                console.log('Background refresh triggered');
+                setTimeout(() => softReloadRecipients(), 1000);
+            }
+            return;
+        }
+    }
+    
+    // Use memory cache if available and fresh (unless forced reload)
     if (!forceReload && 
         window._dataCache && 
         window._dataCacheTimestamp && 
         (now - window._dataCacheTimestamp) < cacheExpiry) {
-        console.log('Using cached data (age:', Math.round((now - window._dataCacheTimestamp) / 1000), 'seconds)');
+        console.log('Using memory cache (age:', Math.round((now - window._dataCacheTimestamp) / 1000), 'seconds)');
         displayRecipientsData(window._dataCache.recipients, window._dataCache.presents, window._dataCache.identificationStatus);
         return;
     }
     
-    // Show loading state only if no cache available
-    if (!window._dataCache) {
-        const recipientsList = document.getElementById('recipientsList');
-        recipientsList.innerHTML = `
-            <div class="text-center aws-loading-state">
-                <div class="logo-spinner" role="status">
-                    <img src="seba_logo.png" alt="Loading..." class="spinning-logo">
-                    <span class="visually-hidden">Ładowanie...</span>
-                </div>
-                <p class="mt-3 text-muted">Ładowanie danych...</p>
+    // Show minimal loading state
+    const recipientsList = document.getElementById('recipientsList');
+    recipientsList.innerHTML = `
+        <div class="text-center aws-loading-state">
+            <div class="minimal-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
             </div>
-        `;
-    }
+            <p class="mt-3 text-muted loading-text">Ładowanie...</p>
+        </div>
+    `;
     
     // Load data with optimized single request
     const startTime = performance.now();
@@ -239,8 +256,12 @@ function loadRecipientsWithPresents(forceReload = false) {
         }
         
         // Cache the data
-        window._dataCache = { recipients: validRecipients, presents: validPresents, identificationStatus };
+        const cacheData = { recipients: validRecipients, presents: validPresents, identificationStatus };
+        window._dataCache = cacheData;
         window._dataCacheTimestamp = Date.now();
+        
+        // Save to persistent cache
+        saveToPersistentCache(cacheData);
         
         // Update modal cache as well
         window._cachedRecipients = validRecipients;
@@ -1195,14 +1216,18 @@ function generateReservationButton(present) {
     if (present.reserved_by) {
         if (present.reserved_by === currentUserId) {
             return `
-                <button class="btn btn-danger btn-sm w-100 w-md-auto" onclick="cancelReservationFromRecipients(${present.id})" title="Usuń rezerwację">
+                <button class="btn btn-danger btn-sm w-100 w-md-auto reserve-btn" 
+                        onclick="handleReserveClick(event, ${present.id}, 'cancel')" 
+                        title="Usuń rezerwację">
                     <i class="fas fa-xmark"></i>
                     <span class="d-inline d-md-none ms-1">Usuń rezerwację</span>
                 </button>
             `;
         } else {
             return `
-                <button class="btn btn-secondary btn-sm w-100 w-md-auto" onclick="showReservedByOtherModal('${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}')" title="Zarezerwowane przez: ${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}">
+                <button class="btn btn-secondary btn-sm w-100 w-md-auto reserve-btn" 
+                        onclick="showReservedByOtherModal('${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}')" 
+                        title="Zarezerwowane przez: ${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}">
                     <i class="fas fa-bookmark"></i>
                     <span class="d-inline d-md-none ms-1">Niedostępne</span>
                 </button>
@@ -1210,11 +1235,33 @@ function generateReservationButton(present) {
         }
     } else {
         return `
-            <button class="btn btn-outline-warning btn-sm w-100 w-md-auto" onclick="reservePresentFromRecipients(${present.id})" title="Zarezerwuj prezent">
+            <button class="btn btn-outline-warning btn-sm w-100 w-md-auto reserve-btn" 
+                    onclick="handleReserveClick(event, ${present.id}, 'reserve')" 
+                    title="Zarezerwuj prezent">
                 <i class="fas fa-bookmark"></i>
                 <span class="d-inline d-md-none ms-1">Zarezerwuj prezent</span>
             </button>
         `;
+    }
+}
+
+// Handle reserve button click with proper feedback
+function handleReserveClick(event, presentId, action) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const button = event.currentTarget;
+    
+    // Add loading state
+    button.disabled = true;
+    button.classList.add('updating');
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    if (action === 'reserve') {
+        reservePresentFromRecipients(presentId, button, originalHTML);
+    } else if (action === 'cancel') {
+        cancelReservationFromRecipients(presentId, button, originalHTML);
     }
 }
 
@@ -1914,7 +1961,7 @@ function showModalMessage(elementId, message, type) {
     element.style.display = 'block';
 }
 
-function reservePresentFromRecipients(presentId) {
+function reservePresentFromRecipients(presentId, button, originalHTML) {
     fetch(`/api/presents/${presentId}/reserve`, {
         method: 'POST',
         headers: {
@@ -1924,16 +1971,31 @@ function reservePresentFromRecipients(presentId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            showSuccessToast('Prezent zarezerwowany!');
+            
+            // Optimistically update cache
+            if (window._dataCache && window._dataCache.presents) {
+                const present = window._dataCache.presents.find(p => p.id === presentId);
+                if (present) {
+                    present.reserved_by = window._currentUserId;
+                    present.reserved_by_username = 'Ty';
+                }
+            }
+            
             const presentItem = document.querySelector(`[data-id="${presentId}"]`);
             if (presentItem) {
+                // Add success animation
+                presentItem.classList.add('success-animation');
+                setTimeout(() => {
+                    presentItem.classList.remove('success-animation');
+                }, 300);
+                
                 // For reservation: item moves to top (first position)
-                // Don't animate if it's already the first item
                 const presentsList = presentItem.parentElement;
                 if (presentsList) {
                     const isFirstItem = presentsList.children[0] === presentItem;
                     if (!isFirstItem) {
                         presentItem.classList.add('smooth-slide-up');
-                        // Find the card that will be overlapped (the new top card)
                         const overlappedCard = presentsList.children[0];
                         if (overlappedCard && overlappedCard !== presentItem) {
                             overlappedCard.classList.add('fading');
@@ -1947,13 +2009,32 @@ function reservePresentFromRecipients(presentId) {
                     }
                 }
             }
-            // Refresh the recipients list to show updated state
+            
+            // Soft reload to update UI
             softReloadRecipients();
+        } else {
+            showErrorToast(data.error || 'Błąd podczas rezerwacji');
+            // Restore button
+            if (button) {
+                button.disabled = false;
+                button.classList.remove('updating');
+                button.innerHTML = originalHTML;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error reserving present:', error);
+        showErrorToast('Błąd podczas rezerwacji');
+        // Restore button
+        if (button) {
+            button.disabled = false;
+            button.classList.remove('updating');
+            button.innerHTML = originalHTML;
         }
     });
 }
 
-function cancelReservationFromRecipients(presentId) {
+function cancelReservationFromRecipients(presentId, button, originalHTML) {
     fetch(`/api/presents/${presentId}/reserve`, {
         method: 'DELETE',
         headers: {
@@ -1963,17 +2044,32 @@ function cancelReservationFromRecipients(presentId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            showSuccessToast('Rezerwacja anulowana');
+            
+            // Optimistically update cache
+            if (window._dataCache && window._dataCache.presents) {
+                const present = window._dataCache.presents.find(p => p.id === presentId);
+                if (present) {
+                    present.reserved_by = null;
+                    present.reserved_by_username = null;
+                }
+            }
+            
             const presentItem = document.querySelector(`[data-id="${presentId}"]`);
             if (presentItem) {
+                // Add success animation
+                presentItem.classList.add('success-animation');
+                setTimeout(() => {
+                    presentItem.classList.remove('success-animation');
+                }, 300);
+                
                 // For canceling reservation: item moves to bottom (last position)
-                // Don't animate if it's already the last item
                 const presentsList = presentItem.parentElement;
                 if (presentsList) {
                     const siblings = Array.from(presentsList.children);
                     const isLastItem = siblings[siblings.length - 1] === presentItem;
                     if (!isLastItem) {
                         presentItem.classList.add('smooth-slide-down');
-                        // Find the card that will be overlapped (the new card below)
                         const idx = siblings.indexOf(presentItem);
                         if (idx < siblings.length - 1) {
                             const overlappedCard = siblings[idx + 1];
@@ -1990,8 +2086,9 @@ function cancelReservationFromRecipients(presentId) {
                     }
                 }
             }
-            // Refresh the recipients list to show updated state
-            loadRecipientsWithPresents();
+            
+            // Soft reload to update UI
+            softReloadRecipients();
         }
     });
 }
@@ -2405,6 +2502,51 @@ function getFullProfilePictureUrl(path) {
     }
     return path;
 }
+// Persistent cache functions
+function saveToPersistentCache(data) {
+    try {
+        const cacheData = {
+            data: data,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('recipientsCache', JSON.stringify(cacheData));
+        console.log('Data saved to persistent cache');
+    } catch (error) {
+        console.error('Error saving to persistent cache:', error);
+    }
+}
+
+function loadFromPersistentCache() {
+    try {
+        const cached = localStorage.getItem('recipientsCache');
+        if (cached) {
+            const cacheData = JSON.parse(cached);
+            const age = Date.now() - cacheData.timestamp;
+            
+            // Cache valid for 5 minutes
+            if (age < 300000) {
+                return cacheData;
+            } else {
+                console.log('Persistent cache expired');
+                localStorage.removeItem('recipientsCache');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading from persistent cache:', error);
+        localStorage.removeItem('recipientsCache');
+    }
+    return null;
+}
+
+function clearPersistentCache() {
+    try {
+        localStorage.removeItem('recipientsCache');
+        console.log('Persistent cache cleared');
+    } catch (error) {
+        console.error('Error clearing persistent cache:', error);
+    }
+}
+
 // Soft reload - only updates cache without showing loading state
 function softReloadRecipients() {
     console.log('Soft reloading recipients data...');
@@ -2429,10 +2571,14 @@ function softReloadRecipients() {
         const presentsData = combinedData.presents || [];
         
         // Update cache
-        window._dataCache = { recipients, presents: presentsData, identificationStatus };
+        const cacheData = { recipients, presents: presentsData, identificationStatus };
+        window._dataCache = cacheData;
         window._dataCacheTimestamp = Date.now();
         window._cachedRecipients = recipients;
         window._cachedIdentificationStatus = identificationStatus;
+        
+        // Save to persistent cache
+        saveToPersistentCache(cacheData);
         
         // Update display without loading state
         displayRecipientsWithPresents(recipients, presentsData);
@@ -2492,9 +2638,16 @@ function clearRecipientsCache() {
     window._cachedIdentificationStatus = null;
     window._dataCache = null;
     window._dataCacheTimestamp = null;
+    clearPersistentCache();
 }
 
 function displayRecipientsData(recipients, presents, identificationStatus) {
+    // Add instant load class for smooth fade-in
+    const recipientsList = document.getElementById('recipientsList');
+    if (recipientsList) {
+        recipientsList.classList.add('instant-load');
+    }
+    
     // Store data globally for other functions
     window._allPresentsByRecipient = {};
     presents.forEach(present => {

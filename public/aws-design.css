@@ -2581,3 +2581,236 @@ button, .btn, .card, .present-item, .recipient-item {
 .notification-pulse {
     animation: pulse-notification 2s infinite;
 }
+
+/* Remove hover states on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .reserve-btn:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    
+    .aws-action-card:hover {
+        transform: none !important;
+        box-shadow: var(--aws-shadow-sm) !important;
+    }
+    
+    .btn:hover {
+        transform: none !important;
+    }
+}
+
+/* Active/pressed state for touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .reserve-btn:active {
+        transform: scale(0.95) !important;
+        opacity: 0.8;
+    }
+    
+    .aws-action-card:active {
+        transform: scale(0.98) !important;
+        opacity: 0.9;
+    }
+    
+    .btn:active {
+        transform: scale(0.95) !important;
+        opacity: 0.8;
+    }
+}
+
+/* Reserve button improvements */
+.reserve-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.reserve-btn:active {
+    transform: scale(0.95);
+}
+
+.reserve-btn.updating {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Ripple effect for buttons on touch */
+.reserve-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.reserve-btn:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* Improve button touch targets on mobile */
+@media (max-width: 767px) {
+    .reserve-btn {
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+    
+    .btn-sm {
+        min-height: 38px;
+        padding: 8px 12px;
+    }
+}
+
+/* Loading spinner in button */
+.reserve-btn .fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Success feedback animation */
+.present-item.success-animation {
+    animation: success-pulse 0.3s ease;
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+/* Disable text selection on buttons */
+.reserve-btn {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Better focus states for keyboard navigation */
+.reserve-btn:focus-visible {
+    outline: 2px solid var(--material-blue);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
+}
+
+/* Modern minimal spinner */
+.minimal-spinner {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+}
+
+.spinner-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 3px solid transparent;
+    border-top-color: var(--material-red);
+    border-radius: 50%;
+    animation: spinner-rotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.spinner-ring:nth-child(1) {
+    animation-delay: -0.45s;
+    border-top-color: var(--material-red);
+}
+
+.spinner-ring:nth-child(2) {
+    animation-delay: -0.3s;
+    border-top-color: var(--material-green);
+}
+
+.spinner-ring:nth-child(3) {
+    animation-delay: -0.15s;
+    border-top-color: var(--material-amber);
+}
+
+@keyframes spinner-rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Loading text fade animation */
+.loading-text {
+    animation: loading-fade 1.5s ease-in-out infinite;
+}
+
+@keyframes loading-fade {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Faster, more prominent logo spinner */
+.logo-spinner {
+    animation: logo-spin-fast 1s ease-in-out infinite, logo-pulse-prominent 1.5s ease-in-out infinite;
+}
+
+@keyframes logo-spin-fast {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.1);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+@keyframes logo-pulse-prominent {
+    0%, 100% {
+        box-shadow: 0 8px 25px rgba(244, 67, 54, 0.4);
+    }
+    50% {
+        box-shadow: 0 12px 40px rgba(244, 67, 54, 0.8);
+    }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .minimal-spinner,
+    .spinner-ring,
+    .logo-spinner,
+    .loading-text {
+        animation: none;
+    }
+    
+    .spinner-ring {
+        border-top-color: var(--material-red);
+    }
+}
+
+/* Instant load indicator */
+.instant-load {
+    opacity: 0;
+    animation: fade-in 0.3s ease forwards;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
