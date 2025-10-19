@@ -34,8 +34,176 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// Search and filter functionality
+let currentFilter = 'all';
+let searchTimeout = null;
+
+function initializeSearchAndFilter() {
+    const searchInput = document.getElementById('searchInput');
+    const clearSearch = document.getElementById('clearSearch');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value;
+            
+            // Show/hide clear button
+            if (clearSearch) {
+                clearSearch.style.display = query ? 'block' : 'none';
+            }
+            
+            // Debounce search
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 300);
+        });
+    }
+    
+    if (clearSearch) {
+        clearSearch.addEventListener('click', function() {
+            searchInput.value = '';
+            clearSearch.style.display = 'none';
+            performSearch('');
+        });
+    }
+    
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            applyFilter();
+        });
+    });
+}
+
+function performSearch(query) {
+    const recipientItems = document.querySelectorAll('.recipient-item');
+    const lowerQuery = query.toLowerCase();
+    
+    recipientItems.forEach(item => {
+        const recipientName = item.querySelector('.recipient-name')?.textContent.toLowerCase() || '';
+        const presents = Array.from(item.querySelectorAll('.present-item'));
+        
+        let hasMatch = recipientName.includes(lowerQuery);
+        
+        // Check presents
+        presents.forEach(present => {
+            const presentText = present.textContent.toLowerCase();
+            const presentMatches = presentText.includes(lowerQuery);
+            
+            if (query) {
+                present.style.display = presentMatches ? '' : 'none';
+            } else {
+                present.style.display = '';
+            }
+            
+            if (presentMatches) hasMatch = true;
+        });
+        
+        item.style.display = hasMatch ? '' : 'none';
+    });
+    
+    // Show "no results" message if needed
+    const visibleItems = Array.from(recipientItems).filter(item => item.style.display !== 'none');
+    if (visibleItems.length === 0 && query) {
+        showNoResultsMessage();
+    } else {
+        hideNoResultsMessage();
+    }
+}
+
+function applyFilter() {
+    const recipientItems = document.querySelectorAll('.recipient-item');
+    
+    recipientItems.forEach(item => {
+        const presents = Array.from(item.querySelectorAll('.present-item'));
+        let hasVisiblePresent = false;
+        
+        presents.forEach(present => {
+            let shouldShow = true;
+            
+            switch(currentFilter) {
+                case 'unreserved':
+                    shouldShow = !present.classList.contains('reserved-by-me') && 
+                                !present.classList.contains('reserved-by-other');
+                    break;
+                case 'my-reserved':
+                    shouldShow = present.classList.contains('reserved-by-me');
+                    break;
+                case 'unchecked':
+                    shouldShow = !present.classList.contains('checked');
+                    break;
+                case 'all':
+                default:
+                    shouldShow = true;
+            }
+            
+            present.style.display = shouldShow ? '' : 'none';
+            if (shouldShow) hasVisiblePresent = true;
+        });
+        
+        // Hide recipient if no presents match filter
+        item.style.display = hasVisiblePresent ? '' : 'none';
+    });
+}
+
+function showNoResultsMessage() {
+    let noResults = document.getElementById('noResultsMessage');
+    if (!noResults) {
+        noResults = document.createElement('div');
+        noResults.id = 'noResultsMessage';
+        noResults.className = 'empty-state';
+        noResults.innerHTML = `
+            <i class="fas fa-search"></i>
+            <h5>Nie znaleziono wyników</h5>
+            <p>Spróbuj użyć innych słów kluczowych</p>
+        `;
+        document.getElementById('recipientsList').appendChild(noResults);
+    }
+}
+
+function hideNoResultsMessage() {
+    const noResults = document.getElementById('noResultsMessage');
+    if (noResults) {
+        noResults.remove();
+    }
+}
+
+// FAB (Floating Action Button) functionality
+function initializeFAB() {
+    const fabMain = document.getElementById('fabMain');
+    const fabMenu = document.getElementById('fabMenu');
+    
+    if (fabMain && fabMenu) {
+        fabMain.addEventListener('click', function() {
+            fabMenu.classList.toggle('active');
+            fabMain.classList.toggle('active');
+        });
+        
+        // Close FAB when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.fab-container')) {
+                fabMenu.classList.remove('active');
+                fabMain.classList.remove('active');
+            }
+        });
+    }
+}
+
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + F - Focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+        }
+    }
+    
     // Ctrl/Cmd + K - Add present
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
@@ -59,6 +227,16 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
         openReservedPresentsModal();
     }
+    
+    // Escape - Clear search
+    if (e.key === 'Escape') {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput && searchInput.value) {
+            searchInput.value = '';
+            document.getElementById('clearSearch').style.display = 'none';
+            performSearch('');
+        }
+    }
 });
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -73,10 +251,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
         
+        // Initialize search and filter
+        initializeSearchAndFilter();
+        
+        // Initialize FAB
+        initializeFAB();
+        
         // Show keyboard shortcuts hint on first load
         setTimeout(() => {
             if (!localStorage.getItem('keyboardHintShown')) {
-                showInfoToast('💡 Wskazówka: Użyj Ctrl+K aby szybko dodać prezent');
+                showInfoToast('💡 Wskazówka: Użyj Ctrl+F aby szukać lub Ctrl+K aby dodać prezent');
                 localStorage.setItem('keyboardHintShown', 'true');
             }
         }, 2000);
@@ -206,16 +390,15 @@ function loadRecipientsWithPresents(forceReload = false) {
         return;
     }
     
-    // Show minimal loading state
+    // Show pulsating logo loading state
     const recipientsList = document.getElementById('recipientsList');
     recipientsList.innerHTML = `
         <div class="text-center aws-loading-state">
-            <div class="minimal-spinner">
-                <div class="spinner-ring"></div>
-                <div class="spinner-ring"></div>
-                <div class="spinner-ring"></div>
+            <div class="logo-spinner" role="status">
+                <img src="seba_logo.png" alt="Loading..." class="spinning-logo">
+                <span class="visually-hidden">Ładowanie...</span>
             </div>
-            <p class="mt-3 text-muted loading-text">Ładowanie...</p>
+            <p class="mt-3 text-muted loading-text">Ładowanie danych...</p>
         </div>
     `;
     

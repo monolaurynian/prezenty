@@ -57,6 +57,24 @@
         </div>
     </nav>
 
+    <!-- Floating Action Button (Mobile) -->
+    <div class="fab-container">
+        <button class="fab-main" id="fabMain" aria-label="Menu szybkich akcji">
+            <i class="fas fa-plus"></i>
+        </button>
+        <div class="fab-menu" id="fabMenu">
+            <button class="fab-item" onclick="openAddPresentModal()" data-tooltip="Dodaj prezent">
+                <i class="fas fa-gift"></i>
+            </button>
+            <button class="fab-item" onclick="openAddRecipientModal()" data-tooltip="Dodaj osobę">
+                <i class="fas fa-user-plus"></i>
+            </button>
+            <button class="fab-item" onclick="openReservedPresentsModal()" data-tooltip="Zarezerwowane">
+                <i class="fas fa-bookmark"></i>
+            </button>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
         <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -89,6 +107,41 @@
     </div>
 
     <div class="container mt-4">
+        <!-- Search and Filter Bar -->
+        <div class="search-filter-bar mb-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-lg-6 col-md-12">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" 
+                               class="form-control search-input" 
+                               id="searchInput" 
+                               placeholder="Szukaj osoby lub prezentu... (Ctrl+F)"
+                               autocomplete="off">
+                        <button class="btn btn-sm btn-link clear-search" id="clearSearch" style="display: none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-12">
+                    <div class="filter-buttons d-flex gap-2 flex-wrap">
+                        <button class="btn btn-sm btn-outline-secondary filter-btn active" data-filter="all">
+                            <i class="fas fa-list me-1"></i>Wszystkie
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning filter-btn" data-filter="unreserved">
+                            <i class="fas fa-bookmark me-1"></i>Niezarezerwowane
+                        </button>
+                        <button class="btn btn-sm btn-outline-success filter-btn" data-filter="my-reserved">
+                            <i class="fas fa-check me-1"></i>Moje rezerwacje
+                        </button>
+                        <button class="btn btn-sm btn-outline-info filter-btn" data-filter="unchecked">
+                            <i class="fas fa-shopping-cart me-1"></i>Do kupienia
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- AWS-Style Action Cards -->
         <div class="aws-action-section mb-4">
             <div class="row g-3">
