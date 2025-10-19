@@ -93,14 +93,28 @@ self.addEventListener('push', function(event) {
     badge: '/seba_logo.png',
     tag: 'new-present',
     requireInteraction: false,
-    actions: [
+    vibrate: [200, 100, 200], // Vibration pattern for mobile
+    renotify: true, // Allow re-notification with same tag
+    silent: false,
+    data: {
+      url: '/recipients',
+      timestamp: Date.now()
+    }
+  };
+  
+  // Add actions only if supported (not on iOS)
+  if (self.registration.getNotifications) {
+    notificationData.actions = [
       {
         action: 'view',
-        title: 'Zobacz',
-        icon: '/seba_logo.png'
+        title: 'Zobacz'
+      },
+      {
+        action: 'dismiss',
+        title: 'Zamknij'
       }
-    ]
-  };
+    ];
+  }
 
   if (event.data) {
     try {
@@ -109,10 +123,14 @@ self.addEventListener('push', function(event) {
         ...notificationData,
         title: data.title || notificationData.title,
         body: data.body || notificationData.body,
-        data: data
+        data: { ...notificationData.data, ...data }
       };
     } catch (e) {
       console.error('Error parsing push data:', e);
+      // If parsing fails, try text
+      if (event.data.text) {
+        notificationData.body = event.data.text();
+      }
     }
   }
 
@@ -127,9 +145,20 @@ self.addEventListener('notificationclick', function(event) {
   
   event.notification.close();
   
+  // Handle dismiss action
+  if (event.action === 'dismiss') {
+    return;
+  }
+  
+  // Handle view action or default click
   if (event.action === 'view' || !event.action) {
+    const urlToOpen = event.notification.data?.url || '/recipients';
+    
     event.waitUntil(
-      clients.matchAll({ type: 'window' }).then(function(clientList) {
+      clients.matchAll({ 
+        type: 'window',
+        includeUncontrolled: true 
+      }).then(function(clientList) {
         // If app is already open, focus it
         for (let client of clientList) {
           if (client.url.includes('/recipients') && 'focus' in client) {
@@ -139,9 +168,14 @@ self.addEventListener('notificationclick', function(event) {
         
         // If app is not open, open it
         if (clients.openWindow) {
-          return clients.openWindow('/recipients');
+          return clients.openWindow(urlToOpen);
         }
       })
     );
   }
+});
+
+// Handle notification close event
+self.addEventListener('notificationclose', function(event) {
+  console.log('Notification closed:', event);
 });

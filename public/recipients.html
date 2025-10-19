@@ -908,22 +908,57 @@
         function requestNotificationPermission() {
             const notificationButton = document.getElementById('notificationButton');
             
-            if ('Notification' in window && 'serviceWorker' in navigator) {
-                Notification.requestPermission().then(function(permission) {
-                    console.log('Notification permission:', permission);
-                    if (permission === 'granted') {
-                        subscribeToNotifications();
-                        if (notificationButton) {
-                            notificationButton.style.display = 'none';
-                        }
-                    } else if (permission === 'denied') {
-                        if (notificationButton) {
-                            notificationButton.innerHTML = '<i class="fas fa-bell-slash me-1"></i>Zablokowane';
-                            notificationButton.disabled = true;
-                        }
-                    }
-                });
+            // Check if notifications are supported
+            if (!('Notification' in window)) {
+                showErrorToast('Powiadomienia nie są obsługiwane w tej przeglądarce');
+                if (notificationButton) {
+                    notificationButton.innerHTML = '<i class="fas fa-bell-slash me-1"></i>Nieobsługiwane';
+                    notificationButton.disabled = true;
+                }
+                return;
             }
+            
+            if (!('serviceWorker' in navigator)) {
+                showErrorToast('Service Worker nie jest obsługiwany');
+                return;
+            }
+            
+            // Show loading state
+            if (notificationButton) {
+                notificationButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Ładowanie...';
+                notificationButton.disabled = true;
+            }
+            
+            Notification.requestPermission().then(function(permission) {
+                console.log('Notification permission:', permission);
+                
+                if (permission === 'granted') {
+                    showSuccessToast('Powiadomienia włączone!');
+                    subscribeToNotifications();
+                    if (notificationButton) {
+                        notificationButton.style.display = 'none';
+                    }
+                } else if (permission === 'denied') {
+                    showErrorToast('Powiadomienia zostały zablokowane. Zmień ustawienia przeglądarki.');
+                    if (notificationButton) {
+                        notificationButton.innerHTML = '<i class="fas fa-bell-slash me-1"></i>Zablokowane';
+                        notificationButton.disabled = true;
+                    }
+                } else {
+                    // Permission dismissed
+                    if (notificationButton) {
+                        notificationButton.innerHTML = '<i class="fas fa-bell me-1"></i>Powiadomienia';
+                        notificationButton.disabled = false;
+                    }
+                }
+            }).catch(function(error) {
+                console.error('Error requesting notification permission:', error);
+                showErrorToast('Błąd podczas włączania powiadomień');
+                if (notificationButton) {
+                    notificationButton.innerHTML = '<i class="fas fa-bell me-1"></i>Powiadomienia';
+                    notificationButton.disabled = false;
+                }
+            });
         }
         
         // Check notification permission status and show button if needed
@@ -952,15 +987,37 @@
 
         function subscribeToNotifications() {
             navigator.serviceWorker.ready.then(function(registration) {
-                return registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array('BEl62iUYgUivxIkv69yViEuiBIa40HI80YmqRcU_d2qcWAh2U5cp7C6_8AT7pRxVxIiNuSOhapA_GTfXRqXWkOU')
+                // Check if already subscribed
+                return registration.pushManager.getSubscription().then(function(existingSubscription) {
+                    if (existingSubscription) {
+                        console.log('Already subscribed:', existingSubscription);
+                        sendSubscriptionToServer(existingSubscription);
+                        return existingSubscription;
+                    }
+                    
+                    // Subscribe to push notifications
+                    return registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array('BEl62iUYgUivxIkv69yViEuiBIa40HI80YmqRcU_d2qcWAh2U5cp7C6_8AT7pRxVxIiNuSOhapA_GTfXRqXWkOU')
+                    });
                 });
             }).then(function(subscription) {
                 console.log('Push subscription successful:', subscription);
                 sendSubscriptionToServer(subscription);
+                
+                // Test notification
+                if (Notification.permission === 'granted') {
+                    new Notification('Życzenia Prezentowe', {
+                        body: 'Powiadomienia zostały włączone! 🎄',
+                        icon: '/seba_logo.png',
+                        badge: '/seba_logo.png',
+                        tag: 'test-notification',
+                        requireInteraction: false
+                    });
+                }
             }).catch(function(error) {
                 console.error('Push subscription failed:', error);
+                showErrorToast('Błąd subskrypcji: ' + error.message);
             });
         }
 
