@@ -4374,7 +4374,7 @@ button, .btn, .card, .present-item, .recipient-item {
     position: fixed !important;
     top: 10px !important;
     right: 10px !important;
-    z-index: 9999 !important;
+    z-index: 1040 !important;
 }
 
 .notification-bell-floating .notification-bell-btn {
@@ -4434,7 +4434,7 @@ button, .btn, .card, .present-item, .recipient-item {
     max-height: 500px;
     display: flex;
     flex-direction: column;
-    z-index: 10000 !important;
+    z-index: 1041 !important;
 }
 
 .notification-bell-floating .notification-dropdown.show {
