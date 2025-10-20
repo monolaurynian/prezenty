@@ -2911,23 +2911,60 @@ button, .btn, .card, .present-item, .recipient-item {
     }
 }
 
-/* Mobile - 2 column grid for search and actions */
+/* Mobile collapsible search */
 @media (max-width: 767px) {
-    .search-filter-bar .row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
+    .mobile-search-toggle {
+        margin-bottom: 16px;
     }
     
-    .search-filter-bar .col-lg-6,
-    .search-filter-bar .col-md-12 {
-        grid-column: 1 / -1; /* Search takes full width */
+    .search-toggle-btn {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 16px;
+        font-weight: 500;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .search-toggle-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    }
+    
+    .search-container {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: all 0.3s ease;
+        transform: translateY(-10px);
+    }
+    
+    .search-container.expanded {
+        max-height: 500px;
+        opacity: 1;
+        transform: translateY(0);
+        margin-bottom: 16px;
+    }
+    
+    .close-search {
+        position: absolute;
+        right: 50px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--aws-gray-500);
+        padding: 4px 8px;
+        z-index: 10;
+    }
+    
+    .close-search:hover {
+        color: var(--aws-gray-700);
     }
     
     .filter-buttons {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
+        margin-top: 12px;
     }
     
     .filter-btn {
@@ -2968,6 +3005,23 @@ button, .btn, .card, .present-item, .recipient-item {
     
     .aws-action-description {
         font-size: 11px;
+    }
+}
+
+/* Desktop - always show search */
+@media (min-width: 768px) {
+    .mobile-search-toggle {
+        display: none;
+    }
+    
+    .search-container {
+        max-height: none;
+        opacity: 1;
+        transform: none;
+    }
+    
+    .close-search {
+        display: none;
     }
 }
 

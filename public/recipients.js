@@ -41,7 +41,34 @@ let searchTimeout = null;
 function initializeSearchAndFilter() {
     const searchInput = document.getElementById('searchInput');
     const clearSearch = document.getElementById('clearSearch');
+    const closeSearch = document.getElementById('closeSearch');
+    const searchToggle = document.getElementById('searchToggle');
+    const searchContainer = document.getElementById('searchContainer');
     const filterButtons = document.querySelectorAll('.filter-btn');
+    
+    // Mobile search toggle
+    if (searchToggle && searchContainer) {
+        searchToggle.addEventListener('click', function() {
+            searchContainer.classList.add('expanded');
+            if (searchInput) {
+                setTimeout(() => {
+                    searchInput.focus();
+                }, 300);
+            }
+        });
+    }
+    
+    // Close search on mobile
+    if (closeSearch && searchContainer) {
+        closeSearch.addEventListener('click', function() {
+            searchContainer.classList.remove('expanded');
+            if (searchInput) {
+                searchInput.value = '';
+                performSearch('');
+            }
+            hideSearchDropdown();
+        });
+    }
     
     if (searchInput) {
         searchInput.addEventListener('input', function(e) {
@@ -88,9 +115,15 @@ function initializeSearchAndFilter() {
     document.addEventListener('click', function(e) {
         const searchBox = document.querySelector('.search-box');
         const dropdown = document.getElementById('searchResults');
+        const searchContainer = document.getElementById('searchContainer');
         
         if (searchBox && dropdown && !searchBox.contains(e.target)) {
             hideSearchDropdown();
+        }
+        
+        // Close mobile search when clicking outside
+        if (searchContainer && !searchContainer.contains(e.target) && !e.target.closest('#searchToggle')) {
+            searchContainer.classList.remove('expanded');
         }
     });
 }

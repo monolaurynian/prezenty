@@ -109,43 +109,56 @@
     <div class="container mt-4">
         <!-- Search and Filter Bar -->
         <div class="search-filter-bar mb-4">
-            <div class="row g-3 align-items-start">
-                <div class="col-lg-6 col-md-12">
-                    <div class="search-box">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" 
-                               class="form-control search-input" 
-                               id="searchInput" 
-                               placeholder="Szukaj osoby lub prezentu... (Ctrl+F)"
-                               autocomplete="off"
-                               aria-autocomplete="list"
-                               aria-controls="searchResults">
-                        <button class="btn btn-sm btn-link clear-search" id="clearSearch" style="display: none;">
-                            <i class="fas fa-times"></i>
-                        </button>
-                        <!-- Search results dropdown -->
-                        <div class="search-results-dropdown" id="searchResults" style="display: none;">
-                            <div class="search-results-header">
-                                <span class="results-count"></span>
+            <!-- Mobile Search Icon -->
+            <div class="mobile-search-toggle d-md-none">
+                <button class="btn btn-outline-primary search-toggle-btn" id="searchToggle">
+                    <i class="fas fa-search me-2"></i>Szukaj
+                </button>
+            </div>
+            
+            <!-- Expandable Search Container -->
+            <div class="search-container" id="searchContainer">
+                <div class="row g-3 align-items-start">
+                    <div class="col-lg-6 col-md-12">
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" 
+                                   class="form-control search-input" 
+                                   id="searchInput" 
+                                   placeholder="Szukaj osoby lub prezentu... (Ctrl+F)"
+                                   autocomplete="off"
+                                   aria-autocomplete="list"
+                                   aria-controls="searchResults">
+                            <button class="btn btn-sm btn-link clear-search" id="clearSearch" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button class="btn btn-sm btn-link close-search d-md-none" id="closeSearch">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <!-- Search results dropdown -->
+                            <div class="search-results-dropdown" id="searchResults" style="display: none;">
+                                <div class="search-results-header">
+                                    <span class="results-count"></span>
+                                </div>
+                                <div class="search-results-list"></div>
                             </div>
-                            <div class="search-results-list"></div>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-6 col-md-12">
-                    <div class="filter-buttons d-flex gap-2 flex-wrap">
-                        <button class="btn btn-sm btn-outline-secondary filter-btn active" data-filter="all">
-                            <i class="fas fa-list me-1"></i>Wszystkie
-                        </button>
-                        <button class="btn btn-sm btn-outline-warning filter-btn" data-filter="unreserved">
-                            <i class="fas fa-bookmark me-1"></i>Niezarezerwowane
-                        </button>
-                        <button class="btn btn-sm btn-outline-success filter-btn" data-filter="my-reserved">
-                            <i class="fas fa-check me-1"></i>Moje rezerwacje
-                        </button>
-                        <button class="btn btn-sm btn-outline-info filter-btn" data-filter="unchecked">
-                            <i class="fas fa-shopping-cart me-1"></i>Do kupienia
-                        </button>
+                    <div class="col-lg-6 col-md-12">
+                        <div class="filter-buttons d-flex gap-2 flex-wrap">
+                            <button class="btn btn-sm btn-outline-secondary filter-btn active" data-filter="all">
+                                <i class="fas fa-list me-1"></i>Wszystkie
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning filter-btn" data-filter="unreserved">
+                                <i class="fas fa-bookmark me-1"></i>Niezarezerwowane
+                            </button>
+                            <button class="btn btn-sm btn-outline-success filter-btn" data-filter="my-reserved">
+                                <i class="fas fa-check me-1"></i>Moje rezerwacje
+                            </button>
+                            <button class="btn btn-sm btn-outline-info filter-btn" data-filter="unchecked">
+                                <i class="fas fa-shopping-cart me-1"></i>Do kupienia
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
