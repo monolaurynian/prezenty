@@ -4382,12 +4382,12 @@ button, .btn, .card, .present-item, .recipient-item {
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
     border: none;
     color: white;
     font-size: 1.3rem;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(198, 40, 40, 0.4);
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
@@ -4396,7 +4396,7 @@ button, .btn, .card, .present-item, .recipient-item {
 
 .notification-bell-floating .notification-bell-btn:hover {
     transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 6px 20px rgba(198, 40, 40, 0.5);
 }
 
 .notification-bell-floating .notification-bell-btn:active {
@@ -4449,7 +4449,7 @@ button, .btn, .card, .present-item, .recipient-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
     color: white;
     border-radius: 16px 16px 0 0;
 }
@@ -4523,7 +4523,7 @@ button, .btn, .card, .present-item, .recipient-item {
 .notification-bell-floating .notification-unread-dot {
     width: 8px;
     height: 8px;
-    background: #667eea;
+    background: #c62828;
     border-radius: 50%;
     flex-shrink: 0;
     margin-top: 6px;
@@ -4533,7 +4533,7 @@ button, .btn, .card, .present-item, .recipient-item {
     padding: 0.75rem;
     border-top: 1px solid #e9ecef;
     text-align: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
     border-radius: 0 0 16px 16px;
 }
 

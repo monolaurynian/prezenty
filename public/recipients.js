@@ -463,13 +463,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Initialize FAB
         initializeFAB();
 
-        // Show keyboard shortcuts hint on first load
-        setTimeout(() => {
-            if (!localStorage.getItem('keyboardHintShown')) {
-                showInfoToast('💡 Wskazówka: Użyj Ctrl+F aby szukać lub Ctrl+K aby dodać prezent');
-                localStorage.setItem('keyboardHintShown', 'true');
-            }
-        }, 2000);
+        // Keyboard shortcuts hint removed
 
         // Set up periodic auth check to detect session expiry
         setInterval(() => {
