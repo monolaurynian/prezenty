@@ -19,16 +19,20 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Configure web-push (fallback for local development)
 let webpush = null;
+let VAPID_PUBLIC_KEY = 'BEl62iUYgUivxIkv69yViEuiBIa40HI80YmqRcU_d2qcWAh2U5cp7C6_8AT7pRxVxIiNuSOhapA_GTfXRqXWkOU';
+let VAPID_PRIVATE_KEY = 'VCz-z9nV_HuHhVCjlHRlSjSWAqS3-T_CKPiuIXSBBtU';
+
 try {
     webpush = require('web-push');
     webpush.setVapidDetails(
-        'mailto:your-email@example.com',
-        'BEl62iUYgUivxIkv69yViEuiBIa40HI80YmqRcU_d2qcWAh2U5cp7C6_8AT7pRxVxIiNuSOhapA_GTfXRqXWkOU', // Public key
-        'VCz-z9nV_HuHhVCjlHRlSjSWAqS3-T_CKPiuIXSBBtU' // Private key
+        'mailto:prezenty@example.com',
+        VAPID_PUBLIC_KEY,
+        VAPID_PRIVATE_KEY
     );
     console.log('✅ Web-push module loaded successfully');
 } catch (error) {
-    console.log('⚠️ Web-push module not available - using fallback notifications');
+    console.log('⚠️ Web-push module not available:', error.message);
+    console.log('📝 To enable notifications: npm install web-push');
     webpush = null;
 }
 
@@ -197,7 +201,7 @@ const getAllPresents = async () => {
 };
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3002;
 const HOST = process.env.HOST || '0.0.0.0';
 
 // Middleware
@@ -1175,6 +1179,15 @@ app.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
     const userId = req.session.userId;
     const subscription = req.body;
     
+    console.log('📝 Notification subscription request:', { userId, hasSubscription: !!subscription });
+    
+    if (!webpush) {
+        console.log('⚠️ Web-push not available - cannot save subscription');
+        return res.status(503).json({ 
+            error: 'Web-push module not available on server' 
+        });
+    }
+    
     if (DEMO_MODE) {
         console.log('Demo mode - notification subscription saved:', { userId, subscription });
         res.json({ success: true });
@@ -1218,10 +1231,52 @@ app.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
     }
 });
 
+// Get VAPID public key endpoint
+app.get('/api/vapid-public-key', (req, res) => {
+    res.json({ 
+        publicKey: VAPID_PUBLIC_KEY,
+        webPushAvailable: !!webpush
+    });
+});
+
+// Test notification endpoint
+app.post('/api/test-notification', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        console.log('🧪 Testing notification for user:', userId);
+        
+        if (!webpush) {
+            return res.status(503).json({ 
+                error: 'Web-push module not available. Run: npm install web-push' 
+            });
+        }
+        
+        // Send a test notification
+        await sendNotificationToUsers(userId, 'Test Notification', 'This is a test notification from Prezenty app! 🎄', {
+            test: true,
+            timestamp: Date.now()
+        });
+        
+        res.json({ success: true, message: 'Test notification sent!' });
+    } catch (error) {
+        console.error('Error sending test notification:', error);
+        res.status(500).json({ error: 'Failed to send test notification: ' + error.message });
+    }
+});
+
 // Function to send notifications to all users except the sender
 async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
+    console.log('🔔 Sending notification:', { excludeUserId, title, body, data });
+    
+    if (!webpush) {
+        console.log('⚠️ Web-push not available - notifications disabled');
+        return;
+    }
+    
     if (DEMO_MODE) {
-        console.log('Demo mode - would send notification:', { excludeUserId, title, body, data });
+        console.log('Demo mode - simulating notification (web-push available)');
+        // In demo mode, we can't access the database, so we'll just log
+        // But the push subscription endpoint should still work for testing
         return;
     }
     
@@ -1582,7 +1637,23 @@ function setupKeepAliveCron() {
     // Only run keep-alive in production on Render
     if (process.env.NODE_ENV === 'production' && process.env.RENDER) {
         console.log('🔄 Setting up keep-alive cronjob for Render...');
-        console.log('✅ Keep-alive cronjob temporarily disabled');
+        
+        const job = new cron.CronJob('*/14 * * * *', function () {
+            https
+                .get("https://prezenty.onrender.com", (res) => {
+                    if (res.statusCode === 200) {
+                        console.log("✅ Keep-alive ping successful at", new Date().toLocaleTimeString());
+                    } else {
+                        console.log("⚠️ Keep-alive ping failed:", res.statusCode);
+                    }
+                })
+                .on("error", (e) => {
+                    console.error("❌ Keep-alive ping error:", e.message);
+                });
+        });
+        
+        job.start();
+        console.log('✅ Keep-alive cronjob started - pinging every 14 minutes');
     } else {
         console.log('ℹ️ Keep-alive cronjob skipped (not in production on Render)');
     }

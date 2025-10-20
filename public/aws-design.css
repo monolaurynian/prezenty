@@ -766,53 +766,48 @@ html {
     display: block;
 }
 
-/* Material Design Expressive Action Cards - 4 Column Layout */
+/* Material Design Expressive Action Cards - 3 Column Layout */
 /* Card 1: Dodaj Prezent - GREEN */
-.recipients-page .aws-action-section .col-lg-3:nth-child(1) .aws-action-icon {
+.recipients-page .aws-action-section .col-lg-4:nth-child(1) .aws-action-icon {
     background: linear-gradient(135deg, var(--material-green), var(--material-light-green));
     box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
 }
 
-.recipients-page .aws-action-section .col-lg-3:nth-child(1) .aws-action-card:hover .aws-action-icon {
+.recipients-page .aws-action-section .col-lg-4:nth-child(1) .aws-action-card:hover .aws-action-icon {
     background: linear-gradient(135deg, var(--material-teal), var(--material-green));
     box-shadow: 0 12px 35px rgba(0, 150, 136, 0.5);
     transform: scale(1.15) rotate(5deg);
 }
 
 /* Card 2: Dodaj Osobę - BLUE */
-.recipients-page .aws-action-section .col-lg-3:nth-child(2) .aws-action-icon {
+.recipients-page .aws-action-section .col-lg-4:nth-child(2) .aws-action-icon {
     background: linear-gradient(135deg, var(--material-blue), var(--material-light-blue));
     box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
 }
 
-.recipients-page .aws-action-section .col-lg-3:nth-child(2) .aws-action-card:hover .aws-action-icon {
+.recipients-page .aws-action-section .col-lg-4:nth-child(2) .aws-action-card:hover .aws-action-icon {
     background: linear-gradient(135deg, var(--material-indigo), var(--material-blue));
     box-shadow: 0 12px 35px rgba(63, 81, 181, 0.5);
     transform: scale(1.15) rotate(-5deg);
 }
 
-/* Card 3: Dodaj Osobę (duplicate) - PURPLE */
-.recipients-page .aws-action-section .col-lg-3:nth-child(3) .aws-action-icon {
-    background: linear-gradient(135deg, var(--material-purple), var(--material-deep-purple));
-    box-shadow: 0 8px 25px rgba(156, 39, 176, 0.4);
+/* Card 3: Zarezerwowane Prezenty - YELLOW */
+.recipients-page .aws-action-section .col-lg-4:nth-child(3) .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-yellow), var(--material-amber));
+    box-shadow: 0 8px 25px rgba(255, 235, 59, 0.4);
 }
 
-.recipients-page .aws-action-section .col-lg-3:nth-child(3) .aws-action-card:hover .aws-action-icon {
-    background: linear-gradient(135deg, var(--material-deep-purple), var(--material-indigo));
-    box-shadow: 0 12px 35px rgba(103, 58, 183, 0.5);
+.recipients-page .aws-action-section .col-lg-4:nth-child(3) .aws-action-card:hover .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-amber), var(--material-orange));
+    box-shadow: 0 12px 35px rgba(255, 193, 7, 0.5);
     transform: scale(1.15) rotate(5deg);
 }
 
-/* Card 4: Dodaj Osobę (duplicate) - ORANGE */
-.recipients-page .aws-action-section .col-lg-3:nth-child(4) .aws-action-icon {
-    background: linear-gradient(135deg, var(--material-orange), var(--material-deep-orange));
-    box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4);
-}
-
-.recipients-page .aws-action-section .col-lg-3:nth-child(4) .aws-action-card:hover .aws-action-icon {
-    background: linear-gradient(135deg, var(--material-deep-orange), var(--material-red));
-    box-shadow: 0 12px 35px rgba(244, 67, 54, 0.5);
-    transform: scale(1.15) rotate(-5deg);
+/* Bookmark icon specific styling for reserved presents */
+.recipients-page .aws-action-section .col-lg-4:nth-child(3) .aws-action-icon i.fa-bookmark {
+    color: white !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
 }
 
 
@@ -822,6 +817,11 @@ html {
     font-weight: 600;
     font-size: var(--aws-font-size-md);
     margin: 0;
+    width: 100%;
+    text-align: center;
+    line-height: 1.2;
+    word-wrap: break-word;
+    hyphens: auto;
 }
 
 .recipients-page .aws-action-description {
@@ -842,36 +842,214 @@ html {
     min-height: 120px;
 }
 
+/* Specific height for action cards */
+.recipients-page .aws-action-section .main-card.compact-card .card-body {
+    height: 140px !important;
+    min-height: 140px !important;
+    max-height: 140px !important;
+    overflow: hidden !important;
+}
+
+/* Ensure action cards have equal height and fixed width */
+.recipients-page .aws-action-section .aws-action-card {
+    height: 140px !important;
+    min-height: 140px !important;
+    max-height: 140px !important;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0; /* Allow flex items to shrink below content size */
+    overflow: hidden !important;
+}
+
+.recipients-page .aws-action-section .aws-action-card .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-width: 0; /* Prevent content from expanding container */
+    box-sizing: border-box;
+}
+
 /* Action cards responsive adjustments */
-.recipients-page .aws-action-section .col-lg-3 {
+.recipients-page .aws-action-section .col-lg-4 {
     margin-bottom: 1rem;
 }
 
+/* Force equal width distribution for action cards */
+.recipients-page .aws-action-section {
+    width: 100%;
+    overflow: hidden;
+}
+
+.recipients-page .aws-action-section > .row > div {
+    flex: 1 1 33.333% !important;
+    max-width: 33.333% !important;
+    width: 33.333% !important;
+    min-width: 0 !important;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Ensure cards stay in one row */
+.recipients-page .aws-action-section .row {
+    flex-direction: row !important;
+}
+
+.recipients-page .aws-action-section [class*="col-"] {
+    flex-shrink: 0 !important;
+}
+
+/* Ensure equal width for action cards - Override Bootstrap grid */
+.recipients-page .aws-action-section .row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    margin: 0 -0.75rem;
+    width: 100%;
+    align-items: stretch !important;
+}
+
+.recipients-page .aws-action-section .col-lg-4,
+.recipients-page .aws-action-section .col-md-4,
+.recipients-page .aws-action-section .col-4 {
+    flex: 1 1 33.333% !important;
+    max-width: 33.333% !important;
+    min-width: 0;
+    padding: 0 0.75rem;
+    width: 33.333% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.recipients-page .aws-action-section .main-card {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100%;
+    overflow: hidden !important;
+}
+
+/* Mobile responsive - maintain equal width */
 @media (max-width: 768px) {
-    .recipients-page .aws-action-section .col-6 {
+    .recipients-page .aws-action-section .row {
+        margin: 0 -0.5rem;
+        flex-wrap: nowrap !important;
+        display: flex !important;
+        align-items: stretch !important;
+    }
+    
+    .recipients-page .aws-action-section .col-lg-4,
+    .recipients-page .aws-action-section .col-md-4,
+    .recipients-page .aws-action-section .col-4 {
+        flex: 1 1 33.333% !important;
+        max-width: 33.333% !important;
+        width: 33.333% !important;
+        padding: 0 0.5rem;
         margin-bottom: 0.75rem;
+        display: flex !important;
+        flex-direction: column !important;
     }
     
     .recipients-page .main-card.compact-card .card-body {
         min-height: 100px;
-        padding: 1rem;
+        padding: 0.75rem;
+    }
+    
+    .recipients-page .aws-action-section .aws-action-card {
+        height: 120px !important;
+        min-height: 120px !important;
+        max-height: 120px !important;
+        overflow: hidden !important;
+    }
+    
+    .recipients-page .aws-action-section .main-card.compact-card .card-body {
+        height: 120px !important;
+        min-height: 120px !important;
+        max-height: 120px !important;
+        overflow: hidden !important;
     }
     
     .recipients-page .aws-action-icon {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
-        max-width: 40px;
-        max-height: 40px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+        max-width: 36px;
+        max-height: 36px;
     }
     
     .recipients-page .aws-action-icon i {
-        font-size: 18px;
+        font-size: 16px;
     }
     
     .recipients-page .aws-action-title {
-        font-size: 0.875rem;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        line-height: 1.1;
+        word-break: break-word;
+        max-width: 100%;
+    }
+}
+
+/* Extra small screens - maintain equal width with smaller padding */
+@media (max-width: 576px) {
+    .recipients-page .aws-action-section .row {
+        margin: 0 -0.25rem;
+        flex-wrap: nowrap !important;
+        display: flex !important;
+        align-items: stretch !important;
+    }
+    
+    .recipients-page .aws-action-section .col-lg-4,
+    .recipients-page .aws-action-section .col-md-4,
+    .recipients-page .aws-action-section .col-4 {
+        flex: 1 1 33.333% !important;
+        max-width: 33.333% !important;
+        width: 33.333% !important;
+        padding: 0 0.25rem;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .recipients-page .main-card.compact-card .card-body {
+        padding: 0.5rem;
+        min-height: 90px;
+    }
+    
+    .recipients-page .aws-action-section .aws-action-card {
+        height: 100px !important;
+        min-height: 100px !important;
+        max-height: 100px !important;
+        overflow: hidden !important;
+    }
+    
+    .recipients-page .aws-action-section .main-card.compact-card .card-body {
+        height: 100px !important;
+        min-height: 100px !important;
+        max-height: 100px !important;
+        overflow: hidden !important;
+    }
+    
+    .recipients-page .aws-action-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+        max-width: 32px;
+        max-height: 32px;
+    }
+    
+    .recipients-page .aws-action-icon i {
+        font-size: 14px;
+    }
+    
+    .recipients-page .aws-action-title {
+        font-size: 0.7rem;
+        margin-top: 0.25rem;
+        line-height: 1.0;
+        word-break: break-word;
+        max-width: 100%;
     }
 }
 

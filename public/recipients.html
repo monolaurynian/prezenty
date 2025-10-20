@@ -50,6 +50,9 @@
                 <button id="notificationButton" class="btn btn-outline-light btn-sm me-2" onclick="requestNotificationPermission()" style="border: 2px solid white; color: white; font-weight: 500; display: none;">
                     <i class="fas fa-bell me-1"></i>Powiadomienia
                 </button>
+                <button id="testNotificationButton" class="btn btn-outline-warning btn-sm me-2" onclick="testNotification()" style="border: 2px solid #ffc107; color: #ffc107; font-weight: 500; display: none;">
+                    <i class="fas fa-vial me-1"></i>Test
+                </button>
                 <button class="btn btn-outline-light btn-sm" onclick="logout()" style="border: 2px solid white; color: white; font-weight: 500;">
                     <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
                 </button>
@@ -107,17 +110,10 @@
     </div>
 
     <div class="container mt-4">
-        <!-- Search and Filter Bar -->
-        <div class="search-filter-bar mb-4">
-
-            
-
-        </div>
-
         <!-- AWS-Style Action Cards -->
         <div class="aws-action-section mb-4">
             <div class="row g-3">
-                <div class="col-lg-3 col-md-6 col-6">
+                <div class="col-lg-4 col-md-4 col-4">
                     <div class="card main-card compact-card aws-action-card" onclick="openAddPresentModal()" 
                          data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+K">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
@@ -128,7 +124,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 col-6">
+                <div class="col-lg-4 col-md-4 col-4">
                     <div class="card main-card compact-card aws-action-card" onclick="openAddRecipientModal()"
                          data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+P">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
@@ -139,25 +135,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 col-6">
+                <div class="col-lg-4 col-md-4 col-4">
                     <div class="card main-card compact-card aws-action-card" onclick="openReservedPresentsModal()"
                          data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+B">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <div class="aws-action-icon mb-3">
                                 <i class="fas fa-bookmark"></i>
                             </div>
-                            <h6 class="aws-action-title mb-0">Zarezerwowane Prezenty</h6>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 col-6">
-                    <div class="card main-card compact-card aws-action-card" onclick="openAddRecipientModal()"
-                         data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+P">
-                        <div class="card-body text-center d-flex flex-column justify-content-center">
-                            <div class="aws-action-icon mb-3">
-                                <i class="fas fa-user-plus"></i>
-                            </div>
-                            <h6 class="aws-action-title mb-0">Dodaj Osobę</h6>
+                            <h6 class="aws-action-title mb-0">Rezerwacje</h6>
                         </div>
                     </div>
                 </div>
@@ -957,22 +942,32 @@
         }
 
         function subscribeToNotifications() {
-            navigator.serviceWorker.ready.then(function(registration) {
-                // Check if already subscribed
-                return registration.pushManager.getSubscription().then(function(existingSubscription) {
-                    if (existingSubscription) {
-                        console.log('Already subscribed:', existingSubscription);
-                        sendSubscriptionToServer(existingSubscription);
-                        return existingSubscription;
+            // First, get the VAPID public key from the server
+            fetch('/api/vapid-public-key')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.webPushAvailable) {
+                        throw new Error('Web-push module not available on server');
                     }
                     
-                    // Subscribe to push notifications
-                    return registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: urlBase64ToUint8Array('BEl62iUYgUivxIkv69yViEuiBIa40HI80YmqRcU_d2qcWAh2U5cp7C6_8AT7pRxVxIiNuSOhapA_GTfXRqXWkOU')
+                    return navigator.serviceWorker.ready.then(function(registration) {
+                        // Check if already subscribed
+                        return registration.pushManager.getSubscription().then(function(existingSubscription) {
+                            if (existingSubscription) {
+                                console.log('Already subscribed:', existingSubscription);
+                                sendSubscriptionToServer(existingSubscription);
+                                return existingSubscription;
+                            }
+                            
+                            // Subscribe to push notifications
+                            return registration.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: urlBase64ToUint8Array(data.publicKey)
+                            });
+                        });
                     });
-                });
-            }).then(function(subscription) {
+                })
+                .then(function(subscription) {
                 console.log('Push subscription successful:', subscription);
                 sendSubscriptionToServer(subscription);
                 
@@ -1003,7 +998,17 @@
                 }
             }).catch(function(error) {
                 console.error('Push subscription failed:', error);
-                showErrorToast('Błąd subskrypcji: ' + error.message);
+                
+                let errorMessage = 'Błąd subskrypcji: ';
+                if (error.message.includes('Web-push module not available')) {
+                    errorMessage += 'Serwer nie obsługuje powiadomień (brak modułu web-push)';
+                } else if (error.message.includes('Registration failed')) {
+                    errorMessage += 'Błąd rejestracji - sprawdź połączenie internetowe';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showErrorToast(errorMessage);
             });
         }
 
@@ -1037,9 +1042,50 @@
             return outputArray;
         }
 
+        // Test notification function
+        function testNotification() {
+            const testButton = document.getElementById('testNotificationButton');
+            
+            if (testButton) {
+                testButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Wysyłanie...';
+                testButton.disabled = true;
+            }
+            
+            fetch('/api/test-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessToast('Test notification sent! Check your notifications.');
+                } else {
+                    showErrorToast('Failed to send test notification: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Test notification error:', error);
+                showErrorToast('Error sending test notification: ' + error.message);
+            })
+            .finally(() => {
+                if (testButton) {
+                    testButton.innerHTML = '<i class="fas fa-vial me-1"></i>Test';
+                    testButton.disabled = false;
+                }
+            });
+        }
+
         // Check notification status when page loads
         setTimeout(() => {
             checkNotificationStatus();
+            
+            // Show test button if notifications are supported
+            const testButton = document.getElementById('testNotificationButton');
+            if (testButton && 'Notification' in window && 'serviceWorker' in navigator) {
+                testButton.style.display = 'inline-block';
+            }
         }, 1000); // Wait 1 second after page load
 
         // Debug PWA installation criteria
