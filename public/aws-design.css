@@ -803,7 +803,7 @@ html {
     transform: scale(1.15) rotate(5deg);
 }
 
-/* Card 4: Szukaj - ORANGE */
+/* Card 4: Dodaj Osobę (duplicate) - ORANGE */
 .recipients-page .aws-action-section .col-lg-3:nth-child(4) .aws-action-icon {
     background: linear-gradient(135deg, var(--material-orange), var(--material-deep-orange));
     box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4);
@@ -839,6 +839,40 @@ html {
     justify-content: center;
     text-align: center;
     height: 100%;
+    min-height: 120px;
+}
+
+/* Action cards responsive adjustments */
+.recipients-page .aws-action-section .col-lg-3 {
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .recipients-page .aws-action-section .col-6 {
+        margin-bottom: 0.75rem;
+    }
+    
+    .recipients-page .main-card.compact-card .card-body {
+        min-height: 100px;
+        padding: 1rem;
+    }
+    
+    .recipients-page .aws-action-icon {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        max-width: 40px;
+        max-height: 40px;
+    }
+    
+    .recipients-page .aws-action-icon i {
+        font-size: 18px;
+    }
+    
+    .recipients-page .aws-action-title {
+        font-size: 0.875rem;
+    }
 }
 
 .recipients-page .action-btn {
