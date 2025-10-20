@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Życzenia Prezentowe</title>
-    
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#F44336">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,7 +13,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Życzenia Prezentowe">
     <meta name="description" content="Aplikacja do zarządzania pomysłami na prezenty świąteczne">
-    
+
     <!-- Favicon and App Icons -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="seba_logo.png">
@@ -21,18 +22,19 @@
     <link rel="apple-touch-icon" sizes="152x152" href="seba_logo.png">
     <link rel="apple-touch-icon" sizes="180x180" href="seba_logo.png">
     <link rel="apple-touch-icon" sizes="167x167" href="seba_logo.png">
-    
+
     <!-- Manifest -->
     <link rel="manifest" href="manifest.json">
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="styles.deduped.min.css" rel="stylesheet">
     <link href="aws-design.css" rel="stylesheet">
 </head>
+
 <body class="recipients-page">
     <div class="background-overlay"></div>
-    
+
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -49,14 +51,16 @@
             <div class="navbar-nav ms-auto d-flex align-items-center">
                 <!-- Notification Bell -->
                 <div class="notification-bell-container me-3">
-                    <button class="notification-bell-btn" onclick="toggleNotificationDropdown()" aria-label="Powiadomienia">
+                    <button class="notification-bell-btn" onclick="toggleNotificationDropdown()"
+                        aria-label="Powiadomienia">
                         <i class="fas fa-bell"></i>
                         <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
                     </button>
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-dropdown-header">
                             <h6 class="mb-0">Powiadomienia</h6>
-                            <button class="btn btn-sm btn-link text-decoration-none" onclick="markAllAsRead()" id="markAllReadBtn" style="display: none;">
+                            <button class="btn btn-sm btn-link text-decoration-none" onclick="markAllAsRead()"
+                                id="markAllReadBtn" style="display: none;">
                                 Oznacz wszystkie
                             </button>
                         </div>
@@ -73,12 +77,36 @@
                         </div>
                     </div>
                 </div>
-                <button class="btn btn-outline-light btn-sm" onclick="logout()" style="border: 2px solid white; color: white; font-weight: 500;">
+                <button class="btn btn-outline-light btn-sm" onclick="logout()"
+                    style="border: 2px solid white; color: white; font-weight: 500;">
                     <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
                 </button>
             </div>
         </div>
     </nav>
+
+    <!-- Notification Banner -->
+    <div id="notificationBanner" class="notification-banner" style="display: none;">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <i class="fas fa-bell me-3" style="font-size: 1.2rem;"></i>
+                    <div>
+                        <strong id="bannerTitle">Masz nowe powiadomienia</strong>
+                        <div id="bannerMessage" class="small"></div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-light" onclick="window.location.href='/activity.html'">
+                        <i class="fas fa-list me-1"></i>Zobacz wszystkie
+                    </button>
+                    <button class="btn btn-sm btn-outline-light" onclick="dismissNotificationBanner()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Floating Action Button (Mobile) -->
     <div class="fab-container">
@@ -100,7 +128,8 @@
 
     <!-- Toast Container -->
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert"
+            aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">
                     <i class="fas fa-check-circle me-2"></i>
@@ -109,7 +138,8 @@
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
-        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive"
+            aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">
                     <i class="fas fa-exclamation-circle me-2"></i>
@@ -118,7 +148,8 @@
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
-        <div id="infoToast" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div id="infoToast" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive"
+            aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">
                     <i class="fas fa-info-circle me-2"></i>
@@ -134,8 +165,8 @@
         <div class="aws-action-section mb-4">
             <div class="row g-3">
                 <div class="col-lg-4 col-md-4 col-4">
-                    <div class="card main-card compact-card aws-action-card" onclick="openAddPresentModal()" 
-                         data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+K">
+                    <div class="card main-card compact-card aws-action-card" onclick="openAddPresentModal()"
+                        data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+K">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <div class="aws-action-icon mb-3">
                                 <i class="fas fa-gift"></i>
@@ -146,7 +177,7 @@
                 </div>
                 <div class="col-lg-4 col-md-4 col-4">
                     <div class="card main-card compact-card aws-action-card" onclick="openAddRecipientModal()"
-                         data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+P">
+                        data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+P">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <div class="aws-action-icon mb-3">
                                 <i class="fas fa-user-plus"></i>
@@ -157,7 +188,7 @@
                 </div>
                 <div class="col-lg-4 col-md-4 col-4">
                     <div class="card main-card compact-card aws-action-card" onclick="openReservedPresentsModal()"
-                         data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+B">
+                        data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+B">
                         <div class="card-body text-center d-flex flex-column justify-content-center">
                             <div class="aws-action-icon mb-3">
                                 <i class="fas fa-bookmark"></i>
@@ -217,8 +248,8 @@
                                         <label for="presentTitle" class="form-label aws-form-label">
                                             <i class="fas fa-gift me-1"></i>Jaki prezent?
                                         </label>
-                                        <input type="text" class="form-control aws-form-control" id="presentTitle" 
-                                               placeholder="Wprowadź nazwę prezentu" required>
+                                        <input type="text" class="form-control aws-form-control" id="presentTitle"
+                                            placeholder="Wprowadź nazwę prezentu" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -239,8 +270,8 @@
                                 <label for="presentComments" class="form-label aws-form-label">
                                     <i class="fas fa-comment me-1"></i>Dodatkowe informacje
                                 </label>
-                                <textarea class="form-control aws-form-control" id="presentComments" rows="3" 
-                                          placeholder="Opis, linki, uwagi, gdzie kupić..."></textarea>
+                                <textarea class="form-control aws-form-control" id="presentComments" rows="3"
+                                    placeholder="Opis, linki, uwagi, gdzie kupić..."></textarea>
                             </div>
                         </div>
                     </form>
@@ -281,8 +312,8 @@
                                         <label for="editPresentTitle" class="form-label aws-form-label">
                                             <i class="fas fa-gift me-1"></i>Jaki prezent?
                                         </label>
-                                        <input type="text" class="form-control aws-form-control" id="editPresentTitle" 
-                                               placeholder="Wprowadź nazwę prezentu" required>
+                                        <input type="text" class="form-control aws-form-control" id="editPresentTitle"
+                                            placeholder="Wprowadź nazwę prezentu" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -302,8 +333,8 @@
                                 <label for="editPresentComments" class="form-label aws-form-label">
                                     <i class="fas fa-comment me-1"></i>Dodatkowe informacje
                                 </label>
-                                <textarea class="form-control aws-form-control" id="editPresentComments" rows="3" 
-                                          placeholder="Opis, linki, uwagi, gdzie kupić..."></textarea>
+                                <textarea class="form-control aws-form-control" id="editPresentComments" rows="3"
+                                    placeholder="Opis, linki, uwagi, gdzie kupić..."></textarea>
                             </div>
                         </div>
                     </form>
@@ -361,7 +392,8 @@
                     <form id="addRecipientForm">
                         <div class="mb-3">
                             <label for="recipientName" class="form-label">Imię i nazwisko</label>
-                            <input type="text" class="form-control" id="recipientName" placeholder="Wprowadź imię i nazwisko" required>
+                            <input type="text" class="form-control" id="recipientName"
+                                placeholder="Wprowadź imię i nazwisko" required>
                         </div>
                     </form>
                     <div id="addRecipientMessage" class="alert mt-3" style="display: none;"></div>
@@ -388,22 +420,22 @@
                     <form id="profilePictureForm">
                         <div class="mb-3">
                             <label for="profilePictureFile" class="form-label">Wybierz plik</label>
-                            <input type="file" class="form-control" id="profilePictureFile" 
-                                   accept="image/*" onchange="previewImage(this)">
+                            <input type="file" class="form-control" id="profilePictureFile" accept="image/*"
+                                onchange="previewImage(this)">
                             <div class="form-text">Wybierz plik obrazu (JPG, PNG, GIF)</div>
                         </div>
                         <div class="mb-3">
                             <label for="profilePictureUrl" class="form-label">Lub wklej URL zdjęcia</label>
-                            <input type="url" class="form-control" id="profilePictureUrl" 
-                                   placeholder="https://example.com/photo.jpg">
+                            <input type="url" class="form-control" id="profilePictureUrl"
+                                placeholder="https://example.com/photo.jpg">
                             <div class="form-text">Alternatywnie wklej link do zdjęcia</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Podgląd:</label>
                             <div class="text-center">
-                                <img id="profilePicturePreview" src="" alt="Podgląd" 
-                                     style="max-width: 200px; max-height: 200px; display: none;" 
-                                     class="img-fluid rounded">
+                                <img id="profilePicturePreview" src="" alt="Podgląd"
+                                    style="max-width: 200px; max-height: 200px; display: none;"
+                                    class="img-fluid rounded">
                             </div>
                         </div>
                     </form>
@@ -432,19 +464,26 @@
                             <i class="fas fa-user-circle fa-3x text-primary"></i>
                         </div>
                         <h6 class="text-muted mb-3">Czy to jesteś Ty?</h6>
-                        <p class="mb-0">Chcesz zidentyfikować się jako <strong id="identificationRecipientName" class="text-primary"></strong>?</p>
-                        <small class="text-muted d-block mt-2">Po identyfikacji będziesz mógł zarządzać swoimi prezentami</small>
+                        <p class="mb-0">Chcesz zidentyfikować się jako <strong id="identificationRecipientName"
+                                class="text-primary"></strong>?</p>
+                        <small class="text-muted d-block mt-2">Po identyfikacji będziesz mógł zarządzać swoimi
+                            prezentami</small>
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center">
                     <div class="d-flex flex-column flex-md-row gap-3 w-100 justify-content-center align-items-center">
-                        <button type="button" class="btn btn-secondary btn-lg order-3 order-md-1" data-bs-dismiss="modal" style="min-width: 140px;">
+                        <button type="button" class="btn btn-secondary btn-lg order-3 order-md-1"
+                            data-bs-dismiss="modal" style="min-width: 140px;">
                             <i class="fas fa-times me-1"></i>Anuluj
                         </button>
-                        <button type="button" class="btn btn-warning btn-lg order-2" onclick="showRecipientSelectionModal()" style="background: linear-gradient(135deg, #ffc107, #e0a800); border: 2px solid #ffc107; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3); min-width: 160px;">
+                        <button type="button" class="btn btn-warning btn-lg order-2"
+                            onclick="showRecipientSelectionModal()"
+                            style="background: linear-gradient(135deg, #ffc107, #e0a800); border: 2px solid #ffc107; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3); min-width: 160px;">
                             <i class="fas fa-search me-1"></i>Nie, to nie ja
                         </button>
-                        <button type="button" class="btn btn-success btn-lg order-1 order-md-3" onclick="confirmSelfIdentification()" style="background: linear-gradient(135deg, #28a745, #1e7e34); border: 2px solid #28a745; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); min-width: 180px;">
+                        <button type="button" class="btn btn-success btn-lg order-1 order-md-3"
+                            onclick="confirmSelfIdentification()"
+                            style="background: linear-gradient(135deg, #28a745, #1e7e34); border: 2px solid #28a745; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); min-width: 180px;">
                             <i class="fas fa-check me-1"></i>Tak, to jestem ja
                         </button>
                     </div>
@@ -471,7 +510,7 @@
                         <h6 class="text-muted">Która osoba to Ty?</h6>
                         <p class="text-muted mb-0">Wybierz swoje imię z listy lub dodaj nowe</p>
                     </div>
-                    
+
                     <div class="mb-4">
                         <h6 class="mb-3">
                             <i class="fas fa-list me-2"></i>Dostępne osoby:
@@ -480,25 +519,27 @@
                             <!-- Lista będzie generowana dynamicznie -->
                         </div>
                     </div>
-                    
+
                     <hr class="my-4">
-                    
+
                     <div class="mb-3">
                         <h6 class="mb-3">
                             <i class="fas fa-plus-circle me-2"></i>Dodaj nową osobę:
                         </h6>
                         <form id="newRecipientForm">
                             <div class="mb-3">
-                                <input type="text" class="form-control" id="newRecipientName" 
-                                       placeholder="Wprowadź swoje imię i nazwisko" required
-                                       style="border: 2px solid #007bff; border-radius: 8px; padding: 12px; font-size: 16px;">
+                                <input type="text" class="form-control" id="newRecipientName"
+                                    placeholder="Wprowadź swoje imię i nazwisko" required
+                                    style="border: 2px solid #007bff; border-radius: 8px; padding: 12px; font-size: 16px;">
                             </div>
                             <div class="mb-3">
-                                <button type="button" class="btn btn-success w-100" onclick="addNewRecipientAndIdentify()">
+                                <button type="button" class="btn btn-success w-100"
+                                    onclick="addNewRecipientAndIdentify()">
                                     <i class="fas fa-plus me-1"></i>Dodaj i zidentyfikuj
                                 </button>
                             </div>
-                            <small class="text-muted d-block mt-2">Jeśli nie widzisz swojego imienia, dodaj je tutaj</small>
+                            <small class="text-muted d-block mt-2">Jeśli nie widzisz swojego imienia, dodaj je
+                                tutaj</small>
                         </form>
                     </div>
                     <div id="recipientSelectionMessage" class="alert mt-3" style="display: none;"></div>
@@ -521,12 +562,14 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Czy na pewno chcesz anulować identyfikację jako <strong id="cancelIdentificationRecipientName"></strong>?</p>
+                    <p>Czy na pewno chcesz anulować identyfikację jako <strong
+                            id="cancelIdentificationRecipientName"></strong>?</p>
                     <p class="text-muted">Po anulowaniu będziesz mógł ponownie zidentyfikować się jako ta osoba.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                    <button type="button" class="btn btn-danger" onclick="confirmCancelIdentification()">Tak, anuluj identyfikację</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmCancelIdentification()">Tak, anuluj
+                        identyfikację</button>
                 </div>
             </div>
         </div>
@@ -553,7 +596,8 @@
     </div>
 
     <!-- Modal potwierdzenia usunięcia osoby -->
-    <div class="modal fade" id="confirmDeleteRecipientModal" tabindex="-1" aria-labelledby="confirmDeleteRecipientModalLabel" aria-hidden="true">
+    <div class="modal fade" id="confirmDeleteRecipientModal" tabindex="-1"
+        aria-labelledby="confirmDeleteRecipientModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -610,8 +654,8 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-4 text-center mb-4">
-                            <img id="recipientDetailsImage" src="" alt="Zdjęcie profilowe" 
-                                 class="img-fluid rounded-circle mb-3" style="max-width: 200px; max-height: 200px;">
+                            <img id="recipientDetailsImage" src="" alt="Zdjęcie profilowe"
+                                class="img-fluid rounded-circle mb-3" style="max-width: 200px; max-height: 200px;">
                             <h6 id="recipientDetailsName2" class="text-primary"></h6>
                         </div>
                         <div class="col-md-8">
@@ -664,12 +708,14 @@
                     <form id="changePictureForm">
                         <div class="mb-3">
                             <label for="newProfilePicture" class="form-label">Wybierz nowe zdjęcie:</label>
-                            <input type="file" class="form-control" id="newProfilePicture" name="profile_picture" accept="image/*" required>
+                            <input type="file" class="form-control" id="newProfilePicture" name="profile_picture"
+                                accept="image/*" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Podgląd:</label>
                             <div id="imagePreview" class="text-center" style="display: none;">
-                                <img id="previewImage" src="" alt="Podgląd" class="img-fluid rounded" style="max-width: 200px; max-height: 200px;">
+                                <img id="previewImage" src="" alt="Podgląd" class="img-fluid rounded"
+                                    style="max-width: 200px; max-height: 200px;">
                             </div>
                         </div>
                     </form>
@@ -685,7 +731,8 @@
     </div>
 
     <!-- Profile Picture Preview Modal -->
-    <div class="modal fade profile-preview-modal" id="profilePreviewModal" tabindex="-1" aria-labelledby="profilePreviewModalLabel" aria-hidden="true">
+    <div class="modal fade profile-preview-modal" id="profilePreviewModal" tabindex="-1"
+        aria-labelledby="profilePreviewModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-header">
@@ -701,15 +748,15 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- PWA Install Script -->
     <script>
         let recipientsDeferredPrompt;
-        
+
         // Add click event listener to logo
         const logoContainer = document.querySelector('.brand-logo-container');
         if (logoContainer) {
-            logoContainer.addEventListener('click', function(event) {
+            logoContainer.addEventListener('click', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 showInstallInstructions();
@@ -726,7 +773,7 @@
 
         function showInstallInstructions() {
             console.log('showInstallInstructions() called');
-            
+
             // Try native prompt first if available
             if (recipientsDeferredPrompt) {
                 console.log('Using native PWA install prompt');
@@ -743,20 +790,20 @@
                 });
                 return;
             }
-            
+
             // Show manual instructions if native prompt not available
             showManualInstallInstructions();
         }
-        
+
         function showManualInstallInstructions() {
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             const isAndroid = /Android/.test(navigator.userAgent);
             const isChrome = /Chrome/.test(navigator.userAgent);
             const isEdge = /Edg/.test(navigator.userAgent);
-            
+
             let instructions = '';
             let title = 'Zainstaluj aplikację';
-            
+
             if (isIOS) {
                 title = 'Dodaj do ekranu głównego';
                 instructions = `
@@ -827,7 +874,7 @@
                     </ul>
                 `;
             }
-            
+
             // Create and show modal
             const modal = document.createElement('div');
             modal.className = 'modal fade';
@@ -852,11 +899,11 @@
                     </div>
                 </div>
             `;
-            
+
             document.body.appendChild(modal);
             const bootstrapModal = new bootstrap.Modal(modal);
             bootstrapModal.show();
-            
+
             // Remove modal from DOM when hidden
             modal.addEventListener('hidden.bs.modal', () => {
                 document.body.removeChild(modal);
@@ -882,11 +929,11 @@
 
         // Notification Bell Functions
         let notificationDropdownOpen = false;
-        
+
         function toggleNotificationDropdown() {
             const dropdown = document.getElementById('notificationDropdown');
             notificationDropdownOpen = !notificationDropdownOpen;
-            
+
             if (notificationDropdownOpen) {
                 dropdown.classList.add('show');
                 loadRecentNotifications();
@@ -894,18 +941,22 @@
                 dropdown.classList.remove('show');
             }
         }
-        
+
         function loadUnreadCount() {
             fetch('/api/notifications/unread-count')
                 .then(response => response.json())
                 .then(data => {
                     updateBadgeCount(data.count);
+                    // Show banner if there are unread notifications
+                    if (data.count > 0) {
+                        showNotificationBanner(data.count);
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading unread count:', error);
                 });
         }
-        
+
         function updateBadgeCount(count) {
             const badge = document.getElementById('notificationBadge');
             if (count > 0) {
@@ -915,14 +966,14 @@
                 badge.style.display = 'none';
             }
         }
-        
+
         function loadRecentNotifications() {
             const body = document.getElementById('notificationDropdownBody');
             const footer = document.getElementById('notificationDropdownFooter');
             const markAllBtn = document.getElementById('markAllReadBtn');
-            
+
             body.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
-            
+
             fetch('/api/notifications?limit=5')
                 .then(response => response.json())
                 .then(data => {
@@ -939,12 +990,12 @@
                     body.innerHTML = '<div class="text-center py-3 text-danger"><i class="fas fa-exclamation-circle"></i> Błąd ładowania</div>';
                 });
         }
-        
+
         function renderNotification(notification) {
             const config = getNotificationConfig(notification.type);
             const isUnread = !notification.is_read;
             const timeAgo = getTimeAgo(notification.created_at);
-            
+
             return `
                 <div class="notification-item ${isUnread ? 'unread' : ''}" onclick="markNotificationAsRead(${notification.id})">
                     <div class="notification-icon" style="color: ${config.color}">
@@ -960,7 +1011,7 @@
                 </div>
             `;
         }
-        
+
         function getNotificationConfig(type) {
             const configs = {
                 recipient_added: {
@@ -996,7 +1047,7 @@
             };
             return configs[type] || configs.present_added;
         }
-        
+
         function getTimeAgo(timestamp) {
             const now = new Date();
             const time = new Date(timestamp);
@@ -1004,62 +1055,79 @@
             const diffMins = Math.floor(diffMs / 60000);
             const diffHours = Math.floor(diffMs / 3600000);
             const diffDays = Math.floor(diffMs / 86400000);
-            
+
             if (diffMins < 1) return 'Teraz';
             if (diffMins < 60) return `${diffMins} min temu`;
             if (diffHours < 24) return `${diffHours} godz. temu`;
             if (diffDays < 7) return `${diffDays} dni temu`;
             return time.toLocaleDateString('pl-PL');
         }
-        
+
         function markNotificationAsRead(notificationId) {
             fetch(`/api/notifications/${notificationId}/read`, {
                 method: 'POST'
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    updateBadgeCount(data.unreadCount);
-                    loadRecentNotifications();
-                }
-            })
-            .catch(error => {
-                console.error('Error marking notification as read:', error);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateBadgeCount(data.unreadCount);
+                        loadRecentNotifications();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking notification as read:', error);
+                });
         }
-        
+
         function markAllAsRead() {
             fetch('/api/notifications/read-all', {
                 method: 'POST'
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    updateBadgeCount(0);
-                    loadRecentNotifications();
-                    showSuccessToast('Wszystkie powiadomienia oznaczone jako przeczytane');
-                }
-            })
-            .catch(error => {
-                console.error('Error marking all as read:', error);
-                showErrorToast('Błąd podczas oznaczania powiadomień');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateBadgeCount(0);
+                        loadRecentNotifications();
+                        dismissNotificationBanner();
+                        showSuccessToast('Wszystkie powiadomienia oznaczone jako przeczytane');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking all as read:', error);
+                    showErrorToast('Błąd podczas oznaczania powiadomień');
+                });
         }
-        
+
+        // Notification Banner Functions
+        function showNotificationBanner(count) {
+            const banner = document.getElementById('notificationBanner');
+            const bannerMessage = document.getElementById('bannerMessage');
+
+            if (count > 0) {
+                bannerMessage.textContent = `Masz ${count} ${count === 1 ? 'nowe powiadomienie' : count < 5 ? 'nowe powiadomienia' : 'nowych powiadomień'}`;
+                banner.style.display = 'block';
+            }
+        }
+
+        function dismissNotificationBanner() {
+            const banner = document.getElementById('notificationBanner');
+            banner.style.display = 'none';
+        }
+
         // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const dropdown = document.getElementById('notificationDropdown');
             const bellBtn = document.querySelector('.notification-bell-btn');
-            
+
             if (notificationDropdownOpen && dropdown && bellBtn) {
                 if (!dropdown.contains(event.target) && !bellBtn.contains(event.target)) {
                     toggleNotificationDropdown();
                 }
             }
         });
-        
+
         // Load unread count on page load and poll every 30 seconds
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadUnreadCount();
             setInterval(loadUnreadCount, 30000); // Poll every 30 seconds
         });
@@ -1067,7 +1135,7 @@
         // Push notification functions
         function requestNotificationPermission() {
             const notificationButton = document.getElementById('notificationButton');
-            
+
             // Check if notifications are supported
             if (!('Notification' in window)) {
                 showErrorToast('Powiadomienia nie są obsługiwane w tej przeglądarce');
@@ -1077,21 +1145,21 @@
                 }
                 return;
             }
-            
+
             if (!('serviceWorker' in navigator)) {
                 showErrorToast('Service Worker nie jest obsługiwany');
                 return;
             }
-            
+
             // Show loading state
             if (notificationButton) {
                 notificationButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Ładowanie...';
                 notificationButton.disabled = true;
             }
-            
-            Notification.requestPermission().then(function(permission) {
+
+            Notification.requestPermission().then(function (permission) {
                 console.log('Notification permission:', permission);
-                
+
                 if (permission === 'granted') {
                     showSuccessToast('Powiadomienia włączone!');
                     subscribeToNotifications();
@@ -1111,7 +1179,7 @@
                         notificationButton.disabled = false;
                     }
                 }
-            }).catch(function(error) {
+            }).catch(function (error) {
                 console.error('Error requesting notification permission:', error);
                 showErrorToast('Błąd podczas włączania powiadomień');
                 if (notificationButton) {
@@ -1120,11 +1188,11 @@
                 }
             });
         }
-        
+
         // Check notification permission status and show button if needed
         function checkNotificationStatus() {
             const notificationButton = document.getElementById('notificationButton');
-            
+
             if ('Notification' in window && 'serviceWorker' in navigator) {
                 if (Notification.permission === 'default') {
                     if (notificationButton) {
@@ -1153,16 +1221,16 @@
                     if (!data.webPushAvailable) {
                         throw new Error('Web-push module not available on server');
                     }
-                    
-                    return navigator.serviceWorker.ready.then(function(registration) {
+
+                    return navigator.serviceWorker.ready.then(function (registration) {
                         // Check if already subscribed
-                        return registration.pushManager.getSubscription().then(function(existingSubscription) {
+                        return registration.pushManager.getSubscription().then(function (existingSubscription) {
                             if (existingSubscription) {
                                 console.log('Already subscribed:', existingSubscription);
                                 sendSubscriptionToServer(existingSubscription);
                                 return existingSubscription;
                             }
-                            
+
                             // Subscribe to push notifications
                             return registration.pushManager.subscribe({
                                 userVisibleOnly: true,
@@ -1171,49 +1239,49 @@
                         });
                     });
                 })
-                .then(function(subscription) {
-                console.log('Push subscription successful:', subscription);
-                sendSubscriptionToServer(subscription);
-                
-                // Test notification
-                if (Notification.permission === 'granted') {
-                    try {
-                        new Notification('Życzenia Prezentowe', {
-                            body: 'Powiadomienia zostały włączone! 🎄',
-                            icon: '/seba_logo.png',
-                            badge: '/seba_logo.png',
-                            tag: 'test-notification',
-                            requireInteraction: false
-                        });
-                    } catch (error) {
-                        console.error('Error creating notification:', error);
-                        // Fallback: show via service worker
-                        if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
-                            navigator.serviceWorker.ready.then(registration => {
-                                registration.showNotification('Życzenia Prezentowe', {
-                                    body: 'Powiadomienia zostały włączone! 🎄',
-                                    icon: '/seba_logo.png',
-                                    badge: '/seba_logo.png',
-                                    tag: 'test-notification'
-                                });
+                .then(function (subscription) {
+                    console.log('Push subscription successful:', subscription);
+                    sendSubscriptionToServer(subscription);
+
+                    // Test notification
+                    if (Notification.permission === 'granted') {
+                        try {
+                            new Notification('Życzenia Prezentowe', {
+                                body: 'Powiadomienia zostały włączone! 🎄',
+                                icon: '/seba_logo.png',
+                                badge: '/seba_logo.png',
+                                tag: 'test-notification',
+                                requireInteraction: false
                             });
+                        } catch (error) {
+                            console.error('Error creating notification:', error);
+                            // Fallback: show via service worker
+                            if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+                                navigator.serviceWorker.ready.then(registration => {
+                                    registration.showNotification('Życzenia Prezentowe', {
+                                        body: 'Powiadomienia zostały włączone! 🎄',
+                                        icon: '/seba_logo.png',
+                                        badge: '/seba_logo.png',
+                                        tag: 'test-notification'
+                                    });
+                                });
+                            }
                         }
                     }
-                }
-            }).catch(function(error) {
-                console.error('Push subscription failed:', error);
-                
-                let errorMessage = 'Błąd subskrypcji: ';
-                if (error.message.includes('Web-push module not available')) {
-                    errorMessage += 'Serwer nie obsługuje powiadomień (brak modułu web-push)';
-                } else if (error.message.includes('Registration failed')) {
-                    errorMessage += 'Błąd rejestracji - sprawdź połączenie internetowe';
-                } else {
-                    errorMessage += error.message;
-                }
-                
-                showErrorToast(errorMessage);
-            });
+                }).catch(function (error) {
+                    console.error('Push subscription failed:', error);
+
+                    let errorMessage = 'Błąd subskrypcji: ';
+                    if (error.message.includes('Web-push module not available')) {
+                        errorMessage += 'Serwer nie obsługuje powiadomień (brak modułu web-push)';
+                    } else if (error.message.includes('Registration failed')) {
+                        errorMessage += 'Błąd rejestracji - sprawdź połączenie internetowe';
+                    } else {
+                        errorMessage += error.message;
+                    }
+
+                    showErrorToast(errorMessage);
+                });
         }
 
         function sendSubscriptionToServer(subscription) {
@@ -1221,7 +1289,7 @@
                 endpoint: subscription.endpoint.substring(0, 50) + '...',
                 hasKeys: !!(subscription.keys && subscription.keys.p256dh && subscription.keys.auth)
             });
-            
+
             fetch('/api/notifications/subscribe', {
                 method: 'POST',
                 headers: {
@@ -1229,14 +1297,14 @@
                 },
                 body: JSON.stringify(subscription)
             }).then(response => response.json())
-            .then(data => {
-                console.log('✅ Subscription saved successfully:', data);
-                if (data.userSubscriptions !== undefined) {
-                    console.log(`📊 You have ${data.userSubscriptions} subscription(s). Total system: ${data.totalSubscriptions}`);
-                }
-            }).catch(error => {
-                console.error('❌ Error sending subscription to server:', error);
-            });
+                .then(data => {
+                    console.log('✅ Subscription saved successfully:', data);
+                    if (data.userSubscriptions !== undefined) {
+                        console.log(`📊 You have ${data.userSubscriptions} subscription(s). Total system: ${data.totalSubscriptions}`);
+                    }
+                }).catch(error => {
+                    console.error('❌ Error sending subscription to server:', error);
+                });
         }
 
         function urlBase64ToUint8Array(base64String) {
@@ -1257,12 +1325,12 @@
         // Test notification function
         function testNotification() {
             const testButton = document.getElementById('testNotificationButton');
-            
+
             if (testButton) {
                 testButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Wysyłanie...';
                 testButton.disabled = true;
             }
-            
+
             fetch('/api/test-notification', {
                 method: 'POST',
                 headers: {
@@ -1272,30 +1340,30 @@
                     includeCurrentUser: true  // Send to yourself for testing
                 })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showSuccessToast('Test notification sent! You should receive it in a few seconds.');
-                } else {
-                    showErrorToast('Failed to send test notification: ' + (data.error || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Test notification error:', error);
-                showErrorToast('Error sending test notification: ' + error.message);
-            })
-            .finally(() => {
-                if (testButton) {
-                    testButton.innerHTML = '<i class="fas fa-vial me-1"></i>Test';
-                    testButton.disabled = false;
-                }
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccessToast('Test notification sent! You should receive it in a few seconds.');
+                    } else {
+                        showErrorToast('Failed to send test notification: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Test notification error:', error);
+                    showErrorToast('Error sending test notification: ' + error.message);
+                })
+                .finally(() => {
+                    if (testButton) {
+                        testButton.innerHTML = '<i class="fas fa-vial me-1"></i>Test';
+                        testButton.disabled = false;
+                    }
+                });
         }
 
         // Check notification status when page loads
         setTimeout(() => {
             checkNotificationStatus();
-            
+
             // Show test button if notifications are supported
             const testButton = document.getElementById('testNotificationButton');
             if (testButton && 'Notification' in window && 'serviceWorker' in navigator) {
@@ -1312,7 +1380,7 @@
             userAgent: navigator.userAgent
         });
     </script>
-    
+
     <!-- Notification Bell Script -->
     <script>
         // Notification configuration
@@ -1376,7 +1444,7 @@
         function toggleNotificationDropdown() {
             const dropdown = document.getElementById('notificationDropdown');
             const isOpen = dropdown.classList.contains('show');
-            
+
             if (isOpen) {
                 dropdown.classList.remove('show');
             } else {
@@ -1386,10 +1454,10 @@
         }
 
         // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const dropdown = document.getElementById('notificationDropdown');
             const bellBtn = document.querySelector('.notification-bell-btn');
-            
+
             if (!dropdown.contains(event.target) && !bellBtn.contains(event.target)) {
                 dropdown.classList.remove('show');
             }
@@ -1399,16 +1467,16 @@
         function loadRecentNotifications() {
             const body = document.getElementById('notificationDropdownBody');
             body.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p class="mb-0">Ładowanie...</p></div>';
-            
+
             fetch('/api/notifications?limit=5')
                 .then(response => response.json())
                 .then(data => {
                     displayNotificationsInDropdown(data.notifications);
-                    
+
                     // Show/hide footer
                     const footer = document.getElementById('notificationDropdownFooter');
                     footer.style.display = data.hasMore ? 'block' : 'none';
-                    
+
                     // Show/hide mark all button
                     const markAllBtn = document.getElementById('markAllReadBtn');
                     markAllBtn.style.display = data.unreadCount > 0 ? 'inline-block' : 'none';
@@ -1422,19 +1490,19 @@
         // Display notifications in dropdown
         function displayNotificationsInDropdown(notifications) {
             const body = document.getElementById('notificationDropdownBody');
-            
+
             if (notifications.length === 0) {
                 body.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-bell-slash fa-2x mb-2"></i><p class="mb-0">Brak powiadomień</p></div>';
                 return;
             }
-            
+
             const html = notifications.map(notification => {
                 const config = notificationConfig[notification.type];
                 if (!config) return '';
-                
+
                 const isUnread = !notification.is_read;
                 const timeAgo = getTimeAgo(notification.created_at);
-                
+
                 return `
                     <div class="notification-dropdown-item ${isUnread ? 'unread' : ''}" 
                          onclick="markNotificationAsRead(${notification.id})">
@@ -1449,7 +1517,7 @@
                     </div>
                 `;
             }).join('');
-            
+
             body.innerHTML = html;
         }
 
@@ -1458,26 +1526,26 @@
             fetch(`/api/notifications/${notificationId}/read`, {
                 method: 'POST'
             })
-            .then(response => response.json())
-            .then(data => {
-                // Update badge
-                updateBadge(data.unreadCount);
-                
-                // Update dropdown item
-                const item = document.querySelector(`[onclick="markNotificationAsRead(${notificationId})"]`);
-                if (item) {
-                    item.classList.remove('unread');
-                    const dot = item.querySelector('.notification-unread-dot');
-                    if (dot) dot.remove();
-                }
-                
-                // Update mark all button visibility
-                const markAllBtn = document.getElementById('markAllReadBtn');
-                markAllBtn.style.display = data.unreadCount > 0 ? 'inline-block' : 'none';
-            })
-            .catch(error => {
-                console.error('Error marking notification as read:', error);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    // Update badge
+                    updateBadge(data.unreadCount);
+
+                    // Update dropdown item
+                    const item = document.querySelector(`[onclick="markNotificationAsRead(${notificationId})"]`);
+                    if (item) {
+                        item.classList.remove('unread');
+                        const dot = item.querySelector('.notification-unread-dot');
+                        if (dot) dot.remove();
+                    }
+
+                    // Update mark all button visibility
+                    const markAllBtn = document.getElementById('markAllReadBtn');
+                    markAllBtn.style.display = data.unreadCount > 0 ? 'inline-block' : 'none';
+                })
+                .catch(error => {
+                    console.error('Error marking notification as read:', error);
+                });
         }
 
         // Mark all as read
@@ -1485,26 +1553,26 @@
             const btn = document.getElementById('markAllReadBtn');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            
+
             fetch('/api/notifications/read-all', {
                 method: 'POST'
             })
-            .then(response => response.json())
-            .then(data => {
-                // Update badge
-                updateBadge(0);
-                
-                // Reload notifications
-                loadRecentNotifications();
-                
-                btn.disabled = false;
-                btn.innerHTML = 'Oznacz wszystkie';
-            })
-            .catch(error => {
-                console.error('Error marking all as read:', error);
-                btn.disabled = false;
-                btn.innerHTML = 'Oznacz wszystkie';
-            });
+                .then(response => response.json())
+                .then(data => {
+                    // Update badge
+                    updateBadge(0);
+
+                    // Reload notifications
+                    loadRecentNotifications();
+
+                    btn.disabled = false;
+                    btn.innerHTML = 'Oznacz wszystkie';
+                })
+                .catch(error => {
+                    console.error('Error marking all as read:', error);
+                    btn.disabled = false;
+                    btn.innerHTML = 'Oznacz wszystkie';
+                });
         }
 
         // Get time ago string
@@ -1512,22 +1580,23 @@
             const now = new Date();
             const then = new Date(timestamp);
             const seconds = Math.floor((now - then) / 1000);
-            
+
             if (seconds < 60) return 'przed chwilą';
             if (seconds < 3600) return `${Math.floor(seconds / 60)} min temu`;
             if (seconds < 86400) return `${Math.floor(seconds / 3600)} godz. temu`;
             if (seconds < 604800) return `${Math.floor(seconds / 86400)} dni temu`;
-            
+
             return then.toLocaleDateString('pl-PL');
         }
 
         // Load unread count on page load
         loadUnreadCount();
-        
+
         // Poll for updates every 30 seconds
         setInterval(loadUnreadCount, 30000);
     </script>
-    
+
     <script src="recipients.js?v=7&t=1111111111"></script>
 </body>
-</html> 
+
+</html>
