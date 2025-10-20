@@ -29,7 +29,7 @@
     <div class="background-overlay"></div>
     
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px);">
         <div class="container">
             <a class="navbar-brand" href="/recipients">
                 <div class="brand-container">
@@ -42,10 +42,10 @@
                 </div>
             </a>
             <div class="navbar-nav ms-auto d-flex align-items-center">
-                <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='/recipients'" style="border: 2px solid white; font-weight: 500;">
-                    <i class="fas fa-home me-1"></i>Strona główna
+                <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='/recipients'" style="border: 2px solid white; font-weight: 500; color: white;">
+                    <i class="fas fa-home me-1"></i><span class="d-none d-sm-inline">Strona główna</span><span class="d-inline d-sm-none">Główna</span>
                 </button>
-                <button class="btn btn-outline-light btn-sm" onclick="logout()" style="border: 2px solid white; font-weight: 500;">
+                <button class="btn btn-outline-light btn-sm" onclick="logout()" style="border: 2px solid white; font-weight: 500; color: white;">
                     <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
                 </button>
             </div>
@@ -57,12 +57,12 @@
         <div class="row">
             <div class="col-12">
                 <!-- Header -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="text-white">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <h2 class="text-white mb-0">
                         <i class="fas fa-bell me-2"></i>Aktywność
                     </h2>
                     <button class="btn btn-outline-light btn-sm" onclick="markAllAsRead()" id="markAllReadBtn">
-                        <i class="fas fa-check-double me-1"></i>Oznacz wszystkie jako przeczytane
+                        <i class="fas fa-check-double me-1"></i><span class="d-none d-md-inline">Oznacz wszystkie jako przeczytane</span><span class="d-inline d-md-none">Oznacz wszystkie</span>
                     </button>
                 </div>
 

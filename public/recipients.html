@@ -49,34 +49,6 @@
                 </div>
             </a>
             <div class="navbar-nav ms-auto d-flex align-items-center">
-                <!-- Notification Bell -->
-                <div class="notification-bell-container me-3">
-                    <button class="notification-bell-btn" onclick="toggleNotificationDropdown()"
-                        aria-label="Powiadomienia">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
-                    </button>
-                    <div class="notification-dropdown" id="notificationDropdown">
-                        <div class="notification-dropdown-header">
-                            <h6 class="mb-0">Powiadomienia</h6>
-                            <button class="btn btn-sm btn-link text-decoration-none" onclick="markAllAsRead()"
-                                id="markAllReadBtn" style="display: none;">
-                                Oznacz wszystkie
-                            </button>
-                        </div>
-                        <div class="notification-dropdown-body" id="notificationDropdownBody">
-                            <div class="text-center py-4 text-muted">
-                                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
-                                <p class="mb-0">Ładowanie...</p>
-                            </div>
-                        </div>
-                        <div class="notification-dropdown-footer">
-                            <a href="/activity.html" class="btn btn-sm btn-link text-decoration-none w-100">
-                                <i class="fas fa-list me-1"></i>Zobacz wszystkie powiadomienia
-                            </a>
-                        </div>
-                    </div>
-                </div>
                 <button class="btn btn-outline-light btn-sm" onclick="logout()"
                     style="border: 2px solid white; color: white; font-weight: 500;">
                     <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
@@ -104,6 +76,34 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Notification Bell -->
+    <div class="notification-bell-floating">
+        <button class="notification-bell-btn" onclick="toggleNotificationDropdown()" aria-label="Powiadomienia">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+        </button>
+        <div class="notification-dropdown" id="notificationDropdown">
+            <div class="notification-dropdown-header">
+                <h6 class="mb-0">Powiadomienia</h6>
+                <button class="btn btn-sm btn-link text-decoration-none" onclick="markAllAsRead()" id="markAllReadBtn"
+                    style="display: none;">
+                    Oznacz wszystkie
+                </button>
+            </div>
+            <div class="notification-dropdown-body" id="notificationDropdownBody">
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                    <p class="mb-0">Ładowanie...</p>
+                </div>
+            </div>
+            <div class="notification-dropdown-footer">
+                <a href="/activity.html" class="btn btn-sm btn-link text-decoration-none w-100">
+                    <i class="fas fa-list me-1"></i>Zobacz wszystkie powiadomienia
+                </a>
             </div>
         </div>
     </div>
@@ -969,8 +969,9 @@
 
         function loadRecentNotifications() {
             const body = document.getElementById('notificationDropdownBody');
-            const footer = document.getElementById('notificationDropdownFooter');
             const markAllBtn = document.getElementById('markAllReadBtn');
+
+            if (!body) return;
 
             body.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i></div>';
 
@@ -979,15 +980,15 @@
                 .then(data => {
                     if (data.notifications.length === 0) {
                         body.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-bell-slash fa-2x mb-2"></i><p class="mb-0">Brak powiadomień</p></div>';
-                        markAllBtn.style.display = 'none';
+                        if (markAllBtn) markAllBtn.style.display = 'none';
                     } else {
                         body.innerHTML = data.notifications.map(n => renderNotification(n)).join('');
-                        markAllBtn.style.display = data.unreadCount > 0 ? 'inline-block' : 'none';
+                        if (markAllBtn) markAllBtn.style.display = data.unreadCount > 0 ? 'inline-block' : 'none';
                     }
                 })
                 .catch(error => {
                     console.error('Error loading notifications:', error);
-                    body.innerHTML = '<div class="text-center py-3 text-danger"><i class="fas fa-exclamation-circle"></i> Błąd ładowania</div>';
+                    if (body) body.innerHTML = '<div class="text-center py-3 text-danger"><i class="fas fa-exclamation-circle"></i> Błąd ładowania</div>';
                 });
         }
 
@@ -1463,131 +1464,7 @@
             }
         });
 
-        // Load recent notifications
-        function loadRecentNotifications() {
-            const body = document.getElementById('notificationDropdownBody');
-            body.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p class="mb-0">Ładowanie...</p></div>';
-
-            fetch('/api/notifications?limit=5')
-                .then(response => response.json())
-                .then(data => {
-                    displayNotificationsInDropdown(data.notifications);
-
-                    // Show/hide footer
-                    const footer = document.getElementById('notificationDropdownFooter');
-                    footer.style.display = data.hasMore ? 'block' : 'none';
-
-                    // Show/hide mark all button
-                    const markAllBtn = document.getElementById('markAllReadBtn');
-                    markAllBtn.style.display = data.unreadCount > 0 ? 'inline-block' : 'none';
-                })
-                .catch(error => {
-                    console.error('Error loading notifications:', error);
-                    body.innerHTML = '<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p class="mb-0">Błąd ładowania</p></div>';
-                });
-        }
-
-        // Display notifications in dropdown
-        function displayNotificationsInDropdown(notifications) {
-            const body = document.getElementById('notificationDropdownBody');
-
-            if (notifications.length === 0) {
-                body.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-bell-slash fa-2x mb-2"></i><p class="mb-0">Brak powiadomień</p></div>';
-                return;
-            }
-
-            const html = notifications.map(notification => {
-                const config = notificationConfig[notification.type];
-                if (!config) return '';
-
-                const isUnread = !notification.is_read;
-                const timeAgo = getTimeAgo(notification.created_at);
-
-                return `
-                    <div class="notification-dropdown-item ${isUnread ? 'unread' : ''}" 
-                         onclick="markNotificationAsRead(${notification.id})">
-                        <div class="notification-icon" style="background-color: ${config.color}20; color: ${config.color};">
-                            <i class="fas ${config.icon}"></i>
-                        </div>
-                        <div class="notification-content">
-                            <div class="notification-message">${config.getMessage(notification.data, notification.actor_username)}</div>
-                            <div class="notification-time"><i class="fas fa-clock me-1"></i>${timeAgo}</div>
-                        </div>
-                        ${isUnread ? '<div class="notification-unread-dot"></div>' : ''}
-                    </div>
-                `;
-            }).join('');
-
-            body.innerHTML = html;
-        }
-
-        // Mark notification as read
-        function markNotificationAsRead(notificationId) {
-            fetch(`/api/notifications/${notificationId}/read`, {
-                method: 'POST'
-            })
-                .then(response => response.json())
-                .then(data => {
-                    // Update badge
-                    updateBadge(data.unreadCount);
-
-                    // Update dropdown item
-                    const item = document.querySelector(`[onclick="markNotificationAsRead(${notificationId})"]`);
-                    if (item) {
-                        item.classList.remove('unread');
-                        const dot = item.querySelector('.notification-unread-dot');
-                        if (dot) dot.remove();
-                    }
-
-                    // Update mark all button visibility
-                    const markAllBtn = document.getElementById('markAllReadBtn');
-                    markAllBtn.style.display = data.unreadCount > 0 ? 'inline-block' : 'none';
-                })
-                .catch(error => {
-                    console.error('Error marking notification as read:', error);
-                });
-        }
-
-        // Mark all as read
-        function markAllAsRead() {
-            const btn = document.getElementById('markAllReadBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-            fetch('/api/notifications/read-all', {
-                method: 'POST'
-            })
-                .then(response => response.json())
-                .then(data => {
-                    // Update badge
-                    updateBadge(0);
-
-                    // Reload notifications
-                    loadRecentNotifications();
-
-                    btn.disabled = false;
-                    btn.innerHTML = 'Oznacz wszystkie';
-                })
-                .catch(error => {
-                    console.error('Error marking all as read:', error);
-                    btn.disabled = false;
-                    btn.innerHTML = 'Oznacz wszystkie';
-                });
-        }
-
-        // Get time ago string
-        function getTimeAgo(timestamp) {
-            const now = new Date();
-            const then = new Date(timestamp);
-            const seconds = Math.floor((now - then) / 1000);
-
-            if (seconds < 60) return 'przed chwilą';
-            if (seconds < 3600) return `${Math.floor(seconds / 60)} min temu`;
-            if (seconds < 86400) return `${Math.floor(seconds / 3600)} godz. temu`;
-            if (seconds < 604800) return `${Math.floor(seconds / 86400)} dni temu`;
-
-            return then.toLocaleDateString('pl-PL');
-        }
+        // Duplicate functions removed - using the ones defined earlier
 
         // Load unread count on page load
         loadUnreadCount();
