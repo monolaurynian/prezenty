@@ -299,6 +299,22 @@ function hideSearchDropdown() {
     }
 }
 
+function focusSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchContainer = document.getElementById('searchContainer');
+    
+    // On mobile, expand search if collapsed
+    if (searchContainer && !searchContainer.classList.contains('expanded')) {
+        searchContainer.classList.add('expanded');
+    }
+    
+    // Focus the search input
+    if (searchInput) {
+        searchInput.focus();
+        searchInput.select(); // Select any existing text
+    }
+}
+
 function highlightText(text, query) {
     if (!query) return escapeHtml(text);
     const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');

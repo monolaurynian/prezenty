@@ -766,54 +766,56 @@ html {
     display: block;
 }
 
-/* Material Design Expressive Action Cards */
+/* Material Design Expressive Action Cards - 4 Column Layout */
 /* Card 1: Dodaj Prezent - GREEN */
-.recipients-page .aws-action-section .col-lg-4:nth-child(1) .aws-action-icon {
+.recipients-page .aws-action-section .col-lg-3:nth-child(1) .aws-action-icon {
     background: linear-gradient(135deg, var(--material-green), var(--material-light-green));
     box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
 }
 
-.recipients-page .aws-action-section .col-lg-4:nth-child(1) .aws-action-card:hover .aws-action-icon {
+.recipients-page .aws-action-section .col-lg-3:nth-child(1) .aws-action-card:hover .aws-action-icon {
     background: linear-gradient(135deg, var(--material-teal), var(--material-green));
     box-shadow: 0 12px 35px rgba(0, 150, 136, 0.5);
     transform: scale(1.15) rotate(5deg);
 }
 
-/* Card 2: Zarezerwowane Prezenty - YELLOW */
-.recipients-page .aws-action-section .col-lg-4:nth-child(2) .aws-action-icon {
-    background: linear-gradient(135deg, var(--material-yellow), var(--material-amber));
-    box-shadow: 0 8px 25px rgba(255, 235, 59, 0.4);
-}
-
-.recipients-page .aws-action-section .col-lg-4:nth-child(2) .aws-action-card:hover .aws-action-icon {
-    background: linear-gradient(135deg, var(--material-amber), var(--material-orange));
-    box-shadow: 0 12px 35px rgba(255, 193, 7, 0.5);
-    transform: scale(1.15) rotate(-5deg);
-}
-
-/* Bookmark icon specific styling */
-.recipients-page .aws-action-section .col-lg-4:nth-child(2) .aws-action-icon i.fa-bookmark {
-    color: white !important;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
-}
-
-.recipients-page .aws-action-section .col-lg-4:nth-child(2) .aws-action-card:hover .aws-action-icon i.fa-bookmark {
-    color: white !important;
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-}
-
-/* Card 3: Dodaj Osobę - BLUE */
-.recipients-page .aws-action-section .col-lg-4:nth-child(3) .aws-action-icon {
+/* Card 2: Dodaj Osobę - BLUE */
+.recipients-page .aws-action-section .col-lg-3:nth-child(2) .aws-action-icon {
     background: linear-gradient(135deg, var(--material-blue), var(--material-light-blue));
     box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
 }
 
-.recipients-page .aws-action-section .col-lg-4:nth-child(3) .aws-action-card:hover .aws-action-icon {
+.recipients-page .aws-action-section .col-lg-3:nth-child(2) .aws-action-card:hover .aws-action-icon {
     background: linear-gradient(135deg, var(--material-indigo), var(--material-blue));
     box-shadow: 0 12px 35px rgba(63, 81, 181, 0.5);
+    transform: scale(1.15) rotate(-5deg);
+}
+
+/* Card 3: Dodaj Osobę (duplicate) - PURPLE */
+.recipients-page .aws-action-section .col-lg-3:nth-child(3) .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-purple), var(--material-deep-purple));
+    box-shadow: 0 8px 25px rgba(156, 39, 176, 0.4);
+}
+
+.recipients-page .aws-action-section .col-lg-3:nth-child(3) .aws-action-card:hover .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-deep-purple), var(--material-indigo));
+    box-shadow: 0 12px 35px rgba(103, 58, 183, 0.5);
     transform: scale(1.15) rotate(5deg);
 }
+
+/* Card 4: Szukaj - ORANGE */
+.recipients-page .aws-action-section .col-lg-3:nth-child(4) .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-orange), var(--material-deep-orange));
+    box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4);
+}
+
+.recipients-page .aws-action-section .col-lg-3:nth-child(4) .aws-action-card:hover .aws-action-icon {
+    background: linear-gradient(135deg, var(--material-deep-orange), var(--material-red));
+    box-shadow: 0 12px 35px rgba(244, 67, 54, 0.5);
+    transform: scale(1.15) rotate(-5deg);
+}
+
+
 
 .recipients-page .aws-action-title {
     color: var(--aws-gray-900);

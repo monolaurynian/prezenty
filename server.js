@@ -10,19 +10,27 @@ const mysql = require('mysql2/promise');
 const MySQLStore = require('express-mysql-session')(session);
 const cron = require('cron');
 const https = require('https');
-const webpush = require('web-push');
+// const webpush = require('web-push'); // Now enabled below
 
 // Load .env file in development, but not in production
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 
-// Configure web-push
-webpush.setVapidDetails(
-    'mailto:your-email@example.com',
-    'BEl62iUYgUivxIkv69yViEuiBIa40HI80YmqRcU_d2qcWAh2U5cp7C6_8AT7pRxVxIiNuSOhapA_GTfXRqXWkOU', // Public key
-    'dBnqwHzhfBibnwdBVVHzlEi9Oi1Ab8RqrkDdrgkjP-g' // Private key
-);
+// Configure web-push (fallback for local development)
+let webpush = null;
+try {
+    webpush = require('web-push');
+    webpush.setVapidDetails(
+        'mailto:your-email@example.com',
+        'BEl62iUYgUivxIkv69yViEuiBIa40HI80YmqRcU_d2qcWAh2U5cp7C6_8AT7pRxVxIiNuSOhapA_GTfXRqXWkOU', // Public key
+        'VCz-z9nV_HuHhVCjlHRlSjSWAqS3-T_CKPiuIXSBBtU' // Private key
+    );
+    console.log('✅ Web-push module loaded successfully');
+} catch (error) {
+    console.log('⚠️ Web-push module not available - using fallback notifications');
+    webpush = null;
+}
 
 // Demo mode - run without database for preview
 let DEMO_MODE = process.env.DEMO_MODE === 'true' || 
@@ -189,7 +197,7 @@ const getAllPresents = async () => {
 };
 
 const app = express();
-const PORT = process.env.PORT || 5173;
+const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
 // Middleware
@@ -1232,6 +1240,11 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
             data
         });
         
+        if (!webpush) {
+            console.log('⚠️ Web-push not available - notifications disabled');
+            return;
+        }
+
         const promises = subscriptions.map(async (sub) => {
             try {
                 await webpush.sendNotification({
@@ -1569,23 +1582,7 @@ function setupKeepAliveCron() {
     // Only run keep-alive in production on Render
     if (process.env.NODE_ENV === 'production' && process.env.RENDER) {
         console.log('🔄 Setting up keep-alive cronjob for Render...');
-        
-        const job = new cron.CronJob("*/14 * * * *", function () {
-            https
-                .get("https://prezenty.onrender.com", (res) => {
-                    if (res.statusCode === 200) {
-                        console.log("✅ Keep-alive ping successful at", new Date().toLocaleTimeString());
-                    } else {
-                        console.log("⚠️ Keep-alive ping failed:", res.statusCode);
-                    }
-                })
-                .on("error", (e) => {
-                    console.error("❌ Keep-alive ping error:", e.message);
-                });
-        });
-        
-        job.start();
-        console.log('✅ Keep-alive cronjob started - pinging every 14 minutes');
+        console.log('✅ Keep-alive cronjob temporarily disabled');
     } else {
         console.log('ℹ️ Keep-alive cronjob skipped (not in production on Render)');
     }
