@@ -451,11 +451,13 @@ document.addEventListener('DOMContentLoaded', function () {
         // Load recipients with their presents after auth is confirmed
         loadRecipientsWithPresents();
 
-        // Initialize Bootstrap tooltips
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
+        // Initialize Bootstrap tooltips (only on non-mobile devices)
+        if (window.innerWidth > 768) {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
 
         // Initialize search and filter
         initializeSearchAndFilter();
