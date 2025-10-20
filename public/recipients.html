@@ -112,20 +112,9 @@
 
     <!-- Floating Action Button (Mobile) -->
     <div class="fab-container">
-        <button class="fab-main" id="fabMain" aria-label="Menu szybkich akcji">
-            <i class="fas fa-plus"></i>
+        <button class="fab-main" id="fabMain" onclick="openAddPresentModal()" aria-label="Dodaj prezent">
+            <i class="fas fa-gift"></i>
         </button>
-        <div class="fab-menu" id="fabMenu">
-            <button class="fab-item" onclick="openAddPresentModal()" data-tooltip="Dodaj prezent">
-                <i class="fas fa-gift"></i>
-            </button>
-            <button class="fab-item" onclick="openAddRecipientModal()" data-tooltip="Dodaj osobę">
-                <i class="fas fa-user-plus"></i>
-            </button>
-            <button class="fab-item" onclick="openReservedPresentsModal()" data-tooltip="Zarezerwowane">
-                <i class="fas fa-bookmark"></i>
-            </button>
-        </div>
     </div>
 
     <!-- Toast Container -->

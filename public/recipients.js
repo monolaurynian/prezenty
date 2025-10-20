@@ -379,23 +379,8 @@ function hideNoResultsMessage() {
 
 // FAB (Floating Action Button) functionality
 function initializeFAB() {
-    const fabMain = document.getElementById('fabMain');
-    const fabMenu = document.getElementById('fabMenu');
-
-    if (fabMain && fabMenu) {
-        fabMain.addEventListener('click', function () {
-            fabMenu.classList.toggle('active');
-            fabMain.classList.toggle('active');
-        });
-
-        // Close FAB when clicking outside
-        document.addEventListener('click', function (e) {
-            if (!e.target.closest('.fab-container')) {
-                fabMenu.classList.remove('active');
-                fabMain.classList.remove('active');
-            }
-        });
-    }
+    // FAB now directly opens add present modal via onclick attribute
+    // No additional initialization needed
 }
 
 // Keyboard shortcuts
@@ -756,15 +741,18 @@ function displayRecipientsWithPresents(recipients, presents) {
                   <ul class="list-group">
                     ${ownPresents.map(p => `
                       <li class="list-group-item">
-                        <div class="d-flex align-items-center flex-wrap flex-md-nowrap">
-                          <span class="flex-grow-1">${escapeHtml(p.title)}</span>
-                          <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto">
-                            <button class="btn btn-sm btn-outline-primary mt-2 mt-md-0 w-100 w-md-auto"
+                        <div class="d-flex align-items-start flex-wrap flex-md-nowrap">
+                          <div class="flex-grow-1">
+                            <div class="fw-semibold">${escapeHtml(p.title)}</div>
+                            ${p.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
+                          </div>
+                          <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto mt-2 mt-md-0">
+                            <button class="btn btn-sm btn-outline-primary w-100 w-md-auto"
                               onclick="editPresent(${p.id}, '${escapeHtml(p.title)}', ${p.recipient_id}, '${escapeHtml(p.comments || '')}')"
                               style="max-width:50px;">
                               <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger mt-2 mt-md-0 w-100 w-md-auto"
+                            <button class="btn btn-sm btn-danger w-100 w-md-auto"
                               onclick="deletePresent(${p.id}, '${escapeHtml(p.title)}', ${recipient.id})"
                               style="max-width:50px;">
                               <i class="fas fa-trash-alt"></i>
