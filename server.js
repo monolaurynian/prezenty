@@ -1323,7 +1323,9 @@ app.get('/api/notifications/debug', requireAuth, async (req, res) => {
 app.post('/api/test-notification', requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
-        console.log('🧪 Testing notification for user:', userId);
+        const includeCurrentUser = req.body.includeCurrentUser || false;
+        
+        console.log('🧪 [TEST] Testing notification for user:', userId, 'includeCurrentUser:', includeCurrentUser);
         
         if (!webpush) {
             return res.status(503).json({ 
@@ -1331,15 +1333,16 @@ app.post('/api/test-notification', requireAuth, async (req, res) => {
             });
         }
         
-        // Send a test notification
-        await sendNotificationToUsers(userId, 'Test Notification', 'This is a test notification from Prezenty app! 🎄', {
+        // Send a test notification (exclude current user by default, or include if requested)
+        const excludeUserId = includeCurrentUser ? -1 : userId; // Use -1 to not exclude anyone
+        await sendNotificationToUsers(excludeUserId, 'Test Notification', 'This is a test notification from Prezenty app! 🎄', {
             test: true,
             timestamp: Date.now()
         });
         
         res.json({ success: true, message: 'Test notification sent!' });
     } catch (error) {
-        console.error('Error sending test notification:', error);
+        console.error('❌ [TEST] Error sending test notification:', error);
         res.status(500).json({ error: 'Failed to send test notification: ' + error.message });
     }
 });

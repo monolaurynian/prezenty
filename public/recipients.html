@@ -1013,6 +1013,11 @@
         }
 
         function sendSubscriptionToServer(subscription) {
+            console.log('📤 Sending subscription to server:', {
+                endpoint: subscription.endpoint.substring(0, 50) + '...',
+                hasKeys: !!(subscription.keys && subscription.keys.p256dh && subscription.keys.auth)
+            });
+            
             fetch('/api/notifications/subscribe', {
                 method: 'POST',
                 headers: {
@@ -1021,9 +1026,12 @@
                 body: JSON.stringify(subscription)
             }).then(response => response.json())
             .then(data => {
-                console.log('Subscription sent to server:', data);
+                console.log('✅ Subscription saved successfully:', data);
+                if (data.userSubscriptions !== undefined) {
+                    console.log(`📊 You have ${data.userSubscriptions} subscription(s). Total system: ${data.totalSubscriptions}`);
+                }
             }).catch(error => {
-                console.error('Error sending subscription to server:', error);
+                console.error('❌ Error sending subscription to server:', error);
             });
         }
 
@@ -1055,12 +1063,15 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify({
+                    includeCurrentUser: true  // Send to yourself for testing
+                })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showSuccessToast('Test notification sent! Check your notifications.');
+                    showSuccessToast('Test notification sent! You should receive it in a few seconds.');
                 } else {
                     showErrorToast('Failed to send test notification: ' + (data.error || 'Unknown error'));
                 }

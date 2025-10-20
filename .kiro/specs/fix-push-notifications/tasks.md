@@ -3,6 +3,10 @@
 - [x] 1. Enhance logging in sendNotificationToUsers function
 
 
+
+
+
+
   - Add log for subscription count at the start of the function
   - Add early return with log message if no subscriptions found
   - Add success counter and log total notifications sent

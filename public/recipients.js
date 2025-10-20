@@ -5,16 +5,16 @@ function logout() {
     fetch('/api/logout', {
         method: 'POST'
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/';
+            }
+        })
+        .catch(error => {
+            console.error('Logout error:', error);
             window.location.href = '/';
-        }
-    })
-    .catch(error => {
-        console.error('Logout error:', error);
-        window.location.href = '/';
-    });
+        });
 }
 
 let currentUserId = null;
@@ -23,12 +23,12 @@ let pendingIdentificationRecipientId = null;
 
 // Register service worker
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
         navigator.serviceWorker.register('/sw.js')
-            .then(function(registration) {
+            .then(function (registration) {
                 console.log('ServiceWorker registration successful');
             })
-            .catch(function(err) {
+            .catch(function (err) {
                 console.log('ServiceWorker registration failed: ', err);
             });
     });
@@ -45,10 +45,10 @@ function initializeSearchAndFilter() {
     const searchToggle = document.getElementById('searchToggle');
     const searchContainer = document.getElementById('searchContainer');
     const filterButtons = document.querySelectorAll('.filter-btn');
-    
+
     // Mobile search toggle
     if (searchToggle && searchContainer) {
-        searchToggle.addEventListener('click', function() {
+        searchToggle.addEventListener('click', function () {
             searchContainer.classList.add('expanded');
             if (searchInput) {
                 setTimeout(() => {
@@ -57,10 +57,10 @@ function initializeSearchAndFilter() {
             }
         });
     }
-    
+
     // Close search on mobile
     if (closeSearch && searchContainer) {
-        closeSearch.addEventListener('click', function() {
+        closeSearch.addEventListener('click', function () {
             searchContainer.classList.remove('expanded');
             if (searchInput) {
                 searchInput.value = '';
@@ -69,58 +69,58 @@ function initializeSearchAndFilter() {
             hideSearchDropdown();
         });
     }
-    
+
     if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
+        searchInput.addEventListener('input', function (e) {
             const query = e.target.value;
-            
+
             // Show/hide clear button
             if (clearSearch) {
                 clearSearch.style.display = query ? 'block' : 'none';
             }
-            
+
             // Debounce search
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 performSearch(query);
             }, 300);
         });
-        
+
         // Keep dropdown open when clicking inside search box
-        searchInput.addEventListener('focus', function() {
+        searchInput.addEventListener('focus', function () {
             if (this.value) {
                 performSearch(this.value);
             }
         });
     }
-    
+
     if (clearSearch) {
-        clearSearch.addEventListener('click', function() {
+        clearSearch.addEventListener('click', function () {
             searchInput.value = '';
             clearSearch.style.display = 'none';
             performSearch('');
         });
     }
-    
+
     filterButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             filterButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentFilter = this.dataset.filter;
             applyFilter();
         });
     });
-    
+
     // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         const searchBox = document.querySelector('.search-box');
         const dropdown = document.getElementById('searchResults');
         const searchContainer = document.getElementById('searchContainer');
-        
+
         if (searchBox && dropdown && !searchBox.contains(e.target)) {
             hideSearchDropdown();
         }
-        
+
         // Close mobile search when clicking outside
         if (searchContainer && !searchContainer.contains(e.target) && !e.target.closest('#searchToggle')) {
             searchContainer.classList.remove('expanded');
@@ -132,7 +132,7 @@ function performSearch(query) {
     const recipientItems = document.querySelectorAll('.recipient-item');
     const lowerQuery = query.toLowerCase();
     const searchResults = [];
-    
+
     if (!query) {
         // Clear search - show everything
         recipientItems.forEach(item => {
@@ -146,15 +146,15 @@ function performSearch(query) {
         hideNoResultsMessage();
         return;
     }
-    
+
     recipientItems.forEach(item => {
         const recipientName = item.querySelector('.recipient-name')?.textContent || '';
         const recipientId = item.getAttribute('data-id');
         const lowerRecipientName = recipientName.toLowerCase();
         const presents = Array.from(item.querySelectorAll('.present-item'));
-        
+
         let hasMatch = lowerRecipientName.includes(lowerQuery);
-        
+
         // Check if recipient name matches
         if (hasMatch) {
             searchResults.push({
@@ -164,13 +164,13 @@ function performSearch(query) {
                 element: item
             });
         }
-        
+
         // Check presents
         presents.forEach(present => {
             const presentTitle = present.querySelector('.present-name')?.textContent || '';
             const presentText = present.textContent.toLowerCase();
             const presentMatches = presentText.includes(lowerQuery);
-            
+
             if (presentMatches) {
                 searchResults.push({
                     type: 'present',
@@ -180,16 +180,16 @@ function performSearch(query) {
                 });
                 hasMatch = true;
             }
-            
+
             present.style.display = presentMatches ? '' : 'none';
         });
-        
+
         item.style.display = hasMatch ? '' : 'none';
     });
-    
+
     // Show search results dropdown
     showSearchDropdown(searchResults, query);
-    
+
     // Show "no results" message if needed
     if (searchResults.length === 0) {
         showNoResultsMessage();
@@ -200,18 +200,18 @@ function performSearch(query) {
 
 function applyFilter() {
     const recipientItems = document.querySelectorAll('.recipient-item');
-    
+
     recipientItems.forEach(item => {
         const presents = Array.from(item.querySelectorAll('.present-item'));
         let hasVisiblePresent = false;
-        
+
         presents.forEach(present => {
             let shouldShow = true;
-            
-            switch(currentFilter) {
+
+            switch (currentFilter) {
                 case 'unreserved':
-                    shouldShow = !present.classList.contains('reserved-by-me') && 
-                                !present.classList.contains('reserved-by-other');
+                    shouldShow = !present.classList.contains('reserved-by-me') &&
+                        !present.classList.contains('reserved-by-other');
                     break;
                 case 'my-reserved':
                     shouldShow = present.classList.contains('reserved-by-me');
@@ -223,11 +223,11 @@ function applyFilter() {
                 default:
                     shouldShow = true;
             }
-            
+
             present.style.display = shouldShow ? '' : 'none';
             if (shouldShow) hasVisiblePresent = true;
         });
-        
+
         // Hide recipient if no presents match filter
         item.style.display = hasVisiblePresent ? '' : 'none';
     });
@@ -237,18 +237,18 @@ function showSearchDropdown(results, query) {
     const dropdown = document.getElementById('searchResults');
     const resultsList = dropdown.querySelector('.search-results-list');
     const resultsCount = dropdown.querySelector('.results-count');
-    
+
     if (!dropdown || !resultsList) return;
-    
+
     // Update count
     resultsCount.textContent = `Znaleziono: ${results.length}`;
-    
+
     // Group results by type
     const recipients = results.filter(r => r.type === 'recipient');
     const presents = results.filter(r => r.type === 'present');
-    
+
     let html = '';
-    
+
     if (recipients.length > 0) {
         html += '<div class="search-results-section">';
         html += '<div class="search-results-section-title"><i class="fas fa-user me-2"></i>Osoby</div>';
@@ -266,7 +266,7 @@ function showSearchDropdown(results, query) {
         }
         html += '</div>';
     }
-    
+
     if (presents.length > 0) {
         html += '<div class="search-results-section">';
         html += '<div class="search-results-section-title"><i class="fas fa-gift me-2"></i>Prezenty</div>';
@@ -287,7 +287,7 @@ function showSearchDropdown(results, query) {
         }
         html += '</div>';
     }
-    
+
     resultsList.innerHTML = html;
     dropdown.style.display = 'block';
 }
@@ -302,12 +302,12 @@ function hideSearchDropdown() {
 function focusSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchContainer = document.getElementById('searchContainer');
-    
+
     // On mobile, expand search if collapsed
     if (searchContainer && !searchContainer.classList.contains('expanded')) {
         searchContainer.classList.add('expanded');
     }
-    
+
     // Focus the search input
     if (searchInput) {
         searchInput.focus();
@@ -340,7 +340,7 @@ function scrollToElement(elementId) {
 function scrollToPresent(element) {
     const presentName = element.getAttribute('data-present-name');
     const presents = document.querySelectorAll('.present-item');
-    
+
     for (let present of presents) {
         const name = present.querySelector('.present-name')?.textContent;
         if (name === presentName) {
@@ -381,15 +381,15 @@ function hideNoResultsMessage() {
 function initializeFAB() {
     const fabMain = document.getElementById('fabMain');
     const fabMenu = document.getElementById('fabMenu');
-    
+
     if (fabMain && fabMenu) {
-        fabMain.addEventListener('click', function() {
+        fabMain.addEventListener('click', function () {
             fabMenu.classList.toggle('active');
             fabMain.classList.toggle('active');
         });
-        
+
         // Close FAB when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!e.target.closest('.fab-container')) {
                 fabMenu.classList.remove('active');
                 fabMain.classList.remove('active');
@@ -399,7 +399,7 @@ function initializeFAB() {
 }
 
 // Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
     // Ctrl/Cmd + F - Focus search
     if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
@@ -409,31 +409,31 @@ document.addEventListener('keydown', function(e) {
             searchInput.select();
         }
     }
-    
+
     // Ctrl/Cmd + K - Add present
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         openAddPresentModal();
     }
-    
+
     // Ctrl/Cmd + P - Add person
     if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
         e.preventDefault();
         openAddRecipientModal();
     }
-    
+
     // Ctrl/Cmd + Shift + R - Refresh
     if ((e.ctrlKey || e.metaKey) && e.key === 'R' && e.shiftKey) {
         e.preventDefault();
         loadRecipients();
     }
-    
+
     // Ctrl/Cmd + B - Reserved presents
     if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
         e.preventDefault();
         openReservedPresentsModal();
     }
-    
+
     // Escape - Clear search
     if (e.key === 'Escape') {
         const searchInput = document.getElementById('searchInput');
@@ -445,24 +445,24 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Check authentication first, then load data
     checkAuth().then(() => {
         // Load recipients with their presents after auth is confirmed
         loadRecipientsWithPresents();
-        
+
         // Initialize Bootstrap tooltips
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
-        
+
         // Initialize search and filter
         initializeSearchAndFilter();
-        
+
         // Initialize FAB
         initializeFAB();
-        
+
         // Show keyboard shortcuts hint on first load
         setTimeout(() => {
             if (!localStorage.getItem('keyboardHintShown')) {
@@ -470,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('keyboardHintShown', 'true');
             }
         }, 2000);
-        
+
         // Set up periodic auth check to detect session expiry
         setInterval(() => {
             checkAuth().catch(() => {
@@ -478,25 +478,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = '/';
             });
         }, 5 * 60 * 1000); // Check every 5 minutes
-        
+
     }).catch(error => {
         console.error('Auth failed:', error);
         window.location.href = '/';
     });
-    
+
     // Initialize animations
     initializeAnimations();
-    
+
     // Profile picture preview
     const profilePictureUrl = document.getElementById('profilePictureUrl');
-    profilePictureUrl.addEventListener('input', function() {
+    profilePictureUrl.addEventListener('input', function () {
         const preview = document.getElementById('profilePicturePreview');
         const url = this.value.trim();
-        
+
         if (url) {
             preview.src = url;
             preview.style.display = 'block';
-            preview.onerror = function() {
+            preview.onerror = function () {
                 preview.style.display = 'none';
             };
         } else {
@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listener to submit the new recipient form on Enter
     const newRecipientForm = document.getElementById('newRecipientForm');
     if (newRecipientForm) {
-        newRecipientForm.addEventListener('submit', function(e) {
+        newRecipientForm.addEventListener('submit', function (e) {
             e.preventDefault();
             addNewRecipientAndIdentify();
         });
@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listener to submit the add person modal form on Enter
     const addRecipientForm = document.getElementById('addRecipientForm');
     if (addRecipientForm) {
-        addRecipientForm.addEventListener('submit', function(e) {
+        addRecipientForm.addEventListener('submit', function (e) {
             e.preventDefault();
             addRecipientFromModal();
         });
@@ -542,32 +542,32 @@ function checkAuth() {
     return fetch('/api/auth', {
         credentials: 'include' // Ensure cookies are sent
     })
-    .then(response => {
-        console.log('Auth response status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Auth response data:', data);
-        if (!data.authenticated) {
-            console.warn('User not authenticated, redirecting to login');
-            throw new Error('Not authenticated');
-        } else {
-            currentUserId = data.user.id;
-            console.log('Auth successful, currentUserId set to:', currentUserId);
-        }
-    })
-    .catch(error => {
-        console.error('Auth check error:', error);
-        throw error;
-    });
+        .then(response => {
+            console.log('Auth response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Auth response data:', data);
+            if (!data.authenticated) {
+                console.warn('User not authenticated, redirecting to login');
+                throw new Error('Not authenticated');
+            } else {
+                currentUserId = data.user.id;
+                console.log('Auth successful, currentUserId set to:', currentUserId);
+            }
+        })
+        .catch(error => {
+            console.error('Auth check error:', error);
+            throw error;
+        });
 }
 
 function loadRecipientsWithPresents(forceReload = false) {
     console.log('Loading recipients and presents...', forceReload ? '(forced)' : '');
-    
+
     const now = Date.now();
     const cacheExpiry = 60000; // 60 seconds cache
-    
+
     // Try to load from localStorage first (persistent cache)
     if (!forceReload && !window._dataCache) {
         const persistentCache = loadFromPersistentCache();
@@ -576,7 +576,7 @@ function loadRecipientsWithPresents(forceReload = false) {
             window._dataCache = persistentCache.data;
             window._dataCacheTimestamp = persistentCache.timestamp;
             displayRecipientsData(persistentCache.data.recipients, persistentCache.data.presents, persistentCache.data.identificationStatus);
-            
+
             // Refresh in background if cache is older than 30 seconds
             if ((now - persistentCache.timestamp) > 30000) {
                 console.log('Background refresh triggered');
@@ -585,17 +585,17 @@ function loadRecipientsWithPresents(forceReload = false) {
             return;
         }
     }
-    
+
     // Use memory cache if available and fresh (unless forced reload)
-    if (!forceReload && 
-        window._dataCache && 
-        window._dataCacheTimestamp && 
+    if (!forceReload &&
+        window._dataCache &&
+        window._dataCacheTimestamp &&
         (now - window._dataCacheTimestamp) < cacheExpiry) {
         console.log('Using memory cache (age:', Math.round((now - window._dataCacheTimestamp) / 1000), 'seconds)');
         displayRecipientsData(window._dataCache.recipients, window._dataCache.presents, window._dataCache.identificationStatus);
         return;
     }
-    
+
     // Show pulsating logo loading state
     const recipientsList = document.getElementById('recipientsList');
     recipientsList.innerHTML = `
@@ -607,10 +607,10 @@ function loadRecipientsWithPresents(forceReload = false) {
             <p class="mt-3 text-muted loading-text">Ładowanie danych...</p>
         </div>
     `;
-    
+
     // Load data with optimized single request
     const startTime = performance.now();
-    
+
     Promise.all([
         fetch('/api/recipients-with-presents').then(response => {
             if (!response.ok) {
@@ -629,69 +629,69 @@ function loadRecipientsWithPresents(forceReload = false) {
             return response.json();
         })
     ])
-    .then(([combinedData, identificationStatus]) => {
-        const endTime = performance.now();
-        console.log(`Data loaded in ${(endTime - startTime).toFixed(2)}ms`);
-        
-        const recipients = combinedData.recipients || [];
-        const presentsData = combinedData.presents || [];
-        
-        // Validate data
-        const validRecipients = Array.isArray(recipients) ? recipients : [];
-        const validPresents = Array.isArray(presentsData) ? presentsData : [];
-        
-        if (!validRecipients || !validPresents) {
-            throw new Error('Invalid data received from server');
-        }
-        
-        // Cache the data
-        const cacheData = { recipients: validRecipients, presents: validPresents, identificationStatus };
-        window._dataCache = cacheData;
-        window._dataCacheTimestamp = Date.now();
-        
-        // Save to persistent cache
-        saveToPersistentCache(cacheData);
-        
-        // Update modal cache as well
-        window._cachedRecipients = validRecipients;
-        window._cachedIdentificationStatus = identificationStatus;
-        
-        // Display data
-        displayRecipientsWithPresents(validRecipients, validPresents);
-        
-        // Handle identification logic
-        handleIdentificationLogic(validRecipients, identificationStatus);
-    })
-    .catch(error => {
-        console.error('Error loading data:', error);
-        if (error.message !== 'Unauthorized') {
-            document.getElementById('recipientsList').innerHTML = 
-                '<div class="alert alert-danger">Błąd podczas ładowania danych. Spróbuj odświeżyć stronę.</div>';
-        }
-    });
+        .then(([combinedData, identificationStatus]) => {
+            const endTime = performance.now();
+            console.log(`Data loaded in ${(endTime - startTime).toFixed(2)}ms`);
+
+            const recipients = combinedData.recipients || [];
+            const presentsData = combinedData.presents || [];
+
+            // Validate data
+            const validRecipients = Array.isArray(recipients) ? recipients : [];
+            const validPresents = Array.isArray(presentsData) ? presentsData : [];
+
+            if (!validRecipients || !validPresents) {
+                throw new Error('Invalid data received from server');
+            }
+
+            // Cache the data
+            const cacheData = { recipients: validRecipients, presents: validPresents, identificationStatus };
+            window._dataCache = cacheData;
+            window._dataCacheTimestamp = Date.now();
+
+            // Save to persistent cache
+            saveToPersistentCache(cacheData);
+
+            // Update modal cache as well
+            window._cachedRecipients = validRecipients;
+            window._cachedIdentificationStatus = identificationStatus;
+
+            // Display data
+            displayRecipientsWithPresents(validRecipients, validPresents);
+
+            // Handle identification logic
+            handleIdentificationLogic(validRecipients, identificationStatus);
+        })
+        .catch(error => {
+            console.error('Error loading data:', error);
+            if (error.message !== 'Unauthorized') {
+                document.getElementById('recipientsList').innerHTML =
+                    '<div class="alert alert-danger">Błąd podczas ładowania danych. Spróbuj odświeżyć stronę.</div>';
+            }
+        });
 }
 
 function displayRecipientsWithPresents(recipients, presents) {
     const recipientsList = document.getElementById('recipientsList');
-    
-    console.log('displayRecipientsWithPresents called with:', { 
-        recipients: recipients, 
+
+    console.log('displayRecipientsWithPresents called with:', {
+        recipients: recipients,
         presents: presents,
         recipientsLength: recipients?.length,
         presentsLength: presents?.length
     });
-    
+
     // Ensure both recipients and presents are arrays
     if (!Array.isArray(recipients)) {
         console.error('recipients is not an array:', recipients);
         recipients = [];
     }
-    
+
     if (!Array.isArray(presents)) {
         console.error('presents is not an array:', presents);
         presents = [];
     }
-    
+
     if (recipients.length === 0) {
         recipientsList.innerHTML = `
             <div class="text-center text-muted">
@@ -701,22 +701,22 @@ function displayRecipientsWithPresents(recipients, presents) {
         `;
         return;
     }
-    
+
     // Sort recipients: identified users first, then alphabetically
     const sortedRecipients = recipients.sort((a, b) => {
         const aIsIdentified = currentUserId && a.identified_by === currentUserId;
         const bIsIdentified = currentUserId && b.identified_by === currentUserId;
-        
+
         if (aIsIdentified && !bIsIdentified) return -1;
         if (!aIsIdentified && bIsIdentified) return 1;
-        
+
         // If both are identified or both are not identified, sort alphabetically
         return a.name.localeCompare(b.name);
     });
-    
+
     // Check if anyone is identified
     const hasAnyIdentification = recipients.some(recipient => recipient.identified_by !== null);
-    
+
     // Group presents by recipient
     const presentsByRecipient = {};
     presents.forEach(present => {
@@ -726,12 +726,12 @@ function displayRecipientsWithPresents(recipients, presents) {
         }
         presentsByRecipient[recipientId].push(present);
     });
-    
+
     recipientsList.innerHTML = sortedRecipients.map(recipient => {
         const recipientPresents = presentsByRecipient[recipient.id] || [];
         const checkedPresents = recipientPresents.filter(p => p.is_checked).length;
         const totalPresents = recipientPresents.length;
-        
+
         console.log('Processing recipient:', {
             id: recipient.id,
             name: recipient.name,
@@ -739,10 +739,10 @@ function displayRecipientsWithPresents(recipients, presents) {
             currentUserId: currentUserId,
             isIdentified: recipient.identified_by === currentUserId
         });
-        
+
         const isIdentified = currentUserId && recipient.identified_by === currentUserId;
         const isIdentifiedByOther = recipient.identified_by && currentUserId && recipient.identified_by !== currentUserId;
-        
+
         // Show surprise note for identified user, otherwise show presents
         let presentsHTML;
         if (isIdentified) {
@@ -781,25 +781,25 @@ function displayRecipientsWithPresents(recipients, presents) {
                 </div>`;
             }
         } else {
-            presentsHTML = (recipientPresents.length > 0 ? 
-                generatePresentsList(recipientPresents) : 
+            presentsHTML = (recipientPresents.length > 0 ?
+                generatePresentsList(recipientPresents) :
                 '<p class="text-muted mb-0">Brak prezentów dla tej osoby</p>'
             );
         }
-        
+
         const profilePictureHTML = generateProfilePictureHTML(recipient, isIdentified);
-        
+
         return `
             <div class="recipient-item" data-id="${recipient.id}" id="recipient-${recipient.id}">
                 <div class="row">
                     <div class="col-lg-2 col-md-6 text-center">
                         <div class="recipient-avatar">
-                            ${recipient.profile_picture && recipient.profile_picture.trim() !== '' ? 
-                                `<img src="${getFullProfilePictureUrl(escapeHtml(recipient.profile_picture))}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
-                                `<div class="profile-picture-placeholder" onclick="openProfileModal(${recipient.id})" style="cursor: pointer;">
+                            ${recipient.profile_picture && recipient.profile_picture.trim() !== '' ?
+                `<img src="${getFullProfilePictureUrl(escapeHtml(recipient.profile_picture))}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
+                `<div class="profile-picture-placeholder" onclick="openProfileModal(${recipient.id})" style="cursor: pointer;">
                                    
                                 </div>`
-                            }
+            }
                         </div>
                         
                         <!-- Name shown in profile section for wider screens -->
@@ -923,7 +923,7 @@ function generateProfilePictureHTML(recipient, isIdentified) {
 function identifyAsRecipient(recipientId, recipientName, hideDeleteButton = false) {
     pendingIdentificationRecipientId = recipientId;
     document.getElementById('identificationRecipientName').textContent = recipientName;
-    
+
     // Show or hide the delete button
     const deleteBtn = document.querySelector('#selfIdentificationModal .btn-outline-danger');
     if (deleteBtn) {
@@ -940,60 +940,60 @@ function identifyAsRecipient(recipientId, recipientName, hideDeleteButton = fals
 
 function confirmSelfIdentification() {
     if (!pendingIdentificationRecipientId) return;
-    
+
     fetch(`/api/recipients/${pendingIdentificationRecipientId}/identify`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showSuccessMessage('Pomyślnie zidentyfikowano!');
-            clearRecipientsCache();
-            softReloadRecipients();
-            
-            // Close the modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('selfIdentificationModal'));
-            modal.hide();
-        } else {
-            showErrorModal(data.error || 'Błąd podczas identyfikacji');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showErrorModal('Błąd połączenia z serwerem');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessMessage('Pomyślnie zidentyfikowano!');
+                clearRecipientsCache();
+                softReloadRecipients();
+
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('selfIdentificationModal'));
+                modal.hide();
+            } else {
+                showErrorModal(data.error || 'Błąd podczas identyfikacji');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorModal('Błąd połączenia z serwerem');
+        });
 }
 
 function deleteRecipientFromModal() {
     if (!pendingIdentificationRecipientId) return;
-    
+
     // Get the recipient name from the modal
     const recipientName = document.getElementById('identificationRecipientName').textContent;
-    
+
     // Close the self-identification modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('selfIdentificationModal'));
     modal.hide();
-    
+
     // Show the confirmation modal
     document.getElementById('confirmDeleteRecipientModalBody').innerHTML = `
         <p>Czy na pewno chcesz usunąć osobę <strong>${escapeHtml(recipientName)}</strong>?</p>
         <p class="text-muted">Ta operacja jest nieodwracalna i usunie wszystkie prezenty tej osoby.</p>
     `;
-    
+
     // Store the recipient ID for deletion
     window.pendingDeleteRecipientId = pendingIdentificationRecipientId;
     window.pendingDeleteRecipientName = recipientName;
-    
+
     const confirmModal = new bootstrap.Modal(document.getElementById('confirmDeleteRecipientModal'));
     confirmModal.show();
 }
 
 function showRecipientSelectionModal() {
     console.log('showRecipientSelectionModal() called');
-    
+
     // Close the self-identification modal and move focus out
     const selfIdentificationModal = bootstrap.Modal.getInstance(document.getElementById('selfIdentificationModal'));
     if (selfIdentificationModal) {
@@ -1002,28 +1002,28 @@ function showRecipientSelectionModal() {
         document.body.focus();
         selfIdentificationModal.hide();
     }
-    
+
     // Load available recipients and show selection modal
     console.log('Fetching recipients for selection modal...');
     fetch('/api/recipients')
-    .then(response => response.json())
-    .then(recipients => {
-        console.log('Recipients loaded for selection modal:', recipients);
-        const availableRecipientsList = document.getElementById('availableRecipientsList');
-        
-        // Filter out already identified recipients
-        const availableRecipients = recipients.filter(recipient => !recipient.identified_by);
-        console.log('Available recipients (not identified):', availableRecipients);
-        
-        if (availableRecipients.length === 0) {
-            availableRecipientsList.innerHTML = `
+        .then(response => response.json())
+        .then(recipients => {
+            console.log('Recipients loaded for selection modal:', recipients);
+            const availableRecipientsList = document.getElementById('availableRecipientsList');
+
+            // Filter out already identified recipients
+            const availableRecipients = recipients.filter(recipient => !recipient.identified_by);
+            console.log('Available recipients (not identified):', availableRecipients);
+
+            if (availableRecipients.length === 0) {
+                availableRecipientsList.innerHTML = `
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
                     Wszystkie osoby są już zidentyfikowane. Dodaj nową osobę poniżej.
                 </div>
             `;
-        } else {
-            availableRecipientsList.innerHTML = availableRecipients.map(recipient => `
+            } else {
+                availableRecipientsList.innerHTML = availableRecipients.map(recipient => `
                 <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                     <div style="cursor:pointer;" onclick="identifyAsRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
                         <i class="fas fa-user me-2"></i>
@@ -1053,18 +1053,18 @@ function showRecipientSelectionModal() {
                     </div>
                 </div>
             `).join('');
-        }
-        
-        // Show the selection modal
-        console.log('Showing recipient selection modal...');
-        const selectionModal = new bootstrap.Modal(document.getElementById('recipientSelectionModal'));
-        selectionModal.show();
-        console.log('Recipient selection modal should be visible now');
-    })
-    .catch(error => {
-        console.error('Error loading recipients:', error);
-        showErrorModal('Błąd podczas ładowania listy osób');
-    });
+            }
+
+            // Show the selection modal
+            console.log('Showing recipient selection modal...');
+            const selectionModal = new bootstrap.Modal(document.getElementById('recipientSelectionModal'));
+            selectionModal.show();
+            console.log('Recipient selection modal should be visible now');
+        })
+        .catch(error => {
+            console.error('Error loading recipients:', error);
+            showErrorModal('Błąd podczas ładowania listy osób');
+        });
 }
 
 function deleteRecipientFromSelection(recipientId, recipientName) {
@@ -1074,19 +1074,19 @@ function deleteRecipientFromSelection(recipientId, recipientName) {
     fetch(`/api/recipients/${recipientId}`, {
         method: 'DELETE'
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showSuccessMessage('Osoba została usunięta!');
-            showRecipientSelectionModal(); // Refresh the modal list
-        } else {
-            showErrorModal(data.error || 'Błąd podczas usuwania osoby');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showErrorModal('Błąd połączenia z serwerem');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessMessage('Osoba została usunięta!');
+                showRecipientSelectionModal(); // Refresh the modal list
+            } else {
+                showErrorModal(data.error || 'Błąd podczas usuwania osoby');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorModal('Błąd połączenia z serwerem');
+        });
 }
 
 function identifyAsRecipientFromSelection(recipientId, recipientName) {
@@ -1095,7 +1095,7 @@ function identifyAsRecipientFromSelection(recipientId, recipientName) {
     // Move focus to body before hiding modal to prevent aria-hidden issues
     document.body.focus();
     selectionModal.hide();
-    
+
     // Identify as the selected recipient
     fetch(`/api/recipients/${recipientId}/identify`, {
         method: 'POST',
@@ -1103,29 +1103,29 @@ function identifyAsRecipientFromSelection(recipientId, recipientName) {
             'Content-Type': 'application/json',
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showSuccessMessage(`Pomyślnie zidentyfikowano jako ${recipientName}!`);
-            softReloadRecipients();
-        } else {
-            showErrorModal(data.error || 'Błąd podczas identyfikacji');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showErrorModal('Błąd połączenia z serwerem');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessMessage(`Pomyślnie zidentyfikowano jako ${recipientName}!`);
+                softReloadRecipients();
+            } else {
+                showErrorModal(data.error || 'Błąd podczas identyfikacji');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorModal('Błąd połączenia z serwerem');
+        });
 }
 
 function addNewRecipientAndIdentify() {
     const newRecipientName = document.getElementById('newRecipientName').value.trim();
-    
+
     if (!newRecipientName) {
         showModalMessage('recipientSelectionMessage', 'Wprowadź imię i nazwisko', 'danger');
         return;
     }
-    
+
     // Use the atomic endpoint to add and identify in one step
     fetch('/api/user/identify', {
         method: 'POST',
@@ -1134,62 +1134,62 @@ function addNewRecipientAndIdentify() {
         },
         body: JSON.stringify({ name: newRecipientName })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Close the selection modal and move focus out
-            const selectionModal = bootstrap.Modal.getInstance(document.getElementById('recipientSelectionModal'));
-            // Move focus to body before hiding modal to prevent aria-hidden issues
-            document.body.focus();
-            selectionModal.hide();
-            
-            showSuccessMessage(`Pomyślnie dodano i zidentyfikowano jako ${newRecipientName}!`);
-            clearRecipientsCache();
-            softReloadRecipients();
-        } else {
-            throw new Error(data.error || 'Błąd podczas dodawania osoby');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showModalMessage('recipientSelectionMessage', error.message || 'Błąd połączenia z serwerem', 'danger');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close the selection modal and move focus out
+                const selectionModal = bootstrap.Modal.getInstance(document.getElementById('recipientSelectionModal'));
+                // Move focus to body before hiding modal to prevent aria-hidden issues
+                document.body.focus();
+                selectionModal.hide();
+
+                showSuccessMessage(`Pomyślnie dodano i zidentyfikowano jako ${newRecipientName}!`);
+                clearRecipientsCache();
+                softReloadRecipients();
+            } else {
+                throw new Error(data.error || 'Błąd podczas dodawania osoby');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showModalMessage('recipientSelectionMessage', error.message || 'Błąd połączenia z serwerem', 'danger');
+        });
 }
 
 function cancelIdentification(recipientId, recipientName) {
     pendingIdentificationRecipientId = recipientId;
     document.getElementById('cancelIdentificationRecipientName').textContent = recipientName;
-    
+
     const modal = new bootstrap.Modal(document.getElementById('cancelIdentificationModal'));
     modal.show();
 }
 
 function confirmCancelIdentification() {
     if (!pendingIdentificationRecipientId) return;
-    
+
     fetch(`/api/recipients/${pendingIdentificationRecipientId}/identify`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showSuccessMessage('Identyfikacja została anulowana!');
-            softReloadRecipients();
-            
-            // Close the modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('cancelIdentificationModal'));
-            modal.hide();
-        } else {
-            showErrorModal(data.error || 'Błąd podczas anulowania identyfikacji');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showErrorModal('Błąd połączenia z serwerem');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessMessage('Identyfikacja została anulowana!');
+                softReloadRecipients();
+
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('cancelIdentificationModal'));
+                modal.hide();
+            } else {
+                showErrorModal(data.error || 'Błąd podczas anulowania identyfikacji');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorModal('Błąd połączenia z serwerem');
+        });
 }
 
 function showErrorModal(message) {
@@ -1208,7 +1208,7 @@ function showSuccessMessage(message) {
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     document.body.appendChild(alertDiv);
-    
+
     // Auto-remove after 3 seconds
     setTimeout(() => {
         if (alertDiv.parentNode) {
@@ -1220,13 +1220,13 @@ function showSuccessMessage(message) {
 function openProfileModal(recipientId) {
     const recipient = window._allRecipients.find(r => r.id === recipientId);
     if (!recipient) return;
-    
+
     const profileImg = document.getElementById('profileModalImage');
     const profileName = document.getElementById('profileModalName');
-    
+
     if (profileImg && profileName) {
         profileName.textContent = recipient.name;
-        
+
         if (recipient.profile_picture && recipient.profile_picture.trim() !== '') {
             profileImg.src = getFullProfilePictureUrl(recipient.profile_picture);
             profileImg.style.display = 'block';
@@ -1240,7 +1240,7 @@ function openProfileModal(recipientId) {
             placeholder.style.height = '200px';
             placeholder.style.fontSize = '4rem';
             placeholder.style.margin = '0 auto';
-            
+
             const container = profileImg.parentElement;
             // Remove any existing placeholder
             const existingPlaceholder = container.querySelector('.profile-picture-placeholder-large');
@@ -1249,7 +1249,7 @@ function openProfileModal(recipientId) {
             }
             container.appendChild(placeholder);
         }
-        
+
         const modal = new bootstrap.Modal(document.getElementById('profileModal'));
         modal.show();
     }
@@ -1258,10 +1258,10 @@ function openProfileModal(recipientId) {
 function previewImage(input) {
     const preview = document.getElementById('profilePicturePreview');
     const file = input.files[0];
-    
+
     if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             preview.src = e.target.result;
             preview.style.display = 'block';
         };
@@ -1273,15 +1273,15 @@ function previewImage(input) {
 
 function saveProfilePicture() {
     if (!currentRecipientId) return;
-    
+
     const url = document.getElementById('profilePictureUrl').value.trim();
     const file = document.getElementById('profilePictureFile').files[0];
-    
+
     if (!url && !file) {
         showErrorModal('Wybierz plik lub wprowadź URL zdjęcia');
         return;
     }
-    
+
     if (file) {
         // Check file size (10MB limit)
         const maxSize = 10 * 1024 * 1024; // 10MB in bytes
@@ -1289,10 +1289,10 @@ function saveProfilePicture() {
             showErrorModal('Plik jest zbyt duży. Maksymalny rozmiar to 10MB.');
             return;
         }
-        
+
         // Handle file upload
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             saveImageToServer(e.target.result);
         };
         reader.readAsDataURL(file);
@@ -1310,40 +1310,40 @@ function saveImageToServer(imageData) {
         },
         body: JSON.stringify({ profile_picture: imageData })
     })
-    .then(response => {
-        if (!response.ok) {
-            if (response.status === 413) {
-                throw new Error('Plik jest zbyt duży. Maksymalny rozmiar to 10MB.');
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 413) {
+                    throw new Error('Plik jest zbyt duży. Maksymalny rozmiar to 10MB.');
+                }
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Błąd podczas zapisywania zdjęcia');
+                });
             }
-            return response.json().then(data => {
-                throw new Error(data.error || 'Błąd podczas zapisywania zdjęcia');
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            showSuccessMessage('Zdjęcie profilowe zostało zapisane!');
-            softReloadRecipients();
-            
-            // Close the modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('profilePictureModal'));
-            modal.hide();
-        } else {
-            showErrorModal(data.error || 'Błąd podczas zapisywania zdjęcia');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showErrorModal(error.message || 'Błąd połączenia z serwerem');
-    });
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showSuccessMessage('Zdjęcie profilowe zostało zapisane!');
+                softReloadRecipients();
+
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('profilePictureModal'));
+                modal.hide();
+            } else {
+                showErrorModal(data.error || 'Błąd podczas zapisywania zdjęcia');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorModal(error.message || 'Błąd połączenia z serwerem');
+        });
 }
 
 function generatePresentsList(presents) {
     if (presents.length === 0) {
         return '<p class="text-muted mb-0">Brak prezentów dla tej osoby</p>';
     }
-    
+
     // Sort presents: reserved by current user first, then unchecked, then checked at bottom
     const sortedPresents = presents.sort((a, b) => {
         // First, move checked items to the bottom regardless of reservation status
@@ -1358,7 +1358,7 @@ function generatePresentsList(presents) {
         // Finally by creation date (newer first)
         return new Date(b.created_at) - new Date(a.created_at);
     });
-    
+
     const html = `
         <div class="presents-list presents-list-container">
             ${sortedPresents.map((present, index) => `
@@ -1390,12 +1390,12 @@ function generatePresentsList(presents) {
             `).join('')}
         </div>
     `;
-    
+
     // Calculate container height after rendering
     setTimeout(() => {
         calculateContainerHeight();
     }, 100);
-    
+
     return html;
 }
 
@@ -1435,7 +1435,7 @@ function updatePresentCheckStatus(id, isChecked, presentItem) {
             present.is_checked = isChecked;
         }
     }
-    
+
     // Update the UI immediately
     if (isChecked) {
         presentItem.classList.add('checked');
@@ -1450,15 +1450,39 @@ function updatePresentCheckStatus(id, isChecked, presentItem) {
         },
         body: JSON.stringify({ is_checked: isChecked })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update progress bar without full reload
-            updateProgressBar(presentItem);
-            presentItem.classList.remove('updating');
-            presentItem.classList.remove('animating');
-        } else {
-            console.error('Failed to toggle present:', data.error);
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update progress bar without full reload
+                updateProgressBar(presentItem);
+                presentItem.classList.remove('updating');
+                presentItem.classList.remove('animating');
+            } else {
+                console.error('Failed to toggle present:', data.error);
+                // Revert optimistic update on error
+                if (window._dataCache && window._dataCache.presents) {
+                    const present = window._dataCache.presents.find(p => p.id === id);
+                    if (present) {
+                        present.is_checked = !isChecked;
+                    }
+                }
+                // Revert UI
+                if (isChecked) {
+                    presentItem.classList.remove('checked');
+                } else {
+                    presentItem.classList.add('checked');
+                }
+                // Revert checkbox
+                const checkbox = presentItem.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = !isChecked;
+                }
+                presentItem.classList.remove('updating');
+                presentItem.classList.remove('animating');
+            }
+        })
+        .catch(error => {
+            console.error('Error toggling present:', error);
             // Revert optimistic update on error
             if (window._dataCache && window._dataCache.presents) {
                 const present = window._dataCache.presents.find(p => p.id === id);
@@ -1479,31 +1503,7 @@ function updatePresentCheckStatus(id, isChecked, presentItem) {
             }
             presentItem.classList.remove('updating');
             presentItem.classList.remove('animating');
-        }
-    })
-    .catch(error => {
-        console.error('Error toggling present:', error);
-        // Revert optimistic update on error
-        if (window._dataCache && window._dataCache.presents) {
-            const present = window._dataCache.presents.find(p => p.id === id);
-            if (present) {
-                present.is_checked = !isChecked;
-            }
-        }
-        // Revert UI
-        if (isChecked) {
-            presentItem.classList.remove('checked');
-        } else {
-            presentItem.classList.add('checked');
-        }
-        // Revert checkbox
-        const checkbox = presentItem.querySelector('input[type="checkbox"]');
-        if (checkbox) {
-            checkbox.checked = !isChecked;
-        }
-        presentItem.classList.remove('updating');
-        presentItem.classList.remove('animating');
-    });
+        });
 }
 
 // Update progress bar for a specific recipient
@@ -1511,24 +1511,24 @@ function updateProgressBar(presentItem) {
     // Find the recipient container
     const recipientItem = presentItem.closest('.recipient-item');
     if (!recipientItem) return;
-    
+
     const recipientId = recipientItem.getAttribute('data-id');
     if (!recipientId) return;
-    
+
     // Get all presents for this recipient from cache
     if (!window._dataCache || !window._dataCache.presents) return;
-    
+
     const recipientPresents = window._dataCache.presents.filter(p => p.recipient_id == recipientId);
     const checkedPresents = recipientPresents.filter(p => p.is_checked).length;
     const totalPresents = recipientPresents.length;
-    
+
     // Update the progress bar
     const progressBar = recipientItem.querySelector('.progress-bar');
     if (progressBar && totalPresents > 0) {
         const percentage = (checkedPresents / totalPresents) * 100;
         progressBar.style.width = `${percentage}%`;
     }
-    
+
     // Update the text
     const progressText = recipientItem.querySelector('.text-muted');
     if (progressText) {
@@ -1562,7 +1562,7 @@ function animatePresentTransition(presentItem, isChecked, callback) {
     clone.style.pointerEvents = 'none';
     clone.style.opacity = '1'; // Keep the animated item fully opaque
     clone.classList.remove('updating', 'animating');
-    
+
     // Add to container
     container.style.position = 'relative';
     container.appendChild(clone);
@@ -1570,7 +1570,7 @@ function animatePresentTransition(presentItem, isChecked, callback) {
     // Animate the clone
     const targetY = isChecked ? containerRect.height : -itemHeight;
     clone.style.transition = 'all 0.8s ease-out'; // Updated to 0.8s
-    
+
     // Trigger animation
     setTimeout(() => {
         clone.style.transform = `translateY(${targetY}px)`;
@@ -1638,10 +1638,10 @@ function generateReservationButton(present) {
 function handleReserveClick(event, presentId, action) {
     event.preventDefault();
     event.stopPropagation();
-    
+
     const button = event.currentTarget;
     const presentItem = document.querySelector(`[data-id="${presentId}"]`);
-    
+
     // Store previous state for potential rollback
     const previousState = {
         reserved_by: null,
@@ -1649,7 +1649,7 @@ function handleReserveClick(event, presentId, action) {
         buttonHTML: button.outerHTML,
         itemClasses: presentItem ? presentItem.className : ''
     };
-    
+
     // Get current state from cache
     if (window._dataCache && window._dataCache.presents) {
         const present = window._dataCache.presents.find(p => p.id === presentId);
@@ -1658,14 +1658,14 @@ function handleReserveClick(event, presentId, action) {
             previousState.reserved_by_username = present.reserved_by_username;
         }
     }
-    
+
     // Perform optimistic updates immediately
     updateButtonOptimistically(button, action);
     if (presentItem) {
         updatePresentItemOptimistically(presentItem, action);
     }
     updateCacheOptimistically(presentId, action, window._currentUserId);
-    
+
     // Make API call with rollback capability
     if (action === 'reserve') {
         reservePresentFromRecipients(presentId, button, previousState);
@@ -1677,9 +1677,9 @@ function handleReserveClick(event, presentId, action) {
 function formatCommentsPreview(comments) {
     // Truncate long comments and make URLs clickable
     const maxLength = 500;
-    let truncated = comments.length > maxLength ? 
+    let truncated = comments.length > maxLength ?
         comments.substring(0, maxLength) + '...' : comments;
-    
+
     // Regex to match URLs and domain-like words
     // Matches http(s)://... or www.... or anything.something
     const urlRegex = /((https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?)/gi;
@@ -1695,7 +1695,7 @@ function formatCommentsPreview(comments) {
 
 function convertUrlsToLinks(text) {
     if (!text) return text;
-    
+
     // Convert URLs to clickable links
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
@@ -1703,12 +1703,12 @@ function convertUrlsToLinks(text) {
 
 function addRecipient() {
     const name = document.getElementById('recipientName').value.trim();
-    
+
     if (!name) {
         showErrorModal('Nazwa jest wymagana');
         return;
     }
-    
+
     fetch('/api/recipients', {
         method: 'POST',
         headers: {
@@ -1716,20 +1716,20 @@ function addRecipient() {
         },
         body: JSON.stringify({ name })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.id) {
-            showSuccessMessage('Osoba została dodana!');
-            document.getElementById('recipientForm').reset();
-            softReloadRecipients();
-        } else {
-            showErrorModal(data.error || 'Błąd podczas dodawania osoby');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showErrorModal('Błąd połączenia z serwerem');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.recipient) {
+                showSuccessMessage('Osoba została dodana!');
+                document.getElementById('recipientForm').reset();
+                softReloadRecipients();
+            } else {
+                showErrorModal(data.error || 'Błąd podczas dodawania osoby');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorModal('Błąd połączenia z serwerem');
+        });
 }
 
 function deleteRecipient(id, name) {
@@ -1745,26 +1745,26 @@ function deleteRecipient(id, name) {
 function deleteRecipientConfirmed() {
     const id = document.getElementById('confirmDeleteRecipientModal').getAttribute('data-recipient-id');
     const modal = bootstrap.Modal.getInstance(document.getElementById('confirmDeleteRecipientModal'));
-    
+
     fetch(`/api/recipients/${id}`, {
         method: 'DELETE'
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                modal.hide();
+                showSuccessMessage('Osoba została usunięta!');
+                softReloadRecipients();
+            } else {
+                modal.hide();
+                showErrorModal(data.error || 'Błąd podczas usuwania osoby');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
             modal.hide();
-            showSuccessMessage('Osoba została usunięta!');
-            softReloadRecipients();
-        } else {
-            modal.hide();
-            showErrorModal(data.error || 'Błąd podczas usuwania osoby');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        modal.hide();
-        showErrorModal('Błąd połączenia z serwerem');
-    });
+            showErrorModal('Błąd połączenia z serwerem');
+        });
 }
 
 function escapeHtml(text) {
@@ -1773,18 +1773,18 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
- 
+
 
 // Modal functions
 function openAddPresentModal() {
     // Show modal immediately for better UX
     const modal = new bootstrap.Modal(document.getElementById('addPresentModal'));
     modal.show();
-    
+
     // Clear form immediately
     document.getElementById('addPresentForm').reset();
     document.getElementById('addPresentMessage').style.display = 'none';
-    
+
     // Use cached data if available, otherwise load fresh data
     if (window._cachedRecipients && window._cachedIdentificationStatus) {
         populateAddPresentModal(window._cachedRecipients, window._cachedIdentificationStatus);
@@ -1792,34 +1792,34 @@ function openAddPresentModal() {
         // Show loading state in dropdown
         const select = document.getElementById('recipientSelect');
         select.innerHTML = '<option value="">Ładowanie...</option>';
-        
+
         // Load data in background
         Promise.all([
             fetch('/api/recipients').then(response => response.json()),
             fetch('/api/user/identification').then(response => response.json())
         ])
-        .then(([recipients, identificationStatus]) => {
-            // Cache the data
-            window._cachedRecipients = recipients;
-            window._cachedIdentificationStatus = identificationStatus;
-            
-            populateAddPresentModal(recipients, identificationStatus);
-        })
-        .catch(error => {
-            console.error('Error loading recipients:', error);
-            const select = document.getElementById('recipientSelect');
-            select.innerHTML = '<option value="">Błąd ładowania</option>';
-            showModalMessage('addPresentMessage', 'Błąd podczas ładowania listy osób', 'danger');
-        });
+            .then(([recipients, identificationStatus]) => {
+                // Cache the data
+                window._cachedRecipients = recipients;
+                window._cachedIdentificationStatus = identificationStatus;
+
+                populateAddPresentModal(recipients, identificationStatus);
+            })
+            .catch(error => {
+                console.error('Error loading recipients:', error);
+                const select = document.getElementById('recipientSelect');
+                select.innerHTML = '<option value="">Błąd ładowania</option>';
+                showModalMessage('addPresentMessage', 'Błąd podczas ładowania listy osób', 'danger');
+            });
     }
 }
 
 function populateAddPresentModal(recipients, identificationStatus) {
     const select = document.getElementById('recipientSelect');
-    
+
     // Clear select
     select.innerHTML = '<option value="">Wybierz osobę</option>';
-    
+
     // Add existing recipients to select
     recipients.forEach(recipient => {
         const option = document.createElement('option');
@@ -1827,17 +1827,17 @@ function populateAddPresentModal(recipients, identificationStatus) {
         option.textContent = recipient.name;
         select.appendChild(option);
     });
-    
+
     // Add "Add person" option at the end
     const addOption = document.createElement('option');
     addOption.value = 'add_new';
     addOption.textContent = '➕ Dodaj nową osobę';
     select.appendChild(addOption);
-    
+
     // Default set identified person if user is identified
     if (identificationStatus.isIdentified && identificationStatus.identifiedRecipient) {
         const identifiedId = identificationStatus.identifiedRecipient.id.toString();
-        
+
         for (let i = 0; i < select.options.length; i++) {
             if (select.options[i].value === identifiedId) {
                 select.selectedIndex = i;
@@ -1853,34 +1853,34 @@ function addPresentFromModal() {
     const title = document.getElementById('presentTitle').value.trim();
     const recipientId = document.getElementById('recipientSelect').value;
     const comments = document.getElementById('presentComments').value.trim();
-    
+
     if (!title) {
         showModalMessage('addPresentMessage', 'Nazwa prezentu jest wymagana', 'danger');
         return;
     }
-    
+
     if (!recipientId) {
         showModalMessage('addPresentMessage', 'Wybierz osobę dla prezentu', 'danger');
         return;
     }
-    
+
     // Check if user wants to add new person
     if (recipientId === 'add_new') {
         // Close current modal and open add recipient modal
         const addPresentModal = bootstrap.Modal.getInstance(document.getElementById('addPresentModal'));
         addPresentModal.hide();
-        
+
         // Store form data for later use
         window.pendingPresentData = {
             title: title,
             comments: comments
         };
-        
+
         // Open add recipient modal
         openAddRecipientModal();
         return;
     }
-    
+
     // Add the present with existing recipient
     fetch('/api/presents', {
         method: 'POST',
@@ -1893,51 +1893,51 @@ function addPresentFromModal() {
             comments
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.id) {
-            showModalMessage('addPresentMessage', 'Prezent został dodany!', 'success');
-            document.getElementById('addPresentForm').reset();
-            
-            // Refresh the recipients list to show the new present
-            softReloadRecipients();
-            
-            // Close modal after 1 second
-            setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('addPresentModal'));
-                modal.hide();
-            }, 1000);
-        } else {
-            showModalMessage('addPresentMessage', data.error || 'Błąd podczas dodawania prezentu', 'danger');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showModalMessage('addPresentMessage', 'Błąd połączenia z serwerem', 'danger');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.id) {
+                showModalMessage('addPresentMessage', 'Prezent został dodany!', 'success');
+                document.getElementById('addPresentForm').reset();
+
+                // Refresh the recipients list to show the new present
+                softReloadRecipients();
+
+                // Close modal after 1 second
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addPresentModal'));
+                    modal.hide();
+                }, 1000);
+            } else {
+                showModalMessage('addPresentMessage', data.error || 'Błąd podczas dodawania prezentu', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showModalMessage('addPresentMessage', 'Błąd połączenia z serwerem', 'danger');
+        });
 }
 
 function openReservedPresentsModal() {
     // Load reserved presents
     fetch('/api/presents/all')
-    .then(response => response.json())
-    .then(presents => {
-        const reservedPresents = presents.filter(present => present.reserved_by === currentUserId);
-        displayReservedPresentsInModal(reservedPresents);
-        
-        // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('reservedPresentsModal'));
-        modal.show();
-    })
-    .catch(error => {
-        console.error('Error loading presents:', error);
-        showErrorModal('Błąd podczas ładowania prezentów');
-    });
+        .then(response => response.json())
+        .then(presents => {
+            const reservedPresents = presents.filter(present => present.reserved_by === currentUserId);
+            displayReservedPresentsInModal(reservedPresents);
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('reservedPresentsModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error loading presents:', error);
+            showErrorModal('Błąd podczas ładowania prezentów');
+        });
 }
 
 function displayReservedPresentsInModal(presents) {
     const container = document.getElementById('reservedPresentsList');
-    
+
     if (presents.length === 0) {
         container.innerHTML = `
             <div class="text-center text-muted">
@@ -1947,11 +1947,11 @@ function displayReservedPresentsInModal(presents) {
         `;
         return;
     }
-    
+
     // Separate presents into two categories
     const uncheckedPresents = presents.filter(present => !present.is_checked);
     const checkedPresents = presents.filter(present => present.is_checked);
-    
+
     container.innerHTML = `
         <div class="row">
             <!-- Do kupienia -->
@@ -1965,9 +1965,9 @@ function displayReservedPresentsInModal(presents) {
                         <span class="badge bg-warning text-dark">${uncheckedPresents.length}</span>
                     </div>
                     <div class="card-body">
-                        ${uncheckedPresents.length === 0 ? 
-                            '<p class="text-muted text-center">Brak prezentów do kupienia</p>' :
-                            uncheckedPresents.map(present => `
+                        ${uncheckedPresents.length === 0 ?
+            '<p class="text-muted text-center">Brak prezentów do kupienia</p>' :
+            uncheckedPresents.map(present => `
                                 <div class="present-item-modal card mb-2" data-id="${present.id}">
                                     <div class="card-body p-3">
                                         <div class="row align-items-center">
@@ -1981,28 +1981,26 @@ function displayReservedPresentsInModal(presents) {
                                             <div class="col-11">
                                                 <h6 class="mb-1">${convertUrlsToLinks(escapeHtml(present.title))}</h6>
                                                 <small class="text-muted">Dla: ${escapeHtml(present.recipient_name)}</small>
-                                                ${
-                                                    typeof present.comments === 'string' && present.comments.trim().length > 0
-                                                        ? `
+                                                ${typeof present.comments === 'string' && present.comments.trim().length > 0
+                    ? `
                                                     <div class="mt-2">
                                                         <div class="card card-body p-2" style="background: #f8f9fa; min-height: 80px; max-height: 220px; overflow-y: auto;">
                                                             <small class="text-muted" style="white-space: pre-line;">${escapeHtml(present.comments)}</small>
                                                         </div>
                                                     </div>
                                                 `
-                                                        : ''
-                                                }
-                                                ${
-                                                    present.comments && typeof present.comments !== 'string'
-                                                        ? `<div class="alert alert-danger mt-2 p-2">Błąd: nieprawidłowy format komentarza</div>`
-                                                        : ''
-                                                }
+                    : ''
+                }
+                                                ${present.comments && typeof present.comments !== 'string'
+                    ? `<div class="alert alert-danger mt-2 p-2">Błąd: nieprawidłowy format komentarza</div>`
+                    : ''
+                }
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             `).join('')
-                        }
+        }
                     </div>
                 </div>
             </div>
@@ -2018,9 +2016,9 @@ function displayReservedPresentsInModal(presents) {
                         <span class="badge bg-success">${checkedPresents.length}</span>
                     </div>
                     <div class="card-body">
-                        ${checkedPresents.length === 0 ? 
-                            '<p class="text-muted text-center">Brak kupionych prezentów</p>' :
-                            checkedPresents.map(present => `
+                        ${checkedPresents.length === 0 ?
+            '<p class="text-muted text-center">Brak kupionych prezentów</p>' :
+            checkedPresents.map(present => `
                                 <div class="present-item-modal card mb-2 checked" data-id="${present.id}">
                                     <div class="card-body p-3">
                                         <div class="row align-items-center">
@@ -2040,7 +2038,7 @@ function displayReservedPresentsInModal(presents) {
                                     </div>
                                 </div>
                             `).join('')
-                        }
+        }
                     </div>
                 </div>
             </div>
@@ -2084,7 +2082,7 @@ function updateModalPresentCheckStatus(id, isChecked, presentItem) {
             present.is_checked = isChecked;
         }
     }
-    
+
     // Update the UI immediately
     if (isChecked) {
         presentItem.classList.add('checked');
@@ -2099,17 +2097,41 @@ function updateModalPresentCheckStatus(id, isChecked, presentItem) {
         },
         body: JSON.stringify({ is_checked: isChecked })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Remove updating state
-            presentItem.classList.remove('updating');
-            presentItem.classList.remove('animating');
-            
-            // Update badge counts without full reload
-            updateModalBadgeCounts();
-        } else {
-            console.error('Failed to toggle present:', data.error);
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove updating state
+                presentItem.classList.remove('updating');
+                presentItem.classList.remove('animating');
+
+                // Update badge counts without full reload
+                updateModalBadgeCounts();
+            } else {
+                console.error('Failed to toggle present:', data.error);
+                // Revert optimistic update on error
+                if (window._dataCache && window._dataCache.presents) {
+                    const present = window._dataCache.presents.find(p => p.id === id);
+                    if (present) {
+                        present.is_checked = !isChecked;
+                    }
+                }
+                // Revert UI
+                if (isChecked) {
+                    presentItem.classList.remove('checked');
+                } else {
+                    presentItem.classList.add('checked');
+                }
+                // Revert checkbox
+                const checkbox = presentItem.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = !isChecked;
+                }
+                presentItem.classList.remove('updating');
+                presentItem.classList.remove('animating');
+            }
+        })
+        .catch(error => {
+            console.error('Error toggling present:', error);
             // Revert optimistic update on error
             if (window._dataCache && window._dataCache.presents) {
                 const present = window._dataCache.presents.find(p => p.id === id);
@@ -2130,46 +2152,22 @@ function updateModalPresentCheckStatus(id, isChecked, presentItem) {
             }
             presentItem.classList.remove('updating');
             presentItem.classList.remove('animating');
-        }
-    })
-    .catch(error => {
-        console.error('Error toggling present:', error);
-        // Revert optimistic update on error
-        if (window._dataCache && window._dataCache.presents) {
-            const present = window._dataCache.presents.find(p => p.id === id);
-            if (present) {
-                present.is_checked = !isChecked;
-            }
-        }
-        // Revert UI
-        if (isChecked) {
-            presentItem.classList.remove('checked');
-        } else {
-            presentItem.classList.add('checked');
-        }
-        // Revert checkbox
-        const checkbox = presentItem.querySelector('input[type="checkbox"]');
-        if (checkbox) {
-            checkbox.checked = !isChecked;
-        }
-        presentItem.classList.remove('updating');
-        presentItem.classList.remove('animating');
-    });
+        });
 }
 
 // Update badge counts in modal without full reload
 function updateModalBadgeCounts() {
     if (!window._dataCache || !window._dataCache.presents) return;
-    
+
     const currentUserId = window._currentUserId;
     const reservedPresents = window._dataCache.presents.filter(p => p.reserved_by === currentUserId);
     const uncheckedPresents = reservedPresents.filter(p => !p.is_checked);
     const checkedPresents = reservedPresents.filter(p => p.is_checked);
-    
+
     // Update badges
     const uncheckedBadge = document.querySelector('#reservedPresentsModal .card-header .badge.bg-warning');
     const checkedBadge = document.querySelector('#reservedPresentsModal .card-header .badge.bg-success');
-    
+
     if (uncheckedBadge) {
         uncheckedBadge.textContent = uncheckedPresents.length;
     }
@@ -2202,7 +2200,7 @@ function animateModalPresentTransition(presentItem, isChecked, callback) {
     clone.style.pointerEvents = 'none';
     clone.style.opacity = '1'; // Keep the animated item fully opaque
     clone.classList.remove('updating', 'animating');
-    
+
     // Add to container
     container.style.position = 'relative';
     container.appendChild(clone);
@@ -2210,7 +2208,7 @@ function animateModalPresentTransition(presentItem, isChecked, callback) {
     // Animate the clone
     const targetY = isChecked ? containerRect.height : -itemHeight;
     clone.style.transition = 'all 0.8s ease-out'; // Updated to 0.8s
-    
+
     // Trigger animation
     setTimeout(() => {
         clone.style.transform = `translateY(${targetY}px)`;
@@ -2232,19 +2230,19 @@ function cancelReservationFromModal(presentId) {
         fetch(`/api/presents/${presentId}/reserve`, {
             method: 'DELETE'
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Refresh the reserved presents list
-                openReservedPresentsModal();
-            } else {
-                showErrorModal(data.error || 'Błąd podczas anulowania rezerwacji');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showErrorModal('Błąd połączenia z serwerem');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Refresh the reserved presents list
+                    openReservedPresentsModal();
+                } else {
+                    showErrorModal(data.error || 'Błąd podczas anulowania rezerwacji');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorModal('Błąd połączenia z serwerem');
+            });
     }
 }
 
@@ -2252,7 +2250,7 @@ function openAddRecipientModal() {
     // Clear form
     document.getElementById('addRecipientForm').reset();
     document.getElementById('addRecipientMessage').style.display = 'none';
-    
+
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('addRecipientModal'));
     modal.show();
@@ -2260,12 +2258,12 @@ function openAddRecipientModal() {
 
 function addRecipientFromModal() {
     const name = document.getElementById('recipientName').value.trim();
-    
+
     if (!name) {
         showModalMessage('addRecipientMessage', 'Nazwa jest wymagana', 'danger');
         return;
     }
-    
+
     fetch('/api/recipients', {
         method: 'POST',
         headers: {
@@ -2273,40 +2271,40 @@ function addRecipientFromModal() {
         },
         body: JSON.stringify({ name })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.id) {
-            // Close add recipient modal
-            const addRecipientModal = bootstrap.Modal.getInstance(document.getElementById('addRecipientModal'));
-            addRecipientModal.hide();
-            
-            // Check if we have pending present data
-            if (window.pendingPresentData) {
-                // Return to add present modal with the new recipient selected
-                returnToAddPresentModalWithNewRecipient(data.id, name);
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.recipient) {
+                // Close add recipient modal
+                const addRecipientModal = bootstrap.Modal.getInstance(document.getElementById('addRecipientModal'));
+                addRecipientModal.hide();
+
+                // Check if we have pending present data
+                if (window.pendingPresentData) {
+                    // Return to add present modal with the new recipient selected
+                    returnToAddPresentModalWithNewRecipient(data.recipient.id, name);
+                } else {
+                    // Normal flow - just show success message and refresh list
+                    showModalMessage('addRecipientMessage', 'Osoba została dodana!', 'success');
+                    document.getElementById('addRecipientForm').reset();
+
+                    // Clear cache and refresh the recipients list to show the new person
+                    clearRecipientsCache();
+                    softReloadRecipients();
+
+                    // Close modal after 1 second
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('addRecipientModal'));
+                        modal.hide();
+                    }, 1000);
+                }
             } else {
-                // Normal flow - just show success message and refresh list
-                showModalMessage('addRecipientMessage', 'Osoba została dodana!', 'success');
-                document.getElementById('addRecipientForm').reset();
-                
-                // Clear cache and refresh the recipients list to show the new person
-                clearRecipientsCache();
-                softReloadRecipients();
-                
-                // Close modal after 1 second
-                setTimeout(() => {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addRecipientModal'));
-                    modal.hide();
-                }, 1000);
+                showModalMessage('addRecipientMessage', data.error || 'Błąd podczas dodawania osoby', 'danger');
             }
-        } else {
-            showModalMessage('addRecipientMessage', data.error || 'Błąd podczas dodawania osoby', 'danger');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showModalMessage('addRecipientMessage', 'Błąd połączenia z serwerem', 'danger');
-    });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showModalMessage('addRecipientMessage', 'Błąd połączenia z serwerem', 'danger');
+        });
 }
 
 function returnToAddPresentModalWithNewRecipient(recipientId, recipientName) {
@@ -2315,52 +2313,52 @@ function returnToAddPresentModalWithNewRecipient(recipientId, recipientName) {
         fetch('/api/recipients').then(response => response.json()),
         fetch('/api/user/identification').then(response => response.json())
     ])
-    .then(([recipients, identificationStatus]) => {
-        const select = document.getElementById('recipientSelect');
-        
-        // Clear select
-        select.innerHTML = '<option value="">Wybierz osobę</option>';
-        
-        // Add existing recipients to select
-        recipients.forEach(recipient => {
-            const option = document.createElement('option');
-            option.value = recipient.id;
-            option.textContent = recipient.name;
-            select.appendChild(option);
-        });
-        
-        // Add "Add person" option at the end
-        const addOption = document.createElement('option');
-        addOption.value = 'add_new';
-        addOption.textContent = '➕ Dodaj nową osobę';
-        select.appendChild(addOption);
-        
-        // Restore form data
-        document.getElementById('presentTitle').value = window.pendingPresentData.title;
-        document.getElementById('presentComments').value = window.pendingPresentData.comments;
-        
-        // Select the newly added recipient
-        for (let i = 0; i < select.options.length; i++) {
-            if (select.options[i].value === recipientId.toString()) {
-                select.selectedIndex = i;
-                break;
+        .then(([recipients, identificationStatus]) => {
+            const select = document.getElementById('recipientSelect');
+
+            // Clear select
+            select.innerHTML = '<option value="">Wybierz osobę</option>';
+
+            // Add existing recipients to select
+            recipients.forEach(recipient => {
+                const option = document.createElement('option');
+                option.value = recipient.id;
+                option.textContent = recipient.name;
+                select.appendChild(option);
+            });
+
+            // Add "Add person" option at the end
+            const addOption = document.createElement('option');
+            addOption.value = 'add_new';
+            addOption.textContent = '➕ Dodaj nową osobę';
+            select.appendChild(addOption);
+
+            // Restore form data
+            document.getElementById('presentTitle').value = window.pendingPresentData.title;
+            document.getElementById('presentComments').value = window.pendingPresentData.comments;
+
+            // Select the newly added recipient
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === recipientId.toString()) {
+                    select.selectedIndex = i;
+                    break;
+                }
             }
-        }
-        
-        // Clear pending data
-        delete window.pendingPresentData;
-        
-        // Clear any previous messages
-        document.getElementById('addPresentMessage').style.display = 'none';
-        
-        // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('addPresentModal'));
-        modal.show();
-    })
-    .catch(error => {
-        console.error('Error loading recipients:', error);
-        showErrorModal('Błąd podczas ładowania listy osób');
-    });
+
+            // Clear pending data
+            delete window.pendingPresentData;
+
+            // Clear any previous messages
+            document.getElementById('addPresentMessage').style.display = 'none';
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('addPresentModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error loading recipients:', error);
+            showErrorModal('Błąd podczas ładowania listy osób');
+        });
 }
 
 function showModalMessage(elementId, message, type) {
@@ -2424,13 +2422,13 @@ function rollbackOptimisticUpdate(presentId, previousState) {
             present.reserved_by_username = previousState.reserved_by_username;
         }
     }
-    
+
     // Restore present item classes
     const presentItem = document.querySelector(`[data-id="${presentId}"]`);
     if (presentItem) {
         presentItem.className = previousState.itemClasses;
     }
-    
+
     // Restore button - need to find it again and update its HTML
     const button = presentItem ? presentItem.querySelector('.reserve-btn') : null;
     if (button) {
@@ -2445,53 +2443,53 @@ function reservePresentFromRecipients(presentId, button, previousState) {
             'Content-Type': 'application/json',
         }
     }, 10000)
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => {
-                throw new Error(data.error || 'Server error');
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            // Success - optimistic update is confirmed
-            showSuccessToast('Prezent zarezerwowany!');
-            
-            // Update button to show cancel action with correct onclick handler
-            const presentItem = document.querySelector(`[data-id="${presentId}"]`);
-            const currentButton = presentItem ? presentItem.querySelector('.reserve-btn') : null;
-            if (currentButton) {
-                currentButton.disabled = false;
-                currentButton.classList.remove('updating');
-                currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'cancel')`);
-                currentButton.setAttribute('title', 'Usuń rezerwację');
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Server error');
+                });
             }
-        } else {
-            // Server returned success: false - rollback
-            const errorMsg = data.error || 'Błąd podczas rezerwacji';
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Success - optimistic update is confirmed
+                showSuccessToast('Prezent zarezerwowany!');
+
+                // Update button to show cancel action with correct onclick handler
+                const presentItem = document.querySelector(`[data-id="${presentId}"]`);
+                const currentButton = presentItem ? presentItem.querySelector('.reserve-btn') : null;
+                if (currentButton) {
+                    currentButton.disabled = false;
+                    currentButton.classList.remove('updating');
+                    currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'cancel')`);
+                    currentButton.setAttribute('title', 'Usuń rezerwację');
+                }
+            } else {
+                // Server returned success: false - rollback
+                const errorMsg = data.error || 'Błąd podczas rezerwacji';
+                showErrorToast(errorMsg);
+                rollbackOptimisticUpdate(presentId, previousState);
+            }
+        })
+        .catch(error => {
+            console.error('Error reserving present:', error);
+
+            // Determine error type for better messaging
+            let errorMsg = 'Błąd podczas rezerwacji';
+            if (error.message === 'Request timeout') {
+                errorMsg = 'Przekroczono limit czasu żądania. Spróbuj ponownie.';
+            } else if (error.message.includes('already reserved')) {
+                errorMsg = 'Ten prezent został już zarezerwowany przez kogoś innego';
+            } else if (!navigator.onLine) {
+                errorMsg = 'Brak połączenia z internetem';
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+
             showErrorToast(errorMsg);
             rollbackOptimisticUpdate(presentId, previousState);
-        }
-    })
-    .catch(error => {
-        console.error('Error reserving present:', error);
-        
-        // Determine error type for better messaging
-        let errorMsg = 'Błąd podczas rezerwacji';
-        if (error.message === 'Request timeout') {
-            errorMsg = 'Przekroczono limit czasu żądania. Spróbuj ponownie.';
-        } else if (error.message.includes('already reserved')) {
-            errorMsg = 'Ten prezent został już zarezerwowany przez kogoś innego';
-        } else if (!navigator.onLine) {
-            errorMsg = 'Brak połączenia z internetem';
-        } else if (error.message) {
-            errorMsg = error.message;
-        }
-        
-        showErrorToast(errorMsg);
-        rollbackOptimisticUpdate(presentId, previousState);
-    });
+        });
 }
 
 function cancelReservationFromRecipients(presentId, button, previousState) {
@@ -2501,53 +2499,53 @@ function cancelReservationFromRecipients(presentId, button, previousState) {
             'Content-Type': 'application/json',
         }
     }, 10000)
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => {
-                throw new Error(data.error || 'Server error');
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            // Success - optimistic update is confirmed
-            showSuccessToast('Rezerwacja anulowana');
-            
-            // Update button to show reserve action with correct onclick handler
-            const presentItem = document.querySelector(`[data-id="${presentId}"]`);
-            const currentButton = presentItem ? presentItem.querySelector('.reserve-btn') : null;
-            if (currentButton) {
-                currentButton.disabled = false;
-                currentButton.classList.remove('updating');
-                currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'reserve')`);
-                currentButton.setAttribute('title', 'Zarezerwuj prezent');
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Server error');
+                });
             }
-        } else {
-            // Server returned success: false - rollback
-            const errorMsg = data.error || 'Błąd podczas anulowania rezerwacji';
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Success - optimistic update is confirmed
+                showSuccessToast('Rezerwacja anulowana');
+
+                // Update button to show reserve action with correct onclick handler
+                const presentItem = document.querySelector(`[data-id="${presentId}"]`);
+                const currentButton = presentItem ? presentItem.querySelector('.reserve-btn') : null;
+                if (currentButton) {
+                    currentButton.disabled = false;
+                    currentButton.classList.remove('updating');
+                    currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'reserve')`);
+                    currentButton.setAttribute('title', 'Zarezerwuj prezent');
+                }
+            } else {
+                // Server returned success: false - rollback
+                const errorMsg = data.error || 'Błąd podczas anulowania rezerwacji';
+                showErrorToast(errorMsg);
+                rollbackOptimisticUpdate(presentId, previousState);
+            }
+        })
+        .catch(error => {
+            console.error('Error canceling reservation:', error);
+
+            // Determine error type for better messaging
+            let errorMsg = 'Błąd podczas anulowania rezerwacji';
+            if (error.message === 'Request timeout') {
+                errorMsg = 'Przekroczono limit czasu żądania. Spróbuj ponownie.';
+            } else if (error.message.includes('not reserved')) {
+                errorMsg = 'Ten prezent nie jest zarezerwowany';
+            } else if (!navigator.onLine) {
+                errorMsg = 'Brak połączenia z internetem';
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+
             showErrorToast(errorMsg);
             rollbackOptimisticUpdate(presentId, previousState);
-        }
-    })
-    .catch(error => {
-        console.error('Error canceling reservation:', error);
-        
-        // Determine error type for better messaging
-        let errorMsg = 'Błąd podczas anulowania rezerwacji';
-        if (error.message === 'Request timeout') {
-            errorMsg = 'Przekroczono limit czasu żądania. Spróbuj ponownie.';
-        } else if (error.message.includes('not reserved')) {
-            errorMsg = 'Ten prezent nie jest zarezerwowany';
-        } else if (!navigator.onLine) {
-            errorMsg = 'Brak połączenia z internetem';
-        } else if (error.message) {
-            errorMsg = error.message;
-        }
-        
-        showErrorToast(errorMsg);
-        rollbackOptimisticUpdate(presentId, previousState);
-    });
+        });
 }
 
 function showReservedByOtherModal(username) {
@@ -2624,7 +2622,7 @@ function showRecipientDetailsFromList(recipientId) {
 
 // Zmodyfikuj displayRecipientsWithPresents by zapisać dane globalnie
 const oldDisplayRecipientsWithPresents = displayRecipientsWithPresents;
-displayRecipientsWithPresents = function(recipients, presents) {
+displayRecipientsWithPresents = function (recipients, presents) {
     // Zbuduj mapę prezentów po recipientId
     const presentsByRecipient = {};
     presents.forEach(p => {
@@ -2637,16 +2635,16 @@ displayRecipientsWithPresents = function(recipients, presents) {
 };
 
 // Add proper focus management for modals to prevent aria-hidden accessibility issues
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Handle modal hidden events to ensure proper focus management
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
-        modal.addEventListener('hidden.bs.modal', function() {
+        modal.addEventListener('hidden.bs.modal', function () {
             // Move focus to body when modal is hidden to prevent aria-hidden issues
             document.body.focus();
         });
-        
-        modal.addEventListener('show.bs.modal', function() {
+
+        modal.addEventListener('show.bs.modal', function () {
             // Ensure modal is properly accessible when shown
             this.removeAttribute('aria-hidden');
         });
@@ -2656,28 +2654,28 @@ document.addEventListener('DOMContentLoaded', function() {
 function openChangePictureModal(recipientId) {
     // Store the recipient ID for later use
     window.currentChangingRecipientId = recipientId;
-    
+
     const modal = document.getElementById('changePictureModal');
     if (!modal) {
         console.error('Change picture modal not found');
         return;
     }
-    
+
     // Clear previous form
     document.getElementById('changePictureForm').reset();
     document.getElementById('imagePreview').style.display = 'none';
-    
+
     // Show the modal
     const bootstrapModal = new bootstrap.Modal(modal);
     bootstrapModal.show();
-    
+
     // Add event listener for file input
     const fileInput = document.getElementById('newProfilePicture');
-    fileInput.onchange = function() {
+    fileInput.onchange = function () {
         const file = this.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 document.getElementById('previewImage').src = e.target.result;
                 document.getElementById('imagePreview').style.display = 'block';
             };
@@ -2690,40 +2688,40 @@ function saveNewProfilePicture() {
     const fileInput = document.getElementById('newProfilePicture');
     const file = fileInput.files[0];
     const recipientId = window.currentChangingRecipientId;
-    
+
     if (!file || !recipientId) {
         alert('Proszę wybrać zdjęcie');
         return;
     }
-    
+
     const formData = new FormData();
     formData.append('profile_picture', file);
-    
+
     fetch(`/api/recipients/${recipientId}/profile-picture`, {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Close the modal
-            const modal = document.getElementById('changePictureModal');
-            const bootstrapModal = bootstrap.Modal.getInstance(modal);
-            bootstrapModal.hide();
-            
-            // Refresh the recipients list
-            softReloadRecipients();
-            
-            // Show success message
-            alert('Zdjęcie profilowe zostało zaktualizowane');
-        } else {
-            alert('Błąd podczas aktualizacji zdjęcia: ' + (data.error || 'Nieznany błąd'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Błąd podczas aktualizacji zdjęcia');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close the modal
+                const modal = document.getElementById('changePictureModal');
+                const bootstrapModal = bootstrap.Modal.getInstance(modal);
+                bootstrapModal.hide();
+
+                // Refresh the recipients list
+                softReloadRecipients();
+
+                // Show success message
+                alert('Zdjęcie profilowe zostało zaktualizowane');
+            } else {
+                alert('Błąd podczas aktualizacji zdjęcia: ' + (data.error || 'Nieznany błąd'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Błąd podczas aktualizacji zdjęcia');
+        });
 }
 
 function openProfilePicturePreview(recipientId) {
@@ -2731,15 +2729,15 @@ function openProfilePicturePreview(recipientId) {
     if (!recipient || !recipient.profile_picture || recipient.profile_picture.trim() === '') {
         return; // Don't open modal for placeholders
     }
-    
+
     const modal = document.getElementById('profilePreviewModal');
     const previewImage = document.getElementById('profilePreviewImage');
     const previewName = document.getElementById('profilePreviewName');
-    
+
     if (modal && previewImage && previewName) {
         previewImage.src = getFullProfilePictureUrl(recipient.profile_picture);
         previewName.textContent = recipient.name;
-        
+
         const bootstrapModal = new bootstrap.Modal(modal);
         bootstrapModal.show();
     }
@@ -2748,15 +2746,15 @@ function openProfilePicturePreview(recipientId) {
 // Edit present function
 function editPresent(presentId, title, recipientId, comments) {
     console.log('Editing present:', { presentId, title, recipientId, comments });
-    
+
     // Set the form values
     document.getElementById('editPresentId').value = presentId;
     document.getElementById('editPresentTitle').value = title;
     document.getElementById('editPresentComments').value = comments || '';
-    
+
     // Populate recipient select
     populateEditRecipientSelect(recipientId);
-    
+
     // Show the modal
     const modal = new bootstrap.Modal(document.getElementById('editPresentModal'));
     modal.show();
@@ -2765,10 +2763,10 @@ function editPresent(presentId, title, recipientId, comments) {
 function populateEditRecipientSelect(selectedRecipientId) {
     const select = document.getElementById('editRecipientSelect');
     select.innerHTML = '<option value="">Wybierz osobę</option>';
-    
+
     // Use cached recipients if available
     const recipients = window._cachedRecipients || [];
-    
+
     recipients.forEach(recipient => {
         const option = document.createElement('option');
         option.value = recipient.id;
@@ -2785,20 +2783,20 @@ function saveEditedPresent() {
     const title = document.getElementById('editPresentTitle').value.trim();
     const recipientId = document.getElementById('editRecipientSelect').value;
     const comments = document.getElementById('editPresentComments').value.trim();
-    
+
     if (!title) {
         showEditPresentMessage('Nazwa prezentu jest wymagana', 'danger');
         return;
     }
-    
+
     if (!recipientId) {
         showEditPresentMessage('Wybierz osobę', 'danger');
         return;
     }
-    
+
     // Show loading state
     showEditPresentMessage('Zapisywanie...', 'info');
-    
+
     fetch(`/api/presents/${presentId}`, {
         method: 'PUT',
         headers: {
@@ -2810,25 +2808,25 @@ function saveEditedPresent() {
             comments: comments || null
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showEditPresentMessage('Prezent został zaktualizowany!', 'success');
-            
-            // Refresh the list
-            setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('editPresentModal'));
-                modal.hide();
-                softReloadRecipients();
-            }, 1000);
-        } else {
-            showEditPresentMessage(data.error || 'Błąd podczas aktualizacji prezentu', 'danger');
-        }
-    })
-    .catch(error => {
-        console.error('Error updating present:', error);
-        showEditPresentMessage('Błąd podczas aktualizacji prezentu', 'danger');
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showEditPresentMessage('Prezent został zaktualizowany!', 'success');
+
+                // Refresh the list
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editPresentModal'));
+                    modal.hide();
+                    softReloadRecipients();
+                }, 1000);
+            } else {
+                showEditPresentMessage(data.error || 'Błąd podczas aktualizacji prezentu', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating present:', error);
+            showEditPresentMessage('Błąd podczas aktualizacji prezentu', 'danger');
+        });
 }
 
 function showEditPresentMessage(message, type) {
@@ -2836,7 +2834,7 @@ function showEditPresentMessage(message, type) {
     messageDiv.className = `alert alert-${type} mt-3`;
     messageDiv.textContent = message;
     messageDiv.style.display = 'block';
-    
+
     if (type === 'success') {
         setTimeout(() => {
             messageDiv.style.display = 'none';
@@ -2846,20 +2844,20 @@ function showEditPresentMessage(message, type) {
 
 // Add deletePresent function if not present
 if (typeof window.deletePresent !== 'function') {
-  window.deletePresent = function(presentId, presentTitle, recipientId) {
-    if (!confirm(`Czy na pewno chcesz usunąć prezent: "${presentTitle}"?`)) return;
-    fetch(`/api/presents/${presentId}`, { method: 'DELETE' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          showSuccessMessage('Prezent został usunięty.');
-          softReloadRecipients();
-        } else {
-          showErrorModal(data.error || 'Błąd podczas usuwania prezentu');
-        }
-      })
-      .catch(() => showErrorModal('Błąd połączenia z serwerem'));
-  }
+    window.deletePresent = function (presentId, presentTitle, recipientId) {
+        if (!confirm(`Czy na pewno chcesz usunąć prezent: "${presentTitle}"?`)) return;
+        fetch(`/api/presents/${presentId}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessMessage('Prezent został usunięty.');
+                    softReloadRecipients();
+                } else {
+                    showErrorModal(data.error || 'Błąd podczas usuwania prezentu');
+                }
+            })
+            .catch(() => showErrorModal('Błąd połączenia z serwerem'));
+    }
 }
 
 // Function to reorder presents list after animation
@@ -2868,18 +2866,18 @@ function reorderPresentsList() {
     if (!presentsList) return;
 
     const presentItems = Array.from(presentsList.querySelectorAll('.present-item'));
-    
+
     // Store original positions before sorting
     const originalPositions = new Map();
     presentItems.forEach((item, index) => {
         originalPositions.set(item, index);
     });
-    
+
     // Sort items: unchecked first, then checked
     presentItems.sort((a, b) => {
         const aChecked = a.querySelector('.form-check-input').checked;
         const bChecked = b.querySelector('.form-check-input').checked;
-        
+
         if (aChecked === bChecked) return 0;
         return aChecked ? 1 : -1; // Unchecked items first
     });
@@ -2887,7 +2885,7 @@ function reorderPresentsList() {
     // Reorder DOM elements, skipping animation for items that don't move
     presentItems.forEach((item, newIndex) => {
         const originalIndex = originalPositions.get(item);
-        
+
         // Skip animation if item doesn't change position
         if (originalIndex === newIndex) {
             item.style.transition = 'none';
@@ -2908,12 +2906,12 @@ function reorderModalPresentsList() {
     if (!modalBody) return;
 
     const presentItems = Array.from(modalBody.querySelectorAll('.present-item-modal'));
-    
+
     // Sort items: unchecked first, then checked
     presentItems.sort((a, b) => {
         const aChecked = a.querySelector('.form-check-input').checked;
         const bChecked = b.querySelector('.form-check-input').checked;
-        
+
         if (aChecked === bChecked) return 0;
         return aChecked ? 1 : -1; // Unchecked items first
     });
@@ -2923,12 +2921,12 @@ function reorderModalPresentsList() {
     presentItems.forEach((item, index) => {
         originalPositions.set(item, index);
     });
-    
+
     // Sort items: unchecked first, then checked
     presentItems.sort((a, b) => {
         const aChecked = a.querySelector('.form-check-input').checked;
         const bChecked = b.querySelector('.form-check-input').checked;
-        
+
         if (aChecked === bChecked) return 0;
         return aChecked ? 1 : -1; // Unchecked items first
     });
@@ -2936,7 +2934,7 @@ function reorderModalPresentsList() {
     // Reorder DOM elements, skipping animation for items that don't move
     presentItems.forEach((item, newIndex) => {
         const originalIndex = originalPositions.get(item);
-        
+
         // Skip animation if item doesn't change position
         if (originalIndex === newIndex) {
             item.style.transition = 'none';
@@ -2949,7 +2947,7 @@ function reorderModalPresentsList() {
             modalBody.appendChild(item);
         }
     });
-} 
+}
 
 // Helper to get full profile picture URL
 function getFullProfilePictureUrl(path) {
@@ -2979,7 +2977,7 @@ function loadFromPersistentCache() {
         if (cached) {
             const cacheData = JSON.parse(cached);
             const age = Date.now() - cacheData.timestamp;
-            
+
             // Cache valid for 5 minutes
             if (age < 300000) {
                 return cacheData;
@@ -3007,9 +3005,9 @@ function clearPersistentCache() {
 // Soft reload - only updates cache without showing loading state
 function softReloadRecipients() {
     console.log('Soft reloading recipients data...');
-    
+
     const startTime = performance.now();
-    
+
     Promise.all([
         fetch('/api/recipients-with-presents').then(response => {
             if (!response.ok) throw new Error('API error');
@@ -3020,44 +3018,44 @@ function softReloadRecipients() {
             return response.json();
         })
     ])
-    .then(([combinedData, identificationStatus]) => {
-        const endTime = performance.now();
-        console.log(`Soft reload completed in ${(endTime - startTime).toFixed(2)}ms`);
-        
-        const recipients = combinedData.recipients || [];
-        const presentsData = combinedData.presents || [];
-        
-        // Update cache
-        const cacheData = { recipients, presents: presentsData, identificationStatus };
-        window._dataCache = cacheData;
-        window._dataCacheTimestamp = Date.now();
-        window._cachedRecipients = recipients;
-        window._cachedIdentificationStatus = identificationStatus;
-        
-        // Save to persistent cache
-        saveToPersistentCache(cacheData);
-        
-        // Update display without loading state
-        displayRecipientsWithPresents(recipients, presentsData);
-        handleIdentificationLogic(recipients, identificationStatus);
-    })
-    .catch(error => {
-        console.error('Error in soft reload:', error);
-        // Fallback to cached data if available
-        if (window._dataCache) {
-            console.log('Using cached data after soft reload error');
-        }
-    });
+        .then(([combinedData, identificationStatus]) => {
+            const endTime = performance.now();
+            console.log(`Soft reload completed in ${(endTime - startTime).toFixed(2)}ms`);
+
+            const recipients = combinedData.recipients || [];
+            const presentsData = combinedData.presents || [];
+
+            // Update cache
+            const cacheData = { recipients, presents: presentsData, identificationStatus };
+            window._dataCache = cacheData;
+            window._dataCacheTimestamp = Date.now();
+            window._cachedRecipients = recipients;
+            window._cachedIdentificationStatus = identificationStatus;
+
+            // Save to persistent cache
+            saveToPersistentCache(cacheData);
+
+            // Update display without loading state
+            displayRecipientsWithPresents(recipients, presentsData);
+            handleIdentificationLogic(recipients, identificationStatus);
+        })
+        .catch(error => {
+            console.error('Error in soft reload:', error);
+            // Fallback to cached data if available
+            if (window._dataCache) {
+                console.log('Using cached data after soft reload error');
+            }
+        });
 }
 
 // Toast notification system
 function showToast(message, type = 'success') {
     const toastId = `${type}Toast`;
     const messageId = `${type}ToastMessage`;
-    
+
     const toastElement = document.getElementById(toastId);
     const messageElement = document.getElementById(messageId);
-    
+
     if (toastElement && messageElement) {
         messageElement.textContent = message;
         const toast = new bootstrap.Toast(toastElement, {
@@ -3104,7 +3102,7 @@ function displayRecipientsData(recipients, presents, identificationStatus) {
     if (recipientsList) {
         recipientsList.classList.add('instant-load');
     }
-    
+
     // Store data globally for other functions
     window._allPresentsByRecipient = {};
     presents.forEach(present => {
@@ -3113,7 +3111,7 @@ function displayRecipientsData(recipients, presents, identificationStatus) {
         }
         window._allPresentsByRecipient[present.recipient_id].push(present);
     });
-    
+
     // Display the recipients
     displayRecipientsWithPresents(recipients, presents);
 }
@@ -3124,40 +3122,40 @@ function handleIdentificationLogic(recipients, identificationStatus) {
         recipients: recipients.map(r => ({ id: r.id, name: r.name, identified_by: r.identified_by })),
         identificationStatus
     });
-    
+
     // Ensure currentUserId is set
     if (!currentUserId) {
         console.warn('currentUserId not set, skipping identification logic');
         return;
     }
-    
+
     // First check the identification status from the API
     if (identificationStatus.isIdentified && identificationStatus.identifiedRecipient) {
         console.log('User is already identified according to API:', identificationStatus.identifiedRecipient.name, '- skipping identification flow');
         return;
     }
-    
+
     // Also check if user is already identified as any recipient in the recipients list
-    const alreadyIdentified = recipients.find(recipient => 
+    const alreadyIdentified = recipients.find(recipient =>
         recipient.identified_by === currentUserId
     );
-    
+
     console.log('Already identified check:', { currentUserId, alreadyIdentified });
-    
+
     if (alreadyIdentified) {
         console.log('User is already identified as:', alreadyIdentified.name, '- skipping identification flow');
         return; // Don't show any identification modals
     }
-    
+
     // Only show identification flow if user is not identified at all
     console.log('User is not identified, checking for identification options...');
-    
+
     // Find matching recipient by username (for first-time identification)
-    const matchingRecipient = recipients.find(recipient => 
+    const matchingRecipient = recipients.find(recipient =>
         recipient.name.toLowerCase() === identificationStatus.username?.toLowerCase() &&
         !recipient.identified_by
     );
-    
+
     if (matchingRecipient) {
         console.log('Found matching unidentified recipient:', matchingRecipient.name);
         setTimeout(() => {
@@ -3176,11 +3174,11 @@ function refreshRecipientsCache() {
         fetch('/api/recipients').then(response => response.json()),
         fetch('/api/user/identification').then(response => response.json())
     ])
-    .then(([recipients, identificationStatus]) => {
-        window._cachedRecipients = recipients;
-        window._cachedIdentificationStatus = identificationStatus;
-        return { recipients, identificationStatus };
-    });
+        .then(([recipients, identificationStatus]) => {
+            window._cachedRecipients = recipients;
+            window._cachedIdentificationStatus = identificationStatus;
+            return { recipients, identificationStatus };
+        });
 }
 
 // PWA functionality is now handled in recipients.html
