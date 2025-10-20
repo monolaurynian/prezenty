@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aktywność - Życzenia Prezentowe</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#F44336">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Życzenia Prezentowe">
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="seba_logo.png">
+    <link rel="apple-touch-icon" href="seba_logo.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.deduped.min.css" rel="stylesheet">
+    <link href="aws-design.css" rel="stylesheet">
+</head>
+<body class="activity-page">
+    <div class="background-overlay"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/recipients">
+                <div class="brand-container">
+                    <div class="brand-logo-container">
+                        <img src="seba_logo.png" alt="Logo" class="brand-logo">
+                    </div>
+                    <span class="brand-text">
+                        <i class="fas fa-gift me-2 holiday-icon christmas-sparkle"></i>Życzenia Prezentowe
+                    </span>
+                </div>
+            </a>
+            <div class="navbar-nav ms-auto d-flex align-items-center">
+                <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='/recipients'">
+                    <i class="fas fa-arrow-left me-1"></i>Powrót
+                </button>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="text-white">
+                        <i class="fas fa-bell me-2"></i>Aktywność
+                    </h2>
+                    <button class="btn btn-outline-light btn-sm" onclick="markAllAsRead()" id="markAllReadBtn">
+                        <i class="fas fa-check-double me-1"></i>Oznacz wszystkie jako przeczytane
+                    </button>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="card main-card">
+                    <div class="card-body">
+                        <div id="activityFeed">
+                            <!-- Loading state -->
+                            <div class="text-center py-5" id="loadingState">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Ładowanie...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Ładowanie aktywności...</p>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div id="paginationContainer" class="mt-4" style="display: none;">
+                            <nav>
+                                <ul class="pagination justify-content-center" id="pagination">
+                                    <!-- Pagination buttons will be inserted here -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let totalNotifications = 0;
+
+        // Notification type configuration
+        const notificationConfig = {
+            recipient_added: {
+                icon: 'fa-user-plus',
+                color: '#4CAF50',
+                getMessage: (data, actor) => `<strong>${actor}</strong> dodał(a) osobę <strong>${data.recipientName}</strong>`
+            },
+            present_added: {
+                icon: 'fa-gift',
+                color: '#2196F3',
+                getMessage: (data, actor) => `<strong>${actor}</strong> dodał(a) prezent "<strong>${data.presentTitle}</strong>" dla ${data.recipientName}`
+            },
+            present_reserved: {
+                icon: 'fa-bookmark',
+                color: '#FF9800',
+                getMessage: (data, actor) => `<strong>${actor}</strong> zarezerwował(a) prezent "<strong>${data.presentTitle}</strong>"`
+            },
+            present_unreserved: {
+                icon: 'fa-bookmark-slash',
+                color: '#9E9E9E',
+                getMessage: (data, actor) => `<strong>${actor}</strong> anulował(a) rezerwację "<strong>${data.presentTitle}</strong>"`
+            },
+            present_checked: {
+                icon: 'fa-check-circle',
+                color: '#4CAF50',
+                getMessage: (data, actor) => `<strong>${actor}</strong> oznaczył(a) jako kupione "<strong>${data.presentTitle}</strong>"`
+            },
+            present_unchecked: {
+                icon: 'fa-circle',
+                color: '#9E9E9E',
+                getMessage: (data, actor) => `<strong>${actor}</strong> odznaczył(a) "<strong>${data.presentTitle}</strong>"`
+            }
+        };
+
+        // Load notifications
+        function loadNotifications(page = 1) {
+            currentPage = page;
+            const offset = (page - 1) * itemsPerPage;
+            
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('activityFeed').innerHTML = '<div class="text-center py-5" id="loadingState"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Ładowanie...</span></div><p class="mt-3 text-muted">Ładowanie aktywności...</p></div>';
+            
+            fetch(`/api/notifications?limit=${itemsPerPage}&offset=${offset}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayNotifications(data.notifications);
+                    totalNotifications = offset + data.notifications.length + (data.hasMore ? 1 : 0);
+                    updatePagination(data.hasMore);
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                    document.getElementById('activityFeed').innerHTML = `
+                        <div class="text-center py-5 text-danger">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <p>Błąd podczas ładowania aktywności</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Display notifications
+        function displayNotifications(notifications) {
+            const feed = document.getElementById('activityFeed');
+            
+            if (notifications.length === 0) {
+                feed.innerHTML = `
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-bell-slash fa-3x mb-3"></i>
+                        <p>Brak powiadomień</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = notifications.map(notification => {
+                const config = notificationConfig[notification.type];
+                if (!config) return '';
+                
+                const isUnread = !notification.is_read;
+                const timeAgo = getTimeAgo(notification.created_at);
+                
+                return `
+                    <div class="notification-item ${isUnread ? 'unread' : ''}" 
+                         data-id="${notification.id}"
+                         onclick="markNotificationAsRead(${notification.id})">
+                        <div class="notification-icon" style="background-color: ${config.color}20; color: ${config.color};">
+                            <i class="fas ${config.icon}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-message">
+                                ${config.getMessage(notification.data, notification.actor_username)}
+                            </div>
+                            <div class="notification-time">
+                                <i class="fas fa-clock me-1"></i>${timeAgo}
+                            </div>
+                        </div>
+                        ${isUnread ? '<div class="notification-unread-dot"></div>' : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            feed.innerHTML = html;
+        }
+
+        // Update pagination
+        function updatePagination(hasMore) {
+            const paginationContainer = document.getElementById('paginationContainer');
+            const pagination = document.getElementById('pagination');
+            
+            if (currentPage === 1 && !hasMore) {
+                paginationContainer.style.display = 'none';
+                return;
+            }
+            
+            paginationContainer.style.display = 'block';
+            
+            let html = '';
+            
+            // Previous button
+            if (currentPage > 1) {
+                html += `
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="loadNotifications(${currentPage - 1}); return false;">
+                            <i class="fas fa-chevron-left"></i> Poprzednia
+                        </a>
+                    </li>
+                `;
+            }
+            
+            // Page number
+            html += `
+                <li class="page-item active">
+                    <span class="page-link">Strona ${currentPage}</span>
+                </li>
+            `;
+            
+            // Next button
+            if (hasMore) {
+                html += `
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="loadNotifications(${currentPage + 1}); return false;">
+                            Następna <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                `;
+            }
+            
+            pagination.innerHTML = html;
+        }
+
+        // Mark notification as read
+        function markNotificationAsRead(notificationId) {
+            fetch(`/api/notifications/${notificationId}/read`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update UI
+                const notificationElement = document.querySelector(`[data-id="${notificationId}"]`);
+                if (notificationElement) {
+                    notificationElement.classList.remove('unread');
+                    const dot = notificationElement.querySelector('.notification-unread-dot');
+                    if (dot) dot.remove();
+                }
+            })
+            .catch(error => {
+                console.error('Error marking notification as read:', error);
+            });
+        }
+
+        // Mark all as read
+        function markAllAsRead() {
+            const btn = document.getElementById('markAllReadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Oznaczanie...';
+            
+            fetch('/api/notifications/read-all', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reload notifications
+                loadNotifications(currentPage);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-double me-1"></i>Oznacz wszystkie jako przeczytane';
+            })
+            .catch(error => {
+                console.error('Error marking all as read:', error);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-double me-1"></i>Oznacz wszystkie jako przeczytane';
+            });
+        }
+
+        // Get time ago string
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const then = new Date(timestamp);
+            const seconds = Math.floor((now - then) / 1000);
+            
+            if (seconds < 60) return 'przed chwilą';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)} min temu`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)} godz. temu`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)} dni temu`;
+            
+            return then.toLocaleDateString('pl-PL');
+        }
+
+        // Logout function
+        function logout() {
+            fetch('/api/logout', { method: 'POST' })
+                .then(() => window.location.href = '/')
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    window.location.href = '/';
+                });
+        }
+
+        // Check authentication
+        fetch('/api/auth')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.authenticated) {
+                    window.location.href = '/';
+                } else {
+                    // Load notifications
+                    loadNotifications(1);
+                }
+            })
+            .catch(error => {
+                console.error('Auth check error:', error);
+                window.location.href = '/';
+            });
+    </script>
+</body>
+</html>

@@ -141,6 +141,84 @@ const getRecipientById = async (id) => {
     }
 };
 
+// Notification helper functions
+async function ensureNotificationsTable() {
+    if (DEMO_MODE) return;
+    
+    try {
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                type ENUM('recipient_added', 'present_added', 'present_reserved', 
+                          'present_unreserved', 'present_checked', 'present_unchecked') NOT NULL,
+                actor_id INT NOT NULL,
+                data JSON,
+                is_read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_user_read (user_id, is_read),
+                INDEX idx_created (created_at DESC),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('✅ [NOTIFICATIONS] Notifications table ready');
+    } catch (err) {
+        console.error('❌ [NOTIFICATIONS] Error creating notifications table:', err);
+    }
+}
+
+async function createNotification(type, actorId, data) {
+    if (DEMO_MODE) {
+        console.log('📝 [NOTIFICATIONS] Demo mode - skipping notification creation');
+        return;
+    }
+    
+    try {
+        // Ensure table exists
+        await ensureNotificationsTable();
+        
+        // Get all users except the actor
+        const [users] = await pool.execute(
+            'SELECT id FROM users WHERE id != ?',
+            [actorId]
+        );
+        
+        console.log(`📢 [NOTIFICATIONS] Creating ${type} notification for ${users.length} user(s)`);
+        
+        // Filter out identified recipients if notification is about their presents
+        for (const user of users) {
+            let shouldCreateNotification = true;
+            
+            // Check if this is a present-related notification
+            if (type.includes('present_') && data.recipientId) {
+                // Check if user is identified as this recipient
+                const [identification] = await pool.execute(
+                    'SELECT id FROM recipients WHERE id = ? AND identified_by = ?',
+                    [data.recipientId, user.id]
+                );
+                
+                // Skip this user if they're identified as the recipient
+                if (identification.length > 0) {
+                    console.log(`🔒 [NOTIFICATIONS] Skipping user ${user.id} - identified as recipient ${data.recipientId}`);
+                    shouldCreateNotification = false;
+                }
+            }
+            
+            if (shouldCreateNotification) {
+                await pool.execute(
+                    'INSERT INTO notifications (user_id, type, actor_id, data) VALUES (?, ?, ?, ?)',
+                    [user.id, type, actorId, JSON.stringify(data)]
+                );
+                console.log(`✅ [NOTIFICATIONS] Created ${type} notification for user ${user.id}`);
+            }
+        }
+    } catch (err) {
+        console.error('❌ [NOTIFICATIONS] Error creating notification:', err);
+        // Don't throw - notifications are non-critical
+    }
+}
+
 // Simple in-memory cache for database queries
 const cache = {
     data: new Map(),
@@ -299,6 +377,15 @@ app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
+app.get('/activity', (req, res) => {
+    // If user is not authenticated, redirect to login page
+    if (!req.session.userId) {
+        res.redirect('/');
+    } else {
+        res.sendFile(path.join(__dirname, 'public', 'activity.html'));
+    }
+});
+
 // API Routes
 
 // Login
@@ -420,6 +507,13 @@ app.post('/api/recipients', requireAuth, async (req, res) => {
     try {
         const [result] = await pool.execute('INSERT INTO recipients (name) VALUES (?)', [name.trim()]);
         console.log('[POST /api/recipients] Recipient added successfully:', result.insertId, 'Request body:', req.body, 'Session:', req.session);
+        
+        // Create notification for other users
+        await createNotification('recipient_added', req.session.userId, {
+            recipientId: result.insertId,
+            recipientName: name.trim()
+        });
+        
         // Return the expected structure for frontend
         res.json({ success: true, recipient: { id: result.insertId, name: name.trim() } });
     } catch (err) {
@@ -976,7 +1070,15 @@ app.post('/api/presents', requireAuth, async (req, res) => {
             }
         }
         
-        // Send notification to other users (non-blocking, with error handling)
+        // Create in-app notification for other users
+        await createNotification('present_added', userId, {
+            presentId: result.insertId,
+            presentTitle: title.trim(),
+            recipientId: recipient_id || null,
+            recipientName: recipientName
+        });
+        
+        // Send push notification to other users (non-blocking, with error handling)
         const notificationTitle = 'Nowy prezent!';
         const notificationBody = `Dodano nowy prezent "${title.trim()}" dla ${recipientName}`;
         console.log(`📢 [PRESENT] Triggering notification for new present: "${title.trim()}" (ID: ${result.insertId})`);
@@ -1039,8 +1141,28 @@ app.put('/api/presents/:id/check', requireAuth, async (req, res) => {
         
         console.log('Present found:', present);
         
+        // Get present details for notification
+        const [presentDetails] = await pool.execute(`
+            SELECT p.title, p.recipient_id, r.name as recipient_name
+            FROM presents p
+            LEFT JOIN recipients r ON p.recipient_id = r.id
+            WHERE p.id = ?
+        `, [id]);
+        
         // Update the present
         const [result] = await pool.execute('UPDATE presents SET is_checked = ? WHERE id = ?', [is_checked ? 1 : 0, id]);
+        
+        // Create notification for other users (only if status changed)
+        if (present.is_checked !== is_checked && presentDetails.length > 0) {
+            const presentData = presentDetails[0];
+            const notificationType = is_checked ? 'present_checked' : 'present_unchecked';
+            await createNotification(notificationType, req.session.userId, {
+                presentId: parseInt(id),
+                presentTitle: presentData.title,
+                recipientId: presentData.recipient_id,
+                recipientName: presentData.recipient_name || 'kogoś'
+            });
+        }
         
         console.log('Present check status updated successfully:', { 
             id, 
@@ -1177,8 +1299,27 @@ app.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
             return conflict(res, 'Prezent jest już zarezerwowany');
         }
         
+        // Get present details for notification
+        const [presentDetails] = await pool.execute(`
+            SELECT p.title, p.recipient_id, r.name as recipient_name
+            FROM presents p
+            LEFT JOIN recipients r ON p.recipient_id = r.id
+            WHERE p.id = ?
+        `, [id]);
+        
         // Reserve the present
         const [result] = await pool.execute('UPDATE presents SET reserved_by = ? WHERE id = ?', [userId, id]);
+        
+        // Create notification for other users
+        if (presentDetails.length > 0) {
+            const present = presentDetails[0];
+            await createNotification('present_reserved', userId, {
+                presentId: parseInt(id),
+                presentTitle: present.title,
+                recipientId: present.recipient_id,
+                recipientName: present.recipient_name || 'kogoś'
+            });
+        }
         
         console.log('Present reserved successfully:', { id, userId, changes: result.affectedRows });
         res.json({ success: true });
@@ -1319,6 +1460,174 @@ app.get('/api/notifications/debug', requireAuth, async (req, res) => {
     }
 });
 
+// Notification Center API Endpoints
+
+// Get notifications for current user
+app.get('/api/notifications', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const limit = parseInt(req.query.limit) || 5;
+        const offset = parseInt(req.query.offset) || 0;
+        
+        console.log(`📋 [NOTIFICATIONS] Fetching notifications for user ${userId} (limit: ${limit}, offset: ${offset})`);
+        
+        if (DEMO_MODE) {
+            return res.json({ notifications: [], unreadCount: 0, hasMore: false });
+        }
+        
+        // Ensure table exists
+        await ensureNotificationsTable();
+        
+        // Get user's identified recipient (if any)
+        const [identification] = await pool.execute(
+            'SELECT id FROM recipients WHERE identified_by = ?',
+            [userId]
+        );
+        const identifiedRecipientId = identification.length > 0 ? identification[0].id : null;
+        
+        // Fetch notifications with actor username
+        const [notifications] = await pool.execute(`
+            SELECT n.*, u.username as actor_username
+            FROM notifications n
+            JOIN users u ON n.actor_id = u.id
+            WHERE n.user_id = ?
+            ORDER BY n.created_at DESC
+            LIMIT ? OFFSET ?
+        `, [userId, limit + 1, offset]); // Fetch one extra to check if there are more
+        
+        // Filter out notifications about identified recipient's presents
+        let filteredNotifications = notifications;
+        if (identifiedRecipientId) {
+            filteredNotifications = notifications.filter(n => {
+                if (n.type.includes('present_')) {
+                    const data = JSON.parse(n.data);
+                    return data.recipientId !== identifiedRecipientId;
+                }
+                return true;
+            });
+        }
+        
+        // Check if there are more notifications
+        const hasMore = filteredNotifications.length > limit;
+        if (hasMore) {
+            filteredNotifications = filteredNotifications.slice(0, limit);
+        }
+        
+        // Parse JSON data for each notification
+        const parsedNotifications = filteredNotifications.map(n => ({
+            ...n,
+            data: JSON.parse(n.data)
+        }));
+        
+        // Get unread count
+        const [countResult] = await pool.execute(
+            'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
+            [userId]
+        );
+        const unreadCount = countResult[0].count;
+        
+        console.log(`✅ [NOTIFICATIONS] Returning ${parsedNotifications.length} notifications (${unreadCount} unread)`);
+        
+        res.json({
+            notifications: parsedNotifications,
+            unreadCount: unreadCount,
+            hasMore: hasMore
+        });
+    } catch (error) {
+        console.error('❌ [NOTIFICATIONS] Error fetching notifications:', error);
+        res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+});
+
+// Get unread notification count
+app.get('/api/notifications/unread-count', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        
+        if (DEMO_MODE) {
+            return res.json({ count: 0 });
+        }
+        
+        await ensureNotificationsTable();
+        
+        const [result] = await pool.execute(
+            'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
+            [userId]
+        );
+        
+        const count = result[0].count;
+        console.log(`📊 [NOTIFICATIONS] Unread count for user ${userId}: ${count}`);
+        
+        res.json({ count: count });
+    } catch (error) {
+        console.error('❌ [NOTIFICATIONS] Error getting unread count:', error);
+        res.status(500).json({ error: 'Failed to get unread count' });
+    }
+});
+
+// Mark notification as read
+app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const notificationId = req.params.id;
+        
+        console.log(`✓ [NOTIFICATIONS] Marking notification ${notificationId} as read for user ${userId}`);
+        
+        if (DEMO_MODE) {
+            return res.json({ success: true, unreadCount: 0 });
+        }
+        
+        await ensureNotificationsTable();
+        
+        // Mark as read (only if it belongs to this user)
+        await pool.execute(
+            'UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?',
+            [notificationId, userId]
+        );
+        
+        // Get updated unread count
+        const [result] = await pool.execute(
+            'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
+            [userId]
+        );
+        
+        const unreadCount = result[0].count;
+        console.log(`✅ [NOTIFICATIONS] Notification marked as read. New unread count: ${unreadCount}`);
+        
+        res.json({ success: true, unreadCount: unreadCount });
+    } catch (error) {
+        console.error('❌ [NOTIFICATIONS] Error marking notification as read:', error);
+        res.status(500).json({ error: 'Failed to mark notification as read' });
+    }
+});
+
+// Mark all notifications as read
+app.post('/api/notifications/read-all', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        
+        console.log(`✓✓ [NOTIFICATIONS] Marking all notifications as read for user ${userId}`);
+        
+        if (DEMO_MODE) {
+            return res.json({ success: true });
+        }
+        
+        await ensureNotificationsTable();
+        
+        await pool.execute(
+            'UPDATE notifications SET is_read = TRUE WHERE user_id = ? AND is_read = FALSE',
+            [userId]
+        );
+        
+        console.log(`✅ [NOTIFICATIONS] All notifications marked as read for user ${userId}`);
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('❌ [NOTIFICATIONS] Error marking all as read:', error);
+        res.status(500).json({ error: 'Failed to mark all as read' });
+    }
+});
+
 // Test notification endpoint
 app.post('/api/test-notification', requireAuth, async (req, res) => {
     try {
@@ -1344,6 +1653,165 @@ app.post('/api/test-notification', requireAuth, async (req, res) => {
     } catch (error) {
         console.error('❌ [TEST] Error sending test notification:', error);
         res.status(500).json({ error: 'Failed to send test notification: ' + error.message });
+    }
+});
+
+// Notification API endpoints
+app.get('/api/notifications', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const limit = parseInt(req.query.limit) || 5;
+        const offset = parseInt(req.query.offset) || 0;
+        
+        console.log(`📬 [NOTIFICATIONS] Fetching notifications for user ${userId} (limit: ${limit}, offset: ${offset})`);
+        
+        if (DEMO_MODE) {
+            return res.json({ notifications: [], unreadCount: 0, hasMore: false });
+        }
+        
+        await ensureNotificationsTable();
+        
+        // Check if user is identified as a recipient
+        const identifiedRecipient = await getUserIdentification(userId);
+        const identifiedRecipientId = identifiedRecipient ? identifiedRecipient.id : null;
+        
+        // Get notifications with actor username
+        const [notifications] = await pool.execute(`
+            SELECT n.*, u.username as actor_username
+            FROM notifications n
+            LEFT JOIN users u ON n.actor_id = u.id
+            WHERE n.user_id = ?
+            ORDER BY n.created_at DESC
+            LIMIT ? OFFSET ?
+        `, [userId, limit + 1, offset]); // Fetch one extra to check if there are more
+        
+        // Filter out notifications about identified recipient's presents
+        let filteredNotifications = notifications;
+        if (identifiedRecipientId) {
+            filteredNotifications = notifications.filter(n => {
+                if (n.type.includes('present_')) {
+                    const data = JSON.parse(n.data);
+                    return data.recipientId !== identifiedRecipientId;
+                }
+                return true;
+            });
+        }
+        
+        // Check if there are more notifications
+        const hasMore = filteredNotifications.length > limit;
+        if (hasMore) {
+            filteredNotifications = filteredNotifications.slice(0, limit);
+        }
+        
+        // Parse JSON data for each notification
+        const parsedNotifications = filteredNotifications.map(n => ({
+            ...n,
+            data: JSON.parse(n.data)
+        }));
+        
+        // Get unread count
+        const [countResult] = await pool.execute(
+            'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
+            [userId]
+        );
+        const unreadCount = countResult[0].count;
+        
+        console.log(`✅ [NOTIFICATIONS] Returning ${parsedNotifications.length} notifications, ${unreadCount} unread`);
+        
+        res.json({
+            notifications: parsedNotifications,
+            unreadCount: unreadCount,
+            hasMore: hasMore
+        });
+    } catch (err) {
+        console.error('❌ [NOTIFICATIONS] Error fetching notifications:', err);
+        handleDbError(err, res, 'Błąd podczas pobierania powiadomień');
+    }
+});
+
+app.get('/api/notifications/unread-count', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        
+        if (DEMO_MODE) {
+            return res.json({ count: 0 });
+        }
+        
+        await ensureNotificationsTable();
+        
+        const [result] = await pool.execute(
+            'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
+            [userId]
+        );
+        
+        const count = result[0].count;
+        console.log(`📊 [NOTIFICATIONS] User ${userId} has ${count} unread notification(s)`);
+        
+        res.json({ count: count });
+    } catch (err) {
+        console.error('❌ [NOTIFICATIONS] Error getting unread count:', err);
+        handleDbError(err, res, 'Błąd podczas pobierania liczby powiadomień');
+    }
+});
+
+app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const notificationId = req.params.id;
+        
+        console.log(`✓ [NOTIFICATIONS] Marking notification ${notificationId} as read for user ${userId}`);
+        
+        if (DEMO_MODE) {
+            return res.json({ success: true, unreadCount: 0 });
+        }
+        
+        await ensureNotificationsTable();
+        
+        // Mark as read only if it belongs to the user
+        await pool.execute(
+            'UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?',
+            [notificationId, userId]
+        );
+        
+        // Get updated unread count
+        const [result] = await pool.execute(
+            'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
+            [userId]
+        );
+        
+        const unreadCount = result[0].count;
+        console.log(`✅ [NOTIFICATIONS] Notification marked as read. User has ${unreadCount} unread notification(s)`);
+        
+        res.json({ success: true, unreadCount: unreadCount });
+    } catch (err) {
+        console.error('❌ [NOTIFICATIONS] Error marking notification as read:', err);
+        handleDbError(err, res, 'Błąd podczas oznaczania powiadomienia');
+    }
+});
+
+app.post('/api/notifications/read-all', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        
+        console.log(`✓✓ [NOTIFICATIONS] Marking all notifications as read for user ${userId}`);
+        
+        if (DEMO_MODE) {
+            return res.json({ success: true });
+        }
+        
+        await ensureNotificationsTable();
+        
+        await pool.execute(
+            'UPDATE notifications SET is_read = TRUE WHERE user_id = ? AND is_read = FALSE',
+            [userId]
+        );
+        
+        console.log(`✅ [NOTIFICATIONS] All notifications marked as read for user ${userId}`);
+        
+        res.json({ success: true });
+    } catch (err) {
+        console.error('❌ [NOTIFICATIONS] Error marking all as read:', err);
+        handleDbError(err, res, 'Błąd podczas oznaczania wszystkich powiadomień');
     }
 });
 
@@ -1425,6 +1893,95 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
     }
 }
 
+// Notification Center Helper Functions
+
+// Create notifications table if it doesn't exist
+async function ensureNotificationsTable() {
+    if (DEMO_MODE) return;
+    
+    try {
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                type ENUM('recipient_added', 'present_added', 'present_reserved', 
+                          'present_unreserved', 'present_checked', 'present_unchecked') NOT NULL,
+                actor_id INT NOT NULL,
+                data JSON,
+                is_read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_user_read (user_id, is_read),
+                INDEX idx_created (created_at DESC),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('✅ [NOTIFICATIONS] Notifications table ready');
+    } catch (err) {
+        console.error('❌ [NOTIFICATIONS] Error creating notifications table:', err);
+    }
+}
+
+// Check if user is identified as a specific recipient
+async function isUserIdentifiedAsRecipient(userId, recipientId) {
+    if (DEMO_MODE) return false;
+    
+    try {
+        const [rows] = await pool.execute(
+            'SELECT id FROM recipients WHERE id = ? AND identified_by = ?',
+            [recipientId, userId]
+        );
+        return rows.length > 0;
+    } catch (err) {
+        console.error('❌ [NOTIFICATIONS] Error checking identification:', err);
+        return false;
+    }
+}
+
+// Create notification for relevant users
+async function createNotification(type, actorId, data) {
+    if (DEMO_MODE) {
+        console.log('📝 [NOTIFICATIONS] Demo mode - notification not created:', { type, actorId, data });
+        return;
+    }
+    
+    try {
+        // Ensure table exists
+        await ensureNotificationsTable();
+        
+        // Get all users except the actor
+        const [users] = await pool.execute(
+            'SELECT id FROM users WHERE id != ?',
+            [actorId]
+        );
+        
+        console.log(`📢 [NOTIFICATIONS] Creating ${type} notifications for ${users.length} user(s)`);
+        
+        // Create notification for each eligible user
+        for (const user of users) {
+            // Check privacy: skip if user is identified as the recipient in present notifications
+            if (type.includes('present_') && data.recipientId) {
+                const isIdentified = await isUserIdentifiedAsRecipient(user.id, data.recipientId);
+                if (isIdentified) {
+                    console.log(`🔒 [NOTIFICATIONS] Skipping notification for user ${user.id} (identified as recipient ${data.recipientId})`);
+                    continue;
+                }
+            }
+            
+            // Create notification
+            await pool.execute(
+                'INSERT INTO notifications (user_id, type, actor_id, data) VALUES (?, ?, ?, ?)',
+                [user.id, type, actorId, JSON.stringify(data)]
+            );
+        }
+        
+        console.log(`✅ [NOTIFICATIONS] Created ${type} notifications successfully`);
+    } catch (err) {
+        console.error('❌ [NOTIFICATIONS] Error creating notification:', err);
+        // Don't throw - notifications are non-critical
+    }
+}
+
 // Cancel reservation
 app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
     clearCombinedDataCache();
@@ -1479,8 +2036,27 @@ app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
             return forbidden(res, 'Nie możesz anulować rezerwacji innej osoby');
         }
         
+        // Get present details for notification
+        const [presentDetails] = await pool.execute(`
+            SELECT p.title, p.recipient_id, r.name as recipient_name
+            FROM presents p
+            LEFT JOIN recipients r ON p.recipient_id = r.id
+            WHERE p.id = ?
+        `, [id]);
+        
         // Cancel the reservation
         const [result] = await pool.execute('UPDATE presents SET reserved_by = ? WHERE id = ?', [null, id]);
+        
+        // Create notification for other users
+        if (presentDetails.length > 0) {
+            const present = presentDetails[0];
+            await createNotification('present_unreserved', userId, {
+                presentId: parseInt(id),
+                presentTitle: present.title,
+                recipientId: present.recipient_id,
+                recipientName: present.recipient_name || 'kogoś'
+            });
+        }
         
         console.log('Reservation canceled successfully:', { id, userId, changes: result.affectedRows });
         res.json({ success: true });
