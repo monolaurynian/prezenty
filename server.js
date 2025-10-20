@@ -17,22 +17,30 @@ if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 
-// Configure web-push (fallback for local development)
+// Configure web-push with environment variables (fallback to development keys)
 let webpush = null;
-let VAPID_PUBLIC_KEY = 'BEl62iUYgUivxIkv69yViEuiBIa40HI80YmqRcU_d2qcWAh2U5cp7C6_8AT7pRxVxIiNuSOhapA_GTfXRqXWkOU';
-let VAPID_PRIVATE_KEY = 'VCz-z9nV_HuHhVCjlHRlSjSWAqS3-T_CKPiuIXSBBtU';
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa40HI80YmqRcU_d2qcWAh2U5cp7C6_8AT7pRxVxIiNuSOhapA_GTfXRqXWkOU';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'VCz-z9nV_HuHhVCjlHRlSjSWAqS3-T_CKPiuIXSBBtU';
+const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:prezenty@example.com';
+
+// Log VAPID configuration source
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    console.log('🔑 [VAPID] Using VAPID keys from environment variables');
+} else {
+    console.log('🔑 [VAPID] Using fallback development VAPID keys (set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY env vars for production)');
+}
 
 try {
     webpush = require('web-push');
     webpush.setVapidDetails(
-        'mailto:prezenty@example.com',
+        VAPID_EMAIL,
         VAPID_PUBLIC_KEY,
         VAPID_PRIVATE_KEY
     );
-    console.log('✅ Web-push module loaded successfully');
+    console.log('✅ [VAPID] Web-push module loaded and configured successfully');
 } catch (error) {
-    console.log('⚠️ Web-push module not available:', error.message);
-    console.log('📝 To enable notifications: npm install web-push');
+    console.log('⚠️ [VAPID] Web-push module not available:', error.message);
+    console.log('📝 [VAPID] To enable notifications: npm install web-push');
     webpush = null;
 }
 
@@ -968,13 +976,19 @@ app.post('/api/presents', requireAuth, async (req, res) => {
             }
         }
         
-        // Send notification to other users
+        // Send notification to other users (non-blocking, with error handling)
         const notificationTitle = 'Nowy prezent!';
         const notificationBody = `Dodano nowy prezent "${title.trim()}" dla ${recipientName}`;
+        console.log(`📢 [PRESENT] Triggering notification for new present: "${title.trim()}" (ID: ${result.insertId})`);
+        
+        // Send notification asynchronously without blocking the response
         sendNotificationToUsers(userId, notificationTitle, notificationBody, {
             presentId: result.insertId,
             presentTitle: title.trim(),
             recipientName: recipientName
+        }).catch(err => {
+            // Log error but don't fail the present creation
+            console.error('❌ [PRESENT] Failed to send notification (present was created successfully):', err);
         });
         
         res.json({ id: result.insertId, title: title.trim(), recipient_id, comments });
@@ -1209,6 +1223,11 @@ app.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
         `);
         
         // Save subscription
+        console.log(`💾 [SUBSCRIPTION] Saving subscription for user ${userId}:`, {
+            endpoint: subscription.endpoint.substring(0, 50) + '...',
+            hasKeys: !!(subscription.keys && subscription.keys.p256dh && subscription.keys.auth)
+        });
+        
         await pool.execute(`
             INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) 
             VALUES (?, ?, ?, ?)
@@ -1223,10 +1242,26 @@ app.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
             subscription.keys.auth
         ]);
         
-        console.log('Push subscription saved for user:', userId);
-        res.json({ success: true });
+        // Get total subscription count for this user
+        const [countResult] = await pool.execute(
+            'SELECT COUNT(*) as count FROM push_subscriptions WHERE user_id = ?',
+            [userId]
+        );
+        const userSubscriptionCount = countResult[0].count;
+        
+        // Get total subscriptions in system
+        const [totalResult] = await pool.execute('SELECT COUNT(*) as count FROM push_subscriptions');
+        const totalSubscriptions = totalResult[0].count;
+        
+        console.log(`✅ [SUBSCRIPTION] Subscription saved successfully for user ${userId}. User has ${userSubscriptionCount} subscription(s). Total system subscriptions: ${totalSubscriptions}`);
+        
+        res.json({ 
+            success: true,
+            userSubscriptions: userSubscriptionCount,
+            totalSubscriptions: totalSubscriptions
+        });
     } catch (err) {
-        console.error('Error saving push subscription:', err);
+        console.error('❌ [SUBSCRIPTION] Error saving push subscription:', err);
         res.status(500).json({ error: 'Failed to save subscription' });
     }
 });
@@ -1237,6 +1272,51 @@ app.get('/api/vapid-public-key', (req, res) => {
         publicKey: VAPID_PUBLIC_KEY,
         webPushAvailable: !!webpush
     });
+});
+
+// Debug endpoint for notification system
+app.get('/api/notifications/debug', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        console.log('🔍 [DEBUG] Notification debug request from user:', userId);
+        
+        const debugInfo = {
+            webPushAvailable: !!webpush,
+            vapidConfigured: !!(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
+            demoMode: DEMO_MODE,
+            userId: userId,
+            timestamp: new Date().toISOString()
+        };
+        
+        if (DEMO_MODE) {
+            debugInfo.message = 'Running in DEMO mode - database queries disabled';
+            return res.json(debugInfo);
+        }
+        
+        // Get subscription counts
+        const [userSubResult] = await pool.execute(
+            'SELECT COUNT(*) as count FROM push_subscriptions WHERE user_id = ?',
+            [userId]
+        );
+        debugInfo.userSubscriptions = userSubResult[0].count;
+        
+        const [totalSubResult] = await pool.execute(
+            'SELECT COUNT(*) as count FROM push_subscriptions'
+        );
+        debugInfo.totalSubscriptions = totalSubResult[0].count;
+        
+        // Get all user IDs with subscriptions
+        const [usersResult] = await pool.execute(
+            'SELECT DISTINCT user_id FROM push_subscriptions'
+        );
+        debugInfo.subscribedUserIds = usersResult.map(row => row.user_id);
+        
+        console.log('🔍 [DEBUG] Debug info:', debugInfo);
+        res.json(debugInfo);
+    } catch (error) {
+        console.error('❌ [DEBUG] Error getting debug info:', error);
+        res.status(500).json({ error: 'Failed to get debug info: ' + error.message });
+    }
 });
 
 // Test notification endpoint
@@ -1266,15 +1346,15 @@ app.post('/api/test-notification', requireAuth, async (req, res) => {
 
 // Function to send notifications to all users except the sender
 async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
-    console.log('🔔 Sending notification:', { excludeUserId, title, body, data });
+    console.log('🔔 [NOTIFICATION] Starting notification send:', { excludeUserId, title, body, data });
     
     if (!webpush) {
-        console.log('⚠️ Web-push not available - notifications disabled');
+        console.log('⚠️ [NOTIFICATION] Web-push not available - notifications disabled');
         return;
     }
     
     if (DEMO_MODE) {
-        console.log('Demo mode - simulating notification (web-push available)');
+        console.log('📝 [NOTIFICATION] Demo mode - simulating notification (web-push available)');
         // In demo mode, we can't access the database, so we'll just log
         // But the push subscription endpoint should still work for testing
         return;
@@ -1286,6 +1366,14 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
             WHERE user_id != ?
         `, [excludeUserId]);
         
+        console.log(`📊 [NOTIFICATION] Found ${subscriptions.length} subscription(s) to notify (excluding user ${excludeUserId})`);
+        
+        // Early return if no subscriptions
+        if (subscriptions.length === 0) {
+            console.log('ℹ️ [NOTIFICATION] No subscriptions found - skipping notification send');
+            return;
+        }
+        
         const notificationPayload = JSON.stringify({
             title,
             body,
@@ -1295,13 +1383,14 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
             data
         });
         
-        if (!webpush) {
-            console.log('⚠️ Web-push not available - notifications disabled');
-            return;
-        }
+        console.log('📦 [NOTIFICATION] Notification payload:', notificationPayload);
+        
+        let successCount = 0;
+        let failureCount = 0;
 
         const promises = subscriptions.map(async (sub) => {
             try {
+                console.log(`📤 [NOTIFICATION] Sending to user ${sub.user_id} (endpoint: ${sub.endpoint.substring(0, 50)}...)`);
                 await webpush.sendNotification({
                     endpoint: sub.endpoint,
                     keys: {
@@ -1309,20 +1398,27 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
                         auth: sub.auth
                     }
                 }, notificationPayload);
-                console.log('Notification sent to user:', sub.user_id);
+                successCount++;
+                console.log(`✅ [NOTIFICATION] Successfully sent to user ${sub.user_id}`);
             } catch (error) {
-                console.error('Failed to send notification to user:', sub.user_id, error);
+                failureCount++;
+                console.error(`❌ [NOTIFICATION] Failed to send to user ${sub.user_id}:`, {
+                    error: error.message,
+                    statusCode: error.statusCode,
+                    endpoint: sub.endpoint.substring(0, 50) + '...'
+                });
                 // Remove invalid subscription
                 if (error.statusCode === 410) {
+                    console.log(`🗑️ [NOTIFICATION] Removing expired subscription for user ${sub.user_id}`);
                     await pool.execute('DELETE FROM push_subscriptions WHERE id = ?', [sub.id]);
                 }
             }
         });
         
         await Promise.all(promises);
-        console.log(`Sent notifications to ${subscriptions.length} users`);
+        console.log(`✨ [NOTIFICATION] Notification send complete: ${successCount} successful, ${failureCount} failed out of ${subscriptions.length} total`);
     } catch (err) {
-        console.error('Error sending notifications:', err);
+        console.error('💥 [NOTIFICATION] Error in sendNotificationToUsers:', err);
     }
 }
 

@@ -84,7 +84,8 @@ self.addEventListener('activate', function(event) {
 
 // Push notification event listener
 self.addEventListener('push', function(event) {
-  console.log('Push notification received:', event);
+  console.log('🔔 [SW] Push notification received at:', new Date().toISOString());
+  console.log('🔔 [SW] Push event data available:', !!event.data);
   
   let notificationData = {
     title: 'Życzenia Prezentowe',
@@ -119,14 +120,16 @@ self.addEventListener('push', function(event) {
   if (event.data) {
     try {
       const data = event.data.json();
+      console.log('📦 [SW] Parsed push data:', data);
       notificationData = {
         ...notificationData,
         title: data.title || notificationData.title,
         body: data.body || notificationData.body,
         data: { ...notificationData.data, ...data }
       };
+      console.log('✅ [SW] Notification data prepared:', { title: notificationData.title, body: notificationData.body });
     } catch (e) {
-      console.error('Error parsing push data:', e);
+      console.error('❌ [SW] Error parsing push data:', e);
       // If parsing fails, try text
       if (event.data.text) {
         notificationData.body = event.data.text();
@@ -134,8 +137,16 @@ self.addEventListener('push', function(event) {
     }
   }
 
+  console.log('📢 [SW] Displaying notification:', notificationData.title);
+  
   event.waitUntil(
     self.registration.showNotification(notificationData.title, notificationData)
+      .then(() => {
+        console.log('✅ [SW] Notification displayed successfully');
+      })
+      .catch((error) => {
+        console.error('❌ [SW] Error displaying notification:', error);
+      })
   );
 });
 

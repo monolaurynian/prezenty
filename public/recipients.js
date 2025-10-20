@@ -1634,23 +1634,43 @@ function generateReservationButton(present) {
     }
 }
 
-// Handle reserve button click with proper feedback
+// Handle reserve button click with optimistic updates
 function handleReserveClick(event, presentId, action) {
     event.preventDefault();
     event.stopPropagation();
     
     const button = event.currentTarget;
+    const presentItem = document.querySelector(`[data-id="${presentId}"]`);
     
-    // Add loading state
-    button.disabled = true;
-    button.classList.add('updating');
-    const originalHTML = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    // Store previous state for potential rollback
+    const previousState = {
+        reserved_by: null,
+        reserved_by_username: null,
+        buttonHTML: button.outerHTML,
+        itemClasses: presentItem ? presentItem.className : ''
+    };
     
+    // Get current state from cache
+    if (window._dataCache && window._dataCache.presents) {
+        const present = window._dataCache.presents.find(p => p.id === presentId);
+        if (present) {
+            previousState.reserved_by = present.reserved_by;
+            previousState.reserved_by_username = present.reserved_by_username;
+        }
+    }
+    
+    // Perform optimistic updates immediately
+    updateButtonOptimistically(button, action);
+    if (presentItem) {
+        updatePresentItemOptimistically(presentItem, action);
+    }
+    updateCacheOptimistically(presentId, action, window._currentUserId);
+    
+    // Make API call with rollback capability
     if (action === 'reserve') {
-        reservePresentFromRecipients(presentId, button, originalHTML);
+        reservePresentFromRecipients(presentId, button, previousState);
     } else if (action === 'cancel') {
-        cancelReservationFromRecipients(presentId, button, originalHTML);
+        cancelReservationFromRecipients(presentId, button, previousState);
     }
 }
 
@@ -2350,135 +2370,177 @@ function showModalMessage(elementId, message, type) {
     element.style.display = 'block';
 }
 
-function reservePresentFromRecipients(presentId, button, originalHTML) {
-    fetch(`/api/presents/${presentId}/reserve`, {
+// Optimistic update helper functions
+function fetchWithTimeout(url, options, timeout = 10000) {
+    return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), timeout)
+        )
+    ]);
+}
+
+function updateButtonOptimistically(button, action) {
+    if (action === 'reserve') {
+        button.className = 'btn btn-danger btn-sm w-100 w-md-auto reserve-btn updating';
+        button.innerHTML = '<i class="fas fa-xmark"></i> <span class="d-none d-md-inline">Anuluj</span>';
+    } else {
+        button.className = 'btn btn-outline-warning btn-sm w-100 w-md-auto reserve-btn updating';
+        button.innerHTML = '<i class="fas fa-bookmark"></i> <span class="d-none d-md-inline">Zarezerwuj</span>';
+    }
+    button.disabled = true;
+}
+
+function updatePresentItemOptimistically(presentItem, action) {
+    if (action === 'reserve') {
+        presentItem.classList.remove('reserved-by-other');
+        presentItem.classList.add('reserved-by-me');
+    } else {
+        presentItem.classList.remove('reserved-by-me');
+    }
+}
+
+function updateCacheOptimistically(presentId, action, userId) {
+    if (window._dataCache && window._dataCache.presents) {
+        const present = window._dataCache.presents.find(p => p.id === presentId);
+        if (present) {
+            if (action === 'reserve') {
+                present.reserved_by = userId;
+                present.reserved_by_username = 'Ty';
+            } else {
+                present.reserved_by = null;
+                present.reserved_by_username = null;
+            }
+        }
+    }
+}
+
+function rollbackOptimisticUpdate(presentId, previousState) {
+    // Restore cache
+    if (window._dataCache && window._dataCache.presents) {
+        const present = window._dataCache.presents.find(p => p.id === presentId);
+        if (present) {
+            present.reserved_by = previousState.reserved_by;
+            present.reserved_by_username = previousState.reserved_by_username;
+        }
+    }
+    
+    // Restore present item classes
+    const presentItem = document.querySelector(`[data-id="${presentId}"]`);
+    if (presentItem) {
+        presentItem.className = previousState.itemClasses;
+    }
+    
+    // Restore button - need to find it again and update its HTML
+    const button = presentItem ? presentItem.querySelector('.reserve-btn') : null;
+    if (button) {
+        button.outerHTML = previousState.buttonHTML;
+    }
+}
+
+function reservePresentFromRecipients(presentId, button, previousState) {
+    fetchWithTimeout(`/api/presents/${presentId}/reserve`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         }
+    }, 10000)
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || 'Server error');
+            });
+        }
+        return response.json();
     })
-    .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Success - optimistic update is confirmed
             showSuccessToast('Prezent zarezerwowany!');
             
-            // Optimistically update cache
-            if (window._dataCache && window._dataCache.presents) {
-                const present = window._dataCache.presents.find(p => p.id === presentId);
-                if (present) {
-                    present.reserved_by = window._currentUserId;
-                    present.reserved_by_username = 'Ty';
-                }
+            // Re-enable button (keep the updated state)
+            const currentButton = document.querySelector(`[data-id="${presentId}"] .reserve-btn`);
+            if (currentButton) {
+                currentButton.disabled = false;
+                currentButton.classList.remove('updating');
             }
-            
-            const presentItem = document.querySelector(`[data-id="${presentId}"]`);
-            if (presentItem) {
-                // Add success animation
-                presentItem.classList.add('success-animation');
-                setTimeout(() => {
-                    presentItem.classList.remove('success-animation');
-                }, 300);
-                
-                // For reservation: item moves to top (first position)
-                const presentsList = presentItem.parentElement;
-                if (presentsList) {
-                    const isFirstItem = presentsList.children[0] === presentItem;
-                    if (!isFirstItem) {
-                        presentItem.classList.add('smooth-slide-up');
-                        const overlappedCard = presentsList.children[0];
-                        if (overlappedCard && overlappedCard !== presentItem) {
-                            overlappedCard.classList.add('fading');
-                            setTimeout(() => {
-                                overlappedCard.classList.remove('fading');
-                            }, 300);
-                        }
-                        setTimeout(() => {
-                            presentItem.classList.remove('smooth-slide-up');
-                        }, 300);
-                    }
-                }
-            }
-            
-            // Soft reload to update UI
-            softReloadRecipients();
         } else {
-            showErrorToast(data.error || 'Błąd podczas rezerwacji');
-            // Restore button
-            if (button) {
-                button.disabled = false;
-                button.classList.remove('updating');
-                button.innerHTML = originalHTML;
-            }
+            // Server returned success: false - rollback
+            const errorMsg = data.error || 'Błąd podczas rezerwacji';
+            showErrorToast(errorMsg);
+            rollbackOptimisticUpdate(presentId, previousState);
         }
     })
     .catch(error => {
         console.error('Error reserving present:', error);
-        showErrorToast('Błąd podczas rezerwacji');
-        // Restore button
-        if (button) {
-            button.disabled = false;
-            button.classList.remove('updating');
-            button.innerHTML = originalHTML;
+        
+        // Determine error type for better messaging
+        let errorMsg = 'Błąd podczas rezerwacji';
+        if (error.message === 'Request timeout') {
+            errorMsg = 'Przekroczono limit czasu żądania. Spróbuj ponownie.';
+        } else if (error.message.includes('already reserved')) {
+            errorMsg = 'Ten prezent został już zarezerwowany przez kogoś innego';
+        } else if (!navigator.onLine) {
+            errorMsg = 'Brak połączenia z internetem';
+        } else if (error.message) {
+            errorMsg = error.message;
         }
+        
+        showErrorToast(errorMsg);
+        rollbackOptimisticUpdate(presentId, previousState);
     });
 }
 
-function cancelReservationFromRecipients(presentId, button, originalHTML) {
-    fetch(`/api/presents/${presentId}/reserve`, {
+function cancelReservationFromRecipients(presentId, button, previousState) {
+    fetchWithTimeout(`/api/presents/${presentId}/reserve`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
         }
+    }, 10000)
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || 'Server error');
+            });
+        }
+        return response.json();
     })
-    .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Success - optimistic update is confirmed
             showSuccessToast('Rezerwacja anulowana');
             
-            // Optimistically update cache
-            if (window._dataCache && window._dataCache.presents) {
-                const present = window._dataCache.presents.find(p => p.id === presentId);
-                if (present) {
-                    present.reserved_by = null;
-                    present.reserved_by_username = null;
-                }
+            // Re-enable button (keep the updated state)
+            const currentButton = document.querySelector(`[data-id="${presentId}"] .reserve-btn`);
+            if (currentButton) {
+                currentButton.disabled = false;
+                currentButton.classList.remove('updating');
             }
-            
-            const presentItem = document.querySelector(`[data-id="${presentId}"]`);
-            if (presentItem) {
-                // Add success animation
-                presentItem.classList.add('success-animation');
-                setTimeout(() => {
-                    presentItem.classList.remove('success-animation');
-                }, 300);
-                
-                // For canceling reservation: item moves to bottom (last position)
-                const presentsList = presentItem.parentElement;
-                if (presentsList) {
-                    const siblings = Array.from(presentsList.children);
-                    const isLastItem = siblings[siblings.length - 1] === presentItem;
-                    if (!isLastItem) {
-                        presentItem.classList.add('smooth-slide-down');
-                        const idx = siblings.indexOf(presentItem);
-                        if (idx < siblings.length - 1) {
-                            const overlappedCard = siblings[idx + 1];
-                            if (overlappedCard) {
-                                overlappedCard.classList.add('fading');
-                                setTimeout(() => {
-                                    overlappedCard.classList.remove('fading');
-                                }, 300);
-                            }
-                        }
-                        setTimeout(() => {
-                            presentItem.classList.remove('smooth-slide-down');
-                        }, 300);
-                    }
-                }
-            }
-            
-            // Soft reload to update UI
-            softReloadRecipients();
+        } else {
+            // Server returned success: false - rollback
+            const errorMsg = data.error || 'Błąd podczas anulowania rezerwacji';
+            showErrorToast(errorMsg);
+            rollbackOptimisticUpdate(presentId, previousState);
         }
+    })
+    .catch(error => {
+        console.error('Error canceling reservation:', error);
+        
+        // Determine error type for better messaging
+        let errorMsg = 'Błąd podczas anulowania rezerwacji';
+        if (error.message === 'Request timeout') {
+            errorMsg = 'Przekroczono limit czasu żądania. Spróbuj ponownie.';
+        } else if (error.message.includes('not reserved')) {
+            errorMsg = 'Ten prezent nie jest zarezerwowany';
+        } else if (!navigator.onLine) {
+            errorMsg = 'Brak połączenia z internetem';
+        } else if (error.message) {
+            errorMsg = error.message;
+        }
+        
+        showErrorToast(errorMsg);
+        rollbackOptimisticUpdate(presentId, previousState);
     });
 }
 
