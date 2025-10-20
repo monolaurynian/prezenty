@@ -45,10 +45,10 @@ try {
 }
 
 // Demo mode - run without database for preview
-let DEMO_MODE = process.env.DEMO_MODE === 'true' || 
-                process.env.OFFLINE_MODE === 'true' || 
-                !process.env.DB_PASSWORD || 
-                (process.env.NODE_ENV === 'development' && !process.env.DB_PASSWORD);
+let DEMO_MODE = process.env.DEMO_MODE === 'true' ||
+    process.env.OFFLINE_MODE === 'true' ||
+    !process.env.DB_PASSWORD ||
+    (process.env.NODE_ENV === 'development' && !process.env.DB_PASSWORD);
 
 // MySQL database configuration
 let dbConfig;
@@ -144,7 +144,7 @@ const getRecipientById = async (id) => {
 // Notification helper functions
 async function ensureNotificationsTable() {
     if (DEMO_MODE) return;
-    
+
     try {
         await pool.execute(`
             CREATE TABLE IF NOT EXISTS notifications (
@@ -173,23 +173,23 @@ async function createNotification(type, actorId, data) {
         console.log('📝 [NOTIFICATIONS] Demo mode - skipping notification creation');
         return;
     }
-    
+
     try {
         // Ensure table exists
         await ensureNotificationsTable();
-        
+
         // Get all users except the actor
         const [users] = await pool.execute(
             'SELECT id FROM users WHERE id != ?',
             [actorId]
         );
-        
+
         console.log(`📢 [NOTIFICATIONS] Creating ${type} notification for ${users.length} user(s)`);
-        
+
         // Filter out identified recipients if notification is about their presents
         for (const user of users) {
             let shouldCreateNotification = true;
-            
+
             // Check if this is a present-related notification
             if (type.includes('present_') && data.recipientId) {
                 // Check if user is identified as this recipient
@@ -197,14 +197,14 @@ async function createNotification(type, actorId, data) {
                     'SELECT id FROM recipients WHERE id = ? AND identified_by = ?',
                     [data.recipientId, user.id]
                 );
-                
+
                 // Skip this user if they're identified as the recipient
                 if (identification.length > 0) {
                     console.log(`🔒 [NOTIFICATIONS] Skipping user ${user.id} - identified as recipient ${data.recipientId}`);
                     shouldCreateNotification = false;
                 }
             }
-            
+
             if (shouldCreateNotification) {
                 await pool.execute(
                     'INSERT INTO notifications (user_id, type, actor_id, data) VALUES (?, ?, ?, ?)',
@@ -224,7 +224,7 @@ const cache = {
     data: new Map(),
     timestamps: new Map(),
     TTL: 10000, // 10 seconds
-    
+
     get(key) {
         const timestamp = this.timestamps.get(key);
         if (timestamp && (Date.now() - timestamp) < this.TTL) {
@@ -234,24 +234,24 @@ const cache = {
         this.timestamps.delete(key);
         return null;
     },
-    
+
     set(key, value) {
         this.data.set(key, value);
         this.timestamps.set(key, Date.now());
     },
-    
+
     clear() {
         this.data.clear();
         this.timestamps.clear();
     },
-    
+
     invalidatePresents() {
         this.data.delete('all_presents');
         this.data.delete('recipients_with_presents');
         this.timestamps.delete('all_presents');
         this.timestamps.delete('recipients_with_presents');
     },
-    
+
     invalidateRecipients() {
         this.data.delete('all_recipients');
         this.data.delete('recipients_with_presents');
@@ -268,7 +268,7 @@ const getAllPresents = async () => {
         console.log('Using cached presents data');
         return cached;
     }
-    
+
     try {
         const [rows] = await pool.execute(`
             SELECT p.id, p.title, p.recipient_id, p.comments, p.is_checked, p.reserved_by, p.created_by, p.created_at,
@@ -278,7 +278,7 @@ const getAllPresents = async () => {
             LEFT JOIN users u ON p.reserved_by = u.id
             ORDER BY p.id DESC
         `);
-        
+
         cache.set(cacheKey, rows);
         return rows;
     } catch (err) {
@@ -317,7 +317,7 @@ app.use(session(sessionConfig));
 // Configure multer for file uploads (store in memory for database storage)
 const storage = multer.memoryStorage();
 
-const upload = multer({ 
+const upload = multer({
     storage: storage,
     limits: {
         fileSize: 5 * 1024 * 1024 // 5MB limit
@@ -347,8 +347,8 @@ function requireAuth(req, res, next) {
 
 // Routes
 app.get('/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'OK', 
+    res.status(200).json({
+        status: 'OK',
         timestamp: new Date().toISOString(),
         mode: DEMO_MODE ? 'DEMO' : 'PRODUCTION',
         database: DEMO_MODE ? 'disabled' : 'enabled'
@@ -392,7 +392,7 @@ app.get('/activity', (req, res) => {
 app.post('/api/login', async (req, res) => {
     console.log('Login request received:', { username: req.body.username, hasPassword: !!req.body.password });
     const { username, password } = req.body;
-    
+
     if (DEMO_MODE) {
         // Demo mode - accept any login
         if (username && password) {
@@ -405,22 +405,22 @@ app.post('/api/login', async (req, res) => {
         }
         return;
     }
-    
+
     try {
         const [rows] = await pool.execute('SELECT * FROM users WHERE username = ?', [username]);
         const user = rows[0];
-        
+
         if (!user || !bcrypt.compareSync(password, user.password)) {
             console.log('Login failed: invalid credentials for user:', username);
             return res.status(401).json({ error: 'Nieprawidłowa nazwa użytkownika lub hasło' });
         }
-        
+
         console.log('Login successful for user:', username);
         req.session.userId = user.id;
         req.session.username = user.username;
-        
+
         console.log('Session created:', { userId: req.session.userId, username: req.session.username });
-        
+
         res.json({ success: true, user: { id: user.id, username: user.username } });
     } catch (err) {
         console.error('Database error during login:', err);
@@ -447,7 +447,7 @@ app.get('/api/auth', (req, res) => {
 // Recipients API
 app.get('/api/recipients', requireAuth, async (req, res) => {
     console.log('Getting recipients for user:', req.session.userId);
-    
+
     if (DEMO_MODE) {
         // Demo mode - return demo data
         const recipients = demoData.recipients.map(recipient => ({
@@ -458,7 +458,7 @@ app.get('/api/recipients', requireAuth, async (req, res) => {
         res.json(recipients);
         return;
     }
-    
+
     try {
         const [rows] = await pool.execute(`
             SELECT r.*, u.username as identified_by_username 
@@ -466,7 +466,7 @@ app.get('/api/recipients', requireAuth, async (req, res) => {
             LEFT JOIN users u ON r.identified_by = u.id 
             ORDER BY r.name
         `);
-        
+
         // Add profile picture URLs for recipients that have them
         const recipients = rows.map(recipient => {
             if (recipient.profile_picture) {
@@ -474,7 +474,7 @@ app.get('/api/recipients', requireAuth, async (req, res) => {
             }
             return recipient;
         });
-        
+
         console.log('Recipients loaded successfully:', recipients.length, 'recipients');
         res.json(recipients);
     } catch (err) {
@@ -486,14 +486,14 @@ app.get('/api/recipients', requireAuth, async (req, res) => {
 app.post('/api/recipients', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     const { name } = req.body;
-    
+
     console.log('[POST /api/recipients] Incoming request:', { body: req.body, session: req.session });
-    
+
     if (!name || name.trim() === '') {
         console.log('[POST /api/recipients] Validation failed: empty name');
         return badRequest(res, 'Nazwa jest wymagana');
     }
-    
+
     if (DEMO_MODE) {
         // Demo mode - simulate adding recipient
         const newId = Math.max(...demoData.recipients.map(r => r.id)) + 1;
@@ -503,17 +503,17 @@ app.post('/api/recipients', requireAuth, async (req, res) => {
         res.json({ success: true, recipient: { id: newId, name: name.trim() } });
         return;
     }
-    
+
     try {
         const [result] = await pool.execute('INSERT INTO recipients (name) VALUES (?)', [name.trim()]);
         console.log('[POST /api/recipients] Recipient added successfully:', result.insertId, 'Request body:', req.body, 'Session:', req.session);
-        
+
         // Create notification for other users
         await createNotification('recipient_added', req.session.userId, {
             recipientId: result.insertId,
             recipientName: name.trim()
         });
-        
+
         // Return the expected structure for frontend
         res.json({ success: true, recipient: { id: result.insertId, name: name.trim() } });
     } catch (err) {
@@ -530,44 +530,44 @@ app.post('/api/recipients/:id/identify', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     const { id } = req.params;
     const userId = req.session.userId;
-    
+
     if (DEMO_MODE) {
         // Demo mode - simulate identification
         console.log('Demo mode identification:', { id, userId, demoData: demoData.recipients });
         const recipient = demoData.recipients.find(r => r.id == id);
-        
+
         if (!recipient) {
             console.log('Recipient not found in demo data:', id);
             return notFound(res, 'Osoba nie została znaleziona');
         }
-        
+
         console.log('Found recipient for identification:', recipient);
-        
+
         if (recipient.identified_by && recipient.identified_by !== userId) {
             console.log('Recipient already identified by another user:', { currentlyIdentifiedBy: recipient.identified_by, requestingUserId: userId });
             return conflict(res, 'Ta osoba została już zidentyfikowana przez innego użytkownika');
         }
-        
+
         // Update demo data
         recipient.identified_by = userId;
         console.log('Updated recipient identification:', recipient);
         res.json({ success: true });
         return;
     }
-    
+
     try {
         // Check if recipient is already identified
         const [rows] = await pool.execute('SELECT identified_by FROM recipients WHERE id = ?', [id]);
         const recipient = rows[0];
-        
+
         if (!recipient) {
             return notFound(res, 'Osoba nie została znaleziona');
         }
-        
+
         if (recipient.identified_by && recipient.identified_by !== userId) {
             return conflict(res, 'Ta osoba została już zidentyfikowana przez innego użytkownika');
         }
-        
+
         // Update identification
         await pool.execute('UPDATE recipients SET identified_by = ? WHERE id = ?', [userId, id]);
         res.json({ success: true });
@@ -580,7 +580,7 @@ app.post('/api/recipients/:id/identify', requireAuth, async (req, res) => {
 app.get('/api/user/identification', requireAuth, async (req, res) => {
     const userId = req.session.userId;
     const username = req.session.username;
-    
+
     if (DEMO_MODE) {
         // Demo mode - return demo identification status
         res.json({
@@ -592,7 +592,7 @@ app.get('/api/user/identification', requireAuth, async (req, res) => {
         });
         return;
     }
-    
+
     try {
         const recipient = await getUserIdentification(userId);
         const isIdentified = !!recipient;
@@ -614,49 +614,49 @@ app.delete('/api/recipients/:id/identify', requireAuth, async (req, res) => {
     console.log('Cancel identification request:', { id: req.params.id, userId: req.session.userId });
     const { id } = req.params;
     const userId = req.session.userId;
-    
+
     if (DEMO_MODE) {
         // Demo mode - simulate cancel identification
         console.log('Demo mode cancel identification:', { id, userId, demoData: demoData.recipients });
         const recipient = demoData.recipients.find(r => r.id == id);
-        
+
         if (!recipient) {
             console.log('Recipient not found:', id);
             return notFound(res, 'Osoba nie została znaleziona');
         }
-        
+
         console.log('Found recipient:', recipient);
         console.log('Checking authorization:', { recipientIdentifiedBy: recipient.identified_by, userId, match: recipient.identified_by === userId });
-        
+
         if (recipient.identified_by !== userId) {
             console.log('User not authorized to cancel identification');
             return forbidden(res, 'Nie możesz anulować identyfikacji innej osoby');
         }
-        
+
         // Remove identification from demo data
         recipient.identified_by = null;
         console.log('Identification canceled successfully for recipient:', id);
         res.json({ success: true });
         return;
     }
-    
+
     try {
         // Check if user is identified as this recipient
         const [rows] = await pool.execute('SELECT identified_by FROM recipients WHERE id = ?', [id]);
         const recipient = rows[0];
-        
+
         if (!recipient) {
             console.log('Recipient not found:', id);
             return notFound(res, 'Osoba nie została znaleziona');
         }
-        
+
         console.log('Recipient found:', { id, identified_by: recipient.identified_by, userId });
-        
+
         if (recipient.identified_by !== userId) {
             console.log('User not authorized to cancel identification');
             return forbidden(res, 'Nie możesz anulować identyfikacji innej osoby');
         }
-        
+
         // Remove identification
         await pool.execute('UPDATE recipients SET identified_by = ? WHERE id = ?', [null, id]);
         console.log('Identification canceled successfully for recipient:', id);
@@ -671,35 +671,35 @@ app.delete('/api/recipients/:id', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     console.log('Delete recipient request:', { id: req.params.id, userId: req.session.userId });
     const { id } = req.params;
-    
+
     if (DEMO_MODE) {
         // Demo mode - simulate deleting recipient
         const recipientIndex = demoData.recipients.findIndex(r => r.id == id);
-        
+
         if (recipientIndex === -1) {
             console.log('Recipient not found for deletion:', id);
             return notFound(res, 'Osoba nie została znaleziona');
         }
-        
+
         // Remove the recipient from demo data
         demoData.recipients.splice(recipientIndex, 1);
-        
+
         // Also remove any presents for this recipient
         demoData.presents = demoData.presents.filter(p => p.recipient_id != id);
-        
+
         console.log('Recipient deleted successfully in demo mode:', id);
         res.json({ success: true });
         return;
     }
-    
+
     try {
         const [result] = await pool.execute('DELETE FROM recipients WHERE id = ?', [id]);
-        
+
         if (result.affectedRows === 0) {
             console.log('Recipient not found for deletion:', id);
             return notFound(res, 'Osoba nie została znaleziona');
         }
-        
+
         console.log('Recipient deleted successfully:', id);
         res.json({ success: true });
     } catch (err) {
@@ -713,66 +713,66 @@ app.post('/api/recipients/:id/profile-picture', requireAuth, (req, res) => {
     upload.single('profile_picture')(req, res, async (err) => {
         const { id } = req.params;
         const userId = req.session.userId;
-        
+
         console.log('Profile picture upload request:', { id, userId, hasFile: !!req.file, error: err?.message });
-        
+
         if (err) {
             console.error('Multer error:', err);
             return res.status(400).json({ error: err.message });
         }
-        
+
         // Check if file was uploaded
         if (!req.file) {
             console.log('No file uploaded');
             return badRequest(res, 'Brak pliku zdjęcia');
         }
-        
-        console.log('File uploaded:', { 
-            originalname: req.file.originalname, 
-            mimetype: req.file.mimetype, 
-            size: req.file.size 
+
+        console.log('File uploaded:', {
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size
         });
-        
+
         if (DEMO_MODE) {
             // Demo mode - simulate profile picture upload
             console.log('Demo mode: simulating profile picture upload');
             const recipient = demoData.recipients.find(r => r.id == id);
-            
+
             if (!recipient) {
                 console.log('Recipient not found in demo data:', id);
                 return notFound(res, 'Osoba nie została znaleziona');
             }
-            
+
             if (recipient.identified_by && recipient.identified_by !== userId) {
                 console.log('User not authorized to edit profile:', { recipientIdentifiedBy: recipient.identified_by, userId });
                 return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
             }
-            
+
             // In demo mode, just set a placeholder URL
             recipient.profile_picture = `demo-image-${id}.jpg`;
-            
+
             console.log('Profile picture updated successfully in demo mode for recipient:', id);
             res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
             return;
         }
-        
+
         try {
             // Allow editing if not identified or identified by this user
             const [rows] = await pool.execute('SELECT identified_by FROM recipients WHERE id = ?', [id]);
             const recipient = rows[0];
-            
+
             if (!recipient) {
                 return notFound(res, 'Osoba nie została znaleziona');
             }
-            
+
             if (recipient.identified_by && recipient.identified_by !== userId) {
                 return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
             }
-            
+
             // Store image data and type in database
-            await pool.execute('UPDATE recipients SET profile_picture = ?, profile_picture_type = ? WHERE id = ?', 
+            await pool.execute('UPDATE recipients SET profile_picture = ?, profile_picture_type = ? WHERE id = ?',
                 [req.file.buffer, req.file.mimetype, id]);
-            
+
             console.log('Profile picture updated successfully for recipient:', id);
             res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
         } catch (err) {
@@ -785,28 +785,28 @@ app.post('/api/recipients/:id/profile-picture', requireAuth, (req, res) => {
 // Serve profile picture from database
 app.get('/api/recipients/:id/profile-picture', async (req, res) => {
     const { id } = req.params;
-    
+
     if (DEMO_MODE) {
         // Demo mode - serve placeholder image
         const recipient = demoData.recipients.find(r => r.id == id);
-        
+
         if (!recipient || !recipient.profile_picture) {
             return res.status(404).send('Profile picture not found');
         }
-        
+
         // In demo mode, redirect to a placeholder image service
         res.redirect(`https://via.placeholder.com/200x200/4CAF50/FFFFFF?text=${encodeURIComponent(recipient.name.charAt(0))}`);
         return;
     }
-    
+
     try {
         const [rows] = await pool.execute('SELECT profile_picture, profile_picture_type FROM recipients WHERE id = ?', [id]);
         const recipient = rows[0];
-        
+
         if (!recipient || !recipient.profile_picture) {
             return res.status(404).send('Profile picture not found');
         }
-        
+
         res.set('Content-Type', recipient.profile_picture_type);
         res.send(recipient.profile_picture);
     } catch (err) {
@@ -818,18 +818,18 @@ app.get('/api/recipients/:id/profile-picture', async (req, res) => {
 // Get recipient with identification info
 app.get('/api/recipients/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
-    
+
     try {
         const recipient = await getRecipientById(id);
         if (!recipient) {
             return notFound(res, 'Osoba nie została znaleziona');
         }
-        
+
         // Add profile picture URL if exists
         if (recipient.profile_picture) {
             recipient.profile_picture = `/api/recipients/${id}/profile-picture`;
         }
-        
+
         res.json(recipient);
     } catch (err) {
         handleDbError(err, res, 'Błąd podczas pobierania osoby');
@@ -840,7 +840,7 @@ app.get('/api/recipients/:id', requireAuth, async (req, res) => {
 app.get('/api/presents', requireAuth, async (req, res) => {
     console.log('Getting presents for user:', req.session.userId);
     const userId = req.session.userId;
-    
+
     if (DEMO_MODE) {
         // Demo mode - return demo presents
         const presents = demoData.presents.map(present => {
@@ -858,11 +858,11 @@ app.get('/api/presents', requireAuth, async (req, res) => {
         });
         return;
     }
-    
+
     try {
         // First check if user is identified
         const identifiedRecipient = await getUserIdentification(userId);
-        
+
         if (identifiedRecipient) {
             // User is identified - only show progress (checked/unchecked count) for their presents
             const [rows] = await pool.execute(`
@@ -873,10 +873,10 @@ app.get('/api/presents', requireAuth, async (req, res) => {
                 FROM presents p 
                 WHERE p.recipient_id = ?
             `, [identifiedRecipient.id]);
-            
+
             const progress = rows[0] || { total_presents: 0, checked_presents: 0, unchecked_presents: 0 };
             console.log('Progress for identified user:', progress);
-            
+
             res.json({
                 identified: true,
                 recipient: {
@@ -907,7 +907,7 @@ app.get('/api/presents', requireAuth, async (req, res) => {
 // Get all presents without identification logic (for recipients view)
 app.get('/api/presents/all', requireAuth, async (req, res) => {
     console.log('Getting all presents for recipients view');
-    
+
     if (DEMO_MODE) {
         // Demo mode - return demo presents with recipient names
         const presents = demoData.presents.map(present => {
@@ -922,7 +922,7 @@ app.get('/api/presents/all', requireAuth, async (req, res) => {
         res.json(presents);
         return;
     }
-    
+
     try {
         const presents = await getAllPresents();
         console.log('All presents loaded successfully:', presents.length, 'presents');
@@ -942,7 +942,7 @@ const COMBINED_CACHE_TTL = 5000; // 5 seconds cache
 
 app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
     console.log('Getting recipients with presents for user:', req.session.userId);
-    
+
     // Check cache first
     const cacheKey = 'combined-data';
     const cached = combinedDataCache.get(cacheKey);
@@ -950,14 +950,14 @@ app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
         console.log('Returning cached combined data');
         return res.json(cached.data);
     }
-    
+
     if (DEMO_MODE) {
         // Demo mode - return combined demo data
         const recipients = demoData.recipients.map(recipient => ({
             ...recipient,
             identified_by_username: recipient.identified_by ? 'demo' : null
         }));
-        
+
         const presents = demoData.presents.map(present => {
             const recipient = demoData.recipients.find(r => r.id === present.recipient_id);
             return {
@@ -966,14 +966,14 @@ app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
                 reserved_by_username: present.reserved_by ? 'demo' : null
             };
         });
-        
+
         console.log('Demo data loaded:', recipients.length, 'recipients,', presents.length, 'presents');
         const result = { recipients, presents };
         combinedDataCache.set(cacheKey, { data: result, timestamp: Date.now() });
         res.json(result);
         return;
     }
-    
+
     try {
         // Execute both queries in parallel for better performance
         const [recipientsResult, presentsResult] = await Promise.all([
@@ -991,22 +991,22 @@ app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
                 ORDER BY p.created_at DESC
             `)
         ]);
-        
+
         const recipients = recipientsResult[0].map(recipient => {
             if (recipient.profile_picture) {
                 recipient.profile_picture = `/api/recipients/${recipient.id}/profile-picture`;
             }
             return recipient;
         });
-        
+
         const presents = presentsResult[0];
-        
+
         console.log('Combined data loaded successfully:', recipients.length, 'recipients,', presents.length, 'presents');
         const result = { recipients, presents };
-        
+
         // Cache the result
         combinedDataCache.set(cacheKey, { data: result, timestamp: Date.now() });
-        
+
         res.json(result);
     } catch (err) {
         console.error('Database error getting combined data:', err);
@@ -1024,11 +1024,11 @@ app.post('/api/presents', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     const { title, recipient_id, comments } = req.body;
     const userId = req.session.userId;
-    
+
     if (!title || title.trim() === '') {
         return badRequest(res, 'Nazwa prezentu jest wymagana');
     }
-    
+
     if (DEMO_MODE) {
         // Demo mode - simulate adding present
         const newId = Math.max(...demoData.presents.map(p => p.id)) + 1;
@@ -1047,16 +1047,16 @@ app.post('/api/presents', requireAuth, async (req, res) => {
         res.json({ id: newId, title: title.trim(), recipient_id, comments });
         return;
     }
-    
+
     try {
         const [result] = await pool.execute(
             'INSERT INTO presents (title, recipient_id, comments, created_by) VALUES (?, ?, ?, ?)',
             [title.trim(), recipient_id || null, comments || null, userId]
         );
-        
+
         // Invalidate cache when data changes
         cache.invalidatePresents();
-        
+
         // Get recipient name for notification
         let recipientName = 'kogoś';
         if (recipient_id) {
@@ -1069,7 +1069,7 @@ app.post('/api/presents', requireAuth, async (req, res) => {
                 console.error('Error getting recipient name:', err);
             }
         }
-        
+
         // Create in-app notification for other users
         await createNotification('present_added', userId, {
             presentId: result.insertId,
@@ -1077,12 +1077,12 @@ app.post('/api/presents', requireAuth, async (req, res) => {
             recipientId: recipient_id || null,
             recipientName: recipientName
         });
-        
+
         // Send push notification to other users (non-blocking, with error handling)
         const notificationTitle = 'Nowy prezent!';
         const notificationBody = `Dodano nowy prezent "${title.trim()}" dla ${recipientName}`;
         console.log(`📢 [PRESENT] Triggering notification for new present: "${title.trim()}" (ID: ${result.insertId})`);
-        
+
         // Send notification asynchronously without blocking the response
         sendNotificationToUsers(userId, notificationTitle, notificationBody, {
             presentId: result.insertId,
@@ -1092,7 +1092,7 @@ app.post('/api/presents', requireAuth, async (req, res) => {
             // Log error but don't fail the present creation
             console.error('❌ [PRESENT] Failed to send notification (present was created successfully):', err);
         });
-        
+
         res.json({ id: result.insertId, title: title.trim(), recipient_id, comments });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas dodawania prezentu');
@@ -1103,44 +1103,44 @@ app.put('/api/presents/:id/check', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     const { id } = req.params;
     const { is_checked } = req.body;
-    
+
     console.log('Check present request:', { id, is_checked, userId: req.session.userId });
-    
+
     if (DEMO_MODE) {
         // Demo mode - simulate checking present
         const present = demoData.presents.find(p => p.id == id);
-        
+
         if (!present) {
             console.log('No present found with id:', id);
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
+
         console.log('Present found in demo mode:', present);
-        
+
         // Update the present in demo data
         present.is_checked = is_checked;
-        
-        console.log('Present check status updated successfully in demo mode:', { 
-            id, 
+
+        console.log('Present check status updated successfully in demo mode:', {
+            id,
             newStatus: is_checked
         });
-        
+
         res.json({ success: true });
         return;
     }
-    
+
     try {
         // First check if the present exists and get its current status
         const [rows] = await pool.execute('SELECT id, is_checked FROM presents WHERE id = ?', [id]);
         const present = rows[0];
-        
+
         if (!present) {
             console.log('No present found with id:', id);
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
+
         console.log('Present found:', present);
-        
+
         // Get present details for notification
         const [presentDetails] = await pool.execute(`
             SELECT p.title, p.recipient_id, r.name as recipient_name
@@ -1148,10 +1148,10 @@ app.put('/api/presents/:id/check', requireAuth, async (req, res) => {
             LEFT JOIN recipients r ON p.recipient_id = r.id
             WHERE p.id = ?
         `, [id]);
-        
+
         // Update the present
         const [result] = await pool.execute('UPDATE presents SET is_checked = ? WHERE id = ?', [is_checked ? 1 : 0, id]);
-        
+
         // Create notification for other users (only if status changed)
         if (present.is_checked !== is_checked && presentDetails.length > 0) {
             const presentData = presentDetails[0];
@@ -1163,14 +1163,14 @@ app.put('/api/presents/:id/check', requireAuth, async (req, res) => {
                 recipientName: presentData.recipient_name || 'kogoś'
             });
         }
-        
-        console.log('Present check status updated successfully:', { 
-            id, 
-            oldStatus: present.is_checked, 
-            newStatus: is_checked, 
-            changes: result.affectedRows 
+
+        console.log('Present check status updated successfully:', {
+            id,
+            oldStatus: present.is_checked,
+            newStatus: is_checked,
+            changes: result.affectedRows
         });
-        
+
         res.json({ success: true });
     } catch (err) {
         console.error('Database error updating present check status:', err);
@@ -1182,39 +1182,39 @@ app.put('/api/presents/:id', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     const { id } = req.params;
     const { title, recipient_id, comments } = req.body;
-    
+
     if (!title || title.trim() === '') {
         return badRequest(res, 'Nazwa prezentu jest wymagana');
     }
-    
+
     if (DEMO_MODE) {
         // Demo mode - simulate updating present
         const present = demoData.presents.find(p => p.id == id);
-        
+
         if (!present) {
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
+
         // Update the present in demo data
         present.title = title.trim();
         present.recipient_id = recipient_id || null;
         present.comments = comments || null;
-        
+
         console.log('Present updated successfully in demo mode:', id);
         res.json({ success: true });
         return;
     }
-    
+
     try {
         const [result] = await pool.execute(
             'UPDATE presents SET title = ?, recipient_id = ?, comments = ? WHERE id = ?',
             [title.trim(), recipient_id || null, comments || null, id]
         );
-        
+
         if (result.affectedRows === 0) {
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
+
         console.log('Present updated successfully:', id);
         res.json({ success: true });
     } catch (err) {
@@ -1226,29 +1226,29 @@ app.put('/api/presents/:id', requireAuth, async (req, res) => {
 app.delete('/api/presents/:id', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     const { id } = req.params;
-    
+
     if (DEMO_MODE) {
         // Demo mode - simulate deleting present
         const presentIndex = demoData.presents.findIndex(p => p.id == id);
-        
+
         if (presentIndex === -1) {
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
+
         // Remove the present from demo data
         demoData.presents.splice(presentIndex, 1);
         console.log('Present deleted successfully in demo mode:', id);
         res.json({ success: true });
         return;
     }
-    
+
     try {
         const [result] = await pool.execute('DELETE FROM presents WHERE id = ?', [id]);
-        
+
         if (result.affectedRows === 0) {
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
+
         res.json({ success: true });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas usuwania prezentu');
@@ -1260,45 +1260,45 @@ app.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     const { id } = req.params;
     const userId = req.session.userId;
-    
+
     console.log('Reserve present request:', { id, userId });
-    
+
     if (DEMO_MODE) {
         // Demo mode - simulate reservation
         const present = demoData.presents.find(p => p.id == id);
-        
+
         if (!present) {
             console.log('No present found with id:', id);
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
+
         if (present.reserved_by) {
             console.log('Present already reserved by user:', present.reserved_by);
             return conflict(res, 'Prezent jest już zarezerwowany');
         }
-        
+
         // Reserve the present in demo data
         present.reserved_by = userId;
         console.log('Present reserved successfully in demo mode:', { id, userId });
         res.json({ success: true });
         return;
     }
-    
+
     try {
         // First check if the present exists and is not already reserved
         const [rows] = await pool.execute('SELECT id, reserved_by FROM presents WHERE id = ?', [id]);
         const present = rows[0];
-        
+
         if (!present) {
             console.log('No present found with id:', id);
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
+
         if (present.reserved_by) {
             console.log('Present already reserved by user:', present.reserved_by);
             return conflict(res, 'Prezent jest już zarezerwowany');
         }
-        
+
         // Get present details for notification
         const [presentDetails] = await pool.execute(`
             SELECT p.title, p.recipient_id, r.name as recipient_name
@@ -1306,10 +1306,10 @@ app.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
             LEFT JOIN recipients r ON p.recipient_id = r.id
             WHERE p.id = ?
         `, [id]);
-        
+
         // Reserve the present
         const [result] = await pool.execute('UPDATE presents SET reserved_by = ? WHERE id = ?', [userId, id]);
-        
+
         // Create notification for other users
         if (presentDetails.length > 0) {
             const present = presentDetails[0];
@@ -1320,7 +1320,7 @@ app.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
                 recipientName: present.recipient_name || 'kogoś'
             });
         }
-        
+
         console.log('Present reserved successfully:', { id, userId, changes: result.affectedRows });
         res.json({ success: true });
     } catch (err) {
@@ -1333,22 +1333,22 @@ app.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
 app.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
     const userId = req.session.userId;
     const subscription = req.body;
-    
+
     console.log('📝 Notification subscription request:', { userId, hasSubscription: !!subscription });
-    
+
     if (!webpush) {
         console.log('⚠️ Web-push not available - cannot save subscription');
-        return res.status(503).json({ 
-            error: 'Web-push module not available on server' 
+        return res.status(503).json({
+            error: 'Web-push module not available on server'
         });
     }
-    
+
     if (DEMO_MODE) {
         console.log('Demo mode - notification subscription saved:', { userId, subscription });
         res.json({ success: true });
         return;
     }
-    
+
     try {
         // Create notifications table if it doesn't exist
         await pool.execute(`
@@ -1362,13 +1362,13 @@ app.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
                 UNIQUE KEY unique_user_endpoint (user_id, endpoint(255))
             )
         `);
-        
+
         // Save subscription
         console.log(`💾 [SUBSCRIPTION] Saving subscription for user ${userId}:`, {
             endpoint: subscription.endpoint.substring(0, 50) + '...',
             hasKeys: !!(subscription.keys && subscription.keys.p256dh && subscription.keys.auth)
         });
-        
+
         await pool.execute(`
             INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) 
             VALUES (?, ?, ?, ?)
@@ -1382,21 +1382,21 @@ app.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
             subscription.keys.p256dh,
             subscription.keys.auth
         ]);
-        
+
         // Get total subscription count for this user
         const [countResult] = await pool.execute(
             'SELECT COUNT(*) as count FROM push_subscriptions WHERE user_id = ?',
             [userId]
         );
         const userSubscriptionCount = countResult[0].count;
-        
+
         // Get total subscriptions in system
         const [totalResult] = await pool.execute('SELECT COUNT(*) as count FROM push_subscriptions');
         const totalSubscriptions = totalResult[0].count;
-        
+
         console.log(`✅ [SUBSCRIPTION] Subscription saved successfully for user ${userId}. User has ${userSubscriptionCount} subscription(s). Total system subscriptions: ${totalSubscriptions}`);
-        
-        res.json({ 
+
+        res.json({
             success: true,
             userSubscriptions: userSubscriptionCount,
             totalSubscriptions: totalSubscriptions
@@ -1409,7 +1409,7 @@ app.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
 
 // Get VAPID public key endpoint
 app.get('/api/vapid-public-key', (req, res) => {
-    res.json({ 
+    res.json({
         publicKey: VAPID_PUBLIC_KEY,
         webPushAvailable: !!webpush
     });
@@ -1420,7 +1420,7 @@ app.get('/api/notifications/debug', requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
         console.log('🔍 [DEBUG] Notification debug request from user:', userId);
-        
+
         const debugInfo = {
             webPushAvailable: !!webpush,
             vapidConfigured: !!(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
@@ -1428,30 +1428,30 @@ app.get('/api/notifications/debug', requireAuth, async (req, res) => {
             userId: userId,
             timestamp: new Date().toISOString()
         };
-        
+
         if (DEMO_MODE) {
             debugInfo.message = 'Running in DEMO mode - database queries disabled';
             return res.json(debugInfo);
         }
-        
+
         // Get subscription counts
         const [userSubResult] = await pool.execute(
             'SELECT COUNT(*) as count FROM push_subscriptions WHERE user_id = ?',
             [userId]
         );
         debugInfo.userSubscriptions = userSubResult[0].count;
-        
+
         const [totalSubResult] = await pool.execute(
             'SELECT COUNT(*) as count FROM push_subscriptions'
         );
         debugInfo.totalSubscriptions = totalSubResult[0].count;
-        
+
         // Get all user IDs with subscriptions
         const [usersResult] = await pool.execute(
             'SELECT DISTINCT user_id FROM push_subscriptions'
         );
         debugInfo.subscribedUserIds = usersResult.map(row => row.user_id);
-        
+
         console.log('🔍 [DEBUG] Debug info:', debugInfo);
         res.json(debugInfo);
     } catch (error) {
@@ -1468,23 +1468,23 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
         const userId = req.session.userId;
         const limit = parseInt(req.query.limit) || 5;
         const offset = parseInt(req.query.offset) || 0;
-        
+
         console.log(`📋 [NOTIFICATIONS] Fetching notifications for user ${userId} (limit: ${limit}, offset: ${offset})`);
-        
+
         if (DEMO_MODE) {
             return res.json({ notifications: [], unreadCount: 0, hasMore: false });
         }
-        
+
         // Ensure table exists
         await ensureNotificationsTable();
-        
+
         // Get user's identified recipient (if any)
         const [identification] = await pool.execute(
             'SELECT id FROM recipients WHERE identified_by = ?',
             [userId]
         );
         const identifiedRecipientId = identification.length > 0 ? identification[0].id : null;
-        
+
         // Fetch notifications with actor username
         const [notifications] = await pool.execute(`
             SELECT n.*, u.username as actor_username
@@ -1494,7 +1494,7 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
             ORDER BY n.created_at DESC
             LIMIT ? OFFSET ?
         `, [userId, limit + 1, offset]); // Fetch one extra to check if there are more
-        
+
         // Filter out notifications about identified recipient's presents
         let filteredNotifications = notifications;
         if (identifiedRecipientId) {
@@ -1506,28 +1506,28 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
                 return true;
             });
         }
-        
+
         // Check if there are more notifications
         const hasMore = filteredNotifications.length > limit;
         if (hasMore) {
             filteredNotifications = filteredNotifications.slice(0, limit);
         }
-        
+
         // Parse JSON data for each notification
         const parsedNotifications = filteredNotifications.map(n => ({
             ...n,
             data: JSON.parse(n.data)
         }));
-        
+
         // Get unread count
         const [countResult] = await pool.execute(
             'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
             [userId]
         );
         const unreadCount = countResult[0].count;
-        
+
         console.log(`✅ [NOTIFICATIONS] Returning ${parsedNotifications.length} notifications (${unreadCount} unread)`);
-        
+
         res.json({
             notifications: parsedNotifications,
             unreadCount: unreadCount,
@@ -1543,21 +1543,21 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
 app.get('/api/notifications/unread-count', requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
-        
+
         if (DEMO_MODE) {
             return res.json({ count: 0 });
         }
-        
+
         await ensureNotificationsTable();
-        
+
         const [result] = await pool.execute(
             'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
             [userId]
         );
-        
+
         const count = result[0].count;
         console.log(`📊 [NOTIFICATIONS] Unread count for user ${userId}: ${count}`);
-        
+
         res.json({ count: count });
     } catch (error) {
         console.error('❌ [NOTIFICATIONS] Error getting unread count:', error);
@@ -1570,30 +1570,30 @@ app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
         const notificationId = req.params.id;
-        
+
         console.log(`✓ [NOTIFICATIONS] Marking notification ${notificationId} as read for user ${userId}`);
-        
+
         if (DEMO_MODE) {
             return res.json({ success: true, unreadCount: 0 });
         }
-        
+
         await ensureNotificationsTable();
-        
+
         // Mark as read (only if it belongs to this user)
         await pool.execute(
             'UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?',
             [notificationId, userId]
         );
-        
+
         // Get updated unread count
         const [result] = await pool.execute(
             'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
             [userId]
         );
-        
+
         const unreadCount = result[0].count;
         console.log(`✅ [NOTIFICATIONS] Notification marked as read. New unread count: ${unreadCount}`);
-        
+
         res.json({ success: true, unreadCount: unreadCount });
     } catch (error) {
         console.error('❌ [NOTIFICATIONS] Error marking notification as read:', error);
@@ -1605,22 +1605,22 @@ app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
 app.post('/api/notifications/read-all', requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
-        
+
         console.log(`✓✓ [NOTIFICATIONS] Marking all notifications as read for user ${userId}`);
-        
+
         if (DEMO_MODE) {
             return res.json({ success: true });
         }
-        
+
         await ensureNotificationsTable();
-        
+
         await pool.execute(
             'UPDATE notifications SET is_read = TRUE WHERE user_id = ? AND is_read = FALSE',
             [userId]
         );
-        
+
         console.log(`✅ [NOTIFICATIONS] All notifications marked as read for user ${userId}`);
-        
+
         res.json({ success: true });
     } catch (error) {
         console.error('❌ [NOTIFICATIONS] Error marking all as read:', error);
@@ -1633,22 +1633,22 @@ app.post('/api/test-notification', requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
         const includeCurrentUser = req.body.includeCurrentUser || false;
-        
+
         console.log('🧪 [TEST] Testing notification for user:', userId, 'includeCurrentUser:', includeCurrentUser);
-        
+
         if (!webpush) {
-            return res.status(503).json({ 
-                error: 'Web-push module not available. Run: npm install web-push' 
+            return res.status(503).json({
+                error: 'Web-push module not available. Run: npm install web-push'
             });
         }
-        
+
         // Send a test notification (exclude current user by default, or include if requested)
         const excludeUserId = includeCurrentUser ? -1 : userId; // Use -1 to not exclude anyone
         await sendNotificationToUsers(excludeUserId, 'Test Notification', 'This is a test notification from Prezenty app! 🎄', {
             test: true,
             timestamp: Date.now()
         });
-        
+
         res.json({ success: true, message: 'Test notification sent!' });
     } catch (error) {
         console.error('❌ [TEST] Error sending test notification:', error);
@@ -1662,19 +1662,19 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
         const userId = req.session.userId;
         const limit = parseInt(req.query.limit) || 5;
         const offset = parseInt(req.query.offset) || 0;
-        
+
         console.log(`📬 [NOTIFICATIONS] Fetching notifications for user ${userId} (limit: ${limit}, offset: ${offset})`);
-        
+
         if (DEMO_MODE) {
             return res.json({ notifications: [], unreadCount: 0, hasMore: false });
         }
-        
+
         await ensureNotificationsTable();
-        
+
         // Check if user is identified as a recipient
         const identifiedRecipient = await getUserIdentification(userId);
         const identifiedRecipientId = identifiedRecipient ? identifiedRecipient.id : null;
-        
+
         // Get notifications with actor username
         const [notifications] = await pool.execute(`
             SELECT n.*, u.username as actor_username
@@ -1684,7 +1684,7 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
             ORDER BY n.created_at DESC
             LIMIT ? OFFSET ?
         `, [userId, limit + 1, offset]); // Fetch one extra to check if there are more
-        
+
         // Filter out notifications about identified recipient's presents
         let filteredNotifications = notifications;
         if (identifiedRecipientId) {
@@ -1696,28 +1696,28 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
                 return true;
             });
         }
-        
+
         // Check if there are more notifications
         const hasMore = filteredNotifications.length > limit;
         if (hasMore) {
             filteredNotifications = filteredNotifications.slice(0, limit);
         }
-        
+
         // Parse JSON data for each notification
         const parsedNotifications = filteredNotifications.map(n => ({
             ...n,
             data: JSON.parse(n.data)
         }));
-        
+
         // Get unread count
         const [countResult] = await pool.execute(
             'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
             [userId]
         );
         const unreadCount = countResult[0].count;
-        
+
         console.log(`✅ [NOTIFICATIONS] Returning ${parsedNotifications.length} notifications, ${unreadCount} unread`);
-        
+
         res.json({
             notifications: parsedNotifications,
             unreadCount: unreadCount,
@@ -1732,21 +1732,21 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
 app.get('/api/notifications/unread-count', requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
-        
+
         if (DEMO_MODE) {
             return res.json({ count: 0 });
         }
-        
+
         await ensureNotificationsTable();
-        
+
         const [result] = await pool.execute(
             'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
             [userId]
         );
-        
+
         const count = result[0].count;
         console.log(`📊 [NOTIFICATIONS] User ${userId} has ${count} unread notification(s)`);
-        
+
         res.json({ count: count });
     } catch (err) {
         console.error('❌ [NOTIFICATIONS] Error getting unread count:', err);
@@ -1758,30 +1758,30 @@ app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
         const notificationId = req.params.id;
-        
+
         console.log(`✓ [NOTIFICATIONS] Marking notification ${notificationId} as read for user ${userId}`);
-        
+
         if (DEMO_MODE) {
             return res.json({ success: true, unreadCount: 0 });
         }
-        
+
         await ensureNotificationsTable();
-        
+
         // Mark as read only if it belongs to the user
         await pool.execute(
             'UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?',
             [notificationId, userId]
         );
-        
+
         // Get updated unread count
         const [result] = await pool.execute(
             'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
             [userId]
         );
-        
+
         const unreadCount = result[0].count;
         console.log(`✅ [NOTIFICATIONS] Notification marked as read. User has ${unreadCount} unread notification(s)`);
-        
+
         res.json({ success: true, unreadCount: unreadCount });
     } catch (err) {
         console.error('❌ [NOTIFICATIONS] Error marking notification as read:', err);
@@ -1792,22 +1792,22 @@ app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
 app.post('/api/notifications/read-all', requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
-        
+
         console.log(`✓✓ [NOTIFICATIONS] Marking all notifications as read for user ${userId}`);
-        
+
         if (DEMO_MODE) {
             return res.json({ success: true });
         }
-        
+
         await ensureNotificationsTable();
-        
+
         await pool.execute(
             'UPDATE notifications SET is_read = TRUE WHERE user_id = ? AND is_read = FALSE',
             [userId]
         );
-        
+
         console.log(`✅ [NOTIFICATIONS] All notifications marked as read for user ${userId}`);
-        
+
         res.json({ success: true });
     } catch (err) {
         console.error('❌ [NOTIFICATIONS] Error marking all as read:', err);
@@ -1818,33 +1818,33 @@ app.post('/api/notifications/read-all', requireAuth, async (req, res) => {
 // Function to send notifications to all users except the sender
 async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
     console.log('🔔 [NOTIFICATION] Starting notification send:', { excludeUserId, title, body, data });
-    
+
     if (!webpush) {
         console.log('⚠️ [NOTIFICATION] Web-push not available - notifications disabled');
         return;
     }
-    
+
     if (DEMO_MODE) {
         console.log('📝 [NOTIFICATION] Demo mode - simulating notification (web-push available)');
         // In demo mode, we can't access the database, so we'll just log
         // But the push subscription endpoint should still work for testing
         return;
     }
-    
+
     try {
         const [subscriptions] = await pool.execute(`
             SELECT * FROM push_subscriptions 
             WHERE user_id != ?
         `, [excludeUserId]);
-        
+
         console.log(`📊 [NOTIFICATION] Found ${subscriptions.length} subscription(s) to notify (excluding user ${excludeUserId})`);
-        
+
         // Early return if no subscriptions
         if (subscriptions.length === 0) {
             console.log('ℹ️ [NOTIFICATION] No subscriptions found - skipping notification send');
             return;
         }
-        
+
         const notificationPayload = JSON.stringify({
             title,
             body,
@@ -1853,9 +1853,9 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
             tag: 'new-present',
             data
         });
-        
+
         console.log('📦 [NOTIFICATION] Notification payload:', notificationPayload);
-        
+
         let successCount = 0;
         let failureCount = 0;
 
@@ -1885,7 +1885,7 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
                 }
             }
         });
-        
+
         await Promise.all(promises);
         console.log(`✨ [NOTIFICATION] Notification send complete: ${successCount} successful, ${failureCount} failed out of ${subscriptions.length} total`);
     } catch (err) {
@@ -1898,7 +1898,7 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
 // Create notifications table if it doesn't exist
 async function ensureNotificationsTable() {
     if (DEMO_MODE) return;
-    
+
     try {
         await pool.execute(`
             CREATE TABLE IF NOT EXISTS notifications (
@@ -1925,7 +1925,7 @@ async function ensureNotificationsTable() {
 // Check if user is identified as a specific recipient
 async function isUserIdentifiedAsRecipient(userId, recipientId) {
     if (DEMO_MODE) return false;
-    
+
     try {
         const [rows] = await pool.execute(
             'SELECT id FROM recipients WHERE id = ? AND identified_by = ?',
@@ -1944,19 +1944,19 @@ async function createNotification(type, actorId, data) {
         console.log('📝 [NOTIFICATIONS] Demo mode - notification not created:', { type, actorId, data });
         return;
     }
-    
+
     try {
         // Ensure table exists
         await ensureNotificationsTable();
-        
+
         // Get all users except the actor
         const [users] = await pool.execute(
             'SELECT id FROM users WHERE id != ?',
             [actorId]
         );
-        
+
         console.log(`📢 [NOTIFICATIONS] Creating ${type} notifications for ${users.length} user(s)`);
-        
+
         // Create notification for each eligible user
         for (const user of users) {
             // Check privacy: skip if user is identified as the recipient in present notifications
@@ -1967,14 +1967,14 @@ async function createNotification(type, actorId, data) {
                     continue;
                 }
             }
-            
+
             // Create notification
             await pool.execute(
                 'INSERT INTO notifications (user_id, type, actor_id, data) VALUES (?, ?, ?, ?)',
                 [user.id, type, actorId, JSON.stringify(data)]
             );
         }
-        
+
         console.log(`✅ [NOTIFICATIONS] Created ${type} notifications successfully`);
     } catch (err) {
         console.error('❌ [NOTIFICATIONS] Error creating notification:', err);
@@ -1987,55 +1987,55 @@ app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     const { id } = req.params;
     const userId = req.session.userId;
-    
+
     console.log('Cancel reservation request:', { id, userId });
-    
+
     if (DEMO_MODE) {
         // Demo mode - simulate cancel reservation
         const present = demoData.presents.find(p => p.id == id);
-        
+
         if (!present) {
             console.log('No present found with id:', id);
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
+
         if (!present.reserved_by) {
             console.log('Present is not reserved');
             return conflict(res, 'Prezent nie jest zarezerwowany');
         }
-        
+
         if (present.reserved_by !== userId) {
             console.log('Present reserved by different user:', present.reserved_by);
             return forbidden(res, 'Nie możesz anulować rezerwacji innej osoby');
         }
-        
+
         // Cancel the reservation in demo data
         present.reserved_by = null;
         console.log('Reservation canceled successfully in demo mode:', { id, userId });
         res.json({ success: true });
         return;
     }
-    
+
     try {
         // First check if the present exists and is reserved by this user
         const [rows] = await pool.execute('SELECT id, reserved_by FROM presents WHERE id = ?', [id]);
         const present = rows[0];
-        
+
         if (!present) {
             console.log('No present found with id:', id);
             return notFound(res, 'Prezent nie został znaleziony');
         }
-        
+
         if (!present.reserved_by) {
             console.log('Present is not reserved');
             return conflict(res, 'Prezent nie jest zarezerwowany');
         }
-        
+
         if (present.reserved_by !== userId) {
             console.log('Present reserved by different user:', present.reserved_by);
             return forbidden(res, 'Nie możesz anulować rezerwacji innej osoby');
         }
-        
+
         // Get present details for notification
         const [presentDetails] = await pool.execute(`
             SELECT p.title, p.recipient_id, r.name as recipient_name
@@ -2043,10 +2043,10 @@ app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
             LEFT JOIN recipients r ON p.recipient_id = r.id
             WHERE p.id = ?
         `, [id]);
-        
+
         // Cancel the reservation
         const [result] = await pool.execute('UPDATE presents SET reserved_by = ? WHERE id = ?', [null, id]);
-        
+
         // Create notification for other users
         if (presentDetails.length > 0) {
             const present = presentDetails[0];
@@ -2057,7 +2057,7 @@ app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
                 recipientName: present.recipient_name || 'kogoś'
             });
         }
-        
+
         console.log('Reservation canceled successfully:', { id, userId, changes: result.affectedRows });
         res.json({ success: true });
     } catch (err) {
@@ -2070,46 +2070,46 @@ app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
 app.post('/api/register', async (req, res) => {
     console.log('Registration request received:', { username: req.body.username, hasPassword: !!req.body.password });
     const { username, password } = req.body;
-    
+
     if (!username || !password) {
         console.log('Registration failed: missing username or password');
         return badRequest(res, 'Wymagane jest podanie nazwy użytkownika i hasła');
     }
-    
+
     if (DEMO_MODE) {
         // Demo mode - simulate registration
         console.log('Demo mode registration for:', username);
-        
+
         // In demo mode, just log them in as the demo user
         req.session.userId = 1;
         req.session.username = username;
-        
+
         console.log('Demo registration successful:', { userId: 1, username: username });
         res.json({ success: true, user: { id: 1, username: username } });
         return;
     }
-    
+
     try {
         console.log('Checking if username exists:', username);
         const [rows] = await pool.execute('SELECT id FROM users WHERE username = ?', [username]);
-        
+
         if (rows.length > 0) {
             console.log('Registration failed: username already exists:', username);
             return conflict(res, 'Nazwa użytkownika jest już zajęta');
         }
-        
+
         console.log('Creating new user:', username);
         const hashedPassword = bcrypt.hashSync(password, 10);
         const [result] = await pool.execute('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword]);
-        
+
         console.log('User created successfully:', { id: result.insertId, username: username });
-        
+
         // Automatycznie loguj użytkownika po rejestracji
         req.session.userId = result.insertId;
         req.session.username = username;
-        
+
         console.log('Session created:', { userId: req.session.userId, username: req.session.username });
-        
+
         res.json({ success: true, user: { id: result.insertId, username: username } });
     } catch (err) {
         console.error('Database error during registration:', err);
@@ -2123,55 +2123,55 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/user/identify', requireAuth, async (req, res) => {
     const { name } = req.body;
     const userId = req.session.userId;
-    
+
     console.log('[POST /api/user/identify] Incoming request:', { body: req.body, session: req.session });
-    
+
     if (!name || name.trim() === '') {
         console.log('[POST /api/user/identify] Validation failed: empty name');
         return badRequest(res, 'Imię jest wymagane');
     }
-    
+
     try {
         // Check if user is already identified
         const [existingRows] = await pool.execute('SELECT r.* FROM recipients r WHERE r.identified_by = ?', [userId]);
         const existingRecipient = existingRows[0];
-        
+
         if (existingRecipient) {
             console.log('[POST /api/user/identify] User already identified as:', existingRecipient);
             return conflict(res, 'Jesteś już zidentyfikowany jako ' + existingRecipient.name);
         }
-        
+
         // Check if recipient with this name already exists
         const [recipientRows] = await pool.execute('SELECT * FROM recipients WHERE name = ?', [name.trim()]);
         const recipient = recipientRows[0];
-        
+
         if (recipient) {
             // Check if this recipient is already identified by someone else
             if (recipient.identified_by && recipient.identified_by !== userId) {
                 console.log('[POST /api/user/identify] Recipient already identified by another user:', recipient);
                 return conflict(res, 'Ta osoba została już zidentyfikowana przez innego użytkownika');
             }
-            
+
             // Update existing recipient to identify this user
             await pool.execute('UPDATE recipients SET identified_by = ? WHERE id = ?', [userId, recipient.id]);
             console.log('[POST /api/user/identify] Recipient identification updated:', { recipientId: recipient.id, userId });
-            res.json({ 
-                success: true, 
-                recipient: { 
-                    id: recipient.id, 
-                    name: recipient.name 
-                } 
+            res.json({
+                success: true,
+                recipient: {
+                    id: recipient.id,
+                    name: recipient.name
+                }
             });
         } else {
             // Create new recipient and identify user
             const [result] = await pool.execute('INSERT INTO recipients (name, identified_by) VALUES (?, ?)', [name.trim(), userId]);
             console.log('[POST /api/user/identify] New recipient created and identified:', { id: result.insertId, name: name.trim(), userId });
-            res.json({ 
-                success: true, 
-                recipient: { 
-                    id: result.insertId, 
-                    name: name.trim() 
-                } 
+            res.json({
+                success: true,
+                recipient: {
+                    id: result.insertId,
+                    name: name.trim()
+                }
             });
         }
     } catch (err) {
@@ -2183,19 +2183,19 @@ app.post('/api/user/identify', requireAuth, async (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
-    
+
     if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
         return badRequest(res, 'Nieprawidłowy format danych JSON');
     }
-    
+
     if (err.type === 'entity.too.large') {
         return res.status(413).json({ error: 'Plik jest zbyt duży. Maksymalny rozmiar to 10MB.' });
     }
-    
+
     if (err.message === 'Tylko pliki obrazów są dozwolone') {
         return badRequest(res, err.message);
     }
-    
+
     handleDbError(err, res, 'Błąd serwera');
 });
 
@@ -2236,13 +2236,13 @@ async function startServer() {
     try {
         if (DEMO_MODE) {
             const reason = process.env.OFFLINE_MODE === 'true' ? 'OFFLINE_MODE enabled' :
-                          process.env.DEMO_MODE === 'true' ? 'DEMO_MODE enabled' :
-                          !process.env.DB_PASSWORD ? 'No DB_PASSWORD set' :
-                          'Development mode';
-            
+                process.env.DEMO_MODE === 'true' ? 'DEMO_MODE enabled' :
+                    !process.env.DB_PASSWORD ? 'No DB_PASSWORD set' :
+                        'Development mode';
+
             console.log(`🎭 Starting in OFFLINE/DEMO MODE - ${reason}`);
             console.log('💡 Database features disabled - using sample data');
-            
+
             // Start server without database
             app.listen(PORT, HOST, () => {
                 console.log(`🎄 Serwer Prezenty działa na porcie ${PORT}`);
@@ -2259,11 +2259,11 @@ async function startServer() {
             if (!dbConnected) {
                 console.error('⚠️  Database connection failed - falling back to DEMO MODE');
                 console.error('💡 Set correct DB_PASSWORD to enable database features');
-                
+
                 // Fall back to demo mode
                 DEMO_MODE = true;
                 console.log('🎭 Falling back to DEMO MODE for deployment');
-                
+
                 // Start server in demo mode
                 app.listen(PORT, HOST, () => {
                     console.log(`🎄 Serwer Prezenty działa na porcie ${PORT} (DEMO MODE)`);
@@ -2276,11 +2276,11 @@ async function startServer() {
                 });
                 return;
             }
-            
+
             // Skip database initialization on deployment
             console.log('⚠️  Database schema initialization skipped');
             console.log('💡 Run "npm run init-db" manually if you need to create tables');
-            
+
             // Start server
             app.listen(PORT, HOST, () => {
                 console.log(`Serwer Prezenty działa na porcie ${PORT}`);
@@ -2312,7 +2312,7 @@ function setupKeepAliveCron() {
     // Only run keep-alive in production on Render
     if (process.env.NODE_ENV === 'production' && process.env.RENDER) {
         console.log('🔄 Setting up keep-alive cronjob for Render...');
-        
+
         const job = new cron.CronJob('*/14 * * * *', function () {
             https
                 .get("https://prezenty.onrender.com", (res) => {
@@ -2326,7 +2326,7 @@ function setupKeepAliveCron() {
                     console.error("❌ Keep-alive ping error:", e.message);
                 });
         });
-        
+
         job.start();
         console.log('✅ Keep-alive cronjob started - pinging every 14 minutes');
     } else {
