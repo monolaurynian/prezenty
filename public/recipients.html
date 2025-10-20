@@ -66,9 +66,9 @@
                                 <p class="mb-0">Ładowanie...</p>
                             </div>
                         </div>
-                        <div class="notification-dropdown-footer" id="notificationDropdownFooter" style="display: none;">
+                        <div class="notification-dropdown-footer">
                             <a href="/activity.html" class="btn btn-sm btn-link text-decoration-none w-100">
-                                Zobacz więcej
+                                <i class="fas fa-list me-1"></i>Zobacz wszystkie powiadomienia
                             </a>
                         </div>
                     </div>
@@ -928,11 +928,9 @@
                 .then(data => {
                     if (data.notifications.length === 0) {
                         body.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-bell-slash fa-2x mb-2"></i><p class="mb-0">Brak powiadomień</p></div>';
-                        footer.style.display = 'none';
                         markAllBtn.style.display = 'none';
                     } else {
                         body.innerHTML = data.notifications.map(n => renderNotification(n)).join('');
-                        footer.style.display = data.hasMore ? 'block' : 'none';
                         markAllBtn.style.display = data.unreadCount > 0 ? 'inline-block' : 'none';
                     }
                 })
