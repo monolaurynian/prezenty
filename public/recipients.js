@@ -2383,10 +2383,10 @@ function fetchWithTimeout(url, options, timeout = 10000) {
 function updateButtonOptimistically(button, action) {
     if (action === 'reserve') {
         button.className = 'btn btn-danger btn-sm w-100 w-md-auto reserve-btn updating';
-        button.innerHTML = '<i class="fas fa-xmark"></i> <span class="d-none d-md-inline">Anuluj</span>';
+        button.innerHTML = '<i class="fas fa-xmark"></i> <span class="d-inline d-md-none ms-1">Usuń rezerwację</span>';
     } else {
         button.className = 'btn btn-outline-warning btn-sm w-100 w-md-auto reserve-btn updating';
-        button.innerHTML = '<i class="fas fa-bookmark"></i> <span class="d-none d-md-inline">Zarezerwuj</span>';
+        button.innerHTML = '<i class="fas fa-bookmark"></i> <span class="d-inline d-md-none ms-1">Zarezerwuj prezent</span>';
     }
     button.disabled = true;
 }
@@ -2458,11 +2458,14 @@ function reservePresentFromRecipients(presentId, button, previousState) {
             // Success - optimistic update is confirmed
             showSuccessToast('Prezent zarezerwowany!');
             
-            // Re-enable button (keep the updated state)
-            const currentButton = document.querySelector(`[data-id="${presentId}"] .reserve-btn`);
+            // Update button to show cancel action with correct onclick handler
+            const presentItem = document.querySelector(`[data-id="${presentId}"]`);
+            const currentButton = presentItem ? presentItem.querySelector('.reserve-btn') : null;
             if (currentButton) {
                 currentButton.disabled = false;
                 currentButton.classList.remove('updating');
+                currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'cancel')`);
+                currentButton.setAttribute('title', 'Usuń rezerwację');
             }
         } else {
             // Server returned success: false - rollback
@@ -2511,11 +2514,14 @@ function cancelReservationFromRecipients(presentId, button, previousState) {
             // Success - optimistic update is confirmed
             showSuccessToast('Rezerwacja anulowana');
             
-            // Re-enable button (keep the updated state)
-            const currentButton = document.querySelector(`[data-id="${presentId}"] .reserve-btn`);
+            // Update button to show reserve action with correct onclick handler
+            const presentItem = document.querySelector(`[data-id="${presentId}"]`);
+            const currentButton = presentItem ? presentItem.querySelector('.reserve-btn') : null;
             if (currentButton) {
                 currentButton.disabled = false;
                 currentButton.classList.remove('updating');
+                currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'reserve')`);
+                currentButton.setAttribute('title', 'Zarezerwuj prezent');
             }
         } else {
             // Server returned success: false - rollback
