@@ -81,12 +81,14 @@
     </div>
 
     <!-- Floating Notification Bell -->
-    <div class="notification-bell-floating">
+    <div class="notification-bell-floating"
+        style="position: fixed !important; top: 10px !important; right: 10px !important; z-index: 9999 !important;">
         <button class="notification-bell-btn" onclick="toggleNotificationDropdown()" aria-label="Powiadomienia">
             <i class="fas fa-bell"></i>
             <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
         </button>
-        <div class="notification-dropdown" id="notificationDropdown">
+        <div class="notification-dropdown" id="notificationDropdown"
+            style="position: absolute !important; top: 60px !important; right: 0 !important;">
             <div class="notification-dropdown-header">
                 <h6 class="mb-0">Powiadomienia</h6>
                 <button class="btn btn-sm btn-link text-decoration-none" onclick="markAllAsRead()" id="markAllReadBtn"
@@ -1441,28 +1443,7 @@
             }
         }
 
-        // Toggle notification dropdown
-        function toggleNotificationDropdown() {
-            const dropdown = document.getElementById('notificationDropdown');
-            const isOpen = dropdown.classList.contains('show');
-
-            if (isOpen) {
-                dropdown.classList.remove('show');
-            } else {
-                dropdown.classList.add('show');
-                loadRecentNotifications();
-            }
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function (event) {
-            const dropdown = document.getElementById('notificationDropdown');
-            const bellBtn = document.querySelector('.notification-bell-btn');
-
-            if (!dropdown.contains(event.target) && !bellBtn.contains(event.target)) {
-                dropdown.classList.remove('show');
-            }
-        });
+        // Duplicate removed - using the one defined earlier
 
         // Duplicate functions removed - using the ones defined earlier
 
