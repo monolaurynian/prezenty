@@ -553,9 +553,9 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('[FastLoad] No cache, loading data...');
             loadRecipientsWithPresents(false, false);
         } else if (window._needsIdentifiedUserReload) {
-            // We showed filtered cache with placeholder - need to reload for identified user
-            console.log('[FastLoad] Loading identified user data to replace placeholder');
-            loadRecipientsWithPresents(false, true); // Silent reload
+            // We showed filtered cache with placeholder - need to reload ALL data
+            console.log('[FastLoad] Loading complete data to replace placeholder');
+            loadRecipientsWithPresents(true, false); // Force reload, not silent
             window._needsIdentifiedUserReload = false; // Clear flag
         } else if (cacheAge > 30000) {
             // Stale cache - refresh silently in background
