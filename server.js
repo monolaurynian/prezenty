@@ -322,6 +322,18 @@ const app = express();
 const PORT = process.env.PORT || 3002;
 const HOST = process.env.HOST || '0.0.0.0';
 
+// Enable compression for faster responses
+const compression = require('compression');
+app.use(compression({
+    filter: (req, res) => {
+        if (req.headers['x-no-compression']) {
+            return false;
+        }
+        return compression.filter(req, res);
+    },
+    level: 6 // Balance between speed and compression ratio
+}));
+
 // Middleware
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' ? false : true,
