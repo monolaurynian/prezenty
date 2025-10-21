@@ -444,25 +444,55 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('[Cleanup] Error cleaning cache:', e);
     }
     
-    // OPTIMIZATION: Try to show cached data immediately (if available)
-    // BUT: Skip instant display if user is identified (privacy first!)
+    // OPTIMIZATION: Smart cache display - show others instantly, hide identified user
     let persistentCache = null;
     try {
         persistentCache = loadFromPersistentCache();
         if (persistentCache) {
-            // PRIVACY CHECK: Don't show cache instantly if user is identified
             const isIdentified = persistentCache.data.identificationStatus && 
                                 persistentCache.data.identificationStatus.isIdentified;
             
             if (isIdentified) {
-                console.log('[FastLoad] User is identified - skipping instant cache to preserve privacy');
-                // Don't show cache - wait for proper auth and data load
-                // This prevents showing purchase status before privacy filter applies
+                console.log('[FastLoad] User is identified - showing OTHER recipients from cache, hiding own');
+                
+                // Find which recipient the user is identified as
+                const identifiedRecipientId = persistentCache.data.recipients.find(
+                    r => r.identified_by === persistentCache.data.identificationStatus.userId
+                )?.id;
+                
+                if (identifiedRecipientId) {
+                    // Filter out the identified recipient and their presents
+                    const filteredRecipients = persistentCache.data.recipients.filter(
+                        r => r.id !== identifiedRecipientId
+                    );
+                    const filteredPresents = persistentCache.data.presents.filter(
+                        p => p.recipient_id !== identifiedRecipientId
+                    );
+                    
+                    console.log('[FastLoad] Showing', filteredRecipients.length, 'other recipients instantly');
+                    
+                    // Show filtered data immediately (fast!)
+                    displayRecipientsData(filteredRecipients, filteredPresents, persistentCache.data.identificationStatus);
+                    
+                    // Store in memory cache
+                    window._dataCache = {
+                        recipients: filteredRecipients,
+                        presents: filteredPresents,
+                        identificationStatus: persistentCache.data.identificationStatus
+                    };
+                    window._dataCacheTimestamp = persistentCache.timestamp;
+                } else {
+                    // Couldn't find identified recipient, show all (safe fallback)
+                    console.log('[FastLoad] Showing all cached data');
+                    displayRecipientsData(persistentCache.data.recipients, persistentCache.data.presents, persistentCache.data.identificationStatus);
+                    window._dataCache = persistentCache.data;
+                    window._dataCacheTimestamp = persistentCache.timestamp;
+                }
             } else {
-                console.log('[FastLoad] Showing cached data immediately');
+                // Not identified - show everything instantly
+                console.log('[FastLoad] Showing all cached data immediately');
                 displayRecipientsData(persistentCache.data.recipients, persistentCache.data.presents, persistentCache.data.identificationStatus);
                 
-                // Store in memory cache too
                 window._dataCache = persistentCache.data;
                 window._dataCacheTimestamp = persistentCache.timestamp;
             }
@@ -471,8 +501,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     } catch (e) {
         console.error('[FastLoad] Error loading cache:', e);
-        persistentCache = null; // Ensure it's null on error
-        // Continue without cache - app will work fine
+        persistentCache = null;
     }
     
     // Initialize UI components
