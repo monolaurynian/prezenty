@@ -1027,6 +1027,12 @@ app.get('/api/presents/all', requireAuth, async (req, res) => {
 const combinedDataCache = new Map();
 const COMBINED_CACHE_TTL = 30000; // 30 seconds cache
 
+// Helper function to clear combined data cache
+function clearCombinedDataCache() {
+    combinedDataCache.clear();
+    console.log('[Cache] Combined data cache cleared');
+}
+
 app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
     console.log('Getting recipients with presents for user:', req.session.userId);
 
@@ -1065,7 +1071,9 @@ app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
         // Execute both queries in parallel for better performance
         const [recipientsResult, presentsResult] = await Promise.all([
             pool.execute(`
-                SELECT r.id, r.name, r.identified_by, r.profile_picture_type, r.created_at, 
+                SELECT r.id, r.name, r.identified_by, 
+                       CASE WHEN r.profile_picture IS NOT NULL THEN 1 ELSE 0 END as has_profile_picture,
+                       r.profile_picture_type, r.created_at, 
                        u.username as identified_by_username 
                 FROM recipients r 
                 LEFT JOIN users u ON r.identified_by = u.id 
@@ -1083,9 +1091,12 @@ app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
         ]);
 
         const recipients = recipientsResult[0].map(recipient => {
-            if (recipient.profile_picture) {
+            // Set profile_picture URL if recipient has one
+            if (recipient.has_profile_picture) {
                 recipient.profile_picture = `/api/recipients/${recipient.id}/profile-picture`;
             }
+            // Remove the has_profile_picture flag (internal use only)
+            delete recipient.has_profile_picture;
             return recipient;
         });
 
