@@ -772,10 +772,15 @@ function displayRecipientsWithPresents(recipients, presents) {
         // Show surprise note for identified user, otherwise show presents
         let presentsHTML;
         if (isIdentified) {
-            // Surprise note
-            presentsHTML = `<div class="alert alert-info mb-0">
-                <i class="fas fa-gift me-2"></i>
-                <strong>Nie mogę Ci pokazać czy prezenty dla Ciebie już zostały kupione. Chyba nie chcesz sobie zepsuć niespodzianki? 🤔</strong>
+            // Enhanced surprise note - completely hide purchase status
+            presentsHTML = `<div class="alert alert-warning mb-0" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107;">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-gift fa-2x me-3 text-warning"></i>
+                    <div>
+                        <strong class="d-block mb-1">🎁 Niespodzianka!</strong>
+                        <span>Twoje prezenty są ukryte, żeby nie zepsuć niespodzianki. Nie możesz zobaczyć, co zostało kupione ani zarezerwowane.</span>
+                    </div>
+                </div>
             </div>`;
             // List presents added by the current user (created_by = currentUserId)
             const ownPresents = recipientPresents.filter(p => p.created_by === currentUserId);
@@ -3241,6 +3246,21 @@ function displayRecipientsData(recipients, presents, identificationStatus) {
         recipientsList.classList.add('instant-load');
     }
 
+    // PRIVACY FIX: Set currentUserId immediately from cached data
+    if (identificationStatus && identificationStatus.userId) {
+        if (!currentUserId) {
+            currentUserId = identificationStatus.userId;
+            console.log('[Privacy] Set currentUserId from cache:', currentUserId);
+        }
+    }
+
+    // PRIVACY FIX: Apply identification status immediately from cache
+    if (identificationStatus && identificationStatus.isIdentified) {
+        console.log('[Privacy] User is identified, privacy filter will be applied');
+        // Set global identification state
+        window._identificationStatus = identificationStatus;
+    }
+
     // Store data globally for other functions
     window._allPresentsByRecipient = {};
     presents.forEach(present => {
@@ -3250,7 +3270,7 @@ function displayRecipientsData(recipients, presents, identificationStatus) {
         window._allPresentsByRecipient[present.recipient_id].push(present);
     });
 
-    // Display the recipients
+    // Display the recipients (will use _identificationStatus for privacy)
     displayRecipientsWithPresents(recipients, presents);
 }
 
