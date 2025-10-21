@@ -11,7 +11,8 @@
     "test": "echo 'No tests specified'",
     "postinstall": "echo 'Dependencies installed successfully'",
     "init-db": "node init-db.js",
-    "test-db": "node test-db.js"
+    "test-db": "node test-db.js",
+    "optimize-db": "node optimize-db.js"
   },
   "keywords": [
     "christmas",

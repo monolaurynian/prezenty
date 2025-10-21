@@ -747,13 +747,18 @@ function displayRecipientsWithPresents(recipients, presents) {
                             ${p.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
                           </div>
                           <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto mt-2 mt-md-0">
-                            <button class="btn btn-sm btn-outline-primary w-100 w-md-auto"
-                              onclick="editPresent(${p.id}, '${escapeHtml(p.title)}', ${p.recipient_id}, '${escapeHtml(p.comments || '')}')"
+                            <button class="btn btn-sm btn-outline-primary w-100 w-md-auto edit-present-btn"
+                              data-present-id="${p.id}"
+                              data-present-title="${escapeHtml(p.title)}"
+                              data-recipient-id="${p.recipient_id}"
+                              data-present-comments="${escapeHtml(p.comments || '')}"
                               style="max-width:50px;">
                               <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger w-100 w-md-auto"
-                              onclick="deletePresent(${p.id}, '${escapeHtml(p.title)}', ${recipient.id})"
+                            <button class="btn btn-sm btn-danger w-100 w-md-auto delete-present-btn"
+                              data-present-id="${p.id}"
+                              data-present-title="${escapeHtml(p.title)}"
+                              data-recipient-id="${recipient.id}"
                               style="max-width:50px;">
                               <i class="fas fa-trash-alt"></i>
                             </button>
@@ -886,6 +891,39 @@ function displayRecipientsWithPresents(recipients, presents) {
             </div>
         `;
     }).join('');
+    
+    // Add event delegation for edit and delete buttons
+    setupPresentButtonListeners();
+}
+
+function setupPresentButtonListeners() {
+    // Remove old listeners if they exist
+    const recipientsList = document.getElementById('recipientsList');
+    if (!recipientsList) return;
+    
+    // Use event delegation for edit buttons
+    recipientsList.removeEventListener('click', handlePresentButtonClick);
+    recipientsList.addEventListener('click', handlePresentButtonClick);
+}
+
+function handlePresentButtonClick(e) {
+    const editBtn = e.target.closest('.edit-present-btn');
+    const deleteBtn = e.target.closest('.delete-present-btn');
+    
+    if (editBtn) {
+        e.preventDefault();
+        const presentId = parseInt(editBtn.dataset.presentId);
+        const title = editBtn.dataset.presentTitle;
+        const recipientId = parseInt(editBtn.dataset.recipientId);
+        const comments = editBtn.dataset.presentComments;
+        editPresent(presentId, title, recipientId, comments);
+    } else if (deleteBtn) {
+        e.preventDefault();
+        const presentId = parseInt(deleteBtn.dataset.presentId);
+        const title = deleteBtn.dataset.presentTitle;
+        const recipientId = parseInt(deleteBtn.dataset.recipientId);
+        deletePresent(presentId, title, recipientId);
+    }
 }
 
 function generateProfilePictureHTML(recipient, isIdentified) {

@@ -26,10 +26,12 @@ async function optimizeDatabase() {
         const indexes = [
             'CREATE INDEX IF NOT EXISTS idx_presents_recipient_id ON presents(recipient_id)',
             'CREATE INDEX IF NOT EXISTS idx_presents_reserved_by ON presents(reserved_by)',
+            'CREATE INDEX IF NOT EXISTS idx_presents_created_by ON presents(created_by)',
             'CREATE INDEX IF NOT EXISTS idx_presents_created_at ON presents(created_at)',
+            'CREATE INDEX IF NOT EXISTS idx_presents_is_checked ON presents(is_checked)',
             'CREATE INDEX IF NOT EXISTS idx_recipients_identified_by ON recipients(identified_by)',
             'CREATE INDEX IF NOT EXISTS idx_recipients_name ON recipients(name)',
-            'CREATE INDEX IF NOT EXISTS idx_presents_is_checked ON presents(is_checked)'
+            'CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires)'
         ];
         
         for (const indexQuery of indexes) {

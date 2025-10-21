@@ -84,12 +84,39 @@ async function initializeDatabase() {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
         console.log("✓ Sessions table created");
         
+        // Add indexes for better query performance
+        console.log("\nAdding database indexes for better performance...");
+        
+        const indexes = [
+            'CREATE INDEX IF NOT EXISTS idx_presents_recipient_id ON presents(recipient_id)',
+            'CREATE INDEX IF NOT EXISTS idx_presents_reserved_by ON presents(reserved_by)',
+            'CREATE INDEX IF NOT EXISTS idx_presents_created_by ON presents(created_by)',
+            'CREATE INDEX IF NOT EXISTS idx_presents_created_at ON presents(created_at)',
+            'CREATE INDEX IF NOT EXISTS idx_presents_is_checked ON presents(is_checked)',
+            'CREATE INDEX IF NOT EXISTS idx_recipients_identified_by ON recipients(identified_by)',
+            'CREATE INDEX IF NOT EXISTS idx_recipients_name ON recipients(name)',
+            'CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires)'
+        ];
+        
+        for (const indexQuery of indexes) {
+            try {
+                await connection.execute(indexQuery);
+                const indexName = indexQuery.match(/idx_\w+/)[0];
+                console.log(`✓ Index created: ${indexName}`);
+            } catch (err) {
+                if (err.code !== 'ER_DUP_KEYNAME') {
+                    console.log('⚠ Index creation warning:', err.message);
+                }
+            }
+        }
+        
         console.log("\n🎉 Database initialization completed successfully!");
         console.log("\nTables created:");
         console.log("- users (for user authentication)");
         console.log("- recipients (for gift recipients with profile pictures stored as BLOB)");
         console.log("- presents (for gift ideas)");
         console.log("- sessions (for express-session)");
+        console.log("\nIndexes created for optimal query performance");
         
     } catch (error) {
         console.error("❌ Database initialization failed:", error.message);
