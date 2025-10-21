@@ -960,8 +960,8 @@ function displayRecipientsWithPresents(recipients, presents) {
                         <div class="recipient-avatar">
                             ${recipient.profile_picture && recipient.profile_picture.trim() !== '' ?
                 `<img src="${getFullProfilePictureUrl(escapeHtml(recipient.profile_picture))}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
-                `<div class="profile-picture-placeholder" onclick="openProfileModal(${recipient.id})" style="cursor: pointer;">
-                                   
+                `<div class="profile-picture-placeholder" onclick="openProfileModal(${recipient.id})" style="cursor: pointer; font-size: 4rem;">
+                                    ${getEmojiAvatar(recipient.name)}
                                 </div>`
             }
                         </div>
@@ -1110,8 +1110,8 @@ function generateProfilePictureHTML(recipient, isIdentified) {
         </div>`;
     } else {
         return `<div class="profile-picture-wrapper mb-2 ${isIdentified ? 'identified' : ''}" ${clickHandler}>
-            <div class="profile-picture-placeholder">
-                <i class="fas fa-user"></i>
+            <div class="profile-picture-placeholder" style="font-size: 3rem;">
+                ${getEmojiAvatar(recipient.name)}
             </div>
         </div>`;
     }
@@ -1432,9 +1432,10 @@ function openProfileModal(recipientId) {
             profileImg.style.display = 'none';
             const placeholder = document.createElement('div');
             placeholder.className = 'profile-picture-placeholder-large';
-            placeholder.innerHTML = '<i class="fas fa-user"></i>';
+            placeholder.innerHTML = getEmojiAvatar(recipient.name);
             placeholder.style.width = '200px';
             placeholder.style.height = '200px';
+            placeholder.style.fontSize = '8rem';
             placeholder.style.fontSize = '4rem';
             placeholder.style.margin = '0 auto';
 
@@ -3153,6 +3154,27 @@ function getFullProfilePictureUrl(path) {
         return 'https://prezenty.matmamon.com' + path;
     }
     return path;
+}
+
+// Helper to get a consistent emoji avatar based on name
+function getEmojiAvatar(name) {
+    const emojis = [
+        '🎅', '🤶', '🎄', '⛄', '🎁',
+        '🦌', '⭐', '🔔', '🕯️', '🎀',
+        '🧑', '👨', '👩', '👦', '👧',
+        '🐻', '🐱', '🐶', '🐼', '🦊',
+        '🌟', '💫', '✨', '🎊', '🎉'
+    ];
+
+    // Generate a consistent index based on the name
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = ((hash << 5) - hash) + name.charCodeAt(i);
+        hash = hash & hash; // Convert to 32bit integer
+    }
+
+    const index = Math.abs(hash) % emojis.length;
+    return emojis[index];
 }
 // Persistent cache functions
 function saveToPersistentCache(data) {
