@@ -892,7 +892,9 @@ app.get('/api/recipients/:id/profile-picture', async (req, res) => {
             return res.status(404).send('Profile picture not found');
         }
 
+        // Set proper cache headers for images (cache for 1 hour)
         res.set('Content-Type', recipient.profile_picture_type);
+        res.set('Cache-Control', 'public, max-age=3600');
         res.send(recipient.profile_picture);
     } catch (err) {
         console.error('Error serving profile picture:', err);
