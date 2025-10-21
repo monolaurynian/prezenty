@@ -297,7 +297,26 @@ app.use(cors({
 }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.static('public'));
+
+// Serve static files with cache control
+// For HTML files: no cache (always fetch latest)
+// For assets (CSS, JS, images): cache but revalidate
+app.use(express.static('public', {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.html')) {
+            // HTML files should never be cached
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        } else if (path.endsWith('.css') || path.endsWith('.js')) {
+            // CSS and JS files should revalidate
+            res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+        } else {
+            // Other assets (images, fonts, etc.) can be cached for a short time
+            res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour
+        }
+    }
+}));
 
 // Create session store
 let sessionConfig = {
@@ -352,6 +371,16 @@ app.get('/health', (req, res) => {
         timestamp: new Date().toISOString(),
         mode: DEMO_MODE ? 'DEMO' : 'PRODUCTION',
         database: DEMO_MODE ? 'disabled' : 'enabled'
+    });
+});
+
+// Version endpoint for cache busting
+app.get('/api/version', (req, res) => {
+    const packageJson = require('./package.json');
+    res.json({
+        version: packageJson.version,
+        timestamp: Date.now(),
+        cacheVersion: 'v7'
     });
 });
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v6';
+const CACHE_NAME = 'prezenty-v7';
 const urlsToCache = [
   '/manifest.json',
   '/favicon.svg',
@@ -33,6 +33,29 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
+  // For HTML files, always fetch from network first (network-first strategy)
+  if (event.request.url.endsWith('.html') || event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(function(response) {
+          // Cache the new version
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(function(cache) {
+            cache.put(event.request, responseToCache);
+          });
+          return response;
+        })
+        .catch(function() {
+          // Fallback to cache if network fails
+          return caches.match(event.request).then(function(response) {
+            return response || new Response('Network error', { status: 503 });
+          });
+        })
+    );
+    return;
+  }
+
+  // For other resources, use cache-first strategy
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
@@ -58,10 +81,6 @@ self.addEventListener('fetch', function(event) {
 
           return response;
         }).catch(function() {
-          // Return a fallback response for navigation requests
-          if (event.request.mode === 'navigate') {
-            return caches.match('/');
-          }
           return new Response('Network error', { status: 503 });
         });
       })
