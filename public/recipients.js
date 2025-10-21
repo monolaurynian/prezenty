@@ -511,6 +511,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         identificationStatus: persistentCache.data.identificationStatus
                     };
                     window._dataCacheTimestamp = persistentCache.timestamp;
+                    
+                    // Mark that we need to reload to get the identified user's data
+                    window._needsIdentifiedUserReload = true;
                 } else {
                     // Couldn't find identified recipient, show all (safe fallback)
                     console.log('[FastLoad] Showing all cached data');
@@ -549,6 +552,11 @@ document.addEventListener('DOMContentLoaded', function () {
             // No cache - show loading spinner and fetch
             console.log('[FastLoad] No cache, loading data...');
             loadRecipientsWithPresents(false, false);
+        } else if (window._needsIdentifiedUserReload) {
+            // We showed filtered cache with placeholder - need to reload for identified user
+            console.log('[FastLoad] Loading identified user data to replace placeholder');
+            loadRecipientsWithPresents(false, true); // Silent reload
+            window._needsIdentifiedUserReload = false; // Clear flag
         } else if (cacheAge > 30000) {
             // Stale cache - refresh silently in background
             console.log('[FastLoad] Refreshing stale data in background (age:', Math.round(cacheAge / 1000), 'seconds)');
