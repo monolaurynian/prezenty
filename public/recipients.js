@@ -444,15 +444,22 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('[Cleanup] Error cleaning cache:', e);
     }
     
-    // OPTIMIZATION: Show cached data immediately, then verify auth
-    const persistentCache = loadFromPersistentCache();
-    if (persistentCache) {
-        console.log('[FastLoad] Showing cached data immediately');
-        displayRecipientsData(persistentCache.data.recipients, persistentCache.data.presents, persistentCache.data.identificationStatus);
-        
-        // Store in memory cache too
-        window._dataCache = persistentCache.data;
-        window._dataCacheTimestamp = persistentCache.timestamp;
+    // OPTIMIZATION: Try to show cached data immediately (if available)
+    try {
+        const persistentCache = loadFromPersistentCache();
+        if (persistentCache) {
+            console.log('[FastLoad] Showing cached data immediately');
+            displayRecipientsData(persistentCache.data.recipients, persistentCache.data.presents, persistentCache.data.identificationStatus);
+            
+            // Store in memory cache too
+            window._dataCache = persistentCache.data;
+            window._dataCacheTimestamp = persistentCache.timestamp;
+        } else {
+            console.log('[FastLoad] No cache available, will load from server');
+        }
+    } catch (e) {
+        console.error('[FastLoad] Error loading cache:', e);
+        // Continue without cache - app will work fine
     }
     
     // Initialize UI components
@@ -3018,48 +3025,77 @@ function getFullProfilePictureUrl(path) {
 // Persistent cache functions
 function saveToPersistentCache(data) {
     try {
+        // Check for large comments before optimization
+        const largeComments = data.presents.filter(p => p.comments && p.comments.length > 1000);
+        if (largeComments.length > 0) {
+            console.log(`[Cache] Found ${largeComments.length} presents with large comments (>1000 chars)`);
+            largeComments.forEach(p => {
+                console.log(`[Cache] Present "${p.title}" has ${p.comments.length} char comment`);
+            });
+        }
+        
+        // Optimize data before saving - remove large fields
+        const optimizedData = {
+            recipients: data.recipients.map(r => ({
+                id: r.id,
+                name: r.name,
+                identified_by: r.identified_by,
+                identified_by_username: r.identified_by_username,
+                profile_picture: r.profile_picture // Just the URL, not BLOB
+            })),
+            presents: data.presents.map(p => ({
+                id: p.id,
+                title: p.title,
+                recipient_id: p.recipient_id,
+                // Truncate comments to 200 chars to save more space
+                comments: p.comments ? p.comments.substring(0, 200) : null,
+                is_checked: p.is_checked,
+                reserved_by: p.reserved_by,
+                reserved_by_username: p.reserved_by_username,
+                recipient_name: p.recipient_name
+            })),
+            identificationStatus: data.identificationStatus
+        };
+        
         const cacheData = {
-            data: data,
+            data: optimizedData,
             timestamp: Date.now()
         };
         
-        // Try to save
-        localStorage.setItem('recipientsCache', JSON.stringify(cacheData));
-        console.log('Data saved to persistent cache');
-    } catch (error) {
-        console.error('Error saving to persistent cache:', error);
+        const jsonString = JSON.stringify(cacheData);
+        const sizeKB = (jsonString.length / 1024).toFixed(2);
         
-        // If quota exceeded, clear old data and try again
+        // Log detailed size breakdown
+        console.log(`[Cache] Data breakdown:`, {
+            recipients: optimizedData.recipients.length,
+            presents: optimizedData.presents.length,
+            totalSizeKB: sizeKB,
+            recipientsSizeKB: (JSON.stringify(optimizedData.recipients).length / 1024).toFixed(2),
+            presentsSizeKB: (JSON.stringify(optimizedData.presents).length / 1024).toFixed(2)
+        });
+        
+        console.log(`[Cache] Attempting to save ${sizeKB}KB to localStorage`);
+        
+        // Try to save
+        localStorage.setItem('recipientsCache', jsonString);
+        console.log('[Cache] Data saved successfully');
+    } catch (error) {
+        console.error('[Cache] Error saving:', error);
+        
+        // If quota exceeded, disable caching
         if (error.name === 'QuotaExceededError') {
-            console.log('Quota exceeded, clearing old cache data...');
+            console.warn('[Cache] Quota exceeded - disabling cache. App will work without it.');
             
-            // Clear all old cache keys
-            const keysToRemove = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                // Remove old cache keys
-                if (key && (key.includes('cache') || key.includes('Cache') || key === 'app_data_cache')) {
-                    keysToRemove.push(key);
-                }
-            }
-            
-            keysToRemove.forEach(key => {
-                console.log('Removing old cache key:', key);
-                localStorage.removeItem(key);
-            });
-            
-            // Try to save again
+            // Clear ALL localStorage to free up space
             try {
-                const cacheData = {
-                    data: data,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem('recipientsCache', JSON.stringify(cacheData));
-                console.log('Data saved to persistent cache after cleanup');
-            } catch (retryError) {
-                console.error('Still failed to save after cleanup:', retryError);
-                // Give up - app will work without cache
+                localStorage.clear();
+                console.log('[Cache] localStorage cleared');
+            } catch (e) {
+                console.error('[Cache] Could not clear localStorage:', e);
             }
+            
+            // Don't try to save again - just continue without cache
+            // The app will work fine, just slower on refresh
         }
     }
 }
