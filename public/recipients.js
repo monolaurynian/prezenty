@@ -431,31 +431,17 @@ document.addEventListener('keydown', function (e) {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
-    // OPTIMIZATION: Show cached data immediately, then verify auth in parallel
-    // This makes the page feel instant instead of waiting for auth check
-    
-    // Step 1: Use preloaded cache (already loaded before DOMContentLoaded!)
-    const cached = window._preloadedCache || (window.fastLoader && window.fastLoader.preloadFromCache());
-    if (cached) {
-        console.log('[Optimized] Showing cached data immediately (age:', Math.round(cached.age / 1000), 'seconds)');
-        displayRecipientsData(cached.data.recipients, cached.data.presents, cached.data.identificationStatus);
-    }
-    
-    // Step 2: Initialize UI components immediately (don't wait for auth)
+    // Initialize UI components first
     initializeSearchAndFilter();
     initializeFAB();
     initializeAnimations();
     
-    // Step 3: Check auth and load data in parallel (not sequential!)
-    Promise.all([
-        checkAuth(),
-        // Load fresh data if cache is stale or missing
-        (!cached || cached.isStale) ? loadRecipientsWithPresents() : Promise.resolve()
-    ]).then(() => {
-        // Auth confirmed and data loaded
-        console.log('[Optimized] Auth and data ready');
-        
-        // Initialize tooltips after content is loaded (only on non-mobile)
+    // Check authentication and load data
+    checkAuth().then(() => {
+        // Load recipients with their presents after auth is confirmed
+        loadRecipientsWithPresents();
+
+        // Initialize Bootstrap tooltips (only on non-mobile devices)
         if (window.innerWidth > 768) {
             setTimeout(() => {
                 const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -464,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }, 100);
         }
-        
+
         // Set up periodic auth check to detect session expiry
         setInterval(() => {
             checkAuth().catch(() => {
@@ -472,7 +458,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.location.href = '/';
             });
         }, 5 * 60 * 1000); // Check every 5 minutes
-        
+
     }).catch(error => {
         console.error('Auth failed:', error);
         window.location.href = '/';

@@ -317,13 +317,6 @@
         saveToCache: saveToCache
     };
 
-    // CRITICAL OPTIMIZATION: Preload cache immediately (before DOMContentLoaded)
-    // This makes the cache available instantly when the page loads
-    window._preloadedCache = preloadFromCache();
-    if (window._preloadedCache) {
-        console.log('[FastLoader] Cache preloaded (age:', Math.round(window._preloadedCache.age / 1000), 'seconds)');
-    }
-
     // Auto-initialize
     init();
 })();
