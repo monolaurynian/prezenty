@@ -9,25 +9,43 @@
     const CACHE_MAX_AGE = 5 * 60 * 1000; // 5 minutes
 
     // Preload critical data from cache immediately
+    // OPTIMIZED: Use synchronous localStorage for instant access
     function preloadFromCache() {
         try {
-            const cachedData = localStorage.getItem(CACHE_KEY);
+            // Fast path: Check timestamp first (cheaper than parsing JSON)
             const cacheTimestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
-            
-            if (!cachedData || !cacheTimestamp) {
+            if (!cacheTimestamp) {
                 return null;
             }
             
-            const age = Date.now() - parseInt(cacheTimestamp);
+            const timestamp = parseInt(cacheTimestamp);
+            const age = Date.now() - timestamp;
+            
+            // Get cached data
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            if (!cachedData) {
+                return null;
+            }
+            
+            // Parse JSON (this is the expensive part)
+            const data = JSON.parse(cachedData);
             
             // Return cached data even if old (will refresh in background)
             return {
-                data: JSON.parse(cachedData),
-                timestamp: parseInt(cacheTimestamp),
-                isStale: age > CACHE_MAX_AGE
+                data: data,
+                timestamp: timestamp,
+                isStale: age > CACHE_MAX_AGE,
+                age: age
             };
         } catch (error) {
             console.error('[FastLoader] Error loading cache:', error);
+            // Clear corrupted cache
+            try {
+                localStorage.removeItem(CACHE_KEY);
+                localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+            } catch (e) {
+                // Ignore cleanup errors
+            }
             return null;
         }
     }
@@ -298,6 +316,13 @@
         preloadFromCache: preloadFromCache,
         saveToCache: saveToCache
     };
+
+    // CRITICAL OPTIMIZATION: Preload cache immediately (before DOMContentLoaded)
+    // This makes the cache available instantly when the page loads
+    window._preloadedCache = preloadFromCache();
+    if (window._preloadedCache) {
+        console.log('[FastLoader] Cache preloaded (age:', Math.round(window._preloadedCache.age / 1000), 'seconds)');
+    }
 
     // Auto-initialize
     init();

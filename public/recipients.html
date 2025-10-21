@@ -1451,13 +1451,12 @@
     <!-- Fast loader (load first for instant cache access) -->
     <script src="fast-loader.js"></script>
     
+    <!-- Main app (critical - load immediately) -->
     <script src="recipients.js?v=7&t=1111111111"></script>
     
-    <!-- Auto-update checker -->
-    <script src="update-checker.js"></script>
-    
-    <!-- Real-time incremental updates -->
-    <script src="realtime-updates.js"></script>
+    <!-- Non-critical scripts (defer to load after page is interactive) -->
+    <script src="update-checker.js" defer></script>
+    <script src="realtime-updates.js" defer></script>
 </body>
 
 </html>
