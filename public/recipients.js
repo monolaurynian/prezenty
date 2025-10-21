@@ -431,15 +431,40 @@ document.addEventListener('keydown', function (e) {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Initialize UI components first
+    // OPTIMIZATION: Show cached data immediately, then verify auth
+    const persistentCache = loadFromPersistentCache();
+    if (persistentCache) {
+        console.log('[FastLoad] Showing cached data immediately');
+        displayRecipientsData(persistentCache.data.recipients, persistentCache.data.presents, persistentCache.data.identificationStatus);
+        
+        // Store in memory cache too
+        window._dataCache = persistentCache.data;
+        window._dataCacheTimestamp = persistentCache.timestamp;
+    }
+    
+    // Initialize UI components
     initializeSearchAndFilter();
     initializeFAB();
     initializeAnimations();
     
-    // Check authentication and load data
+    // Check authentication and refresh data if needed
     checkAuth().then(() => {
-        // Load recipients with their presents after auth is confirmed
-        loadRecipientsWithPresents();
+        // Only reload if cache is stale or missing
+        const now = Date.now();
+        const cacheAge = persistentCache ? (now - persistentCache.timestamp) : Infinity;
+        
+        if (!persistentCache) {
+            // No cache - show loading spinner and fetch
+            console.log('[FastLoad] No cache, loading data...');
+            loadRecipientsWithPresents(false, false);
+        } else if (cacheAge > 30000) {
+            // Stale cache - refresh silently in background
+            console.log('[FastLoad] Refreshing stale data in background (age:', Math.round(cacheAge / 1000), 'seconds)');
+            loadRecipientsWithPresents(false, true);
+        } else {
+            // Fresh cache - no need to reload
+            console.log('[FastLoad] Using fresh cached data (age:', Math.round(cacheAge / 1000), 'seconds)');
+        }
 
         // Initialize Bootstrap tooltips (only on non-mobile devices)
         if (window.innerWidth > 768) {
@@ -539,8 +564,8 @@ function checkAuth() {
         });
 }
 
-function loadRecipientsWithPresents(forceReload = false) {
-    console.log('Loading recipients and presents...', forceReload ? '(forced)' : '');
+function loadRecipientsWithPresents(forceReload = false, silent = false) {
+    console.log('Loading recipients and presents...', forceReload ? '(forced)' : '', silent ? '(silent)' : '');
 
     const now = Date.now();
     const cacheExpiry = 60000; // 60 seconds cache
@@ -573,17 +598,19 @@ function loadRecipientsWithPresents(forceReload = false) {
         return;
     }
 
-    // Show pulsating logo loading state
-    const recipientsList = document.getElementById('recipientsList');
-    recipientsList.innerHTML = `
-        <div class="text-center aws-loading-state">
-            <div class="logo-spinner" role="status">
-                <img src="seba_logo.png" alt="Loading..." class="spinning-logo">
-                <span class="visually-hidden">Ładowanie...</span>
+    // Show loading state only if not silent (i.e., no cached data displayed)
+    if (!silent) {
+        const recipientsList = document.getElementById('recipientsList');
+        recipientsList.innerHTML = `
+            <div class="text-center aws-loading-state">
+                <div class="logo-spinner" role="status">
+                    <img src="seba_logo.png" alt="Loading..." class="spinning-logo">
+                    <span class="visually-hidden">Ładowanie...</span>
+                </div>
+                <p class="mt-3 text-muted loading-text">Ładowanie danych...</p>
             </div>
-            <p class="mt-3 text-muted loading-text">Ładowanie danych...</p>
-        </div>
-    `;
+        `;
+    }
 
     // Load data with optimized single request
     const startTime = performance.now();
