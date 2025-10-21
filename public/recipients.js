@@ -443,23 +443,23 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) {
         console.error('[Cleanup] Error cleaning cache:', e);
     }
-    
+
     // OPTIMIZATION: Smart cache display - show others instantly, hide identified user
     let persistentCache = null;
     try {
         persistentCache = loadFromPersistentCache();
         if (persistentCache) {
-            const isIdentified = persistentCache.data.identificationStatus && 
-                                persistentCache.data.identificationStatus.isIdentified;
-            
+            const isIdentified = persistentCache.data.identificationStatus &&
+                persistentCache.data.identificationStatus.isIdentified;
+
             if (isIdentified) {
                 console.log('[FastLoad] User is identified - showing OTHER recipients from cache, hiding own');
-                
+
                 // Find which recipient the user is identified as
                 const identifiedRecipientId = persistentCache.data.recipients.find(
                     r => r.identified_by === persistentCache.data.identificationStatus.userId
                 )?.id;
-                
+
                 if (identifiedRecipientId) {
                     // Filter out the identified recipient and their presents
                     const filteredRecipients = persistentCache.data.recipients.filter(
@@ -468,12 +468,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     const filteredPresents = persistentCache.data.presents.filter(
                         p => p.recipient_id !== identifiedRecipientId
                     );
-                    
+
                     console.log('[FastLoad] Showing', filteredRecipients.length, 'other recipients instantly');
-                    
+
                     // Show filtered data immediately (fast!)
                     displayRecipientsData(filteredRecipients, filteredPresents, persistentCache.data.identificationStatus);
-                    
+
                     // Add placeholder for the identified user's card
                     const identifiedRecipient = persistentCache.data.recipients.find(r => r.id === identifiedRecipientId);
                     if (identifiedRecipient) {
@@ -503,7 +503,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         }, 50);
                     }
-                    
+
                     // Store in memory cache
                     window._dataCache = {
                         recipients: filteredRecipients,
@@ -511,7 +511,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         identificationStatus: persistentCache.data.identificationStatus
                     };
                     window._dataCacheTimestamp = persistentCache.timestamp;
-                    
+
                     // Mark that we need to reload to get the identified user's data
                     window._needsIdentifiedUserReload = true;
                 } else {
@@ -525,7 +525,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Not identified - show everything instantly
                 console.log('[FastLoad] Showing all cached data immediately');
                 displayRecipientsData(persistentCache.data.recipients, persistentCache.data.presents, persistentCache.data.identificationStatus);
-                
+
                 window._dataCache = persistentCache.data;
                 window._dataCacheTimestamp = persistentCache.timestamp;
             }
@@ -536,26 +536,73 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('[FastLoad] Error loading cache:', e);
         persistentCache = null;
     }
-    
+
     // Initialize UI components
     initializeSearchAndFilter();
     initializeFAB();
     initializeAnimations();
-    
+
     // Check authentication and refresh data if needed
     checkAuth().then(() => {
         // Only reload if cache is stale or missing
         const now = Date.now();
         const cacheAge = persistentCache ? (now - persistentCache.timestamp) : Infinity;
-        
+
         if (!persistentCache) {
             // No cache - show loading spinner and fetch
             console.log('[FastLoad] No cache, loading data...');
             loadRecipientsWithPresents(false, false);
         } else if (window._needsIdentifiedUserReload) {
-            // We showed filtered cache with placeholder - need to reload ALL data
-            console.log('[FastLoad] Loading complete data to replace placeholder');
-            loadRecipientsWithPresents(true, false); // Force reload, not silent
+            // We showed filtered cache with placeholder - only load the missing identified user
+            console.log('[FastLoad] Loading identified user data only');
+
+            // Load fresh data from server
+            Promise.all([
+                fetch('/api/recipients-with-presents').then(r => r.json()),
+                fetch('/api/user/identification').then(r => r.json())
+            ]).then(([combinedData, identificationStatus]) => {
+                // Find the identified recipient from fresh data
+                const identifiedRecipientId = combinedData.recipients.find(
+                    r => r.identified_by === identificationStatus.userId
+                )?.id;
+
+                if (identifiedRecipientId) {
+                    // Get the identified recipient and their presents from fresh data
+                    const identifiedRecipient = combinedData.recipients.find(r => r.id === identifiedRecipientId);
+                    const identifiedPresents = combinedData.presents.filter(p => p.recipient_id === identifiedRecipientId);
+
+                    // Merge with cached data (others stay from cache, identified user from server)
+                    const allRecipients = [
+                        ...window._dataCache.recipients, // Keep cached others
+                        identifiedRecipient // Add fresh identified user
+                    ];
+                    const allPresents = [
+                        ...window._dataCache.presents, // Keep cached others' presents
+                        ...identifiedPresents // Add fresh identified user's presents
+                    ];
+
+                    // Remove placeholder
+                    const placeholder = document.querySelector('.loading-placeholder');
+                    if (placeholder) placeholder.remove();
+
+                    // Display complete data
+                    console.log('[FastLoad] Merging cached data with identified user data');
+                    displayRecipientsWithPresents(allRecipients, allPresents);
+
+                    // Update cache
+                    window._dataCache = {
+                        recipients: allRecipients,
+                        presents: allPresents,
+                        identificationStatus
+                    };
+                    saveToPersistentCache(window._dataCache);
+                }
+            }).catch(error => {
+                console.error('[FastLoad] Error loading identified user:', error);
+                // Fallback: reload everything
+                loadRecipientsWithPresents(true, false);
+            });
+
             window._needsIdentifiedUserReload = false; // Clear flag
         } else if (cacheAge > 30000) {
             // Stale cache - refresh silently in background
@@ -1019,7 +1066,7 @@ function displayRecipientsWithPresents(recipients, presents) {
             </div>
         `;
     }).join('');
-    
+
     // Add event delegation for edit and delete buttons
     setupPresentButtonListeners();
 }
@@ -1028,7 +1075,7 @@ function setupPresentButtonListeners() {
     // Remove old listeners if they exist
     const recipientsList = document.getElementById('recipientsList');
     if (!recipientsList) return;
-    
+
     // Use event delegation for edit buttons
     recipientsList.removeEventListener('click', handlePresentButtonClick);
     recipientsList.addEventListener('click', handlePresentButtonClick);
@@ -1037,7 +1084,7 @@ function setupPresentButtonListeners() {
 function handlePresentButtonClick(e) {
     const editBtn = e.target.closest('.edit-present-btn');
     const deleteBtn = e.target.closest('.delete-present-btn');
-    
+
     if (editBtn) {
         e.preventDefault();
         const presentId = parseInt(editBtn.dataset.presentId);
@@ -3118,7 +3165,7 @@ function saveToPersistentCache(data) {
                 console.log(`[Cache] Present "${p.title}" has ${p.comments.length} char comment`);
             });
         }
-        
+
         // Optimize data before saving - remove large fields
         const optimizedData = {
             recipients: data.recipients.map(r => ({
@@ -3148,15 +3195,15 @@ function saveToPersistentCache(data) {
                 // Don't cache identifiedRecipient - it's huge!
             } : null
         };
-        
+
         const cacheData = {
             data: optimizedData,
             timestamp: Date.now()
         };
-        
+
         const jsonString = JSON.stringify(cacheData);
         const sizeKB = (jsonString.length / 1024).toFixed(2);
-        
+
         // Log detailed size breakdown
         console.log(`[Cache] Data breakdown:`, {
             recipients: optimizedData.recipients.length,
@@ -3165,19 +3212,19 @@ function saveToPersistentCache(data) {
             recipientsSizeKB: (JSON.stringify(optimizedData.recipients).length / 1024).toFixed(2),
             presentsSizeKB: (JSON.stringify(optimizedData.presents).length / 1024).toFixed(2)
         });
-        
+
         console.log(`[Cache] Attempting to save ${sizeKB}KB to localStorage`);
-        
+
         // Try to save
         localStorage.setItem('recipientsCache', jsonString);
         console.log('[Cache] Data saved successfully');
     } catch (error) {
         console.error('[Cache] Error saving:', error);
-        
+
         // If quota exceeded, disable caching
         if (error.name === 'QuotaExceededError') {
             console.warn('[Cache] Quota exceeded - disabling cache. App will work without it.');
-            
+
             // Clear ALL localStorage to free up space
             try {
                 localStorage.clear();
@@ -3185,7 +3232,7 @@ function saveToPersistentCache(data) {
             } catch (e) {
                 console.error('[Cache] Could not clear localStorage:', e);
             }
-            
+
             // Don't try to save again - just continue without cache
             // The app will work fine, just slower on refresh
         }
@@ -3338,7 +3385,7 @@ function displayRecipientsData(recipients, presents, identificationStatus) {
 
     // Display the recipients
     displayRecipientsWithPresents(recipients, presents);
-    
+
     // PRIVACY FIX: If user is identified in cache, hide their presents immediately
     if (identificationStatus && identificationStatus.isIdentified && identificationStatus.userId) {
         console.log('[Privacy] Applying privacy filter from cache');
