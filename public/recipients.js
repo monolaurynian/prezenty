@@ -445,8 +445,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     // OPTIMIZATION: Try to show cached data immediately (if available)
+    let persistentCache = null;
     try {
-        const persistentCache = loadFromPersistentCache();
+        persistentCache = loadFromPersistentCache();
         if (persistentCache) {
             console.log('[FastLoad] Showing cached data immediately');
             displayRecipientsData(persistentCache.data.recipients, persistentCache.data.presents, persistentCache.data.identificationStatus);
@@ -459,6 +460,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     } catch (e) {
         console.error('[FastLoad] Error loading cache:', e);
+        persistentCache = null; // Ensure it's null on error
         // Continue without cache - app will work fine
     }
     
