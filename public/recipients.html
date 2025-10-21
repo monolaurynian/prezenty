@@ -1250,32 +1250,7 @@
                 .then(function (subscription) {
                     console.log('Push subscription successful:', subscription);
                     sendSubscriptionToServer(subscription);
-
-                    // Test notification
-                    if (Notification.permission === 'granted') {
-                        try {
-                            new Notification('Życzenia Prezentowe', {
-                                body: 'Powiadomienia zostały włączone! 🎄',
-                                icon: '/seba_logo.png',
-                                badge: '/seba_logo.png',
-                                tag: 'test-notification',
-                                requireInteraction: false
-                            });
-                        } catch (error) {
-                            console.error('Error creating notification:', error);
-                            // Fallback: show via service worker
-                            if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
-                                navigator.serviceWorker.ready.then(registration => {
-                                    registration.showNotification('Życzenia Prezentowe', {
-                                        body: 'Powiadomienia zostały włączone! 🎄',
-                                        icon: '/seba_logo.png',
-                                        badge: '/seba_logo.png',
-                                        tag: 'test-notification'
-                                    });
-                                });
-                            }
-                        }
-                    }
+                    // Test notification removed - no annoying popup
                 }).catch(function (error) {
                     console.error('Push subscription failed:', error);
 
