@@ -752,11 +752,22 @@
         // Add click event listener to logo
         const logoContainer = document.querySelector('.brand-logo-container');
         if (logoContainer) {
-            logoContainer.addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                showInstallInstructions();
-            });
+            // Check if app is installed as PWA
+            const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
+                               window.navigator.standalone === true;
+            
+            if (isInstalled) {
+                // App is installed - remove the install instruction tooltip
+                logoContainer.removeAttribute('title');
+                logoContainer.style.cursor = 'default';
+            } else {
+                // App not installed - show install instructions on click
+                logoContainer.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    showInstallInstructions();
+                });
+            }
         }
 
         window.addEventListener('beforeinstallprompt', (e) => {

@@ -2,12 +2,48 @@ console.log('Recipients.js loading... v7.0 - Reverted to separate API calls');
 
 // Global logout function - ensure it's always available
 function logout() {
+    console.log('[Logout] Clearing all caches...');
+
+    // Clear localStorage cache
+    try {
+        localStorage.removeItem('recipientsCache');
+        localStorage.removeItem('app_data_cache');
+        localStorage.removeItem('app_data_cache_timestamp');
+        localStorage.removeItem('last_update_timestamp');
+        localStorage.removeItem('app_version');
+        console.log('[Logout] localStorage cleared');
+    } catch (e) {
+        console.error('[Logout] Error clearing localStorage:', e);
+    }
+
+    // Clear sessionStorage
+    try {
+        sessionStorage.clear();
+        console.log('[Logout] sessionStorage cleared');
+    } catch (e) {
+        console.error('[Logout] Error clearing sessionStorage:', e);
+    }
+
+    // Clear service worker caches
+    if ('caches' in window) {
+        caches.keys().then(keys => {
+            keys.forEach(key => {
+                caches.delete(key);
+                console.log('[Logout] Deleted cache:', key);
+            });
+        }).catch(e => {
+            console.error('[Logout] Error clearing caches:', e);
+        });
+    }
+
+    // Perform logout
     fetch('/api/logout', {
         method: 'POST'
     })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                console.log('[Logout] Logout successful, redirecting...');
                 window.location.href = '/';
             }
         })
