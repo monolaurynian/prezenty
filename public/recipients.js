@@ -3246,20 +3246,8 @@ function displayRecipientsData(recipients, presents, identificationStatus) {
         recipientsList.classList.add('instant-load');
     }
 
-    // PRIVACY FIX: Set currentUserId immediately from cached data
-    if (identificationStatus && identificationStatus.userId) {
-        if (!currentUserId) {
-            currentUserId = identificationStatus.userId;
-            console.log('[Privacy] Set currentUserId from cache:', currentUserId);
-        }
-    }
-
-    // PRIVACY FIX: Apply identification status immediately from cache
-    if (identificationStatus && identificationStatus.isIdentified) {
-        console.log('[Privacy] User is identified, privacy filter will be applied');
-        // Set global identification state
-        window._identificationStatus = identificationStatus;
-    }
+    // Store identification status for later use
+    window._cachedIdentificationStatus = identificationStatus;
 
     // Store data globally for other functions
     window._allPresentsByRecipient = {};
@@ -3270,8 +3258,28 @@ function displayRecipientsData(recipients, presents, identificationStatus) {
         window._allPresentsByRecipient[present.recipient_id].push(present);
     });
 
-    // Display the recipients (will use _identificationStatus for privacy)
+    // Display the recipients
     displayRecipientsWithPresents(recipients, presents);
+    
+    // PRIVACY FIX: If user is identified in cache, hide their presents immediately
+    if (identificationStatus && identificationStatus.isIdentified && identificationStatus.userId) {
+        console.log('[Privacy] Applying privacy filter from cache');
+        // Find the identified recipient and hide their presents
+        const identifiedRecipient = recipients.find(r => r.identified_by === identificationStatus.userId);
+        if (identifiedRecipient) {
+            // Hide presents for this recipient immediately
+            const recipientCard = document.querySelector(`[data-recipient-id="${identifiedRecipient.id}"]`);
+            if (recipientCard) {
+                const presentsContainer = recipientCard.querySelector('.presents-list, .recipient-presents');
+                if (presentsContainer) {
+                    // Temporarily hide until auth completes
+                    presentsContainer.style.opacity = '0.3';
+                    presentsContainer.style.pointerEvents = 'none';
+                    console.log('[Privacy] Temporarily hiding presents for recipient:', identifiedRecipient.name);
+                }
+            }
+        }
+    }
 }
 
 function handleIdentificationLogic(recipients, identificationStatus) {
