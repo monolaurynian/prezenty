@@ -3056,7 +3056,14 @@ function saveToPersistentCache(data) {
                 reserved_by_username: p.reserved_by_username,
                 recipient_name: p.recipient_name
             })),
-            identificationStatus: data.identificationStatus
+            // Only cache essential identification info (not the huge object)
+            identificationStatus: data.identificationStatus ? {
+                isIdentified: data.identificationStatus.isIdentified,
+                userId: data.identificationStatus.userId,
+                username: data.identificationStatus.username,
+                name: data.identificationStatus.name
+                // Don't cache identifiedRecipient - it's huge!
+            } : null
         };
         
         const cacheData = {
