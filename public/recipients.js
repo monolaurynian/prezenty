@@ -474,6 +474,36 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Show filtered data immediately (fast!)
                     displayRecipientsData(filteredRecipients, filteredPresents, persistentCache.data.identificationStatus);
                     
+                    // Add placeholder for the identified user's card
+                    const identifiedRecipient = persistentCache.data.recipients.find(r => r.id === identifiedRecipientId);
+                    if (identifiedRecipient) {
+                        setTimeout(() => {
+                            const recipientsList = document.getElementById('recipientsList');
+                            if (recipientsList && !recipientsList.querySelector('.loading-placeholder')) {
+                                const placeholder = document.createElement('div');
+                                placeholder.className = 'col-12 loading-placeholder';
+                                placeholder.innerHTML = `
+                                    <div class="card main-card" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107;">
+                                        <div class="card-body text-center py-4">
+                                            <div class="mb-3">
+                                                <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+                                                    <span class="visually-hidden">Ładowanie...</span>
+                                                </div>
+                                            </div>
+                                            <h5 class="mb-2">
+                                                <i class="fas fa-gift me-2"></i>${identifiedRecipient.name}
+                                            </h5>
+                                            <p class="text-muted mb-0">
+                                                <i class="fas fa-lock me-1"></i>Ładowanie Twoich prezentów z zachowaniem prywatności...
+                                            </p>
+                                        </div>
+                                    </div>
+                                `;
+                                recipientsList.insertBefore(placeholder, recipientsList.firstChild);
+                            }
+                        }, 50);
+                    }
+                    
                     // Store in memory cache
                     window._dataCache = {
                         recipients: filteredRecipients,
