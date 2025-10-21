@@ -260,6 +260,38 @@ const cache = {
     }
 };
 
+// Update tracking system for incremental updates
+const updateTracker = {
+    updates: [],
+    maxUpdates: 100, // Keep last 100 updates
+    
+    addUpdate(type, data) {
+        const update = {
+            type,
+            data,
+            timestamp: Date.now()
+        };
+        
+        this.updates.push(update);
+        
+        // Keep only recent updates
+        if (this.updates.length > this.maxUpdates) {
+            this.updates = this.updates.slice(-this.maxUpdates);
+        }
+        
+        console.log(`[UpdateTracker] Added update: ${type}`, data);
+    },
+    
+    getUpdatesSince(timestamp) {
+        const since = parseInt(timestamp) || 0;
+        return this.updates.filter(update => update.timestamp > since);
+    },
+    
+    clear() {
+        this.updates = [];
+    }
+};
+
 // Helper to get all presents with recipient and user info
 const getAllPresents = async () => {
     const cacheKey = 'all_presents';
@@ -380,7 +412,19 @@ app.get('/api/version', (req, res) => {
     res.json({
         version: packageJson.version,
         timestamp: Date.now(),
-        cacheVersion: 'v7'
+        cacheVersion: 'v8'
+    });
+});
+
+// Incremental updates endpoint
+app.get('/api/updates', requireAuth, (req, res) => {
+    const since = req.query.since || 0;
+    const updates = updateTracker.getUpdatesSince(since);
+    
+    res.json({
+        hasUpdates: updates.length > 0,
+        updates: updates,
+        timestamp: Date.now()
     });
 });
 
@@ -1125,6 +1169,21 @@ app.post('/api/presents', requireAuth, async (req, res) => {
             console.error('❌ [PRESENT] Failed to send notification (present was created successfully):', err);
         });
 
+        // Track update for incremental sync
+        updateTracker.addUpdate('present_added', {
+            presentId: result.insertId,
+            recipientId: recipient_id || null,
+            present: {
+                id: result.insertId,
+                title: title.trim(),
+                recipient_id: recipient_id || null,
+                comments: comments || null,
+                is_checked: false,
+                reserved_by: null,
+                created_by: userId
+            }
+        });
+
         res.json({ id: result.insertId, title: title.trim(), recipient_id, comments });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas dodawania prezentu');
@@ -1352,6 +1411,13 @@ app.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
                 recipientName: present.recipient_name || 'kogoś'
             });
         }
+
+        // Track update for incremental sync
+        updateTracker.addUpdate('present_reserved', {
+            presentId: parseInt(id),
+            recipientId: presentDetails[0]?.recipient_id,
+            username: req.session.username
+        });
 
         console.log('Present reserved successfully:', { id, userId, changes: result.affectedRows });
         res.json({ success: true });

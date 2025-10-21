@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v7';
+const CACHE_NAME = 'prezenty-v8';
 const urlsToCache = [
   '/manifest.json',
   '/favicon.svg',
@@ -11,6 +11,9 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', function(event) {
+  // Skip waiting to activate immediately
+  self.skipWaiting();
+  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function(cache) {
@@ -18,11 +21,14 @@ self.addEventListener('install', function(event) {
         return Promise.allSettled(
           urlsToCache.map(url => 
             cache.add(url).catch(err => {
-              console.warn('Failed to cache:', url, err);
+              console.warn('[SW] Failed to cache:', url);
               return null;
             })
           )
         );
+      })
+      .catch(err => {
+        console.warn('[SW] Cache open failed:', err);
       })
   );
 });
@@ -38,11 +44,19 @@ self.addEventListener('fetch', function(event) {
     event.respondWith(
       fetch(event.request)
         .then(function(response) {
-          // Cache the new version
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(function(cache) {
-            cache.put(event.request, responseToCache);
-          });
+          // Only cache successful responses
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME)
+              .then(function(cache) {
+                cache.put(event.request, responseToCache).catch(err => {
+                  // Silently fail - cache errors are non-critical
+                });
+              })
+              .catch(err => {
+                // Silently fail - cache errors are non-critical
+              });
+          }
           return response;
         })
         .catch(function() {
@@ -76,7 +90,12 @@ self.addEventListener('fetch', function(event) {
 
           caches.open(CACHE_NAME)
             .then(function(cache) {
-              cache.put(event.request, responseToCache);
+              cache.put(event.request, responseToCache).catch(err => {
+                // Silently fail - cache errors are non-critical
+              });
+            })
+            .catch(err => {
+              // Silently fail - cache errors are non-critical
             });
 
           return response;
@@ -88,16 +107,23 @@ self.addEventListener('fetch', function(event) {
 });
 
 self.addEventListener('activate', function(event) {
+  // Take control of all clients immediately
   event.waitUntil(
-    caches.keys().then(function(cacheNames) {
-      return Promise.all(
-        cacheNames.map(function(cacheName) {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    Promise.all([
+      // Delete old caches
+      caches.keys().then(function(cacheNames) {
+        return Promise.all(
+          cacheNames.map(function(cacheName) {
+            if (cacheName !== CACHE_NAME) {
+              console.log('[SW] Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      // Take control immediately
+      self.clients.claim()
+    ])
   );
 });
 
