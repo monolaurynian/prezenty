@@ -431,6 +431,19 @@ document.addEventListener('keydown', function (e) {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Clean up old cache keys on startup (prevent quota issues)
+    try {
+        const keysToCheck = ['app_data_cache', 'app_data_cache_timestamp', 'last_update_timestamp'];
+        keysToCheck.forEach(key => {
+            if (localStorage.getItem(key)) {
+                console.log('[Cleanup] Removing duplicate cache key:', key);
+                localStorage.removeItem(key);
+            }
+        });
+    } catch (e) {
+        console.error('[Cleanup] Error cleaning cache:', e);
+    }
+    
     // OPTIMIZATION: Show cached data immediately, then verify auth
     const persistentCache = loadFromPersistentCache();
     if (persistentCache) {
@@ -3009,10 +3022,45 @@ function saveToPersistentCache(data) {
             data: data,
             timestamp: Date.now()
         };
+        
+        // Try to save
         localStorage.setItem('recipientsCache', JSON.stringify(cacheData));
         console.log('Data saved to persistent cache');
     } catch (error) {
         console.error('Error saving to persistent cache:', error);
+        
+        // If quota exceeded, clear old data and try again
+        if (error.name === 'QuotaExceededError') {
+            console.log('Quota exceeded, clearing old cache data...');
+            
+            // Clear all old cache keys
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // Remove old cache keys
+                if (key && (key.includes('cache') || key.includes('Cache') || key === 'app_data_cache')) {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            keysToRemove.forEach(key => {
+                console.log('Removing old cache key:', key);
+                localStorage.removeItem(key);
+            });
+            
+            // Try to save again
+            try {
+                const cacheData = {
+                    data: data,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('recipientsCache', JSON.stringify(cacheData));
+                console.log('Data saved to persistent cache after cleanup');
+            } catch (retryError) {
+                console.error('Still failed to save after cleanup:', retryError);
+                // Give up - app will work without cache
+            }
+        }
     }
 }
 
