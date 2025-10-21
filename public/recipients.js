@@ -445,16 +445,27 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     // OPTIMIZATION: Try to show cached data immediately (if available)
+    // BUT: Skip instant display if user is identified (privacy first!)
     let persistentCache = null;
     try {
         persistentCache = loadFromPersistentCache();
         if (persistentCache) {
-            console.log('[FastLoad] Showing cached data immediately');
-            displayRecipientsData(persistentCache.data.recipients, persistentCache.data.presents, persistentCache.data.identificationStatus);
+            // PRIVACY CHECK: Don't show cache instantly if user is identified
+            const isIdentified = persistentCache.data.identificationStatus && 
+                                persistentCache.data.identificationStatus.isIdentified;
             
-            // Store in memory cache too
-            window._dataCache = persistentCache.data;
-            window._dataCacheTimestamp = persistentCache.timestamp;
+            if (isIdentified) {
+                console.log('[FastLoad] User is identified - skipping instant cache to preserve privacy');
+                // Don't show cache - wait for proper auth and data load
+                // This prevents showing purchase status before privacy filter applies
+            } else {
+                console.log('[FastLoad] Showing cached data immediately');
+                displayRecipientsData(persistentCache.data.recipients, persistentCache.data.presents, persistentCache.data.identificationStatus);
+                
+                // Store in memory cache too
+                window._dataCache = persistentCache.data;
+                window._dataCacheTimestamp = persistentCache.timestamp;
+            }
         } else {
             console.log('[FastLoad] No cache available, will load from server');
         }
@@ -1451,7 +1462,7 @@ function generatePresentsList(presents) {
                         </div>
                         <!-- Date block -->
                         <div class="d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 90px;">
-                            <small class="text-muted">${new Date(present.created_at).toLocaleDateString('pl-PL')}</small>
+                            <small class="text-muted">${present.created_at ? new Date(present.created_at).toLocaleDateString('pl-PL') : ''}</small>
                         </div>
                         <!-- Reservation block -->
                         <div class="d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 120px;">
@@ -2661,7 +2672,7 @@ function openRecipientDetailsModal(recipient, presents, isIdentified) {
             return `<div class="present-item ${extraClass}" style="opacity:${extraClass ? '0.5' : '1'};">` +
                 `<div class="d-flex align-items-center justify-content-between">` +
                 `<div><b>${escapeHtml(p.title)}</b>${p.comments ? `<br><small class='text-muted'>${escapeHtml(p.comments)}</small>` : ''}</div>` +
-                `<div><small>${new Date(p.created_at).toLocaleDateString('pl-PL')}</small></div>` +
+                `<div><small>${p.created_at ? new Date(p.created_at).toLocaleDateString('pl-PL') : ''}</small></div>` +
                 `</div></div>`;
         }
         let html = '';
