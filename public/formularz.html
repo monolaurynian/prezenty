@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formularz Prezentów</title>
+
+    <!-- Cache Control Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.deduped.min.css">
+    <style>
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .navbar-nav .btn {
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-content .snowflake {
+            position: absolute;
+            top: -100px;
+            z-index: 0;
+            user-select: none;
+            cursor: default;
+            animation: fall linear infinite;
+            color: white;
+            font-size: 0.8em;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.6);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .modal-content .snowflake:nth-child(1) {
+            left: 10%;
+            animation-duration: 20s;
+            animation-delay: 0s;
+        }
+
+        .modal-content .snowflake:nth-child(2) {
+            left: 30%;
+            animation-duration: 25s;
+            animation-delay: 5s;
+        }
+
+        .modal-content .snowflake:nth-child(3) {
+            left: 50%;
+            animation-duration: 30s;
+            animation-delay: 10s;
+        }
+
+        .modal-content .snowflake:nth-child(4) {
+            left: 70%;
+            animation-duration: 22s;
+            animation-delay: 15s;
+        }
+
+        .modal-content .snowflake:nth-child(5) {
+            left: 90%;
+            animation-duration: 28s;
+            animation-delay: 20s;
+        }
+
+        .modal-content .snowflake:nth-child(6) {
+            left: 20%;
+            animation-duration: 24s;
+            animation-delay: 25s;
+        }
+
+        .modal-content .snowflake:nth-child(7) {
+            left: 40%;
+            animation-duration: 32s;
+            animation-delay: 30s;
+        }
+
+        .modal-content .snowflake:nth-child(8) {
+            left: 60%;
+            animation-duration: 20s;
+            animation-delay: 35s;
+        }
+
+        .modal-content .snowflake:nth-child(9) {
+            left: 80%;
+            animation-duration: 26s;
+            animation-delay: 40s;
+        }
+
+        .modal-content .snowflake:nth-child(10) {
+            left: 15%;
+            animation-duration: 30s;
+            animation-delay: 45s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-overlay"></div>
+
+    <!-- Navigation Tabs -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-gift me-2"></i>Życzenia Prezentowe
+            </a>
+            <div class="navbar-nav ms-auto d-flex align-items-center gap-2">
+                <button class="btn btn-outline-light btn-sm" onclick="switchTab('add')">
+                    <i class="fas fa-plus me-1"></i>Dodaj Prezent
+                </button>
+                <button class="btn btn-outline-light btn-sm" onclick="switchTab('edit')">
+                    <i class="fas fa-edit me-1"></i>Edytuj Moje Prezenty
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Add Present Tab -->
+        <div id="addTab" class="tab-content active">
+            <div class="login-container" style="min-height: auto; padding: 1rem;">
+                <div class="login-card" id="formCard">
+                    <!-- Snowflakes inside the card -->
+                    <div class="snowflake">❄</div>
+                    <div class="snowflake">❅</div>
+                    <div class="snowflake">❆</div>
+                    <div class="snowflake">❄</div>
+                    <div class="snowflake">❅</div>
+                    <div class="snowflake">❆</div>
+                    <div class="snowflake">❄</div>
+                    <div class="snowflake">❅</div>
+                    <div class="snowflake">❆</div>
+                    <div class="snowflake">❄</div>
+                    <div class="snowflake">❅</div>
+                    <div class="snowflake">❆</div>
+                    <div class="snowflake">❄</div>
+                    <div class="snowflake">❅</div>
+                    <div class="snowflake">❆</div>
+                    <div class="snowflake">❄</div>
+                    <div class="snowflake">❅</div>
+                    <div class="snowflake">❆</div>
+                    <div class="snowflake">❄</div>
+                    <div class="snowflake">❅</div>
+
+                    <div class="login-header content-transition loaded" id="formHeader">
+                        <h4 class="mt-2"
+                            style="margin-bottom: 1rem; margin-top: 0.5rem; color: white !important; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 4px 16px rgba(0, 0, 0, 0.8);">
+                            <i class="fas fa-gift me-2"></i>Dodaj Swój Prezent
+                        </h4>
+                    </div>
+                    <div class="login-body content-transition loaded" id="formBody">
+                        <div class="text-center mb-3">
+                            <p
+                                style="color: white !important; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 3px 12px rgba(0, 0, 0, 0.8); font-size: 0.95rem; line-height: 1.6;">
+                                🎄 Nadchodzą święta! 🎁<br>
+                                Dodaj swoje pomysły na prezenty, aby inni mogli zobaczyć, czego sobie życzysz.
+                            </p>
+                        </div>
+
+                        <form id="presentForm" style="margin-top: 1rem; margin-left: 2rem; margin-right: 2rem;">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" class="form-control" id="recipientName"
+                                    placeholder="Twoje imię i nazwisko" required>
+                            </div>
+
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">
+                                    <i class="fas fa-gift"></i>
+                                </span>
+                                <input type="text" class="form-control" id="presentTitle" placeholder="Nazwa prezentu"
+                                    required>
+                            </div>
+
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">
+                                    <i class="fas fa-comment"></i>
+                                </span>
+                                <textarea class="form-control" id="presentComments"
+                                    placeholder="Dodatkowe informacje (opcjonalnie)" rows="3"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-login">
+                                <i class="fas fa-plus me-2"></i>Dodaj Prezent
+                            </button>
+                        </form>
+
+                        <div id="formMessage" class="alert mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Presents Tab (requires authentication) -->
+        <div id="editTab" class="tab-content" style="display: none;">
+            <div class="card main-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>Edytuj Moje Prezenty
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="myPresentsList">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Ładowanie...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Modal -->
+    <div class="modal fade" id="authModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content"
+                style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 20px; overflow: hidden; position: relative;">
+                <!-- Snowflakes inside the modal -->
+                <div class="snowflake">❄</div>
+                <div class="snowflake">❅</div>
+                <div class="snowflake">❆</div>
+                <div class="snowflake">❄</div>
+                <div class="snowflake">❅</div>
+                <div class="snowflake">❆</div>
+                <div class="snowflake">❄</div>
+                <div class="snowflake">❅</div>
+                <div class="snowflake">❆</div>
+                <div class="snowflake">❄</div>
+
+                <div class="modal-header" style="border-bottom: none; background: transparent;">
+                    <h5 class="modal-title" style="color: white; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);">
+                        <i class="fas fa-lock me-2"></i>Wymagana Autoryzacja
+                    </h5>
+                </div>
+                <div class="modal-body" style="background: transparent;">
+                    <p class="text-center mb-4" style="color: white; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);">
+                        Aby edytować swoje prezenty, musisz się zalogować lub zarejestrować.
+                    </p>
+
+                    <!-- Login Form -->
+                    <div id="loginSection">
+                        <form id="modalLoginForm">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" class="form-control" id="modalUsername"
+                                    placeholder="Nazwa użytkownika" required>
+                            </div>
+
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="modalPassword" placeholder="Hasło"
+                                    required>
+                            </div>
+
+                            <button type="submit" class="btn btn-login w-100">
+                                <i class="fas fa-sign-in-alt me-2"></i>Zaloguj się
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-3">
+                            <a href="#" class="btn-link"
+                                style="color: white; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);"
+                                onclick="toggleAuthForm(event)">
+                                <i class="fas fa-user-plus me-1"></i>Nie masz konta? Zarejestruj się
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="registerSection" style="display: none;">
+                        <form id="modalRegisterForm">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" class="form-control" id="modalRegUsername"
+                                    placeholder="Nazwa użytkownika" required>
+                            </div>
+
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="modalRegPassword" placeholder="Hasło"
+                                    required>
+                            </div>
+
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="modalConfirmPassword"
+                                    placeholder="Potwierdź hasło" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-login w-100">
+                                <i class="fas fa-user-plus me-2"></i>Zarejestruj się
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-3">
+                            <a href="#" class="btn-link"
+                                style="color: white; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);"
+                                onclick="toggleAuthForm(event)">
+                                <i class="fas fa-sign-in-alt me-1"></i>Masz już konto? Zaloguj się
+                            </a>
+                        </div>
+                    </div>
+
+                    <div id="authMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Present Modal -->
+    <div class="modal fade" id="editPresentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Edytuj Prezent
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPresentForm">
+                        <input type="hidden" id="editPresentId">
+
+                        <div class="mb-3">
+                            <label for="editPresentTitle" class="form-label">Nazwa prezentu</label>
+                            <input type="text" class="form-control" id="editPresentTitle" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editPresentComments" class="form-label">Dodatkowe informacje</label>
+                            <textarea class="form-control" id="editPresentComments" rows="3"></textarea>
+                        </div>
+                    </form>
+                    <div id="editPresentMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-success" onclick="saveEditedPresent()">
+                        <i class="fas fa-save me-1"></i>Zapisz
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="formularz.js"></script>
+</body>
+
+</html>

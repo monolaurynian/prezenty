@@ -462,6 +462,10 @@ app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
+app.get('/formularz', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'formularz.html'));
+});
+
 app.get('/activity', (req, res) => {
     // If user is not authenticated, redirect to login page
     if (!req.session.userId) {
@@ -2186,6 +2190,96 @@ app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
     } catch (err) {
         console.error('Database error canceling reservation:', err);
         return handleDbError(err, res, 'Błąd podczas anulowania rezerwacji');
+    }
+});
+
+// Formularz API - Submit present without authentication
+app.post('/api/formularz/present', async (req, res) => {
+    const { recipientName, presentTitle, presentComments } = req.body;
+
+    console.log('[POST /api/formularz/present] Incoming request:', { recipientName, presentTitle });
+
+    if (!recipientName || !presentTitle) {
+        return badRequest(res, 'Imię i nazwa prezentu są wymagane');
+    }
+
+    if (DEMO_MODE) {
+        // Demo mode - simulate adding present
+        console.log('Demo mode: present added via formularz');
+        res.json({ success: true });
+        return;
+    }
+
+    try {
+        // Find or create recipient
+        let recipientId;
+        const [recipientRows] = await pool.execute('SELECT id FROM recipients WHERE name = ?', [recipientName.trim()]);
+        
+        if (recipientRows.length > 0) {
+            recipientId = recipientRows[0].id;
+            console.log('[Formularz] Using existing recipient:', recipientId);
+        } else {
+            // Create new recipient
+            const [result] = await pool.execute('INSERT INTO recipients (name) VALUES (?)', [recipientName.trim()]);
+            recipientId = result.insertId;
+            console.log('[Formularz] Created new recipient:', recipientId);
+        }
+
+        // Add present for this recipient
+        const [presentResult] = await pool.execute(
+            'INSERT INTO presents (title, recipient_id, comments, created_by) VALUES (?, ?, ?, ?)',
+            [presentTitle.trim(), recipientId, presentComments || null, null] // created_by is null for anonymous submissions
+        );
+
+        console.log('[Formularz] Present added successfully:', presentResult.insertId);
+
+        // Clear cache
+        clearCombinedDataCache();
+        cache.invalidatePresents();
+
+        res.json({ success: true, presentId: presentResult.insertId });
+    } catch (err) {
+        console.error('[Formularz] Database error:', err);
+        return handleDbError(err, res, 'Błąd podczas dodawania prezentu');
+    }
+});
+
+// Formularz API - Get user's presents (requires authentication)
+app.get('/api/formularz/my-presents', requireAuth, async (req, res) => {
+    const userId = req.session.userId;
+
+    console.log('[GET /api/formularz/my-presents] Request from user:', userId);
+
+    if (DEMO_MODE) {
+        // Demo mode - return demo presents
+        res.json({ presents: demoData.presents });
+        return;
+    }
+
+    try {
+        // Get user's identified recipient
+        const [recipientRows] = await pool.execute('SELECT id FROM recipients WHERE identified_by = ?', [userId]);
+        
+        if (recipientRows.length === 0) {
+            // User hasn't identified themselves yet
+            console.log('[Formularz] User not identified yet');
+            res.json({ presents: [] });
+            return;
+        }
+
+        const recipientId = recipientRows[0].id;
+
+        // Get all presents for this recipient
+        const [presents] = await pool.execute(
+            'SELECT id, title, comments, created_at FROM presents WHERE recipient_id = ? ORDER BY created_at DESC',
+            [recipientId]
+        );
+
+        console.log('[Formularz] Found', presents.length, 'presents for user');
+        res.json({ presents });
+    } catch (err) {
+        console.error('[Formularz] Database error:', err);
+        return handleDbError(err, res, 'Błąd podczas pobierania prezentów');
     }
 });
 
