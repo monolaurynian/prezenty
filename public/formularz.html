@@ -32,45 +32,86 @@
             box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
         }
 
+        /* Form styling */
         .form-label {
             font-weight: 600;
-            color: var(--ios-text);
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control,
+        .form-select {
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            outline: none;
         }
 
         .form-select option[value="__new__"] {
-            background-color: rgba(0, 122, 255, 0.1);
+            background-color: rgba(13, 110, 253, 0.1);
             font-weight: 600;
+            color: #0d6efd;
         }
 
+        /* Transparent blur header */
         .card-header.bg-transparent-blur {
-            background: rgba(255, 255, 255, 0.15) !important;
+            background: rgba(255, 255, 255, 0.2) !important;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             color: white !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 4px 16px rgba(0, 0, 0, 0.8);
+            padding: 1.5rem;
         }
 
         .card-header.bg-transparent-blur .card-title {
             color: white !important;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 4px 16px rgba(0, 0, 0, 0.8);
+            font-size: 1.5rem;
+            font-weight: 700;
         }
 
+        /* Transparent blur button */
         .btn-transparent-blur {
-            background: rgba(255, 255, 255, 0.15) !important;
+            background: rgba(255, 255, 255, 0.2) !important;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            border: 2px solid rgba(255, 255, 255, 0.4) !important;
             color: white !important;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 0.875rem 1.5rem;
             transition: all 0.3s ease;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .btn-transparent-blur:hover {
-            background: rgba(255, 255, 255, 0.25) !important;
-            border-color: rgba(255, 255, 255, 0.5) !important;
+            background: rgba(255, 255, 255, 0.3) !important;
+            border-color: rgba(255, 255, 255, 0.6) !important;
+            color: white !important;
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Card body styling */
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Alert styling */
+        .alert-info {
+            background-color: rgba(13, 202, 240, 0.1);
+            border: 1px solid rgba(13, 202, 240, 0.3);
+            color: #055160;
+            border-radius: 12px;
         }
     </style>
 </head>
