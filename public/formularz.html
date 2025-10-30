@@ -32,78 +32,14 @@
             box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
         }
 
-        .modal-content .snowflake {
-            position: absolute;
-            top: -100px;
-            z-index: 0;
-            user-select: none;
-            cursor: default;
-            animation: fall linear infinite;
-            color: white;
-            font-size: 0.8em;
-            text-shadow: 0 0 3px rgba(255, 255, 255, 0.6);
-            opacity: 0.6;
-            pointer-events: none;
+        .form-label {
+            font-weight: 600;
+            color: var(--ios-text);
         }
 
-        .modal-content .snowflake:nth-child(1) {
-            left: 10%;
-            animation-duration: 20s;
-            animation-delay: 0s;
-        }
-
-        .modal-content .snowflake:nth-child(2) {
-            left: 30%;
-            animation-duration: 25s;
-            animation-delay: 5s;
-        }
-
-        .modal-content .snowflake:nth-child(3) {
-            left: 50%;
-            animation-duration: 30s;
-            animation-delay: 10s;
-        }
-
-        .modal-content .snowflake:nth-child(4) {
-            left: 70%;
-            animation-duration: 22s;
-            animation-delay: 15s;
-        }
-
-        .modal-content .snowflake:nth-child(5) {
-            left: 90%;
-            animation-duration: 28s;
-            animation-delay: 20s;
-        }
-
-        .modal-content .snowflake:nth-child(6) {
-            left: 20%;
-            animation-duration: 24s;
-            animation-delay: 25s;
-        }
-
-        .modal-content .snowflake:nth-child(7) {
-            left: 40%;
-            animation-duration: 32s;
-            animation-delay: 30s;
-        }
-
-        .modal-content .snowflake:nth-child(8) {
-            left: 60%;
-            animation-duration: 20s;
-            animation-delay: 35s;
-        }
-
-        .modal-content .snowflake:nth-child(9) {
-            left: 80%;
-            animation-duration: 26s;
-            animation-delay: 40s;
-        }
-
-        .modal-content .snowflake:nth-child(10) {
-            left: 15%;
-            animation-duration: 30s;
-            animation-delay: 45s;
+        .form-select option[value="__new__"] {
+            background-color: rgba(0, 122, 255, 0.1);
+            font-weight: 600;
         }
     </style>
 </head>
@@ -131,76 +67,61 @@
     <div class="container mt-4">
         <!-- Add Present Tab -->
         <div id="addTab" class="tab-content active">
-            <div class="login-container" style="min-height: auto; padding: 1rem;">
-                <div class="login-card" id="formCard">
-                    <!-- Snowflakes inside the card -->
-                    <div class="snowflake">❄</div>
-                    <div class="snowflake">❅</div>
-                    <div class="snowflake">❆</div>
-                    <div class="snowflake">❄</div>
-                    <div class="snowflake">❅</div>
-                    <div class="snowflake">❆</div>
-                    <div class="snowflake">❄</div>
-                    <div class="snowflake">❅</div>
-                    <div class="snowflake">❆</div>
-                    <div class="snowflake">❄</div>
-                    <div class="snowflake">❅</div>
-                    <div class="snowflake">❆</div>
-                    <div class="snowflake">❄</div>
-                    <div class="snowflake">❅</div>
-                    <div class="snowflake">❆</div>
-                    <div class="snowflake">❄</div>
-                    <div class="snowflake">❅</div>
-                    <div class="snowflake">❆</div>
-                    <div class="snowflake">❄</div>
-                    <div class="snowflake">❅</div>
-
-                    <div class="login-header content-transition loaded" id="formHeader">
-                        <h4 class="mt-2"
-                            style="margin-bottom: 1rem; margin-top: 0.5rem; color: white !important; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 4px 16px rgba(0, 0, 0, 0.8);">
-                            <i class="fas fa-gift me-2"></i>Dodaj Swój Prezent
-                        </h4>
-                    </div>
-                    <div class="login-body content-transition loaded" id="formBody">
-                        <div class="text-center mb-3">
-                            <p
-                                style="color: white !important; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 3px 12px rgba(0, 0, 0, 0.8); font-size: 0.95rem; line-height: 1.6;">
-                                🎄 Nadchodzą święta! 🎁<br>
-                                Dodaj swoje pomysły na prezenty, aby inni mogli zobaczyć, czego sobie życzysz.
-                            </p>
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-md-10">
+                    <div class="card main-card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-gift me-2"></i>Dodaj Swój Prezent
+                            </h5>
                         </div>
-
-                        <form id="presentForm" style="margin-top: 1rem; margin-left: 2rem; margin-right: 2rem;">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text">
-                                    <i class="fas fa-user"></i>
-                                </span>
-                                <input type="text" class="form-control" id="recipientName"
-                                    placeholder="Twoje imię i nazwisko" required>
+                        <div class="card-body">
+                            <div class="alert alert-info mb-4">
+                                <i class="fas fa-info-circle me-2"></i>
+                                🎄 Nadchodzą święta! 🎁 Dodaj swoje pomysły na prezenty, aby inni mogli zobaczyć, czego
+                                sobie życzysz.
                             </div>
 
-                            <div class="input-group mb-3">
-                                <span class="input-group-text">
-                                    <i class="fas fa-gift"></i>
-                                </span>
-                                <input type="text" class="form-control" id="presentTitle" placeholder="Nazwa prezentu"
-                                    required>
-                            </div>
+                            <form id="presentForm">
+                                <div class="mb-3">
+                                    <label for="recipientSelect" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Twoje imię i nazwisko
+                                    </label>
+                                    <select class="form-select" id="recipientSelect" required>
+                                        <option value="">Wybierz z listy...</option>
+                                        <option value="__new__" class="text-primary fw-bold">+ Dodaj nowe imię</option>
+                                    </select>
+                                    <div id="newNameInput" class="mt-2" style="display: none;">
+                                        <input type="text" class="form-control" id="recipientName"
+                                            placeholder="Wprowadź swoje imię i nazwisko">
+                                    </div>
+                                </div>
 
-                            <div class="input-group mb-3">
-                                <span class="input-group-text">
-                                    <i class="fas fa-comment"></i>
-                                </span>
-                                <textarea class="form-control" id="presentComments"
-                                    placeholder="Dodatkowe informacje (opcjonalnie)" rows="3"></textarea>
-                            </div>
+                                <div class="mb-3">
+                                    <label for="presentTitle" class="form-label">
+                                        <i class="fas fa-gift me-1"></i>Nazwa prezentu
+                                    </label>
+                                    <input type="text" class="form-control" id="presentTitle"
+                                        placeholder="Co chciałbyś dostać?" required>
+                                </div>
 
-                            <button type="submit" class="btn btn-login">
-                                <i class="fas fa-plus me-2"></i>Dodaj Prezent
-                            </button>
-                        </form>
+                                <div class="mb-3">
+                                    <label for="presentComments" class="form-label">
+                                        <i class="fas fa-comment me-1"></i>Dodatkowe informacje (opcjonalnie)
+                                    </label>
+                                    <textarea class="form-control" id="presentComments" rows="3"
+                                        placeholder="Opis, linki, uwagi, gdzie kupić..."></textarea>
+                                </div>
 
-                        <div id="formMessage" class="alert mt-3" style="display: none;"></div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-plus me-2"></i>Dodaj Prezent
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div id="formMessage" class="alert mt-3" style="display: none;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -230,58 +151,40 @@
     <!-- Authentication Modal -->
     <div class="modal fade" id="authModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content"
-                style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 20px; overflow: hidden; position: relative;">
-                <!-- Snowflakes inside the modal -->
-                <div class="snowflake">❄</div>
-                <div class="snowflake">❅</div>
-                <div class="snowflake">❆</div>
-                <div class="snowflake">❄</div>
-                <div class="snowflake">❅</div>
-                <div class="snowflake">❆</div>
-                <div class="snowflake">❄</div>
-                <div class="snowflake">❅</div>
-                <div class="snowflake">❆</div>
-                <div class="snowflake">❄</div>
-
-                <div class="modal-header" style="border-bottom: none; background: transparent;">
-                    <h5 class="modal-title" style="color: white; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
                         <i class="fas fa-lock me-2"></i>Wymagana Autoryzacja
                     </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" style="background: transparent;">
-                    <p class="text-center mb-4" style="color: white; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);">
+                <div class="modal-body">
+                    <p class="text-center mb-4">
                         Aby edytować swoje prezenty, musisz się zalogować lub zarejestrować.
                     </p>
 
                     <!-- Login Form -->
                     <div id="loginSection">
                         <form id="modalLoginForm">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text">
-                                    <i class="fas fa-user"></i>
-                                </span>
-                                <input type="text" class="form-control" id="modalUsername"
-                                    placeholder="Nazwa użytkownika" required>
+                            <div class="mb-3">
+                                <label for="modalUsername" class="form-label">Nazwa użytkownika</label>
+                                <input type="text" class="form-control" id="modalUsername" required>
                             </div>
 
-                            <div class="input-group mb-3">
-                                <span class="input-group-text">
-                                    <i class="fas fa-lock"></i>
-                                </span>
-                                <input type="password" class="form-control" id="modalPassword" placeholder="Hasło"
-                                    required>
+                            <div class="mb-3">
+                                <label for="modalPassword" class="form-label">Hasło</label>
+                                <input type="password" class="form-control" id="modalPassword" required>
                             </div>
 
-                            <button type="submit" class="btn btn-login w-100">
-                                <i class="fas fa-sign-in-alt me-2"></i>Zaloguj się
-                            </button>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Zaloguj się
+                                </button>
+                            </div>
                         </form>
 
                         <div class="text-center mt-3">
-                            <a href="#" class="btn-link"
-                                style="color: white; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);"
-                                onclick="toggleAuthForm(event)">
+                            <a href="#" class="btn-link" onclick="toggleAuthForm(event)">
                                 <i class="fas fa-user-plus me-1"></i>Nie masz konta? Zarejestruj się
                             </a>
                         </div>
@@ -290,39 +193,30 @@
                     <!-- Register Form -->
                     <div id="registerSection" style="display: none;">
                         <form id="modalRegisterForm">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text">
-                                    <i class="fas fa-user"></i>
-                                </span>
-                                <input type="text" class="form-control" id="modalRegUsername"
-                                    placeholder="Nazwa użytkownika" required>
+                            <div class="mb-3">
+                                <label for="modalRegUsername" class="form-label">Nazwa użytkownika</label>
+                                <input type="text" class="form-control" id="modalRegUsername" required>
                             </div>
 
-                            <div class="input-group mb-3">
-                                <span class="input-group-text">
-                                    <i class="fas fa-lock"></i>
-                                </span>
-                                <input type="password" class="form-control" id="modalRegPassword" placeholder="Hasło"
-                                    required>
+                            <div class="mb-3">
+                                <label for="modalRegPassword" class="form-label">Hasło</label>
+                                <input type="password" class="form-control" id="modalRegPassword" required>
                             </div>
 
-                            <div class="input-group mb-3">
-                                <span class="input-group-text">
-                                    <i class="fas fa-lock"></i>
-                                </span>
-                                <input type="password" class="form-control" id="modalConfirmPassword"
-                                    placeholder="Potwierdź hasło" required>
+                            <div class="mb-3">
+                                <label for="modalConfirmPassword" class="form-label">Potwierdź hasło</label>
+                                <input type="password" class="form-control" id="modalConfirmPassword" required>
                             </div>
 
-                            <button type="submit" class="btn btn-login w-100">
-                                <i class="fas fa-user-plus me-2"></i>Zarejestruj się
-                            </button>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-user-plus me-2"></i>Zarejestruj się
+                                </button>
+                            </div>
                         </form>
 
                         <div class="text-center mt-3">
-                            <a href="#" class="btn-link"
-                                style="color: white; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);"
-                                onclick="toggleAuthForm(event)">
+                            <a href="#" class="btn-link" onclick="toggleAuthForm(event)">
                                 <i class="fas fa-sign-in-alt me-1"></i>Masz już konto? Zaloguj się
                             </a>
                         </div>

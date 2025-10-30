@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup form handlers
     setupFormHandlers();
+    
+    // Load recipients for dropdown
+    loadRecipients();
 });
 
 function setupFormHandlers() {
@@ -23,6 +26,21 @@ function setupFormHandlers() {
         presentForm.addEventListener('submit', function(e) {
             e.preventDefault();
             submitPresent();
+        });
+    }
+    
+    // Recipient dropdown change handler
+    const recipientSelect = document.getElementById('recipientSelect');
+    if (recipientSelect) {
+        recipientSelect.addEventListener('change', function() {
+            const newNameInput = document.getElementById('newNameInput');
+            if (this.value === '__new__') {
+                newNameInput.style.display = 'block';
+                document.getElementById('recipientName').required = true;
+            } else {
+                newNameInput.style.display = 'none';
+                document.getElementById('recipientName').required = false;
+            }
         });
     }
     
@@ -92,14 +110,55 @@ function switchTab(tab) {
     }
 }
 
+function loadRecipients() {
+    fetch('/api/formularz/recipients')
+        .then(response => response.json())
+        .then(data => {
+            const recipientSelect = document.getElementById('recipientSelect');
+            if (recipientSelect && data.recipients) {
+                // Clear existing options except the first two
+                while (recipientSelect.options.length > 2) {
+                    recipientSelect.remove(2);
+                }
+                
+                // Add recipients to dropdown
+                data.recipients.forEach(recipient => {
+                    const option = document.createElement('option');
+                    option.value = recipient.name;
+                    option.textContent = recipient.name;
+                    recipientSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading recipients:', error);
+        });
+}
+
 function submitPresent() {
-    const recipientName = document.getElementById('recipientName').value.trim();
+    const recipientSelect = document.getElementById('recipientSelect');
+    const recipientNameInput = document.getElementById('recipientName');
     const presentTitle = document.getElementById('presentTitle').value.trim();
     const presentComments = document.getElementById('presentComments').value.trim();
     const formMessage = document.getElementById('formMessage');
     
-    if (!recipientName || !presentTitle) {
-        showFormMessage('Proszę wypełnić wszystkie wymagane pola', 'danger');
+    // Determine recipient name
+    let recipientName;
+    if (recipientSelect.value === '__new__') {
+        recipientName = recipientNameInput.value.trim();
+        if (!recipientName) {
+            showFormMessage('Proszę wprowadzić swoje imię i nazwisko', 'danger');
+            return;
+        }
+    } else if (recipientSelect.value) {
+        recipientName = recipientSelect.value;
+    } else {
+        showFormMessage('Proszę wybrać lub wprowadzić swoje imię', 'danger');
+        return;
+    }
+    
+    if (!presentTitle) {
+        showFormMessage('Proszę wprowadzić nazwę prezentu', 'danger');
         return;
     }
     
@@ -125,6 +184,9 @@ function submitPresent() {
             showFormMessage('Prezent został dodany pomyślnie! 🎁', 'success');
             // Clear form
             document.getElementById('presentForm').reset();
+            document.getElementById('newNameInput').style.display = 'none';
+            // Reload recipients to include the new one if added
+            loadRecipients();
         } else {
             showFormMessage(data.error || 'Błąd podczas dodawania prezentu', 'danger');
         }

@@ -2193,6 +2193,27 @@ app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
     }
 });
 
+// Formularz API - Get all recipients (no authentication required)
+app.get('/api/formularz/recipients', async (req, res) => {
+    console.log('[GET /api/formularz/recipients] Fetching recipients');
+
+    if (DEMO_MODE) {
+        // Demo mode - return demo recipients
+        const recipients = demoData.recipients.map(r => ({ id: r.id, name: r.name }));
+        res.json({ recipients });
+        return;
+    }
+
+    try {
+        const [rows] = await pool.execute('SELECT id, name FROM recipients ORDER BY name');
+        console.log('[Formularz] Found', rows.length, 'recipients');
+        res.json({ recipients: rows });
+    } catch (err) {
+        console.error('[Formularz] Database error:', err);
+        return handleDbError(err, res, 'Błąd podczas pobierania listy osób');
+    }
+});
+
 // Formularz API - Submit present without authentication
 app.post('/api/formularz/present', async (req, res) => {
     const { recipientName, presentTitle, presentComments } = req.body;
