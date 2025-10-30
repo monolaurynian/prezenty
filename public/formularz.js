@@ -2,11 +2,13 @@ console.log('Formularz.js loading...');
 
 let currentUser = null;
 let authModal = null;
+let loginModal = null;
 let editPresentModal = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Bootstrap modals
     authModal = new bootstrap.Modal(document.getElementById('authModal'));
+    loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
     editPresentModal = new bootstrap.Modal(document.getElementById('editPresentModal'));
     
     // Check if user is authenticated
@@ -70,6 +72,65 @@ function setupFormHandlers() {
             saveEditedPresent();
         });
     }
+    
+    // Login modal form
+    const loginModalForm = document.getElementById('loginModalForm');
+    if (loginModalForm) {
+        loginModalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            loginModalSubmit();
+        });
+    }
+}
+
+function openLoginModal() {
+    loginModal.show();
+}
+
+function loginModalSubmit() {
+    const username = document.getElementById('loginModalUsername').value.trim();
+    const password = document.getElementById('loginModalPassword').value;
+    
+    if (!username || !password) {
+        showLoginModalMessage('Proszę wypełnić wszystkie pola', 'danger');
+        return;
+    }
+    
+    const submitBtn = document.querySelector('#loginModalForm button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logowanie...';
+    submitBtn.disabled = true;
+    
+    fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentUser = data.user;
+            // Redirect to recipients page
+            window.location.href = '/recipients';
+        } else {
+            showLoginModalMessage(data.error || 'Błąd logowania', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Login error:', error);
+        showLoginModalMessage('Błąd połączenia z serwerem', 'danger');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function showLoginModalMessage(message, type) {
+    const loginModalMessage = document.getElementById('loginModalMessage');
+    loginModalMessage.textContent = message;
+    loginModalMessage.className = `alert alert-${type} mt-3`;
+    loginModalMessage.style.display = 'block';
 }
 
 function checkAuth() {

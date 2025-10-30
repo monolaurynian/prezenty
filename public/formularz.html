@@ -42,14 +42,35 @@
             font-weight: 600;
         }
 
-        .card-header.bg-christmas {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+        .card-header.bg-transparent-blur {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             color: white !important;
-            border-bottom: 3px solid #bd2130;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 4px 16px rgba(0, 0, 0, 0.8);
         }
 
-        .card-header.bg-christmas .card-title {
+        .card-header.bg-transparent-blur .card-title {
             color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 4px 16px rgba(0, 0, 0, 0.8);
+        }
+
+        .btn-transparent-blur {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            color: white !important;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-transparent-blur:hover {
+            background: rgba(255, 255, 255, 0.25) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
@@ -64,6 +85,9 @@
                 <i class="fas fa-gift me-2"></i>Życzenia Prezentowe
             </a>
             <div class="navbar-nav ms-auto d-flex align-items-center gap-2">
+                <button class="btn btn-outline-light btn-sm" onclick="openLoginModal()">
+                    <i class="fas fa-sign-in-alt me-1"></i>Zaloguj się
+                </button>
                 <a href="/recipients" class="btn btn-outline-light btn-sm">
                     <i class="fas fa-list me-1"></i>Zobacz Dodane Prezenty
                 </a>
@@ -82,8 +106,9 @@
         <div id="addTab" class="tab-content active">
             <div class="row justify-content-center">
                 <div class="col-lg-8 col-md-10">
-                    <div class="card main-card">
-                        <div class="card-header bg-christmas">
+                    <div class="card main-card"
+                        style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+                        <div class="card-header bg-transparent-blur">
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-gift me-2"></i>Dodaj Swój Prezent
                             </h5>
@@ -127,7 +152,7 @@
                                 </div>
 
                                 <div class="d-grid">
-                                    <button type="submit" class="btn btn-success btn-lg">
+                                    <button type="submit" class="btn btn-transparent-blur btn-lg">
                                         <i class="fas fa-plus me-2"></i>Dodaj Prezent
                                     </button>
                                 </div>
@@ -161,7 +186,48 @@
         </div>
     </div>
 
-    <!-- Authentication Modal -->
+    <!-- Login Modal (redirects to recipients) -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-sign-in-alt me-2"></i>Zaloguj się
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginModalForm">
+                        <div class="mb-3">
+                            <label for="loginModalUsername" class="form-label">Nazwa użytkownika</label>
+                            <input type="text" class="form-control" id="loginModalUsername" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="loginModalPassword" class="form-label">Hasło</label>
+                            <input type="password" class="form-control" id="loginModalPassword" required>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Zaloguj się
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <a href="/register" class="btn-link">
+                            <i class="fas fa-user-plus me-1"></i>Nie masz konta? Zarejestruj się
+                        </a>
+                    </div>
+
+                    <div id="loginModalMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Modal (for edit tab) -->
     <div class="modal fade" id="authModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
