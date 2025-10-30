@@ -116,6 +116,8 @@ function loadRecipients() {
         .then(data => {
             const recipientSelect = document.getElementById('recipientSelect');
             if (recipientSelect && data.recipients) {
+                console.log('Loading recipients:', data.recipients.length);
+                
                 // Clear existing options except the first two
                 while (recipientSelect.options.length > 2) {
                     recipientSelect.remove(2);
@@ -128,6 +130,11 @@ function loadRecipients() {
                     option.textContent = recipient.name;
                     recipientSelect.appendChild(option);
                 });
+                
+                // Ensure dropdown is enabled
+                recipientSelect.disabled = false;
+                
+                console.log('Recipients loaded successfully. Total options:', recipientSelect.options.length);
             }
         })
         .catch(error => {
@@ -142,6 +149,9 @@ function submitPresent() {
     const presentComments = document.getElementById('presentComments').value.trim();
     const formMessage = document.getElementById('formMessage');
     
+    console.log('Submit present - recipientSelect value:', recipientSelect.value);
+    console.log('Submit present - recipientSelect disabled:', recipientSelect.disabled);
+    
     // Determine recipient name
     let recipientName;
     if (recipientSelect.value === '__new__') {
@@ -150,7 +160,7 @@ function submitPresent() {
             showFormMessage('Proszę wprowadzić swoje imię i nazwisko', 'danger');
             return;
         }
-    } else if (recipientSelect.value) {
+    } else if (recipientSelect.value && recipientSelect.value !== '') {
         recipientName = recipientSelect.value;
     } else {
         showFormMessage('Proszę wybrać lub wprowadzić swoje imię', 'danger');
@@ -161,6 +171,8 @@ function submitPresent() {
         showFormMessage('Proszę wprowadzić nazwę prezentu', 'danger');
         return;
     }
+    
+    console.log('Submitting present for recipient:', recipientName);
     
     // Disable submit button
     const submitBtn = document.querySelector('#presentForm button[type="submit"]');

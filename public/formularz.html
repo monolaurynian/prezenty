@@ -41,6 +41,16 @@
             background-color: rgba(0, 122, 255, 0.1);
             font-weight: 600;
         }
+
+        .card-header.bg-christmas {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+            color: white !important;
+            border-bottom: 3px solid #bd2130;
+        }
+
+        .card-header.bg-christmas .card-title {
+            color: white !important;
+        }
     </style>
 </head>
 
@@ -54,6 +64,9 @@
                 <i class="fas fa-gift me-2"></i>Życzenia Prezentowe
             </a>
             <div class="navbar-nav ms-auto d-flex align-items-center gap-2">
+                <a href="/recipients" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-list me-1"></i>Zobacz Dodane Prezenty
+                </a>
                 <button class="btn btn-outline-light btn-sm" onclick="switchTab('add')">
                     <i class="fas fa-plus me-1"></i>Dodaj Prezent
                 </button>
@@ -70,7 +83,7 @@
             <div class="row justify-content-center">
                 <div class="col-lg-8 col-md-10">
                     <div class="card main-card">
-                        <div class="card-header">
+                        <div class="card-header bg-christmas">
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-gift me-2"></i>Dodaj Swój Prezent
                             </h5>
