@@ -311,9 +311,6 @@
     <div class="top-menu-container">
         <div class="container">
             <div class="d-flex justify-content-end align-items-center gap-3">
-                <a href="/formularz" class="menu-home-link">
-                    <span>Menu</span>
-                </a>
                 <button class="hamburger-menu" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
@@ -324,7 +321,11 @@
     <!-- Sidebar Menu -->
     <div class="sidebar-menu" id="sidebarMenu">
         <div class="sidebar-header">
-            <h4><i class="fas fa-gift me-2"></i>Menu</h4>
+            <a href="/formularz"
+                style="text-decoration: none; color: white; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-gift"></i>
+                <h4 style="margin: 0; font-weight: 700;">Menu</h4>
+            </a>
             <button class="sidebar-close" onclick="toggleSidebar()">
                 <i class="fas fa-times"></i>
             </button>
@@ -411,9 +412,9 @@
         <!-- Edit Presents Tab (requires authentication) -->
         <div id="editTab" class="tab-content" style="display: none;">
             <div class="card main-card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-edit me-2"></i>Edytuj Moje Prezenty
+                <div class="card-header bg-red" style="text-align: center;">
+                    <h5 class="card-title" style="color: white !important;">
+                        <i class="fas fa-edit me-2" style="color: white;"></i>Edytuj Moje Prezenty
                     </h5>
                 </div>
                 <div class="card-body">
@@ -506,8 +507,8 @@
                         </form>
 
                         <div class="text-center mt-3">
-                            <a href="#" class="btn-link" onclick="toggleAuthForm(event)">
-                                <i class="fas fa-user-plus me-1"></i>Nie masz konta? Zarejestruj się
+                            <a href="#" class="btn-link" onclick="toggleAuthForm(event)" style="color: black;"></a>
+                            <i class="fas fa-user-plus me-1"></i>Nie masz konta? Zarejestruj się
                             </a>
                         </div>
                     </div>
@@ -538,8 +539,8 @@
                         </form>
 
                         <div class="text-center mt-3">
-                            <a href="#" class="btn-link" onclick="toggleAuthForm(event)">
-                                <i class="fas fa-sign-in-alt me-1"></i>Masz już konto? Zaloguj się
+                            <a href="#" class="btn-link" onclick="toggleAuthForm(event)" style="color: black;"></a>
+                            <i class="fas fa-sign-in-alt me-1"></i>Masz już konto? Zaloguj się
                             </a>
                         </div>
                     </div>
