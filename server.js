@@ -2228,6 +2228,7 @@ app.post('/api/formularz/present', async (req, res) => {
     try {
         // Find or create recipient
         let recipientId;
+        console.log('[Formularz] Looking for recipient:', recipientName.trim());
         const [recipientRows] = await pool.execute('SELECT id FROM recipients WHERE name = ?', [recipientName.trim()]);
         
         if (recipientRows.length > 0) {
@@ -2235,12 +2236,14 @@ app.post('/api/formularz/present', async (req, res) => {
             console.log('[Formularz] Using existing recipient:', recipientId);
         } else {
             // Create new recipient
+            console.log('[Formularz] Creating new recipient:', recipientName.trim());
             const [result] = await pool.execute('INSERT INTO recipients (name) VALUES (?)', [recipientName.trim()]);
             recipientId = result.insertId;
             console.log('[Formularz] Created new recipient:', recipientId);
         }
 
         // Add present for this recipient
+        console.log('[Formularz] Adding present:', { title: presentTitle.trim(), recipientId, comments: presentComments });
         const [presentResult] = await pool.execute(
             'INSERT INTO presents (title, recipient_id, comments, created_by) VALUES (?, ?, ?, ?)',
             [presentTitle.trim(), recipientId, presentComments || null, null] // created_by is null for anonymous submissions
@@ -2249,12 +2252,25 @@ app.post('/api/formularz/present', async (req, res) => {
         console.log('[Formularz] Present added successfully:', presentResult.insertId);
 
         // Clear cache
-        clearCombinedDataCache();
-        cache.invalidatePresents();
+        try {
+            clearCombinedDataCache();
+            cache.invalidatePresents();
+            console.log('[Formularz] Cache cleared successfully');
+        } catch (cacheErr) {
+            console.error('[Formularz] Cache clear error (non-fatal):', cacheErr);
+            // Continue anyway - cache errors shouldn't fail the request
+        }
 
         res.json({ success: true, presentId: presentResult.insertId });
     } catch (err) {
         console.error('[Formularz] Database error:', err);
+        console.error('[Formularz] Error stack:', err.stack);
+        console.error('[Formularz] Error details:', {
+            message: err.message,
+            code: err.code,
+            errno: err.errno,
+            sqlMessage: err.sqlMessage
+        });
         return handleDbError(err, res, 'Błąd podczas dodawania prezentu');
     }
 });

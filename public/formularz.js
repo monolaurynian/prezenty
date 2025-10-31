@@ -140,6 +140,8 @@ function checkAuth() {
             if (data.authenticated) {
                 currentUser = data.user;
                 console.log('User authenticated:', currentUser);
+                // Get user's identification to auto-select their name
+                getUserIdentification();
             } else {
                 currentUser = null;
                 console.log('User not authenticated');
@@ -149,6 +151,38 @@ function checkAuth() {
             console.error('Auth check error:', error);
             currentUser = null;
         });
+}
+
+function getUserIdentification() {
+    fetch('/api/user/identification')
+        .then(response => response.json())
+        .then(data => {
+            if (data.isIdentified && data.name) {
+                console.log('User identified as:', data.name);
+                // Auto-select the user's name in dropdown after recipients are loaded
+                autoSelectUserName(data.name);
+            }
+        })
+        .catch(error => {
+            console.error('Error getting user identification:', error);
+        });
+}
+
+function autoSelectUserName(userName) {
+    // Wait a bit for recipients to load, then select the user's name
+    setTimeout(() => {
+        const recipientSelect = document.getElementById('recipientSelect');
+        if (recipientSelect) {
+            // Try to find and select the user's name
+            for (let i = 0; i < recipientSelect.options.length; i++) {
+                if (recipientSelect.options[i].value === userName) {
+                    recipientSelect.value = userName;
+                    console.log('Auto-selected user name:', userName);
+                    break;
+                }
+            }
+        }
+    }, 500); // Wait 500ms for recipients to load
 }
 
 function switchTab(tab) {
@@ -196,6 +230,11 @@ function loadRecipients() {
                 recipientSelect.disabled = false;
                 
                 console.log('Recipients loaded successfully. Total options:', recipientSelect.options.length);
+                
+                // If user is authenticated, try to auto-select their name
+                if (currentUser) {
+                    getUserIdentification();
+                }
             }
         })
         .catch(error => {
