@@ -1119,12 +1119,6 @@ app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
     }
 });
 
-// Clear combined data cache when data changes
-function clearCombinedDataCache() {
-    combinedDataCache.clear();
-    console.log('Combined data cache cleared');
-}
-
 app.post('/api/presents', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     const { title, recipient_id, comments } = req.body;
