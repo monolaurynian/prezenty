@@ -2228,12 +2228,15 @@ app.post('/api/formularz/present', async (req, res) => {
     try {
         // Find or create recipient
         let recipientId;
+        let createdByUserId = null;
+        
         console.log('[Formularz] Looking for recipient:', recipientName.trim());
-        const [recipientRows] = await pool.execute('SELECT id FROM recipients WHERE name = ?', [recipientName.trim()]);
+        const [recipientRows] = await pool.execute('SELECT id, identified_by FROM recipients WHERE name = ?', [recipientName.trim()]);
         
         if (recipientRows.length > 0) {
             recipientId = recipientRows[0].id;
-            console.log('[Formularz] Using existing recipient:', recipientId);
+            createdByUserId = recipientRows[0].identified_by; // Use the identified user's ID
+            console.log('[Formularz] Using existing recipient:', recipientId, 'identified_by:', createdByUserId);
         } else {
             // Create new recipient
             console.log('[Formularz] Creating new recipient:', recipientName.trim());
@@ -2243,13 +2246,30 @@ app.post('/api/formularz/present', async (req, res) => {
         }
 
         // Add present for this recipient
-        console.log('[Formularz] Adding present:', { title: presentTitle.trim(), recipientId, comments: presentComments });
-        const [presentResult] = await pool.execute(
-            'INSERT INTO presents (title, recipient_id, comments, created_by) VALUES (?, ?, ?, ?)',
-            [presentTitle.trim(), recipientId, presentComments || null, null] // created_by is null for anonymous submissions
+        // If recipient is identified by a user, use that user as created_by
+        console.log('[Formularz] Adding present:', { title: presentTitle.trim(), recipientId, comments: presentComments, createdBy: createdByUserId });
+        
+        if (createdByUserId) {
+            // Recipient is identified - use their user ID as created_by
+            const [presentResult] = await pool.execute(
+                'INSERT INTO presents (title, recipient_id, comments, created_by) VALUES (?, ?, ?, ?)',
+                [presentTitle.trim(), recipientId, presentComments || null, createdByUserId]
+            );
+        } else {
+            // Recipient not identified - don't include created_by
+            const [presentResult] = await pool.execute(
+                'INSERT INTO presents (title, recipient_id, comments) VALUES (?, ?, ?)',
+                [presentTitle.trim(), recipientId, presentComments || null]
+            );
+        }
+        
+        // Get the insert ID from whichever query was executed
+        const [checkResult] = await pool.execute(
+            'SELECT LAST_INSERT_ID() as insertId'
         );
+        const presentId = checkResult[0].insertId;
 
-        console.log('[Formularz] Present added successfully:', presentResult.insertId);
+        console.log('[Formularz] Present added successfully:', presentId);
 
         // Clear cache
         try {
@@ -2261,7 +2281,7 @@ app.post('/api/formularz/present', async (req, res) => {
             // Continue anyway - cache errors shouldn't fail the request
         }
 
-        res.json({ success: true, presentId: presentResult.insertId });
+        res.json({ success: true, presentId: presentId });
     } catch (err) {
         console.error('[Formularz] Database error:', err);
         console.error('[Formularz] Error stack:', err.stack);
