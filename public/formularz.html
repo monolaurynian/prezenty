@@ -122,17 +122,34 @@
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
 
+        /* Menu home link */
+        .menu-home-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .menu-home-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
         /* Hamburger menu styling */
         .hamburger-menu {
             background: rgba(255, 255, 255, 0.2);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 12px;
-            padding: 12px 20px;
+            padding: 12px 16px;
             cursor: pointer;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
-            gap: 0.75rem;
+            justify-content: center;
         }
 
         .hamburger-menu:hover {
@@ -144,12 +161,6 @@
         .hamburger-menu i {
             color: white;
             font-size: 1.5rem;
-        }
-
-        .hamburger-menu span {
-            color: white;
-            font-weight: 600;
-            font-size: 1.1rem;
         }
 
         /* Sidebar menu */
@@ -299,10 +310,12 @@
     <!-- Top Menu Container -->
     <div class="top-menu-container">
         <div class="container">
-            <div class="d-flex justify-content-end">
+            <div class="d-flex justify-content-end align-items-center gap-3">
+                <a href="/formularz" class="menu-home-link">
+                    <span>Menu</span>
+                </a>
                 <button class="hamburger-menu" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
-                    <span>Menu</span>
                 </button>
             </div>
         </div>
