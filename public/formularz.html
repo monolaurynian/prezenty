@@ -113,34 +113,211 @@
             color: #055160;
             border-radius: 12px;
         }
+
+        /* Hamburger menu styling */
+        .hamburger-menu {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-menu:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.5);
+        }
+
+        .hamburger-menu i {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        /* Sidebar menu */
+        .sidebar-menu {
+            position: fixed;
+            top: 0;
+            left: -350px;
+            width: 350px;
+            height: 100vh;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            z-index: 1040;
+            transition: left 0.3s ease;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+        }
+
+        .sidebar-menu.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h4 {
+            color: white;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .sidebar-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-menu-items {
+            padding: 1rem 0;
+        }
+
+        .sidebar-menu-item {
+            padding: 1rem 2rem;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .sidebar-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar-menu-item i {
+            font-size: 1.2rem;
+            width: 24px;
+        }
+
+        /* Overlay for sidebar */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1030;
+            display: none;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* Red header for form */
+        .card-header.bg-red {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+            color: white !important;
+            border-bottom: 3px solid #bd2130;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .card-header.bg-red .card-title {
+            color: white !important;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* Green button */
+        .btn-green {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%) !important;
+            border: 2px solid #28a745 !important;
+            color: white !important;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 0.875rem 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-green:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%) !important;
+            border-color: #1e7e34 !important;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+        }
+
+        /* Hide default navbar */
+        .navbar {
+            display: none;
+        }
     </style>
 </head>
 
 <body>
     <div class="background-overlay"></div>
 
-    <!-- Navigation Tabs -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-gift me-2"></i>Życzenia Prezentowe
-            </a>
-            <div class="navbar-nav ms-auto d-flex align-items-center gap-2">
-                <button class="btn btn-outline-light btn-sm" onclick="openLoginModal()">
-                    <i class="fas fa-sign-in-alt me-1"></i>Zaloguj się
-                </button>
-                <a href="/recipients" class="btn btn-outline-light btn-sm">
-                    <i class="fas fa-list me-1"></i>Zobacz Dodane Prezenty
-                </a>
-                <button class="btn btn-outline-light btn-sm" onclick="switchTab('add')">
-                    <i class="fas fa-plus me-1"></i>Dodaj Prezent
-                </button>
-                <button class="btn btn-outline-light btn-sm" onclick="switchTab('edit')">
-                    <i class="fas fa-edit me-1"></i>Edytuj Moje Prezenty
-                </button>
-            </div>
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-menu" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div class="sidebar-header">
+            <h4><i class="fas fa-gift me-2"></i>Menu</h4>
+            <button class="sidebar-close" onclick="toggleSidebar()">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-    </nav>
+        <div class="sidebar-menu-items">
+            <button class="sidebar-menu-item" onclick="openLoginModal(); toggleSidebar();">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Zaloguj się</span>
+            </button>
+            <a href="/recipients" class="sidebar-menu-item">
+                <i class="fas fa-list"></i>
+                <span>Zobacz Dodane Prezenty</span>
+            </a>
+            <button class="sidebar-menu-item" onclick="switchTab('add'); toggleSidebar();">
+                <i class="fas fa-plus"></i>
+                <span>Dodaj Prezent</span>
+            </button>
+            <button class="sidebar-menu-item" onclick="switchTab('edit'); toggleSidebar();">
+                <i class="fas fa-edit"></i>
+                <span>Edytuj Moje Prezenty</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <div class="container mt-4">
         <!-- Add Present Tab -->
@@ -149,8 +326,8 @@
                 <div class="col-lg-8 col-md-10">
                     <div class="card main-card"
                         style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
-                        <div class="card-header bg-transparent-blur">
-                            <h5 class="card-title mb-0">
+                        <div class="card-header bg-red">
+                            <h5 class="card-title">
                                 <i class="fas fa-gift me-2"></i>Dodaj Swój Prezent
                             </h5>
                         </div>
@@ -193,7 +370,7 @@
                                 </div>
 
                                 <div class="d-grid">
-                                    <button type="submit" class="btn btn-transparent-blur btn-lg">
+                                    <button type="submit" class="btn btn-green btn-lg">
                                         <i class="fas fa-plus me-2"></i>Dodaj Prezent
                                     </button>
                                 </div>
@@ -386,6 +563,14 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="formularz.js"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebarMenu');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+    </script>
 </body>
 
 </html>
