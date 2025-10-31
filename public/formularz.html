@@ -114,29 +114,42 @@
             border-radius: 12px;
         }
 
+        /* Top menu container */
+        .top-menu-container {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
         /* Hamburger menu styling */
         .hamburger-menu {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1050;
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 12px;
-            padding: 12px 16px;
+            padding: 12px 20px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
             transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
         .hamburger-menu:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.5);
         }
 
         .hamburger-menu i {
             color: white;
             font-size: 1.5rem;
+        }
+
+        .hamburger-menu span {
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
         }
 
         /* Sidebar menu */
@@ -283,10 +296,15 @@
 <body>
     <div class="background-overlay"></div>
 
-    <!-- Hamburger Menu Button -->
-    <button class="hamburger-menu" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
+    <!-- Top Menu Container -->
+    <div class="top-menu-container">
+        <div class="container">
+            <button class="hamburger-menu" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+                <span>Menu</span>
+            </button>
+        </div>
+    </div>
 
     <!-- Sidebar Menu -->
     <div class="sidebar-menu" id="sidebarMenu">
@@ -297,18 +315,10 @@
             </button>
         </div>
         <div class="sidebar-menu-items">
-            <button class="sidebar-menu-item" onclick="openLoginModal(); toggleSidebar();">
-                <i class="fas fa-sign-in-alt"></i>
-                <span>Zaloguj się</span>
-            </button>
             <a href="/recipients" class="sidebar-menu-item">
                 <i class="fas fa-list"></i>
                 <span>Zobacz Dodane Prezenty</span>
             </a>
-            <button class="sidebar-menu-item" onclick="switchTab('add'); toggleSidebar();">
-                <i class="fas fa-plus"></i>
-                <span>Dodaj Prezent</span>
-            </button>
             <button class="sidebar-menu-item" onclick="switchTab('edit'); toggleSidebar();">
                 <i class="fas fa-edit"></i>
                 <span>Edytuj Moje Prezenty</span>
@@ -319,7 +329,7 @@
     <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-    <div class="container mt-4">
+    <div class="container">
         <!-- Add Present Tab -->
         <div id="addTab" class="tab-content active">
             <div class="row justify-content-center">
