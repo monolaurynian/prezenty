@@ -36,33 +36,160 @@
     <link href="styles.deduped.min.css" rel="stylesheet">
     <link href="aws-design.css" rel="stylesheet">
     <style>
-        /* Hamburger Menu Button */
+        /* Override background-overlay to remove blur */
+        .recipients-page .background-overlay {
+            backdrop-filter: none !important;
+            background: rgba(0, 0, 0, 0.3) !important;
+        }
+
+        /* Add transparency and blur to all cards - 0.5 transparency */
+        .recipients-page .card,
+        .recipients-page .main-card,
+        .recipients-page .compact-card,
+        .recipients-page .aws-action-card,
+        .recipients-page .aws-main-content {
+            background: rgba(255, 255, 255, 0.5) !important;
+            backdrop-filter: blur(10px) !important;
+        }
+
+        /* Add transparency and blur to recipient cards - 0.5 transparency */
+        .recipients-page .recipient-card {
+            background: rgba(255, 255, 255, 0.5) !important;
+            backdrop-filter: blur(10px) !important;
+        }
+
+        /* Add transparency and blur to modals - 0.5 transparency */
+        .recipients-page .modal-content {
+            background: rgba(255, 255, 255, 0.5) !important;
+            backdrop-filter: blur(10px) !important;
+        }
+
+        /* Red background for card headers - solid color */
+        .recipients-page .card-header,
+        .recipients-page .aws-content-header {
+            background: #F44336 !important;
+            backdrop-filter: none !important;
+        }
+
+        /* Make header text white for better contrast */
+        .recipients-page .card-header h5,
+        .recipients-page .aws-content-header h5,
+        .recipients-page .card-header .card-title,
+        .recipients-page .aws-content-header .card-title,
+        .recipients-page .aws-header-title h5 {
+            color: white !important;
+        }
+
+        /* Make header icons white */
+        .recipients-page .card-header i,
+        .recipients-page .aws-content-header i,
+        .recipients-page .aws-gradient-icon {
+            color: white !important;
+        }
+
+        /* White action titles with blur shadow */
+        .recipients-page .aws-action-title {
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3);
+            font-weight: 600 !important;
+        }
+
+        /* Navbar transparency - white color, no backdrop blur */
+        .recipients-page .navbar {
+            background: rgba(255, 255, 255, 0.5) !important;
+            backdrop-filter: none !important;
+        }
+
+        /* Make navbar text white with shadow */
+        .recipients-page .navbar .navbar-brand,
+        .recipients-page .navbar .brand-text {
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .recipients-page .navbar i {
+            color: white !important;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+        }
+
+        /* FAB button - same style as notification bell */
+        .recipients-page .fab-main {
+            width: 50px !important;
+            height: 50px !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            border: 2px solid rgba(255, 255, 255, 0.5) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .recipients-page .fab-main:hover {
+            background: rgba(255, 255, 255, 0.3) !important;
+            border-color: rgba(255, 255, 255, 0.8) !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .recipients-page .fab-main i {
+            color: white !important;
+            font-size: 20px !important;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)) !important;
+        }
+
+        /* Fix alignment in all action cards */
+        .recipients-page .aws-action-card .card-body {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            min-height: 140px !important;
+            padding: 1.5rem !important;
+        }
+
+        /* Ensure icons and titles are centered on mobile */
+        .recipients-page .aws-action-icon {
+            margin: 0 auto !important;
+        }
+
+        .recipients-page .aws-action-title {
+            margin-top: 0.75rem !important;
+            text-align: center !important;
+        }
+
+        /* Mobile specific fixes */
+        @media (max-width: 768px) {
+            .recipients-page .aws-action-card .card-body {
+                min-height: 120px !important;
+                padding: 1rem !important;
+            }
+        }
+
+        /* Hamburger Menu Button - absolute positioning, no floating */
         .hamburger-menu-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
+            position: absolute;
+            top: 10px;
+            left: 10px;
             z-index: 1050;
-            background: rgba(255, 255, 255, 0.95);
-            border: none;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
             width: 50px;
             height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             transition: all 0.3s ease;
+            color: white;
         }
 
         .hamburger-menu-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.8);
+            transform: scale(1.05);
         }
 
         .hamburger-menu-btn i {
-            font-size: 22px;
-            color: #667eea;
+            font-size: 20px;
+            color: white;
         }
 
         /* Sidebar Menu */
@@ -86,7 +213,7 @@
 
         .sidebar-header {
             padding: 25px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #F44336;
             color: white;
             display: flex;
             align-items: center;
@@ -332,7 +459,7 @@
     <!-- Floating Action Button (Mobile) -->
     <div class="fab-container">
         <button class="fab-main" id="fabMain" onclick="openAddPresentModal()" aria-label="Dodaj prezent">
-            <i class="fas fa-gift"></i>
+            <i class="fas fa-plus"></i>
         </button>
     </div>
 

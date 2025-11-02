@@ -1950,15 +1950,18 @@ app.get('/api/leaderboard', async (req, res) => {
             SELECT 
                 u.id,
                 u.username,
-                u.profile_picture,
-                COUNT(DISTINCT p.id) as total_presents,
-                COUNT(DISTINCT r.id) as reserved_presents
+                r.id as recipient_id,
+                CASE WHEN r.profile_picture IS NOT NULL 
+                    THEN CONCAT('/api/recipients/', r.id, '/profile-picture')
+                    ELSE NULL 
+                END as profile_picture,
+                COUNT(DISTINCT p.id) as total_presents
             FROM users u
-            LEFT JOIN presents p ON p.added_by = u.id
-            LEFT JOIN reservations r ON r.user_id = u.id
-            GROUP BY u.id, u.username, u.profile_picture
-            HAVING total_presents > 0 OR reserved_presents > 0
-            ORDER BY total_presents DESC, reserved_presents DESC
+            LEFT JOIN presents p ON p.created_by = u.id
+            LEFT JOIN recipients r ON r.name = u.username
+            GROUP BY u.id, u.username, r.id, r.profile_picture
+            HAVING total_presents > 0
+            ORDER BY total_presents DESC
             LIMIT 10
         `);
 

@@ -14,33 +14,63 @@
             --bronze-color: #cd7f32;
         }
 
+        body {
+            background: url('seba.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        /* Background overlay without blur */
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: -1;
+        }
+
+        /* Brand container styles */
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-logo-container {
+            display: flex;
+            align-items: center;
+        }
+
         /* Hamburger Menu Button */
         .hamburger-menu-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
+            position: relative;
             z-index: 1050;
-            background: rgba(255, 255, 255, 0.95);
-            border: none;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
             width: 50px;
             height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             transition: all 0.3s ease;
+            color: white;
+            margin-left: 20px;
         }
 
         .hamburger-menu-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.8);
+            transform: scale(1.05);
         }
 
         .hamburger-menu-btn i {
-            font-size: 22px;
-            color: #667eea;
+            font-size: 20px;
+            color: white;
         }
 
         /* Sidebar Menu */
@@ -64,7 +94,7 @@
 
         .sidebar-header {
             padding: 25px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #F44336;
             color: white;
             display: flex;
             align-items: center;
@@ -169,14 +199,11 @@
             visibility: visible;
         }
 
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding-bottom: 50px;
-        }
+
 
         .leaderboard-header {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 30px;
             margin: 30px auto;
@@ -187,19 +214,22 @@
         .leaderboard-title {
             font-size: 36px;
             font-weight: 700;
-            color: #667eea;
+            color: #2d3748;
             text-align: center;
             margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
         }
 
         .leaderboard-subtitle {
             text-align: center;
-            color: #718096;
+            color: #2d3748;
             margin-bottom: 0;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
         }
 
         .podium-section {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 40px;
             margin: 20px auto;
@@ -304,8 +334,9 @@
         .podium-name {
             font-weight: 700;
             font-size: 22px;
-            color: #2d3748;
+            color: #1a202c;
             margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
         }
 
         .podium-place.first .podium-name {
@@ -365,7 +396,8 @@
         }
 
         .ranking-list {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 40px;
             margin: 20px auto;
@@ -376,8 +408,9 @@
         .ranking-list h3 {
             font-size: 24px;
             font-weight: 700;
-            color: #2d3748;
+            color: #1a202c;
             margin-bottom: 25px;
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
         }
 
         .user-card {
@@ -421,8 +454,9 @@
         .user-name {
             font-weight: 700;
             font-size: 18px;
-            color: #2d3748;
+            color: #1a202c;
             margin-bottom: 5px;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
         }
 
         .user-stats {
@@ -471,47 +505,170 @@
 
         @media (max-width: 768px) {
             .podium {
-                flex-direction: column;
-                align-items: center;
+                flex-direction: row;
+                justify-content: center;
+                gap: 10px;
+                flex-wrap: nowrap;
             }
 
             .podium-place {
-                order: unset !important;
-                width: 100%;
-                max-width: 300px;
+                width: 30%;
+                min-width: 100px;
+                max-width: 140px;
+            }
+
+            /* Keep the same order on mobile: 2-1-3 (leader in center) */
+            .podium-place.first {
+                order: 2 !important;
+            }
+
+            .podium-place.second {
+                order: 1 !important;
+            }
+
+            .podium-place.third {
+                order: 3 !important;
+            }
+
+            .podium-avatar {
+                width: 60px !important;
+                height: 60px !important;
+            }
+
+            .podium-place.first .podium-avatar {
+                width: 80px !important;
+                height: 80px !important;
+            }
+
+            .podium-place.second .podium-avatar,
+            .podium-place.third .podium-avatar {
+                width: 60px !important;
+                height: 60px !important;
+            }
+
+            .podium-rank {
+                font-size: 36px;
+                margin-bottom: 10px;
+            }
+
+            .podium-name {
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+
+            .podium-place.first .podium-name {
+                font-size: 16px;
+            }
+
+            .podium-stats {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .stat-item {
+                font-size: 11px;
+                padding: 5px 8px;
+            }
+
+            .podium-base {
+                padding: 15px 10px;
+                margin-top: 10px;
+            }
+
+            .podium-place.first .podium-base {
+                height: 100px;
+            }
+
+            .podium-place.second .podium-base {
+                height: 80px;
+            }
+
+            .podium-place.third .podium-base {
+                height: 65px;
+            }
+
+            .podium-position {
+                font-size: 24px;
             }
 
             .leaderboard-title {
-                font-size: 28px;
+                font-size: 24px;
+            }
+
+            .leaderboard-header,
+            .podium-section,
+            .ranking-list {
+                padding: 20px;
+                margin: 15px auto;
             }
 
             .user-card {
-                padding: 15px;
+                padding: 12px;
             }
 
             .user-rank {
-                font-size: 20px;
-                width: 40px;
+                font-size: 18px;
+                width: 35px;
             }
 
             .user-avatar {
-                width: 50px;
-                height: 50px;
-                margin: 0 15px;
+                width: 45px;
+                height: 45px;
+                margin: 0 12px;
+            }
+
+            .user-name {
+                font-size: 16px;
             }
 
             .user-stats {
                 flex-direction: column;
-                gap: 5px;
+                gap: 3px;
+                font-size: 13px;
+            }
+
+            .user-score {
+                font-size: 20px;
+            }
+
+            .hamburger-menu-btn {
+                top: 15px;
+                left: 15px;
+                width: 45px;
+                height: 45px;
+            }
+
+            .sidebar-menu {
+                width: 280px;
+                left: -280px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Hamburger Menu Button -->
-    <button class="hamburger-menu-btn" onclick="toggleSidebar()" aria-label="Menu">
-        <i class="fas fa-bars"></i>
-    </button>
+    <!-- Background Overlay -->
+    <div class="background-overlay"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: rgba(255, 255, 255, 0.5); backdrop-filter: none;">
+        <div class="container" style="position: relative;">
+            <!-- Hamburger Menu Button -->
+            <button class="hamburger-menu-btn" onclick="toggleSidebar()" aria-label="Menu" style="position: absolute; left: -60px;">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="navbar-brand" style="margin: 0 auto;">
+                <div class="brand-container">
+                    <div class="brand-logo-container">
+                        <img src="seba_logo.png" alt="Logo" class="brand-logo" style="width: 40px; height: 40px; border-radius: 8px;">
+                    </div>
+                    <span class="brand-text" style="color: white; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3); font-size: 1.25rem; font-weight: 600; margin-left: 15px;">
+                        <i class="fas fa-trophy me-2" style="color: white; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));"></i>Ranking Użytkowników
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
 
     <!-- Sidebar Menu -->
     <div class="sidebar-menu" id="sidebarMenu">
@@ -559,11 +716,18 @@
 
     <div class="container">
         <div class="leaderboard-header">
-            <h1 class="leaderboard-title">
-                <i class="fas fa-trophy me-2"></i>
-                Ranking Użytkowników
-            </h1>
-            <p class="leaderboard-subtitle">Najbardziej aktywni użytkownicy Prezentownik</p>
+            <!-- Christmas Countdown -->
+            <div class="christmas-countdown" id="christmasCountdown" style="text-align: center; margin-bottom: 20px; padding: 12px 20px; background: url('seba.jpg') center center; background-size: cover; border-radius: 15px; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(244, 67, 54, 0.85); backdrop-filter: blur(5px);"></div>
+                <div style="position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: center; gap: 12px;">
+                    <div style="font-size: 24px; line-height: 1;">🎄</div>
+                    <div style="font-size: 15px; font-weight: 600; color: white; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); line-height: 1.4;">
+                        <span id="daysToChristmas">Ładowanie...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="leaderboard-subtitle" style="text-align: center; font-size: 18px;">Najbardziej aktywni użytkownicy Prezentownik</p>
         </div>
 
         <div id="loadingSpinner" class="loading-spinner">
@@ -577,6 +741,21 @@
             </h2>
             <div class="podium" id="podium">
                 <!-- Will be populated by JavaScript -->
+            </div>
+            
+            <!-- Call to Action - moved under podium -->
+            <div class="cta-section" style="margin-top: 40px; text-align: center; padding: 60px 40px; background: url('seba.jpg') center center; background-size: cover; border-radius: 20px; color: white; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(244, 67, 54, 0.85); backdrop-filter: blur(5px);"></div>
+                <div style="position: relative; z-index: 1;">
+                    <i class="fas fa-rocket" style="font-size: 48px; margin-bottom: 20px; text-shadow: 0 4px 8px rgba(0,0,0,0.3);"></i>
+                    <h3 style="margin-bottom: 15px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">Dołącz do Rankingu!</h3>
+                    <p style="font-size: 18px; margin-bottom: 25px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                        Dodawaj prezenty, pomagaj innym i wspinaj się na szczyt leaderboardu
+                    </p>
+                    <a href="/recipients.html" class="btn btn-light btn-lg" style="padding: 15px 40px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                        <i class="fas fa-gift me-2"></i>Dodaj Prezent
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -592,6 +771,13 @@
                 <i class="fas fa-users"></i>
                 <h3>Brak aktywnych użytkowników</h3>
                 <p>Bądź pierwszym, który doda prezenty i pojawi się w rankingu!</p>
+            </div>
+            
+            <!-- Call to Action for Empty State -->
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="/recipients.html" class="btn btn-primary btn-lg" style="padding: 15px 40px; font-weight: 600; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <i class="fas fa-gift me-2"></i>Dodaj Pierwszy Prezent
+                </a>
             </div>
         </div>
     </div>
@@ -688,10 +874,6 @@
                             <i class="fas fa-gift"></i>
                             ${user.total_presents} ${user.total_presents === 1 ? 'prezent' : 'prezentów'}
                         </div>
-                        <div class="stat-item">
-                            <i class="fas fa-bookmark"></i>
-                            ${user.reserved_presents} ${user.reserved_presents === 1 ? 'rezerwacja' : 'rezerwacji'}
-                        </div>
                     </div>
                     <div class="podium-base">
                         <div class="podium-position">#${index + 1}</div>
@@ -704,8 +886,6 @@
             const usersList = document.getElementById('usersList');
             
             usersList.innerHTML = users.map((user, index) => {
-                const totalScore = user.total_presents + user.reserved_presents;
-                
                 return `
                     <div class="user-card">
                         <div class="user-rank">#${index + 1}</div>
@@ -720,22 +900,38 @@
                                     <i class="fas fa-gift"></i>
                                     ${user.total_presents} ${user.total_presents === 1 ? 'prezent' : 'prezentów'}
                                 </span>
-                                <span>
-                                    <i class="fas fa-bookmark"></i>
-                                    ${user.reserved_presents} ${user.reserved_presents === 1 ? 'rezerwacja' : 'rezerwacji'}
-                                </span>
                             </div>
                         </div>
                         <div class="user-score">
-                            <i class="fas fa-star me-1"></i>${totalScore}
+                            <i class="fas fa-star me-1"></i>${user.total_presents}
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
+        // Calculate days to Christmas
+        function updateChristmasCountdown() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            let christmas = new Date(currentYear, 11, 25); // December 25
+
+            // If Christmas has passed this year, calculate for next year
+            if (now > christmas) {
+                christmas = new Date(currentYear + 1, 11, 25);
+            }
+
+            const daysUntilChristmas = Math.ceil((christmas - now) / (1000 * 60 * 60 * 24));
+            
+            const countdownElement = document.getElementById('daysToChristmas');
+            if (countdownElement) {
+                countdownElement.innerHTML = `Do Świąt Bożego Narodzenia<br>zostało ${daysUntilChristmas} ${daysUntilChristmas === 1 ? 'dzień' : 'dni'}`;
+            }
+        }
+
         // Load leaderboard on page load
         loadLeaderboard();
+        updateChristmasCountdown();
     </script>
 </body>
 </html>

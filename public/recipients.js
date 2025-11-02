@@ -1505,6 +1505,48 @@ function previewImage(input) {
     }
 }
 
+// Compress image before upload
+function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Calculate new dimensions while maintaining aspect ratio
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Convert to JPEG with quality compression
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                resolve(compressedDataUrl);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
 function saveProfilePicture() {
     if (!currentRecipientId) return;
 
@@ -1517,19 +1559,23 @@ function saveProfilePicture() {
     }
 
     if (file) {
-        // Check file size (10MB limit)
+        // Check file size (10MB limit for original file)
         const maxSize = 10 * 1024 * 1024; // 10MB in bytes
         if (file.size > maxSize) {
             showErrorModal('Plik jest zbyt duży. Maksymalny rozmiar to 10MB.');
             return;
         }
 
-        // Handle file upload
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            saveImageToServer(e.target.result);
-        };
-        reader.readAsDataURL(file);
+        // Compress image before upload
+        compressImage(file, 800, 800, 0.8)
+            .then(compressedDataUrl => {
+                console.log('Image compressed successfully');
+                saveImageToServer(compressedDataUrl);
+            })
+            .catch(error => {
+                console.error('Error compressing image:', error);
+                showErrorModal('Błąd podczas przetwarzania obrazu');
+            });
     } else if (url) {
         // Handle URL
         saveImageToServer(url);
@@ -2928,13 +2974,26 @@ function saveNewProfilePicture() {
         return;
     }
 
-    const formData = new FormData();
-    formData.append('profile_picture', file);
-
-    fetch(`/api/recipients/${recipientId}/profile-picture`, {
-        method: 'POST',
-        body: formData
-    })
+    // Compress image before upload
+    compressImage(file, 800, 800, 0.8)
+        .then(compressedDataUrl => {
+            console.log('Image compressed successfully');
+            
+            // Convert data URL to blob
+            return fetch(compressedDataUrl)
+                .then(res => res.blob())
+                .then(blob => {
+                    const formData = new FormData();
+                    formData.append('profile_picture', blob, 'profile.jpg');
+                    return formData;
+                });
+        })
+        .then(formData => {
+            return fetch(`/api/recipients/${recipientId}/profile-picture`, {
+                method: 'POST',
+                body: formData
+            });
+        })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
