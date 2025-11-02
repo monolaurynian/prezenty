@@ -10,6 +10,7 @@ const mysql = require('mysql2/promise');
 const MySQLStore = require('express-mysql-session')(session);
 const cron = require('cron');
 const https = require('https');
+const sharp = require('sharp');
 // const webpush = require('web-push'); // Now enabled below
 
 // Load .env file in development, but not in production
@@ -90,7 +91,8 @@ if (!DEMO_MODE) {
         timeout: dbConfig.timeout,
         waitForConnections: true,
         connectionLimit: 10,
-        queueLimit: 0
+        queueLimit: 0,
+        maxAllowedPacket: 50 * 1024 * 1024 // 50MB for large images
     });
 }
 
@@ -264,29 +266,29 @@ const cache = {
 const updateTracker = {
     updates: [],
     maxUpdates: 100, // Keep last 100 updates
-    
+
     addUpdate(type, data) {
         const update = {
             type,
             data,
             timestamp: Date.now()
         };
-        
+
         this.updates.push(update);
-        
+
         // Keep only recent updates
         if (this.updates.length > this.maxUpdates) {
             this.updates = this.updates.slice(-this.maxUpdates);
         }
-        
+
         console.log(`[UpdateTracker] Added update: ${type}`, data);
     },
-    
+
     getUpdatesSince(timestamp) {
         const since = parseInt(timestamp) || 0;
         return this.updates.filter(update => update.timestamp > since);
     },
-    
+
     clear() {
         this.updates = [];
     }
@@ -339,8 +341,8 @@ app.use(cors({
     origin: process.env.NODE_ENV === 'production' ? false : true,
     credentials: true
 }));
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve static files with cache control
 // For HTML files: no cache (always fetch latest)
@@ -383,7 +385,7 @@ const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
+        fileSize: 50 * 1024 * 1024 // 50MB limit for compressed images
     },
     fileFilter: function (req, file, cb) {
         if (file.mimetype.startsWith('image/')) {
@@ -432,7 +434,7 @@ app.get('/api/version', (req, res) => {
 app.get('/api/updates', requireAuth, (req, res) => {
     const since = req.query.since || 0;
     const updates = updateTracker.getUpdatesSince(since);
-    
+
     res.json({
         hasUpdates: updates.length > 0,
         updates: updates,
@@ -803,14 +805,17 @@ async function handleBase64Upload(id, userId, base64Data, res) {
         if (DEMO_MODE) {
             const recipient = demoData.recipients.find(r => r.id == id);
             if (!recipient) {
-                return notFound(res, 'Osoba nie została znaleziona');
+                notFound(res, 'Osoba nie została znaleziona');
+                return;
             }
             if (recipient.identified_by && recipient.identified_by !== userId) {
-                return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
+                forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
+                return;
             }
             recipient.profile_picture = `demo-image-${id}.jpg`;
             console.log('Profile picture updated successfully in demo mode for recipient:', id);
-            return res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
+            res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
+            return;
         }
 
         // Check authorization
@@ -818,11 +823,13 @@ async function handleBase64Upload(id, userId, base64Data, res) {
         const recipient = rows[0];
 
         if (!recipient) {
-            return notFound(res, 'Osoba nie została znaleziona');
+            notFound(res, 'Osoba nie została znaleziona');
+            return;
         }
 
         if (recipient.identified_by && recipient.identified_by !== userId) {
-            return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
+            forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
+            return;
         }
 
         // Convert base64 to buffer
@@ -836,7 +843,8 @@ async function handleBase64Upload(id, userId, base64Data, res) {
                 mimeType = matches[1];
                 imageBuffer = Buffer.from(matches[2], 'base64');
             } else {
-                return badRequest(res, 'Nieprawidłowy format danych obrazu');
+                badRequest(res, 'Nieprawidłowy format danych obrazu');
+                return;
             }
         } else {
             // Assume it's a URL
@@ -858,7 +866,7 @@ async function handleBase64Upload(id, userId, base64Data, res) {
         res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
     } catch (err) {
         console.error('Error handling base64 upload:', err);
-        return handleDbError(err, res, 'Błąd podczas aktualizacji zdjęcia profilowego');
+        handleDbError(err, res, 'Błąd podczas aktualizacji zdjęcia profilowego');
     }
 }
 
@@ -866,13 +874,24 @@ app.post('/api/recipients/:id/profile-picture', requireAuth, (req, res) => {
     const { id } = req.params;
     const userId = req.session.userId;
 
+    console.log('Profile picture upload request:', {
+        id,
+        userId,
+        contentType: req.headers['content-type'],
+        hasBody: !!req.body,
+        hasProfilePicture: !!req.body?.profile_picture,
+        bodyKeys: req.body ? Object.keys(req.body) : []
+    });
+
     // Check if this is a JSON request with base64 data
-    if (req.headers['content-type'] === 'application/json' && req.body.profile_picture) {
-        console.log('Profile picture upload request (JSON/base64):', { id, userId });
-        
+    if (req.headers['content-type']?.includes('application/json') && req.body.profile_picture) {
+        console.log('Handling as JSON/base64 upload');
+
         handleBase64Upload(id, userId, req.body.profile_picture, res);
         return;
     }
+
+    console.log('Handling as FormData/multer upload');
 
     // Handle multer upload with custom error handling
     upload.single('profile_picture')(req, res, async (err) => {
@@ -931,9 +950,24 @@ app.post('/api/recipients/:id/profile-picture', requireAuth, (req, res) => {
                 return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
             }
 
-            // Store image data and type in database
+            // Compress image using sharp
+            console.log('Compressing image with sharp...');
+            console.log('Original size:', req.file.size, 'bytes');
+
+            const compressedBuffer = await sharp(req.file.buffer)
+                .resize(800, 800, {
+                    fit: 'inside',
+                    withoutEnlargement: true
+                })
+                .jpeg({ quality: 80 })
+                .toBuffer();
+
+            console.log('Compressed size:', compressedBuffer.length, 'bytes');
+            console.log('Compression ratio:', ((1 - compressedBuffer.length / req.file.size) * 100).toFixed(2) + '%');
+
+            // Store compressed image data and type in database
             await pool.execute('UPDATE recipients SET profile_picture = ?, profile_picture_type = ? WHERE id = ?',
-                [req.file.buffer, req.file.mimetype, id]);
+                [compressedBuffer, 'image/jpeg', id]);
 
             console.log('Profile picture updated successfully for recipient:', id);
             res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
@@ -2345,10 +2379,10 @@ app.post('/api/formularz/present', async (req, res) => {
         // Find or create recipient
         let recipientId;
         let createdByUserId = null;
-        
+
         console.log('[Formularz] Looking for recipient:', recipientName.trim());
         const [recipientRows] = await pool.execute('SELECT id, identified_by FROM recipients WHERE name = ?', [recipientName.trim()]);
-        
+
         if (recipientRows.length > 0) {
             recipientId = recipientRows[0].id;
             createdByUserId = recipientRows[0].identified_by; // Use the identified user's ID
@@ -2364,7 +2398,7 @@ app.post('/api/formularz/present', async (req, res) => {
         // Add present for this recipient
         // If recipient is identified by a user, use that user as created_by
         console.log('[Formularz] Adding present:', { title: presentTitle.trim(), recipientId, comments: presentComments, createdBy: createdByUserId });
-        
+
         if (createdByUserId) {
             // Recipient is identified - use their user ID as created_by
             const [presentResult] = await pool.execute(
@@ -2378,7 +2412,7 @@ app.post('/api/formularz/present', async (req, res) => {
                 [presentTitle.trim(), recipientId, presentComments || null]
             );
         }
-        
+
         // Get the insert ID from whichever query was executed
         const [checkResult] = await pool.execute(
             'SELECT LAST_INSERT_ID() as insertId'
@@ -2426,7 +2460,7 @@ app.get('/api/formularz/my-presents', requireAuth, async (req, res) => {
     try {
         // Get user's identified recipient
         const [recipientRows] = await pool.execute('SELECT id FROM recipients WHERE identified_by = ?', [userId]);
-        
+
         if (recipientRows.length === 0) {
             // User hasn't identified themselves yet
             console.log('[Formularz] User not identified yet');

@@ -34,7 +34,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.3);
+            background: transparent !important;
+            backdrop-filter: none !important;
             z-index: -1;
         }
 
@@ -247,7 +248,7 @@
             background: rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 30px;
+            padding: 30px 30px 20px 30px;
             margin: 30px auto;
             max-width: 1200px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -270,13 +271,18 @@
         }
 
         .podium-section {
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px) saturate(180%);
+            -webkit-backdrop-filter: blur(10px) saturate(180%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 20px;
             padding: 40px;
-            margin: 20px auto;
-            max-width: 1200px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        
+        .podium-section h2 {
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
         }
 
         .podium {
@@ -446,6 +452,12 @@
             max-width: 1200px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
+        
+        .ranking-list h3 {
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+            text-align: center !important;
+        }
 
         .ranking-list h3 {
             font-size: 24px;
@@ -538,11 +550,16 @@
         .loading-spinner {
             text-align: center;
             padding: 60px;
+            color: white;
         }
 
         .loading-spinner i {
             font-size: 48px;
-            color: #667eea;
+            color: white;
+        }
+
+        .loading-spinner p {
+            color: white;
         }
 
         @media (max-width: 768px) {
@@ -793,7 +810,7 @@
     <div class="container">
         <div class="leaderboard-header">
             <!-- Christmas Countdown -->
-            <div class="christmas-countdown" id="christmasCountdown" style="text-align: center; margin-bottom: 20px; padding: 12px 20px; background: url('seba.jpg') center center; background-size: cover; border-radius: 15px; position: relative; overflow: hidden;">
+            <div class="christmas-countdown" id="christmasCountdown" style="text-align: center; margin-bottom: 0; padding: 12px 20px; background: url('seba.jpg') center center; background-size: cover; border-radius: 15px; position: relative; overflow: hidden;">
                 <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(244, 67, 54, 0.85); backdrop-filter: blur(5px);"></div>
                 <div style="position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: center; gap: 12px;">
                     <div style="font-size: 24px; line-height: 1;">🎄</div>
@@ -802,8 +819,6 @@
                     </div>
                 </div>
             </div>
-            
-            <p class="leaderboard-subtitle" style="text-align: center; font-size: 18px;">Najbardziej aktywni użytkownicy Prezentownik</p>
         </div>
 
         <div id="loadingSpinner" class="loading-spinner">
@@ -821,14 +836,14 @@
             
             <!-- Call to Action - moved under podium -->
             <div class="cta-section" style="margin-top: 40px; text-align: center; padding: 60px 40px; background: url('seba.jpg') center center; background-size: cover; border-radius: 20px; color: white; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(244, 67, 54, 0.85); backdrop-filter: blur(5px);"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0)); backdrop-filter: blur(0.5px);"></div>
                 <div style="position: relative; z-index: 1;">
-                    <i class="fas fa-rocket" style="font-size: 48px; margin-bottom: 20px; text-shadow: 0 4px 8px rgba(0,0,0,0.3);"></i>
-                    <h3 style="margin-bottom: 15px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">Dołącz do Rankingu!</h3>
-                    <p style="font-size: 18px; margin-bottom: 25px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    <i class="fas fa-rocket" style="font-size: 48px; margin-bottom: 20px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.8)) drop-shadow(0 8px 24px rgba(0,0,0,0.6));"></i>
+                    <h3 style="margin-bottom: 15px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 4px 16px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5);">Dołącz do Rankingu!</h3>
+                    <p style="font-size: 18px; margin-bottom: 25px; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 4px 16px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5);">
                         Dodawaj prezenty, pomagaj innym i wspinaj się na szczyt leaderboardu
                     </p>
-                    <a href="/recipients.html" class="btn btn-light btn-lg" style="padding: 15px 40px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                    <a href="/recipients.html" class="btn btn-light btn-lg" style="padding: 15px 40px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 8px 30px rgba(0,0,0,0.4);">
                         <i class="fas fa-gift me-2"></i>Dodaj Prezent
                     </a>
                 </div>

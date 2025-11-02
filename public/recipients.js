@@ -1494,12 +1494,22 @@ function previewImage(input) {
     const file = input.files[0];
 
     if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
+        // Show compressed preview
+        compressImage(file, 600, 600, 0.6)
+            .then(compressedDataUrl => {
+                preview.src = compressedDataUrl;
+                preview.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error compressing preview:', error);
+                // Fallback to original if compression fails
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
     } else {
         preview.style.display = 'none';
     }
@@ -1566,10 +1576,20 @@ function saveProfilePicture() {
             return;
         }
 
-        // Compress image before upload
-        compressImage(file, 800, 800, 0.8)
+        // Compress image before upload (smaller size and lower quality for better compression)
+        compressImage(file, 600, 600, 0.6)
             .then(compressedDataUrl => {
-                console.log('Image compressed successfully');
+                console.log('Image compressed successfully, size:', (compressedDataUrl.length / 1024).toFixed(2), 'KB');
+                
+                // Check compressed size
+                const estimatedSize = compressedDataUrl.length * 0.75;
+                const maxSize = 40 * 1024 * 1024; // 40MB limit for base64
+                
+                if (estimatedSize > maxSize) {
+                    showErrorModal('Skompresowany obraz jest nadal zbyt duży. Spróbuj użyć mniejszego zdjęcia.');
+                    return;
+                }
+                
                 saveImageToServer(compressedDataUrl);
             })
             .catch(error => {
@@ -2916,17 +2936,35 @@ displayRecipientsWithPresents = function (recipients, presents) {
 
 // Add proper focus management for modals to prevent aria-hidden accessibility issues
 document.addEventListener('DOMContentLoaded', function () {
+    let scrollPosition = 0;
+
     // Handle modal hidden events to ensure proper focus management
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
+        modal.addEventListener('show.bs.modal', function (e) {
+            // Save current scroll position
+            scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // Ensure modal is properly accessible when shown
+            this.removeAttribute('aria-hidden');
+            
+            // Prevent scrolling by keeping the scroll position
+            setTimeout(() => {
+                window.scrollTo(0, scrollPosition);
+            }, 0);
+        });
+
+        modal.addEventListener('shown.bs.modal', function () {
+            // Restore scroll position after modal is shown
+            window.scrollTo(0, scrollPosition);
+        });
+
         modal.addEventListener('hidden.bs.modal', function () {
             // Move focus to body when modal is hidden to prevent aria-hidden issues
             document.body.focus();
-        });
-
-        modal.addEventListener('show.bs.modal', function () {
-            // Ensure modal is properly accessible when shown
-            this.removeAttribute('aria-hidden');
+            
+            // Restore scroll position
+            window.scrollTo(0, scrollPosition);
         });
     });
 });
@@ -2954,12 +2992,22 @@ function openChangePictureModal(recipientId) {
     fileInput.onchange = function () {
         const file = this.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                document.getElementById('previewImage').src = e.target.result;
-                document.getElementById('imagePreview').style.display = 'block';
-            };
-            reader.readAsDataURL(file);
+            // Show compressed preview
+            compressImage(file, 600, 600, 0.6)
+                .then(compressedDataUrl => {
+                    document.getElementById('previewImage').src = compressedDataUrl;
+                    document.getElementById('imagePreview').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error compressing preview:', error);
+                    // Fallback to original if compression fails
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        document.getElementById('previewImage').src = e.target.result;
+                        document.getElementById('imagePreview').style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                });
         }
     };
 }
@@ -2981,10 +3029,24 @@ function saveNewProfilePicture() {
         return;
     }
 
-    // Compress image before upload
-    compressImage(file, 800, 800, 0.8)
+    // Compress image before upload (smaller size and lower quality for better compression)
+    compressImage(file, 600, 600, 0.6)
         .then(compressedDataUrl => {
+            const sizeKB = (compressedDataUrl.length / 1024).toFixed(2);
+            const sizeMB = (compressedDataUrl.length / 1024 / 1024).toFixed(2);
             console.log('Image compressed successfully');
+            console.log('- Base64 string length:', compressedDataUrl.length);
+            console.log('- Size:', sizeKB, 'KB (', sizeMB, 'MB)');
+            
+            // Check compressed size (base64 string length / 1.37 ≈ actual bytes)
+            const estimatedSize = compressedDataUrl.length * 0.75; // rough estimate
+            const maxSize = 40 * 1024 * 1024; // 40MB limit for base64
+            
+            if (estimatedSize > maxSize) {
+                throw new Error('Skompresowany obraz jest nadal zbyt duży. Spróbuj użyć mniejszego zdjęcia.');
+            }
+            
+            console.log('Sending image to server...');
             
             // Send compressed image as JSON
             return fetch(`/api/recipients/${recipientId}/profile-picture`, {
@@ -2996,17 +3058,23 @@ function saveNewProfilePicture() {
             });
         })
         .then(response => {
+            console.log('Server response status:', response.status);
             if (!response.ok) {
                 if (response.status === 413) {
                     throw new Error('Plik jest zbyt duży. Maksymalny rozmiar to 10MB.');
                 }
                 return response.json().then(data => {
+                    console.error('Server error:', data);
                     throw new Error(data.error || 'Błąd podczas zapisywania zdjęcia');
+                }).catch(err => {
+                    console.error('Failed to parse error response:', err);
+                    throw new Error(`Błąd serwera (${response.status})`);
                 });
             }
             return response.json();
         })
         .then(data => {
+            console.log('Server response data:', data);
             if (data.success) {
                 // Close the modal
                 const modal = document.getElementById('changePictureModal');
@@ -3023,7 +3091,7 @@ function saveNewProfilePicture() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error uploading profile picture:', error);
             alert(error.message || 'Błąd podczas aktualizacji zdjęcia');
         });
 }
