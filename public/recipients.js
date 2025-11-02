@@ -2253,7 +2253,7 @@ function displayReservedPresentsInModal(presents) {
     const checkedPresents = presents.filter(present => present.is_checked);
 
     container.innerHTML = `
-        <div class="row">
+        <div class="row g-3">
             <!-- Do kupienia -->
             <div class="col-md-6">
                 <div class="card">
@@ -3137,13 +3137,14 @@ function populateEditRecipientSelect(selectedRecipientId) {
     select.innerHTML = '<option value="">Wybierz osobę</option>';
 
     // Use cached recipients if available
-    const recipients = window._cachedRecipients || [];
+    const recipients = window._cachedRecipients || (window._dataCache && window._dataCache.recipients) || [];
+    console.log('[Edit Modal] Populating recipients:', recipients.length, 'selected:', selectedRecipientId);
 
     recipients.forEach(recipient => {
         const option = document.createElement('option');
         option.value = recipient.id;
         option.textContent = recipient.name;
-        if (recipient.id === selectedRecipientId) {
+        if (recipient.id == selectedRecipientId) { // Use == for loose comparison
             option.selected = true;
         }
         select.appendChild(option);

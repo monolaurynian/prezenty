@@ -19,6 +19,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load recipients for dropdown
     loadRecipients();
+    
+    // Check for localStorage flag to open edit tab
+    if (localStorage.getItem('openEditTab') === 'true') {
+        localStorage.removeItem('openEditTab');
+        console.log('[LocalStorage] Opening edit tab');
+        // Hide add tab immediately
+        document.getElementById('addTab').style.display = 'none';
+        // Wait longer for auth to complete
+        const checkAndSwitch = setInterval(() => {
+            if (currentUser) {
+                clearInterval(checkAndSwitch);
+                switchTab('edit');
+            }
+        }, 100);
+        // Timeout after 5 seconds
+        setTimeout(() => clearInterval(checkAndSwitch), 5000);
+    }
 });
 
 function setupFormHandlers() {
@@ -175,9 +192,9 @@ function autoSelectUserName(userName) {
         if (recipientSelect) {
             // Try to find and select the user's name
             for (let i = 0; i < recipientSelect.options.length; i++) {
-                if (recipientSelect.options[i].value === userName) {
-                    recipientSelect.value = userName;
-                    console.log('Auto-selected user name:', userName);
+                if (recipientSelect.options[i].dataset.name === userName || recipientSelect.options[i].textContent === userName) {
+                    recipientSelect.value = recipientSelect.options[i].value;
+                    console.log('Auto-selected user name:', userName, 'with ID:', recipientSelect.options[i].value);
                     break;
                 }
             }
@@ -221,8 +238,9 @@ function loadRecipients() {
                 // Add recipients to dropdown
                 data.recipients.forEach(recipient => {
                     const option = document.createElement('option');
-                    option.value = recipient.name;
+                    option.value = recipient.id;
                     option.textContent = recipient.name;
+                    option.dataset.name = recipient.name;
                     recipientSelect.appendChild(option);
                 });
                 
@@ -261,7 +279,9 @@ function submitPresent() {
             return;
         }
     } else if (recipientSelect.value && recipientSelect.value !== '') {
-        recipientName = recipientSelect.value;
+        // Get the text content (name) from the selected option
+        const selectedOption = recipientSelect.options[recipientSelect.selectedIndex];
+        recipientName = selectedOption ? selectedOption.textContent : recipientSelect.value;
     } else {
         showFormMessage('Proszę wybrać lub wprowadzić swoje imię', 'danger');
         return;
@@ -455,7 +475,9 @@ function loadMyPresents() {
     fetch('/api/formularz/my-presents')
         .then(response => response.json())
         .then(data => {
+            console.log('[Load My Presents] Received data:', data);
             if (data.presents && data.presents.length > 0) {
+                console.log('[Load My Presents] First present:', data.presents[0]);
                 displayMyPresents(data.presents);
             } else {
                 myPresentsList.innerHTML = `
@@ -497,7 +519,7 @@ function displayMyPresents(presents) {
                         </small>
                     </div>
                     <div class="btn-group-vertical ms-3">
-                        <button class="btn btn-sm btn-outline-primary" onclick="openEditPresentModal(${present.id}, '${escapeHtml(present.title)}', '${escapeHtml(present.comments || '')}')">
+                        <button class="btn btn-sm btn-outline-primary" onclick="openEditPresentModal(${present.id}, '${escapeHtml(present.title)}', '${escapeHtml(present.comments || '')}', ${present.recipient_id})">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-sm btn-outline-danger" onclick="deletePresent(${present.id})">
@@ -513,10 +535,13 @@ function displayMyPresents(presents) {
     myPresentsList.innerHTML = html;
 }
 
-function openEditPresentModal(id, title, comments) {
+function openEditPresentModal(id, title, comments, recipientId) {
+    console.log('[Edit Modal] Opening with:', { id, title, comments, recipientId });
     document.getElementById('editPresentId').value = id;
     document.getElementById('editPresentTitle').value = title;
     document.getElementById('editPresentComments').value = comments;
+    document.getElementById('editRecipientSelect').value = recipientId;
+    console.log('[Edit Modal] Set recipientId to:', document.getElementById('editRecipientSelect').value);
     document.getElementById('editPresentMessage').style.display = 'none';
     editPresentModal.show();
 }
@@ -525,6 +550,9 @@ function saveEditedPresent() {
     const id = document.getElementById('editPresentId').value;
     const title = document.getElementById('editPresentTitle').value.trim();
     const comments = document.getElementById('editPresentComments').value.trim();
+    const recipientId = document.getElementById('editRecipientSelect').value;
+    
+    console.log('[Save Edit] Saving with recipientId:', recipientId);
     
     if (!title) {
         showEditMessage('Nazwa prezentu jest wymagana', 'danger');
@@ -542,7 +570,7 @@ function saveEditedPresent() {
         body: JSON.stringify({
             title: title,
             comments: comments,
-            recipient_id: null // Keep recipient_id unchanged
+            recipient_id: recipientId || null
         })
     })
     .then(response => response.json())

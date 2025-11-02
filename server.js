@@ -1409,6 +1409,8 @@ app.put('/api/presents/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const { title, recipient_id, comments } = req.body;
 
+    console.log('[PUT /api/presents/:id] Updating present:', { id, title, recipient_id, comments });
+
     if (!title || title.trim() === '') {
         return badRequest(res, 'Nazwa prezentu jest wymagana');
     }
@@ -1432,6 +1434,8 @@ app.put('/api/presents/:id', requireAuth, async (req, res) => {
     }
 
     try {
+        console.log('[PUT] Before UPDATE - values:', { title: title.trim(), recipient_id: recipient_id || null, comments: comments || null, id });
+
         const [result] = await pool.execute(
             'UPDATE presents SET title = ?, recipient_id = ?, comments = ? WHERE id = ?',
             [title.trim(), recipient_id || null, comments || null, id]
@@ -1441,7 +1445,7 @@ app.put('/api/presents/:id', requireAuth, async (req, res) => {
             return notFound(res, 'Prezent nie został znaleziony');
         }
 
-        console.log('Present updated successfully:', id);
+        console.log('[PUT] Present updated successfully:', id, 'with recipient_id:', recipient_id || null);
         res.json({ success: true });
     } catch (err) {
         console.error('Database error updating present:', err);
@@ -2469,14 +2473,18 @@ app.get('/api/formularz/my-presents', requireAuth, async (req, res) => {
         }
 
         const recipientId = recipientRows[0].id;
+        console.log('[Formularz] User identified as recipient:', recipientId);
 
         // Get all presents for this recipient
         const [presents] = await pool.execute(
-            'SELECT id, title, comments, created_at FROM presents WHERE recipient_id = ? ORDER BY created_at DESC',
+            'SELECT id, title, comments, created_at, recipient_id FROM presents WHERE recipient_id = ? ORDER BY created_at DESC',
             [recipientId]
         );
 
-        console.log('[Formularz] Found', presents.length, 'presents for user');
+        console.log('[Formularz] Found', presents.length, 'presents for recipient', recipientId);
+        if (presents.length > 0) {
+            console.log('[Formularz] Sample present:', presents[0]);
+        }
         res.json({ presents });
     } catch (err) {
         console.error('[Formularz] Database error:', err);
