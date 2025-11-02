@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking - Prezentownik</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --gold-color: #ffd700;
+            --silver-color: #c0c0c0;
+            --bronze-color: #cd7f32;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        .leaderboard-header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px auto;
+            max-width: 1200px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .leaderboard-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .leaderboard-subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 0;
+        }
+
+        .podium-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 1200px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .podium {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .podium-place {
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out;
+            position: relative;
+        }
+
+        .podium-place.first {
+            order: 2;
+        }
+
+        .podium-place.second {
+            order: 1;
+        }
+
+        .podium-place.third {
+            order: 3;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .podium-crown {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+
+        .podium-avatar-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .podium-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .podium-place:hover .podium-avatar {
+            transform: scale(1.1);
+        }
+
+        .podium-place.first .podium-avatar {
+            width: 140px;
+            height: 140px;
+            border-color: var(--gold-color);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+
+        .podium-place.second .podium-avatar {
+            width: 110px;
+            height: 110px;
+            border-color: var(--silver-color);
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.5);
+        }
+
+        .podium-place.third .podium-avatar {
+            border-color: var(--bronze-color);
+            box-shadow: 0 0 20px rgba(205, 127, 50, 0.5);
+        }
+
+        .podium-rank {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .podium-name {
+            font-weight: 700;
+            font-size: 22px;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .podium-place.first .podium-name {
+            font-size: 26px;
+        }
+
+        .podium-stats {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            background: #f7fafc;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .stat-item i {
+            color: #667eea;
+            margin-right: 5px;
+        }
+
+        .podium-base {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .podium-place.first .podium-base {
+            height: 140px;
+            background: linear-gradient(135deg, var(--gold-color), #ffed4e);
+            color: #2d3748;
+        }
+
+        .podium-place.second .podium-base {
+            height: 110px;
+            background: linear-gradient(135deg, var(--silver-color), #e8e8e8);
+            color: #2d3748;
+        }
+
+        .podium-place.third .podium-base {
+            height: 90px;
+            background: linear-gradient(135deg, var(--bronze-color), #e89b6d);
+            color: white;
+        }
+
+        .podium-position {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .ranking-list {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 1200px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .ranking-list h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 25px;
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .user-card:hover {
+            transform: translateX(10px);
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .user-rank {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            width: 60px;
+            text-align: center;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 20px;
+            object-fit: cover;
+            border: 3px solid #e2e8f0;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 700;
+            font-size: 18px;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .user-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .user-stats span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .user-score {
+            font-size: 24px;
+            font-weight: 700;
+            color: #48bb78;
+            margin-left: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            transform: scale(1.1);
+            background: white;
+        }
+
+        .back-button i {
+            font-size: 20px;
+            color: #667eea;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 60px;
+        }
+
+        .loading-spinner i {
+            font-size: 48px;
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .podium {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .podium-place {
+                order: unset !important;
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .leaderboard-title {
+                font-size: 28px;
+            }
+
+            .user-card {
+                padding: 15px;
+            }
+
+            .user-rank {
+                font-size: 20px;
+                width: 40px;
+            }
+
+            .user-avatar {
+                width: 50px;
+                height: 50px;
+                margin: 0 15px;
+            }
+
+            .user-stats {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="goBack()" aria-label="Wróć">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="container">
+        <div class="leaderboard-header">
+            <h1 class="leaderboard-title">
+                <i class="fas fa-trophy me-2"></i>
+                Ranking Użytkowników
+            </h1>
+            <p class="leaderboard-subtitle">Najbardziej aktywni użytkownicy Prezentownik</p>
+        </div>
+
+        <div id="loadingSpinner" class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p class="mt-3">Ładowanie rankingu...</p>
+        </div>
+
+        <div id="podiumSection" class="podium-section" style="display: none;">
+            <h2 class="text-center mb-4" style="color: #2d3748; font-weight: 700;">
+                <i class="fas fa-medal me-2"></i>Podium
+            </h2>
+            <div class="podium" id="podium">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div id="rankingList" class="ranking-list" style="display: none;">
+            <h3><i class="fas fa-list-ol me-2"></i>Pełny Ranking</h3>
+            <div id="usersList">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div id="emptyState" class="ranking-list" style="display: none;">
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <h3>Brak aktywnych użytkowników</h3>
+                <p>Bądź pierwszym, który doda prezenty i pojawi się w rankingu!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const response = await fetch('/api/leaderboard');
+                const data = await response.json();
+
+                document.getElementById('loadingSpinner').style.display = 'none';
+
+                if (data.users && data.users.length > 0) {
+                    renderLeaderboard(data.users);
+                } else {
+                    document.getElementById('emptyState').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+            }
+        }
+
+        function renderLeaderboard(users) {
+            // Show podium for top 3
+            if (users.length >= 3) {
+                document.getElementById('podiumSection').style.display = 'block';
+                renderPodium(users.slice(0, 3));
+            }
+
+            // Show full ranking
+            document.getElementById('rankingList').style.display = 'block';
+            renderUsersList(users);
+        }
+
+        function renderPodium(top3) {
+            const podium = document.getElementById('podium');
+            const medals = ['🥇', '🥈', '🥉'];
+            const positions = ['first', 'second', 'third'];
+
+            podium.innerHTML = top3.map((user, index) => `
+                <div class="podium-place ${positions[index]}">
+                    ${index === 0 ? '<div class="podium-crown">👑</div>' : ''}
+                    <div class="podium-rank">${medals[index]}</div>
+                    <div class="podium-avatar-container">
+                        <img src="${user.profile_picture || '/images/default-avatar.svg'}" 
+                             alt="${user.username}" 
+                             class="podium-avatar"
+                             onerror="this.src='/images/default-avatar.svg'">
+                    </div>
+                    <div class="podium-name">${user.username}</div>
+                    <div class="podium-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-gift"></i>
+                            ${user.total_presents} ${user.total_presents === 1 ? 'prezent' : 'prezentów'}
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-bookmark"></i>
+                            ${user.reserved_presents} ${user.reserved_presents === 1 ? 'rezerwacja' : 'rezerwacji'}
+                        </div>
+                    </div>
+                    <div class="podium-base">
+                        <div class="podium-position">#${index + 1}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderUsersList(users) {
+            const usersList = document.getElementById('usersList');
+            
+            usersList.innerHTML = users.map((user, index) => {
+                const totalScore = user.total_presents + user.reserved_presents;
+                
+                return `
+                    <div class="user-card">
+                        <div class="user-rank">#${index + 1}</div>
+                        <img src="${user.profile_picture || '/images/default-avatar.svg'}" 
+                             alt="${user.username}" 
+                             class="user-avatar"
+                             onerror="this.src='/images/default-avatar.svg'">
+                        <div class="user-info">
+                            <div class="user-name">${user.username}</div>
+                            <div class="user-stats">
+                                <span>
+                                    <i class="fas fa-gift"></i>
+                                    ${user.total_presents} ${user.total_presents === 1 ? 'prezent' : 'prezentów'}
+                                </span>
+                                <span>
+                                    <i class="fas fa-bookmark"></i>
+                                    ${user.reserved_presents} ${user.reserved_presents === 1 ? 'rezerwacja' : 'rezerwacji'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="user-score">
+                            <i class="fas fa-star me-1"></i>${totalScore}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Load leaderboard on page load
+        loadLeaderboard();
+    </script>
+</body>
+</html>

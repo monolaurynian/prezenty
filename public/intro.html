@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Witaj w Prezentownik - Twój Asystent Prezentowy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #48bb78;
+            --gold-color: #ffd700;
+            --silver-color: #c0c0c0;
+            --bronze-color: #cd7f32;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .intro-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .christmas-progress {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .christmas-progress h5 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress {
+            height: 30px;
+            border-radius: 15px;
+            background: #e9ecef;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--success-color), var(--primary-color));
+            border-radius: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 20px;
+        }
+
+        .step-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .step-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .step-description {
+            font-size: 16px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-custom {
+            flex: 1;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-prev {
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn-prev:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-skip {
+            background: transparent;
+            color: white;
+            text-decoration: underline;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .leaderboard-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .leaderboard-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+
+        .podium {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .podium-place {
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .podium-place.first {
+            order: 2;
+        }
+
+        .podium-place.second {
+            order: 1;
+        }
+
+        .podium-place.third {
+            order: 3;
+        }
+
+        .podium-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid;
+            margin-bottom: 15px;
+            object-fit: cover;
+        }
+
+        .podium-place.first .podium-avatar {
+            width: 120px;
+            height: 120px;
+            border-color: var(--gold-color);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .podium-place.second .podium-avatar {
+            border-color: var(--silver-color);
+        }
+
+        .podium-place.third .podium-avatar {
+            border-color: var(--bronze-color);
+        }
+
+        .podium-rank {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .podium-name {
+            font-weight: 600;
+            font-size: 18px;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .podium-score {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .podium-base {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .podium-place.first .podium-base {
+            height: 120px;
+        }
+
+        .podium-place.second .podium-base {
+            height: 90px;
+        }
+
+        .podium-place.third .podium-base {
+            height: 70px;
+        }
+
+        .other-users {
+            margin-top: 30px;
+        }
+
+        .user-row {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .user-row:hover {
+            background: #edf2f7;
+            transform: translateX(5px);
+        }
+
+        .user-rank {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+            width: 40px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin: 0 15px;
+            object-fit: cover;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .user-score {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--success-color);
+        }
+
+        .btn-start {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--success-color), var(--primary-color));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(72, 187, 120, 0.4);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .podium {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .podium-place {
+                order: unset !important;
+            }
+
+            .step-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="intro-container">
+        <!-- Christmas Progress Bar -->
+        <div class="christmas-progress">
+            <h5>
+                <i class="fas fa-tree"></i>
+                <span id="christmasCountdown">Ładowanie...</span>
+            </h5>
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" id="christmasProgress" style="width: 0%">
+                    <span id="progressText">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Steps Container -->
+        <div id="stepsContainer">
+            <!-- Step 1 -->
+            <div class="step-card" data-step="1">
+                <div class="text-center">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <h2 class="step-title">Nigdy Nie Zapomnij o Prezencie</h2>
+                    <p class="step-description">
+                        Dodawaj pomysły na prezenty przez cały rok. Gdy nadejdą urodziny lub święta, 
+                        będziesz mieć gotową listę idealnych prezentów dla każdej osoby.
+                    </p>
+                </div>
+                <div class="navigation-buttons">
+                    <button class="btn-custom btn-next" onclick="nextStep()">
+                        Dalej <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step-card hidden" data-step="2">
+                <div class="text-center">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h2 class="step-title">Współdziel z Rodziną i Przyjaciółmi</h2>
+                    <p class="step-description">
+                        Zarezerwuj prezent, aby inni wiedzieli, że już się nim zajmujesz. 
+                        Unikniesz sytuacji, gdy dwie osoby kupują ten sam prezent!
+                    </p>
+                </div>
+                <div class="navigation-buttons">
+                    <button class="btn-custom btn-prev" onclick="prevStep()">
+                        <i class="fas fa-arrow-left me-2"></i> Wstecz
+                    </button>
+                    <button class="btn-custom btn-next" onclick="nextStep()">
+                        Dalej <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step-card hidden" data-step="3">
+                <div class="text-center">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h2 class="step-title">Otrzymuj Powiadomienia</h2>
+                    <p class="step-description">
+                        Bądź na bieżąco! Otrzymuj powiadomienia, gdy ktoś doda nowy prezent, 
+                        zarezerwuje pomysł lub gdy zbliżają się ważne daty.
+                    </p>
+                </div>
+                <div class="navigation-buttons">
+                    <button class="btn-custom btn-prev" onclick="prevStep()">
+                        <i class="fas fa-arrow-left me-2"></i> Wstecz
+                    </button>
+                    <button class="btn-custom btn-next" onclick="nextStep()">
+                        Dalej <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="step-card hidden" data-step="4">
+                <div class="text-center">
+                    <div class="step-number">4</div>
+                    <div class="step-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h2 class="step-title">Śledź Swoją Aktywność</h2>
+                    <p class="step-description">
+                        Zobacz statystyki swoich prezentów, sprawdź ile osób korzysta z Twoich pomysłów 
+                        i rywalizuj z innymi użytkownikami na leaderboardzie!
+                    </p>
+                </div>
+                <div class="navigation-buttons">
+                    <button class="btn-custom btn-prev" onclick="prevStep()">
+                        <i class="fas fa-arrow-left me-2"></i> Wstecz
+                    </button>
+                    <button class="btn-custom btn-next" onclick="nextStep()">
+                        Dalej <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="step-card hidden" data-step="5">
+                <div class="text-center">
+                    <div class="step-number">5</div>
+                    <div class="step-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h2 class="step-title">Sprawiaj Radość Bliskim</h2>
+                    <p class="step-description">
+                        Dzięki Prezentownik każdy prezent będzie trafiony! Twoi bliscy docenią, 
+                        że pamiętasz o ich marzeniach i potrzebach.
+                    </p>
+                </div>
+                <div class="navigation-buttons">
+                    <button class="btn-custom btn-prev" onclick="prevStep()">
+                        <i class="fas fa-arrow-left me-2"></i> Wstecz
+                    </button>
+                    <button class="btn-custom btn-next" onclick="showLeaderboard()">
+                        Zobacz Ranking <i class="fas fa-trophy ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Container -->
+        <div id="leaderboardContainer" class="hidden">
+            <div class="leaderboard-container">
+                <h2 class="leaderboard-title">
+                    <i class="fas fa-trophy me-2"></i>
+                    Najbardziej Aktywni Użytkownicy
+                </h2>
+
+                <!-- Top 3 Podium -->
+                <div class="podium" id="podium">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
+                <!-- Other Users -->
+                <div class="other-users" id="otherUsers">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
+                <button class="btn-start" onclick="startApp()">
+                    <i class="fas fa-rocket me-2"></i>
+                    Zacznij Korzystać z Prezentownik
+                </button>
+            </div>
+        </div>
+
+        <!-- Skip Button -->
+        <div class="text-center mt-3" id="skipButton">
+            <button class="btn-skip" onclick="startApp()">
+                Pomiń wprowadzenie
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+
+        // Calculate Christmas countdown
+        function updateChristmasCountdown() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            let christmas = new Date(currentYear, 11, 25); // December 25
+
+            // If Christmas has passed this year, calculate for next year
+            if (now > christmas) {
+                christmas = new Date(currentYear + 1, 11, 25);
+            }
+
+            const totalDays = 365;
+            const daysUntilChristmas = Math.ceil((christmas - now) / (1000 * 60 * 60 * 24));
+            const daysPassed = totalDays - daysUntilChristmas;
+            const percentage = Math.round((daysPassed / totalDays) * 100);
+
+            document.getElementById('christmasCountdown').textContent = 
+                `Do Świąt Bożego Narodzenia zostało ${daysUntilChristmas} dni`;
+            document.getElementById('christmasProgress').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = percentage + '%';
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                document.querySelector(`[data-step="${currentStep}"]`).classList.add('hidden');
+                currentStep++;
+                document.querySelector(`[data-step="${currentStep}"]`).classList.remove('hidden');
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                document.querySelector(`[data-step="${currentStep}"]`).classList.add('hidden');
+                currentStep--;
+                document.querySelector(`[data-step="${currentStep}"]`).classList.remove('hidden');
+            }
+        }
+
+        function showLeaderboard() {
+            document.getElementById('stepsContainer').classList.add('hidden');
+            document.getElementById('skipButton').classList.add('hidden');
+            document.getElementById('leaderboardContainer').classList.remove('hidden');
+            loadLeaderboard();
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const response = await fetch('/api/leaderboard');
+                const data = await response.json();
+
+                if (data.users && data.users.length > 0) {
+                    renderLeaderboard(data.users);
+                } else {
+                    renderEmptyLeaderboard();
+                }
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+                renderEmptyLeaderboard();
+            }
+        }
+
+        function renderLeaderboard(users) {
+            const podium = document.getElementById('podium');
+            const otherUsers = document.getElementById('otherUsers');
+
+            // Top 3 users
+            const top3 = users.slice(0, 3);
+            const medals = ['🥇', '🥈', '🥉'];
+            const positions = ['first', 'second', 'third'];
+
+            podium.innerHTML = top3.map((user, index) => `
+                <div class="podium-place ${positions[index]}">
+                    <div class="podium-rank">${medals[index]}</div>
+                    <img src="${user.profile_picture || '/images/default-avatar.svg'}" 
+                         alt="${user.username}" 
+                         class="podium-avatar"
+                         onerror="this.src='/images/default-avatar.svg'">
+                    <div class="podium-name">${user.username}</div>
+                    <div class="podium-score">
+                        <i class="fas fa-gift me-1"></i>${user.total_presents} prezentów
+                    </div>
+                    <div class="podium-base">
+                        <div style="font-size: 24px; font-weight: 700;">#${index + 1}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Other users (4-10)
+            const others = users.slice(3, 10);
+            if (others.length > 0) {
+                otherUsers.innerHTML = others.map((user, index) => `
+                    <div class="user-row">
+                        <div class="user-rank">#${index + 4}</div>
+                        <img src="${user.profile_picture || '/images/default-avatar.svg'}" 
+                             alt="${user.username}" 
+                             class="user-avatar"
+                             onerror="this.src='/images/default-avatar.svg'">
+                        <div class="user-info">
+                            <div class="user-name">${user.username}</div>
+                        </div>
+                        <div class="user-score">
+                            <i class="fas fa-gift me-1"></i>${user.total_presents}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                otherUsers.innerHTML = '';
+            }
+        }
+
+        function renderEmptyLeaderboard() {
+            const podium = document.getElementById('podium');
+            podium.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Bądź pierwszym aktywnym użytkownikiem!</p>
+                </div>
+            `;
+            document.getElementById('otherUsers').innerHTML = '';
+        }
+
+        function startApp() {
+            // Mark intro as completed
+            localStorage.setItem('introCompleted', 'true');
+            // Redirect to main app
+            window.location.href = '/recipients.html';
+        }
+
+        // Initialize
+        updateChristmasCountdown();
+
+        // Check if intro was already completed
+        if (localStorage.getItem('introCompleted') === 'true') {
+            // Optionally redirect immediately or show a "return to app" button
+            // window.location.href = '/recipients.html';
+        }
+    </script>
+</body>
+</html>

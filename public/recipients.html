@@ -10,7 +10,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#F44336">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -53,7 +53,11 @@
                     </span>
                 </div>
             </a>
-            <div class="navbar-nav ms-auto d-flex align-items-center">
+            <div class="navbar-nav ms-auto d-flex align-items-center gap-2">
+                <a href="/leaderboard.html" class="btn btn-outline-light btn-sm"
+                    style="border: 2px solid white; color: white; font-weight: 500;">
+                    <i class="fas fa-trophy me-1"></i>Ranking
+                </a>
                 <button class="btn btn-outline-light btn-sm" onclick="logout()"
                     style="border: 2px solid white; color: white; font-weight: 500;">
                     <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
@@ -753,9 +757,9 @@
         const logoContainer = document.querySelector('.brand-logo-container');
         if (logoContainer) {
             // Check if app is installed as PWA
-            const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
-                               window.navigator.standalone === true;
-            
+            const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
+                window.navigator.standalone === true;
+
             if (isInstalled) {
                 // App is installed - remove the install instruction tooltip
                 logoContainer.removeAttribute('title');
@@ -944,8 +948,32 @@
             if (notificationDropdownOpen) {
                 dropdown.classList.add('show');
                 loadRecentNotifications();
+                // Mark all notifications as read when opening the dropdown
+                markAllNotificationsAsReadOnOpen();
             } else {
                 dropdown.classList.remove('show');
+            }
+        }
+
+        function markAllNotificationsAsReadOnOpen() {
+            // Only mark as read if there are unread notifications
+            const badge = document.getElementById('notificationBadge');
+            if (badge && badge.style.display !== 'none') {
+                fetch('/api/notifications/read-all', {
+                    method: 'POST'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update badge count to 0
+                            updateBadgeCount(0);
+                            // Reload notifications to show updated read status
+                            setTimeout(() => loadRecentNotifications(), 100);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error marking notifications as read:', error);
+                    });
             }
         }
 
@@ -1436,13 +1464,13 @@
 
     <!-- Fast loader (load first for instant cache access) -->
     <script src="fast-loader.js"></script>
-    
+
     <!-- Main app (critical - load immediately) -->
     <script src="recipients.js?v=7&t=1111111111"></script>
-    
+
     <!-- Debug script (temporary - remove after fixing) -->
     <script src="profile-picture-debug.js"></script>
-    
+
     <!-- Non-critical scripts (defer to load after page is interactive) -->
     <script src="update-checker.js" defer></script>
     <script src="realtime-updates.js" defer></script>

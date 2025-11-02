@@ -1936,6 +1936,41 @@ app.post('/api/notifications/read-all', requireAuth, async (req, res) => {
     }
 });
 
+// Leaderboard API - Get most active users
+app.get('/api/leaderboard', async (req, res) => {
+    try {
+        console.log('📊 [LEADERBOARD] Fetching most active users');
+
+        if (DEMO_MODE) {
+            return res.json({ users: [] });
+        }
+
+        // Get users with their present count, ordered by activity
+        const [users] = await pool.execute(`
+            SELECT 
+                u.id,
+                u.username,
+                u.profile_picture,
+                COUNT(DISTINCT p.id) as total_presents,
+                COUNT(DISTINCT r.id) as reserved_presents
+            FROM users u
+            LEFT JOIN presents p ON p.added_by = u.id
+            LEFT JOIN reservations r ON r.user_id = u.id
+            GROUP BY u.id, u.username, u.profile_picture
+            HAVING total_presents > 0 OR reserved_presents > 0
+            ORDER BY total_presents DESC, reserved_presents DESC
+            LIMIT 10
+        `);
+
+        console.log(`✅ [LEADERBOARD] Found ${users.length} active users`);
+
+        res.json({ users: users });
+    } catch (err) {
+        console.error('❌ [LEADERBOARD] Error fetching leaderboard:', err);
+        res.status(500).json({ error: 'Failed to fetch leaderboard' });
+    }
+});
+
 // Function to send notifications to all users except the sender
 async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
     console.log('🔔 [NOTIFICATION] Starting notification send:', { excludeUserId, title, body, data });
