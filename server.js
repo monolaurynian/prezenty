@@ -797,13 +797,86 @@ app.delete('/api/recipients/:id', requireAuth, async (req, res) => {
     }
 });
 
+// Helper function to handle base64 image upload
+async function handleBase64Upload(id, userId, base64Data, res) {
+    try {
+        if (DEMO_MODE) {
+            const recipient = demoData.recipients.find(r => r.id == id);
+            if (!recipient) {
+                return notFound(res, 'Osoba nie została znaleziona');
+            }
+            if (recipient.identified_by && recipient.identified_by !== userId) {
+                return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
+            }
+            recipient.profile_picture = `demo-image-${id}.jpg`;
+            console.log('Profile picture updated successfully in demo mode for recipient:', id);
+            return res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
+        }
+
+        // Check authorization
+        const [rows] = await pool.execute('SELECT identified_by FROM recipients WHERE id = ?', [id]);
+        const recipient = rows[0];
+
+        if (!recipient) {
+            return notFound(res, 'Osoba nie została znaleziona');
+        }
+
+        if (recipient.identified_by && recipient.identified_by !== userId) {
+            return forbidden(res, 'Nie masz uprawnień do edycji tego profilu');
+        }
+
+        // Convert base64 to buffer
+        let imageBuffer;
+        let mimeType = 'image/jpeg'; // default
+
+        if (base64Data.startsWith('data:')) {
+            // Extract mime type and base64 data
+            const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                mimeType = matches[1];
+                imageBuffer = Buffer.from(matches[2], 'base64');
+            } else {
+                return badRequest(res, 'Nieprawidłowy format danych obrazu');
+            }
+        } else {
+            // Assume it's a URL
+            imageBuffer = null; // We'll store URL as string
+        }
+
+        if (imageBuffer) {
+            // Store compressed image in database
+            await pool.execute('UPDATE recipients SET profile_picture = ?, profile_picture_type = ? WHERE id = ?',
+                [imageBuffer, mimeType, id]);
+            console.log('Profile picture updated successfully (base64) for recipient:', id);
+        } else {
+            // Store URL as string
+            await pool.execute('UPDATE recipients SET profile_picture = ?, profile_picture_type = ? WHERE id = ?',
+                [base64Data, 'url', id]);
+            console.log('Profile picture updated successfully (URL) for recipient:', id);
+        }
+
+        res.json({ success: true, profile_picture: `/api/recipients/${id}/profile-picture` });
+    } catch (err) {
+        console.error('Error handling base64 upload:', err);
+        return handleDbError(err, res, 'Błąd podczas aktualizacji zdjęcia profilowego');
+    }
+}
+
 app.post('/api/recipients/:id/profile-picture', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const userId = req.session.userId;
+
+    // Check if this is a JSON request with base64 data
+    if (req.headers['content-type'] === 'application/json' && req.body.profile_picture) {
+        console.log('Profile picture upload request (JSON/base64):', { id, userId });
+        
+        handleBase64Upload(id, userId, req.body.profile_picture, res);
+        return;
+    }
+
     // Handle multer upload with custom error handling
     upload.single('profile_picture')(req, res, async (err) => {
-        const { id } = req.params;
-        const userId = req.session.userId;
-
-        console.log('Profile picture upload request:', { id, userId, hasFile: !!req.file, error: err?.message });
+        console.log('Profile picture upload request (FormData):', { id, userId, hasFile: !!req.file, error: err?.message });
 
         if (err) {
             console.error('Multer error:', err);
@@ -894,6 +967,11 @@ app.get('/api/recipients/:id/profile-picture', async (req, res) => {
 
         if (!recipient || !recipient.profile_picture) {
             return res.status(404).send('Profile picture not found');
+        }
+
+        // If it's a URL, redirect to it
+        if (recipient.profile_picture_type === 'url') {
+            return res.redirect(recipient.profile_picture);
         }
 
         // Set proper cache headers for images (cache for 1 hour)
