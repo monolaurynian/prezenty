@@ -51,11 +51,35 @@
             background: rgba(0, 0, 0, 0.3) !important;
         }
 
-        /* Add transparency and blur to cards */
+        /* Add transparency and blur to cards with glass effect */
         .activity-page .card,
         .activity-page .main-card {
-            background: rgba(255, 255, 255, 0.5) !important;
-            backdrop-filter: blur(10px) !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(10px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+            color: white !important;
+        }
+        
+        /* White text with shadow for all elements in cards */
+        .activity-page .card *,
+        .activity-page .main-card * {
+            color: white !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+        }
+        
+        /* White text for primary buttons */
+        .activity-page .btn-primary,
+        .activity-page .btn-outline-light {
+            color: white !important;
+        }
+        
+        /* Black text for pagination links */
+        .activity-page .page-link,
+        .activity-page .page-link * {
+            color: #333 !important;
+            text-shadow: none !important;
         }
 
         /* Fixed header bar for hamburger */
@@ -339,10 +363,7 @@
         <div class="row">
             <div class="col-12">
                 <!-- Header -->
-                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                    <h2 class="text-white mb-0">
-                        <i class="fas fa-bell me-2"></i>Aktywność
-                    </h2>
+                <div class="d-flex justify-content-end align-items-center mb-4 flex-wrap gap-2">
                     <button class="btn btn-outline-light btn-sm" onclick="markAllAsRead()" id="markAllReadBtn">
                         <i class="fas fa-check-double me-1"></i><span class="d-none d-md-inline">Oznacz wszystkie jako przeczytane</span><span class="d-inline d-md-none">Oznacz wszystkie</span>
                     </button>

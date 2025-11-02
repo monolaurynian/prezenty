@@ -66,10 +66,13 @@
             backdrop-filter: blur(10px) !important;
         }
 
-        /* Add transparency and blur to recipient cards - 0.5 transparency */
+        /* Add transparency and blur to recipient cards with glass effect */
         .recipients-page .recipient-card {
-            background: rgba(255, 255, 255, 0.5) !important;
-            backdrop-filter: blur(10px) !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(10px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
         }
 
         /* Add transparency and blur to modals - 0.5 transparency */
