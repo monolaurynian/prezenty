@@ -42,6 +42,17 @@
             max-width: 100vw;
         }
 
+        /* Fix background jumping on scroll */
+        body {
+            background-attachment: fixed !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            will-change: transform;
+        }
+
         /* Override background-overlay to remove blur */
         .recipients-page .background-overlay {
             backdrop-filter: none !important;

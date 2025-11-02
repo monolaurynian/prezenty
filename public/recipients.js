@@ -2974,27 +2974,38 @@ function saveNewProfilePicture() {
         return;
     }
 
+    // Check file size (10MB limit for original file)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > maxSize) {
+        alert('Plik jest zbyt duży. Maksymalny rozmiar to 10MB.');
+        return;
+    }
+
     // Compress image before upload
     compressImage(file, 800, 800, 0.8)
         .then(compressedDataUrl => {
             console.log('Image compressed successfully');
             
-            // Convert data URL to blob
-            return fetch(compressedDataUrl)
-                .then(res => res.blob())
-                .then(blob => {
-                    const formData = new FormData();
-                    formData.append('profile_picture', blob, 'profile.jpg');
-                    return formData;
-                });
-        })
-        .then(formData => {
+            // Send compressed image as JSON
             return fetch(`/api/recipients/${recipientId}/profile-picture`, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ profile_picture: compressedDataUrl })
             });
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 413) {
+                    throw new Error('Plik jest zbyt duży. Maksymalny rozmiar to 10MB.');
+                }
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Błąd podczas zapisywania zdjęcia');
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 // Close the modal
@@ -3013,7 +3024,7 @@ function saveNewProfilePicture() {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Błąd podczas aktualizacji zdjęcia');
+            alert(error.message || 'Błąd podczas aktualizacji zdjęcia');
         });
 }
 
