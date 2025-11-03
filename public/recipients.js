@@ -1105,6 +1105,11 @@ function displayRecipientsWithPresents(recipients, presents) {
 
     // Add event delegation for edit and delete buttons
     setupPresentButtonListeners();
+    
+    // Update search autocomplete data
+    if (typeof updateSearchData === 'function') {
+        setTimeout(() => updateSearchData(), 100);
+    }
 }
 
 function setupPresentButtonListeners() {
@@ -2554,6 +2559,11 @@ function openAddRecipientModal() {
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('addRecipientModal'));
     modal.show();
+    
+    // Auto-focus on name input after modal is shown
+    document.getElementById('addRecipientModal').addEventListener('shown.bs.modal', function () {
+        document.getElementById('recipientName').focus();
+    }, { once: true });
 }
 
 function addRecipientFromModal() {
@@ -3672,3 +3682,50 @@ function refreshRecipientsCache() {
 // PWA functionality is now handled in recipients.html
 
 // PWA helper functions removed - functionality moved to recipients.html
+
+
+// Filter recipients and presents by search term
+function filterRecipients(searchTerm) {
+    const term = searchTerm.toLowerCase().trim();
+    const recipientCards = document.querySelectorAll('.recipient-card');
+    
+    recipientCards.forEach(card => {
+        const recipientName = card.querySelector('.recipient-name')?.textContent.toLowerCase() || '';
+        const presents = card.querySelectorAll('.present-item');
+        let hasVisiblePresent = false;
+        
+        // Check each present
+        presents.forEach(present => {
+            const presentTitle = present.querySelector('.present-title')?.textContent.toLowerCase() || '';
+            const presentComments = present.querySelector('.present-comments')?.textContent.toLowerCase() || '';
+            
+            if (presentTitle.includes(term) || presentComments.includes(term)) {
+                present.style.display = '';
+                hasVisiblePresent = true;
+            } else {
+                present.style.display = term ? 'none' : '';
+            }
+        });
+        
+        // Show card if recipient name matches or has visible presents
+        if (recipientName.includes(term) || hasVisiblePresent || !term) {
+            card.style.display = '';
+            // If recipient name matches, show all presents
+            if (recipientName.includes(term) || !term) {
+                presents.forEach(present => present.style.display = '');
+            }
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Initialize search functionality when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('recipientSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            filterRecipients(this.value);
+        });
+    }
+});

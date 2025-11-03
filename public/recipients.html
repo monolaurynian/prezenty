@@ -36,7 +36,8 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="styles.deduped.min.css" rel="stylesheet">
     <link href="aws-design.css?v=3" rel="stylesheet">
-    <link href="bottom-tab-bar.css?v=13" rel="stylesheet">
+    <link href="bottom-tab-bar.css?v=15" rel="stylesheet">
+    <link href="search-autocomplete.css?v=1" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
         .tab-bar-notifications-panel.show {
@@ -251,27 +252,9 @@
             margin-top: -2.5rem !important;
         }
 
-        /* Remove gradient from aws-action-section */
+        /* Hide aws-action-section (replaced by tab bar) */
         .recipients-page .aws-action-section {
-            background: none !important;
-            background-image: none !important;
-            margin-bottom: 1.5rem !important;
-        }
-
-        /* Remove gradient from action section row */
-        .recipients-page .aws-action-section .row {
-            background: none !important;
-            background-image: none !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
-        }
-        
-        .recipients-page .aws-action-section .row > [class*='col-'] {
-            padding-left: 0 !important;
-        }
-        
-        .recipients-page .aws-action-section .row > [class*='col-']:last-child {
-            padding-right: 0 !important;
+            display: none !important;
         }
 
         /* Make navbar text white with shadow */
@@ -750,12 +733,22 @@
         <!-- AWS-Style Main Content -->
         <div class="card main-card aws-main-content">
             <div class="card-header aws-content-header">
-                <div class="d-flex justify-content-center align-items-center">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                     <div class="aws-header-title">
                         <h5 class="card-title mb-0">
                             <i class="fas fa-users me-2 aws-gradient-icon"></i>Lista Osób i Ich Prezenty
                         </h5>
-                        <p class="aws-header-subtitle mb-0">Zarządzaj osobami i ich prezentami</p>
+                    </div>
+                    <div class="search-container">
+                        <div class="input-group search-input-wrapper">
+                            <span class="input-group-text search-icon-wrapper">
+                                <i class="fas fa-search search-icon"></i>
+                            </span>
+                            <input type="text" 
+                                   class="form-control search-input" 
+                                   id="recipientSearch" 
+                                   placeholder="Szukaj osoby lub prezentu...">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2050,6 +2043,9 @@
     <!-- Main app (critical - load immediately) -->
     <script src="recipients.js?v=7&t=1111111111"></script>
 
+    <!-- Search autocomplete -->
+    <script src="search-autocomplete.js?v=1"></script>
+
     <!-- Debug script (temporary - remove after fixing) -->
     <script src="profile-picture-debug.js"></script>
 
@@ -2114,6 +2110,12 @@
             <a href="#" class="tab-bar-menu-item add-person-item" onclick="openAddRecipientModal(); toggleTabBarMenu(); return false;">
                 <i class="ri-user-add-line"></i>
                 <span>Dodaj Osobę</span>
+            </a>
+            
+            <!-- Add Present -->
+            <a href="#" class="tab-bar-menu-item add-present-item" onclick="openAddPresentModal(); toggleTabBarMenu(); return false;">
+                <i class="ri-gift-line"></i>
+                <span>Dodaj Prezent</span>
             </a>
             
             <!-- Reserved Presents -->

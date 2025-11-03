@@ -1,16 +1,12 @@
-/* Bottom Tab Bar - Enhanced Glass Morphism Style */
+/* Bottom Tab Bar - Solid Style */
 .bottom-tab-bar {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.7) !important;
-    backdrop-filter: blur(30px) saturate(180%) brightness(1.1) !important;
-    -webkit-backdrop-filter: blur(30px) saturate(180%) brightness(1.1) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.5) !important;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12), 
-                0 -2px 8px rgba(0, 0, 0, 0.08),
-                inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    background: #ffffff !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08) !important;
     z-index: 1000;
     padding: 8px 0 max(8px, env(safe-area-inset-bottom));
 }
@@ -614,6 +610,10 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
 /* Menu item specific colors */
 .tab-bar-menu-item.add-person-item i {
     color: #2196F3; /* material-blue */
+}
+
+.tab-bar-menu-item.add-present-item i {
+    color: #F44336; /* material-red */
 }
 
 .tab-bar-menu-item.reserved-item i {

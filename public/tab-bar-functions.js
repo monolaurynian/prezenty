@@ -36,6 +36,17 @@ function toggleNotificationsPanel() {
             badge.style.display = 'none';
         }
         
+        // Mark all notifications as read when opening panel
+        setTimeout(() => {
+            fetch('/api/notifications/mark-all-read', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('[Notifications] Marked all as read');
+                    updateNotificationBadge();
+                })
+                .catch(error => console.error('[Notifications] Error marking as read:', error));
+        }, 1000);
+        
         // Check for data updates when opening notifications
         if (window.realtimeUpdates && typeof window.realtimeUpdates.check === 'function') {
             setTimeout(() => {
