@@ -1,32 +1,4 @@
-/* Search Autocomplete Styles */
-
-.search-autocomplete-dropdown {
-    position: fixed;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-    max-height: 400px;
-    overflow-y: auto;
-    z-index: 9999;
-    display: none;
-    animation: slideDown 0.2s ease;
-    min-width: 300px;
-}
-
-.search-autocomplete-dropdown.show {
-    display: block;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+/* Filters Styles */
 
 .autocomplete-section {
     padding: 8px 0;
@@ -51,6 +23,10 @@
     color: #F44336;
 }
 
+.autocomplete-recipient-group {
+    margin-bottom: 4px;
+}
+
 .autocomplete-item {
     padding: 12px 16px;
     display: flex;
@@ -63,6 +39,49 @@
 .autocomplete-item:hover,
 .autocomplete-item.active {
     background: #f5f5f5;
+}
+
+.autocomplete-recipient {
+    font-weight: 500;
+    background: #fafafa;
+}
+
+.autocomplete-recipient.match {
+    background: #fff3cd;
+}
+
+.autocomplete-recipient:hover {
+    background: #f0f0f0;
+}
+
+.autocomplete-recipient.match:hover {
+    background: #ffe69c;
+}
+
+.autocomplete-presents-list {
+    background: #f9f9f9;
+    border-left: 3px solid #F44336;
+    margin-left: 16px;
+}
+
+.autocomplete-present {
+    padding-left: 32px;
+    font-size: 13px;
+}
+
+.autocomplete-present.match {
+    background: #fff3cd;
+}
+
+.autocomplete-present:hover {
+    background: #ffe69c;
+}
+
+.autocomplete-more-presents {
+    padding: 6px 16px 6px 48px;
+    font-size: 11px;
+    color: #999;
+    font-style: italic;
 }
 
 .autocomplete-item i {
@@ -209,6 +228,8 @@
     transition: all 0.3s ease;
     border: 1px solid #dee2e6;
     width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
 }
 
 .search-input-wrapper:focus-within {
@@ -219,14 +240,19 @@
 .search-icon-wrapper {
     background: white !important;
     border: none !important;
-    padding-left: 12px;
-    padding-right: 8px;
+    padding-left: 14px;
+    padding-right: 10px;
+    min-width: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .search-icon {
     color: #F44336 !important;
     font-size: 16px;
     opacity: 0.8;
+    flex-shrink: 0;
 }
 
 .search-input {
@@ -235,6 +261,8 @@
     padding-right: 12px;
     font-size: 14px;
     background: transparent;
+    flex: 1;
+    min-width: 0;
 }
 
 .search-input:focus {
@@ -283,4 +311,189 @@
     .search-container {
         flex-shrink: 0;
     }
+}
+
+
+/* Filter Button */
+.filter-toggle-btn {
+    min-width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dee2e6;
+    background: white;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.filter-toggle-btn:hover {
+    background: #f8f9fa;
+    border-color: #F44336;
+    color: #F44336;
+}
+
+.filter-toggle-btn.active {
+    background: #F44336;
+    border-color: #F44336;
+    color: white;
+}
+
+/* Filter Panel */
+.filter-panel {
+    background: white;
+    border-bottom: 1px solid #dee2e6;
+    padding: 16px 20px;
+}
+
+.filter-panel-content {
+    max-width: 100%;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.filter-select {
+    min-width: 200px;
+    font-size: 14px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.filter-select:focus {
+    border-color: #F44336;
+    box-shadow: 0 0 0 0.2rem rgba(244, 67, 54, 0.25);
+}
+
+.filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-option {
+    padding: 8px 16px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: white;
+    color: #666;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.filter-option:hover {
+    background: #f8f9fa;
+    border-color: #F44336;
+    color: #F44336;
+}
+
+.filter-option.active {
+    background: #F44336;
+    border-color: #F44336;
+    color: white;
+}
+
+.filter-option i {
+    font-size: 12px;
+}
+
+/* Desktop - keep everything in one line */
+@media (min-width: 769px) {
+    .filter-panel-content > div {
+        flex-wrap: nowrap;
+    }
+}
+
+/* Mobile responsive filters */
+@media (max-width: 768px) {
+    .filter-panel {
+        padding: 12px 16px;
+    }
+    
+    .filter-panel-content > div {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    
+    .filter-group {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .filter-select {
+        width: 100%;
+        min-width: 100%;
+    }
+    
+    .filter-options {
+        gap: 6px;
+        justify-content: flex-start;
+        width: 100%;
+    }
+    
+    .filter-option {
+        padding: 6px 12px;
+        font-size: 12px;
+        flex: 0 0 auto;
+    }
+    
+    .filter-option i {
+        font-size: 11px;
+    }
+    
+    .filter-label {
+        font-size: 12px;
+    }
+}
+
+
+/* Collapse space when presents are hidden */
+.present-item {
+    transition: all 0.3s ease;
+}
+
+.present-item[style*="display: none"] {
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    opacity: 0;
+}
+
+/* Smooth transitions for recipient cards */
+.recipient-item {
+    transition: all 0.3s ease;
+}
+
+.recipient-item[style*="display: none"] {
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    opacity: 0;
+}
+
+/* Ensure present containers collapse properly */
+.presents-preview,
+.presents-list {
+    transition: all 0.3s ease;
 }
