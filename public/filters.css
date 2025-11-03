@@ -494,6 +494,130 @@
 
 /* Ensure present containers collapse properly */
 .presents-preview,
-.presents-list {
+.presents-list,
+.presents-list-container {
     transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Remove fixed heights and let content determine size */
+.presents-preview,
+.presents-list,
+.presents-list-container {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+}
+
+/* Ensure parent containers also collapse */
+.recipient-card,
+.recipient-item .col-lg-6,
+.recipient-item .presents-preview {
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+
+/* Force containers to shrink when children are hidden */
+.recipient-item {
+    display: block !important;
+    overflow: visible !important;
+}
+
+.recipient-item > .row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+}
+
+/* Make sure hidden presents don't take up space - CRITICAL */
+.recipients-page .present-item[style*="display: none"],
+.present-item[style*="display: none"] {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Ensure smooth height transitions for visible presents */
+.recipients-page .present-item:not([style*="display: none"]),
+.present-item:not([style*="display: none"]) {
+    display: block !important;
+    animation: fadeIn 0.3s ease;
+    height: auto !important;
+    margin-bottom: 8px !important;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Force presents container to collapse */
+.recipients-page .presents-preview,
+.recipients-page .presents-list,
+.recipients-page .presents-list-container,
+.presents-preview,
+.presents-list,
+.presents-list-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+
+/* Reserve button hover - make icon white */
+.btn-outline-warning:hover i,
+.btn-outline-warning:hover .fas,
+.btn-outline-warning:hover .far {
+    color: white !important;
+}
+
+/* Also for the reserve button specifically */
+button[onclick*="reservePresent"]:hover i,
+button[onclick*="reservePresent"]:hover .fas,
+button[onclick*="reservePresent"]:hover .far {
+    color: white !important;
+}
+
+/* Ensure all button icons change to white on hover */
+.btn-outline-warning:hover,
+.btn-outline-warning:hover * {
+    color: white !important;
+}
+
+
+/* Call to action section - Red background with 70% transparency */
+.aws-action-section {
+    background: rgba(244, 67, 54, 0.7) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(244, 67, 54, 0.3);
+}
+
+/* Ensure action cards stand out against red background */
+.aws-action-section .aws-action-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.aws-action-section .aws-action-card:hover {
+    background: rgba(255, 255, 255, 1) !important;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
 }
