@@ -27,8 +27,22 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="styles.deduped.min.css" rel="stylesheet">
     <link href="aws-design.css" rel="stylesheet">
+    <link href="bottom-tab-bar.css?v=13" rel="stylesheet">
+    <style>
+        /* Critical styles for notifications panel */
+        .tab-bar-notifications-panel.show {
+            transform: translateY(0) !important;
+            visibility: visible !important;
+        }
+        .tab-bar-menu-overlay.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+    </style>
     <style>
         /* Prevent overflow and scrollbars */
         html, body {
@@ -94,33 +108,9 @@
             pointer-events: none;
         }
 
-        /* Hamburger Menu Button */
+        /* Hamburger Menu Button - Hidden (replaced by tab bar) */
         .hamburger-menu-btn {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 1031;
-            background: transparent;
-            border: none;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: opacity 0.3s ease;
-            color: white;
-            pointer-events: auto;
-        }
-
-        .hamburger-menu-btn:hover {
-            opacity: 0.8;
-        }
-
-        .hamburger-menu-btn i {
-            font-size: 20px;
-            color: white;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+            display: none !important;
         }
 
         /* Navbar styling */
@@ -154,23 +144,11 @@
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
         }
 
-        /* Sidebar Menu */
-        .sidebar-menu {
-            position: fixed;
-            top: 0;
-            left: -320px;
-            width: 320px;
-            height: 100vh;
-            background: white;
-            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
-            z-index: 1100;
-            transition: left 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-menu.active {
-            left: 0;
+        /* Old sidebar elements - Hidden (replaced by tab bar) */
+        .sidebar-menu,
+        .sidebar-overlay,
+        .hamburger-menu-btn {
+            display: none !important;
         }
 
         .sidebar-header {
@@ -285,19 +263,41 @@
         @media (max-width: 768px) {
             .sidebar-menu {
                 width: 280px;
-                left: -280px;
+                right: -280px;
             }
 
             .hamburger-menu-btn {
-                top: 15px;
-                left: 15px;
+                bottom: 20px;
+                right: 20px;
                 width: 45px;
                 height: 45px;
             }
         }
+        
+        /* Activity page notification styles - Glass morphism */
+        .activity-page .notification-item {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(10px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+        }
+        
+        .activity-page .notification-item:hover {
+            background: rgba(255, 255, 255, 0.25) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
+        }
+        
+        .activity-page .notification-item.unread {
+            background: rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        .activity-page .notification-item.unread:hover {
+            background: rgba(255, 255, 255, 0.3) !important;
+        }
     </style>
 </head>
-<body class="activity-page">
+<body class="activity-page has-tab-bar">
     <div class="background-overlay"></div>
     
     <!-- Fixed Header Bar -->
@@ -430,6 +430,7 @@
     </script>
     
     <script>
+        console.log('[Activity] Script loaded!');
         let currentPage = 1;
         const itemsPerPage = 20;
         let totalNotifications = 0;
@@ -470,33 +471,65 @@
 
         // Load notifications
         function loadNotifications(page = 1) {
+            console.log('[Activity] Loading notifications, page:', page);
             currentPage = page;
             const offset = (page - 1) * itemsPerPage;
             
-            document.getElementById('loadingState').style.display = 'block';
-            document.getElementById('activityFeed').innerHTML = '<div class="text-center py-5" id="loadingState"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Ładowanie...</span></div><p class="mt-3 text-muted">Ładowanie aktywności...</p></div>';
+            const activityFeed = document.getElementById('activityFeed');
+            if (!activityFeed) {
+                console.error('[Activity] activityFeed element not found!');
+                return;
+            }
             
+            activityFeed.innerHTML = '<div class="text-center py-5" id="loadingState"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Ładowanie...</span></div><p class="mt-3 text-muted">Ładowanie aktywności...</p></div>';
+            
+            console.log('[Activity] Fetching notifications from API...');
             fetch(`/api/notifications?limit=${itemsPerPage}&offset=${offset}`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('[Activity] API response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
-                    displayNotifications(data.notifications);
-                    totalNotifications = offset + data.notifications.length + (data.hasMore ? 1 : 0);
-                    updatePagination(data.hasMore);
+                    console.log('[Activity] Received notifications:', data.notifications ? data.notifications.length : 0);
+                    console.log('[Activity] About to call displayNotifications...');
+                    try {
+                        console.log('[Activity] Calling displayActivityNotifications now...');
+                        displayActivityNotifications(data.notifications);
+                        console.log('[Activity] displayActivityNotifications returned');
+                        totalNotifications = offset + data.notifications.length + (data.hasMore ? 1 : 0);
+                        updatePagination(data.hasMore);
+                    } catch (error) {
+                        console.error('[Activity] Error in displayNotifications:', error);
+                        document.getElementById('activityFeed').innerHTML = `
+                            <div class="text-center py-5 text-danger">
+                                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                                <p>Błąd podczas wyświetlania powiadomień</p>
+                                <p class="small">${error.message}</p>
+                            </div>
+                        `;
+                    }
                 })
                 .catch(error => {
-                    console.error('Error loading notifications:', error);
+                    console.error('[Activity] Error loading notifications:', error);
                     document.getElementById('activityFeed').innerHTML = `
                         <div class="text-center py-5 text-danger">
                             <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
                             <p>Błąd podczas ładowania aktywności</p>
+                            <p class="small">${error.message}</p>
                         </div>
                     `;
                 });
         }
 
-        // Display notifications
-        function displayNotifications(notifications) {
+        // Display notifications on activity page
+        function displayActivityNotifications(notifications) {
+            console.log('[Activity] Displaying activity notifications...');
             const feed = document.getElementById('activityFeed');
+            
+            if (!feed) {
+                console.error('[Activity] activityFeed element not found!');
+                return;
+            }
             
             if (notifications.length === 0) {
                 feed.innerHTML = `
@@ -509,8 +542,27 @@
             }
             
             const html = notifications.map(notification => {
-                const config = notificationConfig[notification.type];
-                if (!config) return '';
+                let config = notificationConfig[notification.type];
+                if (!config) {
+                    console.warn('[Activity] Unknown notification type:', notification.type);
+                    // Fallback config for unknown types
+                    config = {
+                        icon: 'fa-bell',
+                        color: '#666',
+                        getMessage: (data, actor) => `<strong>${actor || 'Ktoś'}</strong> wykonał akcję`
+                    };
+                }
+                
+                // Parse data if it's a string
+                let data = notification.data;
+                if (typeof data === 'string') {
+                    try {
+                        data = JSON.parse(data);
+                    } catch (e) {
+                        console.error('[Activity] Error parsing notification data:', e);
+                        data = {};
+                    }
+                }
                 
                 const isUnread = !notification.is_read;
                 const timeAgo = getTimeAgo(notification.created_at);
@@ -524,7 +576,7 @@
                         </div>
                         <div class="notification-content">
                             <div class="notification-message">
-                                ${config.getMessage(notification.data, notification.actor_username)}
+                                ${config.getMessage(data, notification.actor_username)}
                             </div>
                             <div class="notification-time">
                                 <i class="fas fa-clock me-1"></i>${timeAgo}
@@ -535,7 +587,13 @@
                 `;
             }).join('');
             
+            console.log('[Activity] Setting HTML with', notifications.length, 'notifications');
+            console.log('[Activity] HTML length:', html.length);
+            if (html.length === 0) {
+                console.error('[Activity] Generated HTML is empty!');
+            }
             feed.innerHTML = html;
+            console.log('[Activity] HTML set successfully');
         }
 
         // Update pagination
@@ -651,24 +709,129 @@
                 });
         }
 
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initActivity);
+        } else {
+            initActivity();
+        }
+        
+        function initActivity() {
+            console.log('[Activity] Initializing activity page...');
+            checkAuth();
+        }
+        
         // Check authentication
-        fetch('/api/auth')
-            .then(response => response.json())
+        function checkAuth() {
+            console.log('[Activity] Checking authentication...');
+            fetch('/api/auth')
+            .then(response => {
+                console.log('[Activity] Auth response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('[Activity] Auth data:', data);
                 if (!data.authenticated) {
+                    console.log('[Activity] Not authenticated, redirecting...');
                     window.location.href = '/';
                 } else {
+                    console.log('[Activity] Authenticated, loading notifications...');
                     // Load notifications
                     loadNotifications(1);
                 }
             })
             .catch(error => {
-                console.error('Auth check error:', error);
+                console.error('[Activity] Auth check error:', error);
                 window.location.href = '/';
             });
+        }
     </script>
     
     <!-- Auto-update checker -->
     <script src="update-checker.js"></script>
+
+    <!-- Bottom Tab Bar -->
+    <div class="bottom-tab-bar">
+        <div class="tab-bar-container">
+            <a href="recipients.html" class="tab-item home-tab">
+                <i class="ri-gift-line"></i>
+                <span>Prezenty</span>
+            </a>
+            <a href="activity.html" class="tab-item activity-tab active">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-notification-3-line"></i>
+                    <span class="notification-badge" id="activityBadge" style="display: none;"></span>
+                </div>
+                <span>Aktywność</span>
+            </a>
+            <div class="tab-spacer"></div>
+            <a href="leaderboard.html" class="tab-item leaderboard-tab">
+                <i class="ri-trophy-line"></i>
+                <span>Ranking</span>
+            </a>
+            <a href="formularz.html" class="tab-item form-tab">
+                <i class="ri-file-list-3-line"></i>
+                <span>Dodaj Prezent</span>
+            </a>
+        </div>
+        <div class="tab-fab" onclick="toggleTabBarMenu()">
+            <i class="ri-menu-line"></i>
+        </div>
+    </div>
+
+    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;"></div>
+
+    <div class="tab-bar-menu-panel" id="tabBarMenuPanel">
+        <div class="tab-bar-menu-header">
+            <h5><i class="ri-menu-line me-2"></i>Menu</h5>
+            <button class="tab-bar-menu-close" onclick="toggleTabBarMenu()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-menu-content">
+            <a href="recipients.html" class="tab-bar-menu-item add-person-item">
+                <i class="ri-user-add-line"></i>
+                <span>Dodaj Osobę</span>
+            </a>
+            <a href="recipients.html" class="tab-bar-menu-item reserved-item">
+                <i class="ri-bookmark-line"></i>
+                <span>Zarezerwowane Prezenty</span>
+            </a>
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
+                <i class="ri-edit-line"></i>
+                <span>Edytuj Moje Prezenty</span>
+            </a>
+            <div class="tab-bar-menu-divider"></div>
+            <a href="#" class="tab-bar-menu-item settings-item" onclick="alert('Funkcja ustawień będzie dostępna wkrótce!'); toggleTabBarMenu(); return false;">
+                <i class="ri-settings-3-line"></i>
+                <span>Ustawienia</span>
+            </a>
+            <a href="#" class="tab-bar-menu-item logout-item" onclick="logout(); return false;">
+                <i class="ri-logout-box-r-line"></i>
+                <span>Wyloguj</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="tab-bar-notifications-panel" id="notificationsPanel" style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="tab-bar-notifications-header" style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
+            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
+            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()" style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-notifications-content" id="notificationsContent" style="flex: 1; overflow-y: auto; background: #ffffff;">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Ładowanie...</span>
+                </div>
+            </div>
+        </div>
+        <div class="tab-bar-notifications-view-all" style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
+            <a href="activity.html" style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie powiadomienia</a>
+        </div>
+    </div>
+
+    <script src="tab-bar-functions.js"></script>
 </body>
 </html>

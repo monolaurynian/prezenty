@@ -1,5 +1,5 @@
-// Real-time incremental updates system
-// Catches individual changes instead of reloading entire list
+// Real-time updates system with fallback to simple polling
+// Automatically refreshes data when changes occur
 
 (function() {
     'use strict';
@@ -7,15 +7,18 @@
     // Configuration
     const POLL_INTERVAL = 10000; // Check for updates every 10 seconds
     const STORAGE_KEY = 'last_update_timestamp';
+    const LAST_DATA_HASH_KEY = 'last_data_hash';
     
     let isPolling = false;
     let pollTimer = null;
     let lastUpdateTimestamp = null;
+    let lastDataHash = null;
 
     // Initialize
     function init() {
         // Get last update timestamp from storage
         lastUpdateTimestamp = localStorage.getItem(STORAGE_KEY) || Date.now();
+        lastDataHash = localStorage.getItem(LAST_DATA_HASH_KEY);
         
         // Start polling for updates
         startPolling();
@@ -23,12 +26,22 @@
         // Poll when page becomes visible
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
+                console.log('[Realtime] Page visible, checking for updates');
                 checkForUpdates();
             }
         });
         
         // Poll when online
-        window.addEventListener('online', checkForUpdates);
+        window.addEventListener('online', function() {
+            console.log('[Realtime] Back online, checking for updates');
+            checkForUpdates();
+        });
+        
+        // Poll when notification is clicked
+        document.addEventListener('notificationClicked', function() {
+            console.log('[Realtime] Notification clicked, checking for updates');
+            checkForUpdates();
+        });
     }
 
     // Start polling
@@ -55,7 +68,48 @@
     // Check for updates
     async function checkForUpdates() {
         try {
+            // Try incremental updates API first
             const response = await fetch(`/api/updates?since=${lastUpdateTimestamp}`, {
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.hasUpdates && data.updates && data.updates.length > 0) {
+                    console.log('[Realtime] Received incremental updates:', data.updates.length);
+                    applyUpdates(data.updates);
+                    
+                    // Update timestamp
+                    lastUpdateTimestamp = data.timestamp;
+                    localStorage.setItem(STORAGE_KEY, lastUpdateTimestamp);
+                    return;
+                }
+            }
+            
+            // Fallback: Check if data has changed by comparing hash
+            await checkDataHash();
+            
+        } catch (error) {
+            console.error('[Realtime] Error checking for updates:', error);
+            // Fallback to hash check
+            await checkDataHash();
+        }
+    }
+    
+    // Check if data has changed using hash comparison
+    async function checkDataHash() {
+        try {
+            // Only check on recipients page
+            if (!window.location.pathname.includes('recipients')) {
+                return;
+            }
+            
+            const response = await fetch('/api/recipients-hash', {
                 cache: 'no-cache',
                 headers: {
                     'Cache-Control': 'no-cache',
@@ -66,17 +120,47 @@
             if (!response.ok) return;
             
             const data = await response.json();
+            const newHash = data.hash;
             
-            if (data.hasUpdates && data.updates && data.updates.length > 0) {
-                console.log('[Realtime] Received updates:', data.updates.length);
-                applyUpdates(data.updates);
+            if (lastDataHash && lastDataHash !== newHash) {
+                console.log('[Realtime] Data changed, reloading...', {
+                    oldHash: lastDataHash.substring(0, 8),
+                    newHash: newHash.substring(0, 8),
+                    counts: data.counts
+                });
                 
-                // Update timestamp
-                lastUpdateTimestamp = data.timestamp;
-                localStorage.setItem(STORAGE_KEY, lastUpdateTimestamp);
+                // Show loading indicator
+                const recipientsList = document.getElementById('recipientsList');
+                if (recipientsList) {
+                    recipientsList.style.opacity = '0.6';
+                }
+                
+                // Reload the data
+                if (typeof loadRecipientsAndPresents === 'function') {
+                    await loadRecipientsAndPresents();
+                    
+                    // Show subtle notification
+                    if (typeof showInfoToast === 'function') {
+                        showInfoToast('✨ Dane zostały zaktualizowane');
+                    }
+                } else if (typeof window.loadRecipients === 'function') {
+                    await window.loadRecipients();
+                }
+                
+                // Restore opacity
+                if (recipientsList) {
+                    recipientsList.style.opacity = '1';
+                }
+            } else if (lastDataHash) {
+                console.log('[Realtime] No changes detected');
             }
+            
+            // Update stored hash
+            lastDataHash = newHash;
+            localStorage.setItem(LAST_DATA_HASH_KEY, newHash);
+            
         } catch (error) {
-            console.error('[Realtime] Error checking for updates:', error);
+            console.error('[Realtime] Error checking data hash:', error);
         }
     }
 

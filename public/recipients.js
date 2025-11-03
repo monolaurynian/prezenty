@@ -1928,7 +1928,7 @@ function generateReservationButton(present) {
                     onclick="handleReserveClick(event, ${present.id}, 'reserve')" 
                     title="Zarezerwuj prezent">
                 <i class="fas fa-bookmark"></i>
-                <span class="d-inline d-md-none ms-1">Zarezerwuj prezent</span>
+                <span class="ms-1">Zarezerwuj</span>
             </button>
         `;
     }
@@ -2684,7 +2684,7 @@ function updateButtonOptimistically(button, action) {
         button.innerHTML = '<i class="fas fa-xmark"></i> <span class="d-inline d-md-none ms-1">Usuń rezerwację</span>';
     } else {
         button.className = 'btn btn-outline-warning btn-sm w-100 w-md-auto reserve-btn updating';
-        button.innerHTML = '<i class="fas fa-bookmark"></i> <span class="d-inline d-md-none ms-1">Zarezerwuj prezent</span>';
+        button.innerHTML = '<i class="fas fa-bookmark"></i> <span class="ms-1">Zarezerwuj</span>';
     }
     button.disabled = true;
 }

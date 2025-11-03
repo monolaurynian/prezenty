@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bottom Tab Bar Demo</title>
+    
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Remix Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <!-- Tab Bar CSS -->
+    <link rel="stylesheet" href="bottom-tab-bar.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .demo-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .demo-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .demo-title {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .demo-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body class="has-tab-bar">
+    <div class="demo-container">
+        <h1 class="demo-title">
+            <i class="fas fa-mobile-alt me-2"></i>
+            Bottom Tab Bar Demo
+        </h1>
+        <p class="demo-subtitle">
+            Scroll down to see the fixed bottom navigation bar
+        </p>
+        
+        <div class="demo-card">
+            <h3><i class="fas fa-info-circle me-2 text-primary"></i>Features</h3>
+            <ul>
+                <li><strong>Hamburger Menu:</strong> Click the bars icon to open a slide-up menu with additional options</li>
+                <li><strong>Main Navigation:</strong> 4 primary tabs + central FAB for quick access</li>
+                <li><strong>Fixed Bottom Position:</strong> Always visible at the bottom of the screen</li>
+                <li><strong>Floating Action Button (FAB):</strong> Central button with gradient and hover effects</li>
+                <li><strong>Active State:</strong> Highlights the current page</li>
+                <li><strong>Smooth Animations:</strong> Slide-up menu with overlay</li>
+                <li><strong>Responsive Design:</strong> Adapts to different screen sizes</li>
+                <li><strong>Safe Area Support:</strong> Works with iOS notches and Android navigation bars</li>
+            </ul>
+        </div>
+        
+        <div class="demo-card">
+            <h3><i class="fas fa-palette me-2 text-success"></i>Customization</h3>
+            <p>You can easily customize:</p>
+            <ul>
+                <li><strong>Colors:</strong> Change gradient colors in the CSS</li>
+                <li><strong>Icons:</strong> Replace Font Awesome icons with your own</li>
+                <li><strong>Links:</strong> Update href attributes to match your pages</li>
+                <li><strong>FAB Action:</strong> Customize the showAddModal() function</li>
+            </ul>
+        </div>
+        
+        <div class="demo-card">
+            <h3><i class="fas fa-code me-2 text-warning"></i>Implementation</h3>
+            <p>To add this to your pages:</p>
+            <ol>
+                <li>Add <code>&lt;link rel="stylesheet" href="bottom-tab-bar.css"&gt;</code> to your &lt;head&gt;</li>
+                <li>Add <code>class="has-tab-bar"</code> to your &lt;body&gt; tag</li>
+                <li>Copy the HTML from <code>bottom-tab-bar-snippet.html</code> before your closing &lt;/body&gt; tag</li>
+                <li>Customize the links and functions to match your app</li>
+            </ol>
+        </div>
+        
+        <div class="demo-card">
+            <h3><i class="fas fa-lightbulb me-2 text-danger"></i>Tips</h3>
+            <ul>
+                <li>The FAB (center button) rotates on hover for a playful effect</li>
+                <li>Active tabs have a subtle pulse animation</li>
+                <li>Each tab can have its own color when active</li>
+                <li>The bar has rounded top corners for a modern look</li>
+            </ul>
+        </div>
+        
+        <!-- Spacer content to demonstrate scrolling -->
+        <div class="demo-card">
+            <h3><i class="fas fa-scroll me-2 text-info"></i>Scroll Test</h3>
+            <p>This content helps demonstrate that the tab bar stays fixed at the bottom while you scroll.</p>
+            <div style="height: 400px; background: linear-gradient(to bottom, #f8f9fa, #e9ecef); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <div style="text-align: center; color: #6c757d;">
+                    <i class="fas fa-arrow-down fa-3x mb-3"></i>
+                    <p>Scroll down to see more</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-card">
+            <h3><i class="fas fa-check-circle me-2 text-success"></i>Bottom of Page</h3>
+            <p>You've reached the bottom! Notice how the tab bar remains fixed and accessible.</p>
+            <p>The content has proper padding so it doesn't get hidden behind the tab bar.</p>
+        </div>
+    </div>
+    
+    <!-- Bottom Tab Bar -->
+    <div class="bottom-tab-bar">
+        <!-- Main Navigation -->
+        <div class="tab-bar-container">
+            <!-- Home Tab -->
+            <a href="recipients.html" class="tab-item home-tab active">
+                <i class="ri-gift-line"></i>
+                <span>Prezenty</span>
+            </a>
+            
+            <!-- Activity Tab -->
+            <a href="activity.html" class="tab-item activity-tab">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-notification-3-line"></i>
+                    <span class="notification-badge">3</span>
+                </div>
+                <span>Aktywność</span>
+            </a>
+            
+            <!-- Spacer for FAB -->
+            <div class="tab-spacer"></div>
+            
+            <!-- Leaderboard Tab -->
+            <a href="leaderboard.html" class="tab-item leaderboard-tab">
+                <i class="ri-trophy-line"></i>
+                <span>Ranking</span>
+            </a>
+            
+            <!-- Form Tab -->
+            <a href="formularz.html" class="tab-item form-tab">
+                <i class="ri-file-list-3-line"></i>
+                <span>Dodaj Prezent</span>
+            </a>
+        </div>
+        
+        <!-- Floating Action Button (FAB) - Opens Hamburger Menu -->
+        <div class="tab-fab" onclick="toggleTabBarMenu()">
+            <i class="ri-menu-line"></i>
+        </div>
+    </div>
+    
+    <!-- Hamburger Menu Overlay -->
+    <div class="tab-bar-menu-overlay" id="tabBarMenuOverlay" onclick="toggleTabBarMenu()"></div>
+
+    <!-- Hamburger Menu Panel -->
+    <div class="tab-bar-menu-panel" id="tabBarMenuPanel">
+        <div class="tab-bar-menu-header">
+            <h5><i class="ri-menu-line me-2"></i>Menu</h5>
+            <button class="tab-bar-menu-close" onclick="toggleTabBarMenu()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-menu-content">
+            <!-- Add Person -->
+            <a href="#" class="tab-bar-menu-item add-person-item" onclick="alert('Dodaj Osobę'); toggleTabBarMenu(); return false;">
+                <i class="ri-user-add-line"></i>
+                <span>Dodaj Osobę</span>
+            </a>
+            
+            <!-- Reserved Presents -->
+            <a href="#" class="tab-bar-menu-item reserved-item" onclick="alert('Zarezerwowane'); toggleTabBarMenu(); return false;">
+                <i class="ri-bookmark-line"></i>
+                <span>Zarezerwowane Prezenty</span>
+            </a>
+            
+            <div class="tab-bar-menu-divider"></div>
+            
+            <!-- Settings -->
+            <a href="#" class="tab-bar-menu-item settings-item" onclick="alert('Ustawienia'); toggleTabBarMenu(); return false;">
+                <i class="ri-settings-3-line"></i>
+                <span>Ustawienia</span>
+            </a>
+            
+            <!-- Logout -->
+            <a href="#" class="tab-bar-menu-item logout-item" onclick="alert('Wyloguj'); toggleTabBarMenu(); return false;">
+                <i class="ri-logout-box-r-line"></i>
+                <span>Wyloguj</span>
+            </a>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Tab bar functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get current page
+            const currentPage = window.location.pathname.split('/').pop() || 'recipients.html';
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-item').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Add active class to current page tab
+            const activeTab = document.querySelector(`.tab-item[href="${currentPage}"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+            
+            // Add click animation to tabs
+            document.querySelectorAll('.tab-item').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active from all
+                    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                    // Add active to clicked
+                    this.classList.add('active');
+                });
+            });
+        });
+        
+        // Toggle hamburger menu
+        function toggleTabBarMenu() {
+            const overlay = document.getElementById('tabBarMenuOverlay');
+            const panel = document.getElementById('tabBarMenuPanel');
+            const menuBtn = document.querySelector('.tab-bar-menu-btn');
+            
+            overlay.classList.toggle('show');
+            panel.classList.toggle('show');
+            menuBtn.classList.toggle('active');
+        }
+        
+        // FAB click handler - opens add present modal
+        function openAddPresentModal() {
+            alert('Dodaj Prezent! This will open the add present modal on the actual app.');
+        }
+    </script>
+</body>
+</html>

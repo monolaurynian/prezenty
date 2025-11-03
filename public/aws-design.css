@@ -686,6 +686,23 @@
         white-space: nowrap;
     }
     
+    /* Desktop: wider present items and full button text */
+    @media (min-width: 768px) {
+        .recipients-page .recipient-card {
+            max-width: 1200px;
+        }
+        
+        .recipients-page .present-item {
+            max-width: 100%;
+        }
+        
+        .recipients-page .present-item .btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+    }
+    
     .recipients-page .present-item .btn-outline-danger {
         font-size: 12px;
         padding: 6px 10px;
@@ -1568,6 +1585,8 @@
     margin-bottom: var(--aws-space-md);
     transition: all 0.2s ease;
     position: relative;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .recipients-page .present-item:hover {
@@ -1690,12 +1709,22 @@
     font-weight: 600;
     font-size: var(--aws-font-size-md);
     margin-bottom: var(--aws-space-xs);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+    flex: 1;
+    min-width: 0;
 }
 
 .recipients-page .present-comments {
     color: var(--aws-gray-700);
     font-size: var(--aws-font-size-sm);
     margin-bottom: var(--aws-space-xs);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-all;
+    max-width: 100%;
 }
 
 .recipients-page .present-date {
@@ -3975,11 +4004,11 @@ button, .btn, .card, .present-item, .recipient-item {
 }
 
 .notification-item.unread {
-    background-color: #E3F2FD;
+    background-color: transparent;
 }
 
 .notification-item.unread:hover {
-    background-color: #BBDEFB;
+    background-color: rgba(0, 0, 0, 0.02);
 }
 
 .notification-icon {
@@ -4089,11 +4118,11 @@ button, .btn, .card, .present-item, .recipient-item {
 }
 
 .notification-item.unread {
-    background-color: #e3f2fd;
+    background-color: transparent;
 }
 
 .notification-item.unread:hover {
-    background-color: #bbdefb;
+    background-color: rgba(0, 0, 0, 0.02);
 }
 
 .notification-icon {

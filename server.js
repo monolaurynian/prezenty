@@ -1231,6 +1231,52 @@ app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
     }
 });
 
+// Get data hash for change detection
+app.get('/api/recipients-hash', requireAuth, async (req, res) => {
+    const crypto = require('crypto');
+    
+    if (DEMO_MODE) {
+        // Demo mode - return a static hash
+        const hash = crypto.createHash('md5').update(JSON.stringify(demoData)).digest('hex');
+        return res.json({ hash, timestamp: Date.now() });
+    }
+    
+    try {
+        // Get counts and latest timestamps
+        const [result] = await pool.execute(`
+            SELECT 
+                (SELECT COUNT(*) FROM recipients) as recipient_count,
+                (SELECT COUNT(*) FROM presents) as present_count,
+                (SELECT MAX(created_at) FROM recipients) as latest_recipient,
+                (SELECT MAX(created_at) FROM presents) as latest_present,
+                (SELECT MAX(updated_at) FROM presents WHERE updated_at IS NOT NULL) as latest_present_update
+        `);
+        
+        const data = result[0];
+        const hashString = JSON.stringify({
+            recipients: data.recipient_count,
+            presents: data.present_count,
+            latestRecipient: data.latest_recipient,
+            latestPresent: data.latest_present,
+            latestUpdate: data.latest_present_update
+        });
+        
+        const hash = crypto.createHash('md5').update(hashString).digest('hex');
+        
+        res.json({ 
+            hash, 
+            timestamp: Date.now(),
+            counts: {
+                recipients: data.recipient_count,
+                presents: data.present_count
+            }
+        });
+    } catch (err) {
+        console.error('Error generating data hash:', err);
+        res.status(500).json({ error: 'Błąd podczas sprawdzania zmian' });
+    }
+});
+
 app.post('/api/presents', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     const { title, recipient_id, comments } = req.body;

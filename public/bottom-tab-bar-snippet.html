@@ -1,0 +1,363 @@
+<!-- Bottom Tab Bar -->
+<!-- Add this snippet before the closing </body> tag in your HTML files -->
+
+<!-- Link the CSS file in your <head> section: -->
+<!-- <link rel="stylesheet" href="bottom-tab-bar.css"> -->
+<!-- <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet"> -->
+
+<!-- Add class to body tag: -->
+<!-- <body class="has-tab-bar"> -->
+
+<div class="bottom-tab-bar">
+    <!-- Main Navigation -->
+    <div class="tab-bar-container">
+        <!-- Home Tab -->
+        <a href="recipients.html" class="tab-item home-tab active">
+            <i class="ri-gift-line"></i>
+            <span>Prezenty</span>
+        </a>
+        
+        <!-- Activity Tab -->
+        <a href="#" class="tab-item activity-tab" onclick="toggleNotificationsPanel(); return false;">
+            <div class="tab-icon-wrapper">
+                <i class="ri-notification-3-line"></i>
+                <span class="notification-badge" id="activityBadge" style="display: none;"></span>
+            </div>
+            <span>Aktywność</span>
+        </a>
+        
+        <!-- Spacer for FAB -->
+        <div class="tab-spacer"></div>
+        
+        <!-- Leaderboard Tab -->
+        <a href="leaderboard.html" class="tab-item leaderboard-tab">
+            <i class="ri-trophy-line"></i>
+            <span>Ranking</span>
+        </a>
+        
+        <!-- Form Tab -->
+        <a href="formularz.html" class="tab-item form-tab">
+            <i class="ri-file-list-3-line"></i>
+            <span>Dodaj Prezent</span>
+        </a>
+    </div>
+    
+    <!-- Floating Action Button (FAB) - Opens Hamburger Menu -->
+    <div class="tab-fab" onclick="toggleTabBarMenu()">
+        <i class="ri-menu-line"></i>
+    </div>
+</div>
+
+<!-- Hamburger Menu Overlay -->
+<div class="tab-bar-menu-overlay" id="tabBarMenuOverlay" onclick="toggleTabBarMenu()"></div>
+
+<!-- Notifications Panel -->
+<div class="tab-bar-notifications-panel" id="tabBarNotificationsPanel">
+    <div class="tab-bar-notifications-header">
+        <h5><i class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
+        <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()">
+            <i class="ri-close-line"></i>
+        </button>
+    </div>
+    <div class="tab-bar-notifications-content" id="notificationsContent">
+        <div class="tab-bar-notifications-empty">
+            <i class="ri-notification-off-line"></i>
+            <p>Brak powiadomień</p>
+        </div>
+    </div>
+    <div class="tab-bar-notifications-view-all">
+        <a href="activity.html">Zobacz wszystkie powiadomienia</a>
+    </div>
+</div>
+
+<!-- Hamburger Menu Panel -->
+<div class="tab-bar-menu-panel" id="tabBarMenuPanel">
+    <div class="tab-bar-menu-header">
+        <h5><i class="ri-menu-line me-2"></i>Menu</h5>
+        <button class="tab-bar-menu-close" onclick="toggleTabBarMenu()">
+            <i class="ri-close-line"></i>
+        </button>
+    </div>
+    <div class="tab-bar-menu-content">
+        <!-- Add Person -->
+        <a href="#" class="tab-bar-menu-item add-person-item" onclick="openAddRecipientModal(); toggleTabBarMenu(); return false;">
+            <i class="ri-user-add-line"></i>
+            <span>Dodaj Osobę</span>
+        </a>
+        
+        <!-- Reserved Presents -->
+        <a href="#" class="tab-bar-menu-item reserved-item" onclick="openReservedPresentsModal(); toggleTabBarMenu(); return false;">
+            <i class="ri-bookmark-line"></i>
+            <span>Zarezerwowane Prezenty</span>
+        </a>
+        
+        <div class="tab-bar-menu-divider"></div>
+        
+        <!-- Settings -->
+        <a href="#" class="tab-bar-menu-item settings-item" onclick="openSettingsModal(); toggleTabBarMenu(); return false;">
+            <i class="ri-settings-3-line"></i>
+            <span>Ustawienia</span>
+        </a>
+        
+        <!-- Logout -->
+        <a href="#" class="tab-bar-menu-item logout-item" onclick="logout(); return false;">
+            <i class="ri-logout-box-r-line"></i>
+            <span>Wyloguj</span>
+        </a>
+    </div>
+</div>
+
+<script>
+// Tab bar functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Get current page
+    const currentPage = window.location.pathname.split('/').pop() || 'recipients.html';
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.tab-item').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Add active class to current page tab
+    const activeTab = document.querySelector(`.tab-item[href="${currentPage}"]`);
+    if (activeTab) {
+        activeTab.classList.add('active');
+    }
+    
+    // Add click animation to tabs
+    document.querySelectorAll('.tab-item').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remove active from all
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            // Add active to clicked
+            this.classList.add('active');
+        });
+    });
+});
+
+// Toggle hamburger menu
+function toggleTabBarMenu() {
+    const overlay = document.getElementById('tabBarMenuOverlay');
+    const panel = document.getElementById('tabBarMenuPanel');
+    const menuBtn = document.querySelector('.tab-bar-menu-btn');
+    
+    // Close notifications panel if open
+    const notificationsPanel = document.getElementById('tabBarNotificationsPanel');
+    if (notificationsPanel && notificationsPanel.classList.contains('show')) {
+        toggleNotificationsPanel();
+    }
+    
+    overlay.classList.toggle('show');
+    panel.classList.toggle('show');
+    menuBtn.classList.toggle('active');
+}
+
+// Toggle notifications panel
+function toggleNotificationsPanel() {
+    const overlay = document.getElementById('tabBarMenuOverlay');
+    const panel = document.getElementById('tabBarNotificationsPanel');
+    
+    // Close menu panel if open
+    const menuPanel = document.getElementById('tabBarMenuPanel');
+    if (menuPanel && menuPanel.classList.contains('show')) {
+        toggleTabBarMenu();
+    }
+    
+    overlay.classList.toggle('show');
+    panel.classList.toggle('show');
+    
+    // Load notifications when opening
+    if (panel.classList.contains('show')) {
+        loadNotifications();
+    }
+}
+
+// Load notifications
+function loadNotifications() {
+    const content = document.getElementById('notificationsContent');
+    if (!content) return;
+    
+    // Show loading state
+    content.innerHTML = '<div class="text-center py-4"><i class="ri-loader-4-line ri-spin" style="font-size: 32px; color: #666;"></i></div>';
+    
+    fetch('/api/notifications?limit=10')
+        .then(response => response.json())
+        .then(data => {
+            if (data.notifications && data.notifications.length > 0) {
+                content.innerHTML = data.notifications.map(notif => {
+                    const isUnread = !notif.read;
+                    const iconClass = getNotificationIcon(notif.type);
+                    const iconColor = getNotificationColor(notif.type);
+                    const timeAgo = formatTimeAgo(notif.created_at);
+                    
+                    return `
+                        <div class="tab-bar-notification-item ${isUnread ? 'unread' : ''}" onclick="markAsRead(${notif.id})">
+                            <div class="tab-bar-notification-icon" style="background: ${iconColor}20;">
+                                <i class="${iconClass}" style="color: ${iconColor};"></i>
+                            </div>
+                            <div class="tab-bar-notification-content">
+                                <div class="tab-bar-notification-message">${notif.message}</div>
+                                <div class="tab-bar-notification-time">${timeAgo}</div>
+                            </div>
+                            ${isUnread ? '<div class="tab-bar-notification-unread-dot"></div>' : ''}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                content.innerHTML = `
+                    <div class="tab-bar-notifications-empty">
+                        <i class="ri-notification-off-line"></i>
+                        <p>Brak powiadomień</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading notifications:', error);
+            content.innerHTML = `
+                <div class="tab-bar-notifications-empty">
+                    <i class="ri-error-warning-line"></i>
+                    <p>Błąd ładowania powiadomień</p>
+                </div>
+            `;
+        });
+}
+
+// Helper functions for notifications
+function getNotificationIcon(type) {
+    const icons = {
+        'gift_added': 'ri-gift-line',
+        'gift_reserved': 'ri-bookmark-line',
+        'gift_purchased': 'ri-shopping-bag-line',
+        'gift_unreserved': 'ri-bookmark-line',
+        'comment_added': 'ri-chat-3-line',
+        'default': 'ri-notification-3-line'
+    };
+    return icons[type] || icons.default;
+}
+
+function getNotificationColor(type) {
+    const colors = {
+        'gift_added': '#4CAF50',
+        'gift_reserved': '#FF9800',
+        'gift_purchased': '#2196F3',
+        'gift_unreserved': '#9E9E9E',
+        'comment_added': '#9C27B0',
+        'default': '#666'
+    };
+    return colors[type] || colors.default;
+}
+
+function formatTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+    
+    if (seconds < 60) return 'Przed chwilą';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} min temu`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} godz. temu`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)} dni temu`;
+    return date.toLocaleDateString('pl-PL');
+}
+
+function markAsRead(notificationId) {
+    fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' })
+        .then(() => {
+            updateNotificationBadge();
+            loadNotifications();
+        })
+        .catch(error => console.error('Error marking notification as read:', error));
+}
+
+// FAB click handler - opens add present modal
+function openAddPresentModal() {
+    // Check if we're on recipients page and function exists
+    if (typeof window.openAddPresentModal === 'function') {
+        window.openAddPresentModal();
+    } else {
+        // Try to find and click the add present button
+        const addPresentBtn = document.querySelector('[data-bs-target="#addPresentModal"]');
+        if (addPresentBtn) {
+            addPresentBtn.click();
+        } else {
+            // Try to open modal directly
+            const modal = document.getElementById('addPresentModal');
+            if (modal) {
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+            } else {
+                // Redirect to recipients page if not there
+                window.location.href = 'recipients.html';
+            }
+        }
+    }
+}
+
+// Add recipient modal handler
+function openAddRecipientModal() {
+    if (typeof window.openAddRecipientModal === 'function') {
+        window.openAddRecipientModal();
+    } else {
+        const modal = document.getElementById('addRecipientModal');
+        if (modal) {
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        } else {
+            window.location.href = 'recipients.html';
+        }
+    }
+}
+
+// Reserved presents modal handler
+function openReservedPresentsModal() {
+    if (typeof window.openReservedPresentsModal === 'function') {
+        window.openReservedPresentsModal();
+    } else {
+        const modal = document.getElementById('reservedPresentsModal');
+        if (modal) {
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        } else {
+            window.location.href = 'recipients.html';
+        }
+    }
+}
+
+// Settings modal handler
+function openSettingsModal() {
+    alert('Funkcja ustawień będzie dostępna wkrótce!');
+}
+
+// Logout handler
+function logout() {
+    if (confirm('Czy na pewno chcesz się wylogować?')) {
+        fetch('/api/logout', { method: 'POST' })
+            .then(() => window.location.href = '/')
+            .catch(() => window.location.href = '/');
+    }
+}
+
+// Update notification badge
+function updateNotificationBadge() {
+    fetch('/api/notifications/unread-count')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('activityBadge');
+            if (badge) {
+                if (data.count > 0) {
+                    badge.textContent = data.count > 99 ? '99+' : data.count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => console.error('Error fetching notification count:', error));
+}
+
+// Update badge on page load and periodically
+if (document.getElementById('activityBadge')) {
+    updateNotificationBadge();
+    setInterval(updateNotificationBadge, 30000); // Update every 30 seconds
+}
+</script>

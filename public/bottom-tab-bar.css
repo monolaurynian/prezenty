@@ -1,0 +1,773 @@
+/* Bottom Tab Bar - Enhanced Glass Morphism Style */
+.bottom-tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(30px) saturate(180%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) brightness(1.1) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12), 
+                0 -2px 8px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    z-index: 1000;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+}
+
+.tab-bar-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    padding: 0 16px;
+    height: 64px;
+}
+
+.tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    text-decoration: none;
+    color: #666;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 8px 4px;
+    cursor: pointer;
+    position: relative;
+    min-width: 64px;
+    max-width: 100px;
+}
+
+/* Icon wrapper for badge positioning */
+.tab-icon-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 6px;
+}
+
+/* Remove double margin for icons inside wrapper */
+.tab-icon-wrapper i {
+    margin-bottom: 0 !important;
+}
+
+.tab-item i {
+    font-size: 24px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 6px;
+}
+
+/* Notification badge */
+.notification-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, #FF5722, #F44336);
+    color: white;
+    border-radius: 9px;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 2px 6px rgba(244, 67, 54, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.95);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* Badge pulse animation */
+@keyframes badgePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.tab-item span {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.2px;
+    margin-top: 4px;
+    text-align: center;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tab-item.active {
+    color: inherit;
+}
+
+/* Active indicator line */
+.tab-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 32px;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-item.active::before {
+    transform: translateX(-50%) scaleX(1);
+}
+
+.tab-item:hover:not(.active) i {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tab-item.home-tab:hover:not(.active) i {
+    background: rgba(244, 67, 54, 0.12);
+}
+
+.tab-item.activity-tab:hover:not(.active) i {
+    background: rgba(255, 152, 0, 0.12);
+}
+
+.tab-item.leaderboard-tab:hover:not(.active) i {
+    background: rgba(33, 150, 243, 0.12);
+}
+
+.tab-item.form-tab:hover:not(.active) i {
+    background: rgba(76, 175, 80, 0.12);
+}
+
+/* Floating Action Button (FAB) - Red Gradient Style */
+.tab-fab {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FF5722, #F44336);
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 16px rgba(244, 67, 54, 0.4), 
+                0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-fab i {
+    color: white;
+    font-size: 26px;
+    line-height: 1;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-fab:hover {
+    transform: translateX(-50%) translateY(-2px);
+    background: linear-gradient(135deg, #F44336, #E91E63);
+    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.5), 
+                0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.tab-fab:hover i {
+    transform: scale(1.1);
+}
+
+.tab-fab:active {
+    transform: translateX(-50%) translateY(0);
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4), 
+                0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Spacer for FAB */
+.tab-spacer {
+    flex: 1;
+}
+
+/* Add padding to body to prevent content from being hidden behind tab bar */
+body.has-tab-bar {
+    padding-bottom: 80px;
+}
+
+body.has-tab-bar.expanded {
+    padding-bottom: 140px;
+}
+
+/* Hamburger Menu Button - Glass Morphism Style */
+.tab-bar-menu-btn {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(30px) saturate(180%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-bottom: none !important;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1),
+                0 -1px 4px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1001;
+}
+
+.tab-bar-menu-btn i {
+    color: #666;
+    font-size: 18px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-bar-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12),
+                0 -2px 6px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.tab-bar-menu-btn:hover i {
+    color: #333;
+    transform: scale(1.1);
+}
+
+
+
+/* Overlay for both menu and notifications */
+.tab-bar-menu-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    z-index: 9998 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.3s ease, visibility 0.3s ease !important;
+    pointer-events: none !important;
+}
+
+.tab-bar-menu-overlay.show {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* Notifications Panel - Override all page styles */
+.tab-bar-notifications-panel,
+body.recipients-page .tab-bar-notifications-panel,
+.recipients-page .tab-bar-notifications-panel {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3), 0 -4px 16px rgba(0, 0, 0, 0.2) !important;
+    z-index: 9999 !important;
+    transform: translateY(100%) !important;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    max-height: 70vh !important;
+    min-height: 300px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    pointer-events: auto !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.tab-bar-notifications-panel.show,
+body.recipients-page .tab-bar-notifications-panel.show,
+.recipients-page .tab-bar-notifications-panel.show {
+    transform: translateY(0) !important;
+    visibility: visible !important;
+}
+
+.tab-bar-notifications-header,
+body.recipients-page .tab-bar-notifications-header,
+.recipients-page .tab-bar-notifications-header {
+    padding: 20px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    flex-shrink: 0 !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
+}
+
+.tab-bar-notifications-header h5,
+body.recipients-page .tab-bar-notifications-header h5,
+.recipients-page .tab-bar-notifications-header h5 {
+    margin: 0 !important;
+    color: #2d3748 !important;
+    font-weight: 600 !important;
+    font-size: 18px !important;
+    text-shadow: none !important;
+}
+
+.tab-bar-notifications-header i,
+body.recipients-page .tab-bar-notifications-header i,
+.recipients-page .tab-bar-notifications-header i {
+    color: #2d3748 !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+.tab-bar-notifications-close {
+    background: rgba(0, 0, 0, 0.05) !important;
+    border: none !important;
+    border-radius: 50% !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    color: #2d3748 !important;
+}
+
+.tab-bar-notifications-close:hover {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+.tab-bar-notifications-close i {
+    color: #2d3748 !important;
+    font-size: 18px !important;
+}
+
+.tab-bar-notifications-content,
+body.recipients-page .tab-bar-notifications-content,
+.recipients-page .tab-bar-notifications-content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.tab-bar-notification-item,
+body.recipients-page .tab-bar-notification-item,
+.recipients-page .tab-bar-notification-item {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    padding: 15px 20px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+}
+
+.tab-bar-notification-item:hover {
+    background: rgba(0, 0, 0, 0.02) !important;
+}
+
+.tab-bar-notification-item.unread {
+    background: rgba(33, 150, 243, 0.05) !important;
+}
+
+.tab-bar-notification-icon {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.tab-bar-notification-icon i {
+    font-size: 20px !important;
+}
+
+.tab-bar-notification-content {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.tab-bar-notification-message,
+body.recipients-page .tab-bar-notification-message,
+.recipients-page .tab-bar-notification-message {
+    font-size: 14px !important;
+    color: #2d3748 !important;
+    margin-bottom: 4px !important;
+    line-height: 1.4 !important;
+    text-shadow: none !important;
+}
+
+.tab-bar-notification-time,
+body.recipients-page .tab-bar-notification-time,
+.recipients-page .tab-bar-notification-time {
+    font-size: 12px !important;
+    color: #718096 !important;
+    text-shadow: none !important;
+}
+
+.tab-bar-notification-time i,
+body.recipients-page .tab-bar-notification-time i,
+.recipients-page .tab-bar-notification-time i {
+    font-size: 12px !important;
+    color: #718096 !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+.tab-bar-notification-unread-dot {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    background: #2196F3 !important;
+    flex-shrink: 0 !important;
+    margin-top: 6px !important;
+}
+
+.tab-bar-notifications-empty,
+body.recipients-page .tab-bar-notifications-empty,
+.recipients-page .tab-bar-notifications-empty {
+    text-align: center !important;
+    padding: 60px 20px !important;
+    color: #718096 !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+}
+
+.tab-bar-notifications-empty i,
+body.recipients-page .tab-bar-notifications-empty i,
+.recipients-page .tab-bar-notifications-empty i {
+    font-size: 48px !important;
+    margin-bottom: 16px !important;
+    opacity: 0.5 !important;
+    color: #718096 !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+.tab-bar-notifications-empty p,
+body.recipients-page .tab-bar-notifications-empty p,
+.recipients-page .tab-bar-notifications-empty p {
+    color: #718096 !important;
+    margin: 0 !important;
+    text-shadow: none !important;
+}
+
+.tab-bar-notifications-view-all,
+body.recipients-page .tab-bar-notifications-view-all,
+.recipients-page .tab-bar-notifications-view-all {
+    padding: 16px 20px !important;
+    text-align: center !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    flex-shrink: 0 !important;
+}
+
+.tab-bar-notifications-view-all a,
+body.recipients-page .tab-bar-notifications-view-all a,
+.recipients-page .tab-bar-notifications-view-all a {
+    color: #2196F3 !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    text-shadow: none !important;
+}
+
+.tab-bar-notifications-view-all a:hover,
+body.recipients-page .tab-bar-notifications-view-all a:hover,
+.recipients-page .tab-bar-notifications-view-all a:hover {
+    text-decoration: underline !important;
+}
+
+/* Hamburger Menu Panel */
+.tab-bar-menu-panel {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
+    box-shadow: 0 -8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+    z-index: 9999 !important;
+    transform: translateY(100%) !important;
+    transition: transform 0.3s ease !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+}
+
+.tab-bar-menu-panel.show {
+    transform: translateY(0) !important;
+    visibility: visible !important;
+}
+
+.tab-bar-menu-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tab-bar-menu-header h5 {
+    margin: 0;
+    color: #2d3748;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.tab-bar-menu-close {
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #2d3748;
+}
+
+.tab-bar-menu-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.tab-bar-menu-content {
+    padding: 10px 0;
+}
+
+.tab-bar-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 25px;
+    color: #2d3748;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+    cursor: pointer;
+}
+
+.tab-bar-menu-item:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-left-color: #667eea;
+}
+
+.tab-bar-menu-item i {
+    font-size: 20px;
+    width: 25px;
+    text-align: center;
+    color: #667eea;
+}
+
+.tab-bar-menu-item span {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.tab-bar-menu-divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.1);
+    margin: 10px 25px;
+}
+
+/* Menu item specific colors */
+.tab-bar-menu-item.add-person-item i {
+    color: #2196F3; /* material-blue */
+}
+
+.tab-bar-menu-item.reserved-item i {
+    color: #FF9800; /* material-orange */
+}
+
+.tab-bar-menu-item.edit-presents-item i {
+    color: #4CAF50; /* material-green */
+}
+
+.tab-bar-menu-item.settings-item i {
+    color: #9C27B0; /* material-purple */
+}
+
+.tab-bar-menu-item.logout-item i {
+    color: #F44336; /* material-red */
+}
+
+.tab-bar-menu-item.logout-item:hover {
+    background: rgba(244, 67, 54, 0.1);
+    border-left-color: #F44336;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .tab-bar-container {
+        padding: 0 4px;
+        height: 56px;
+    }
+    
+    .tab-item {
+        padding: 6px 2px;
+        min-width: 56px;
+        max-width: 76px;
+    }
+    
+    .tab-item i {
+        font-size: 22px;
+        width: 36px;
+        height: 36px;
+    }
+    
+    .tab-item span {
+        font-size: 9px;
+        letter-spacing: 0;
+    }
+    
+    .tab-fab {
+        width: 52px;
+        height: 52px;
+        top: -22px;
+        border-width: 3px;
+    }
+    
+    .tab-fab i {
+        font-size: 22px;
+    }
+    
+    .tab-bar-menu-btn {
+        width: 44px;
+        height: 28px;
+        top: -14px;
+    }
+    
+    .tab-bar-menu-btn i {
+        font-size: 16px;
+    }
+}
+
+/* Animation for tab switching */
+@keyframes tabPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+.tab-item.active i {
+    animation: tabPulse 0.4s ease;
+}
+
+/* Glass morphism variants for different backgrounds */
+.tab-bar-dark-bg {
+    background: rgba(0, 0, 0, 0.2) !important;
+    backdrop-filter: blur(15px) saturate(180%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.tab-bar-light-bg {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(15px) saturate(180%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Icon specific colors - Inactive state with circles */
+.tab-item.home-tab i {
+    background: rgba(244, 67, 54, 0.1);
+    color: #F44336;
+}
+
+.tab-item.activity-tab i {
+    background: rgba(255, 152, 0, 0.1);
+    color: #FF9800;
+}
+
+.tab-item.leaderboard-tab i {
+    background: rgba(33, 150, 243, 0.1);
+    color: #2196F3;
+}
+
+.tab-item.form-tab i {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+}
+
+/* Icon specific colors when active with stronger circles */
+.tab-item.active.home-tab i {
+    background: rgba(244, 67, 54, 0.15);
+    color: #F44336;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3), 0 2px 6px rgba(244, 67, 54, 0.2);
+}
+
+.tab-item.active.home-tab::before {
+    background: #F44336;
+}
+
+.tab-item.active.activity-tab i {
+    background: rgba(255, 152, 0, 0.15);
+    color: #FF9800;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3), 0 2px 6px rgba(255, 152, 0, 0.2);
+}
+
+.tab-item.active.activity-tab::before {
+    background: #FF9800;
+}
+
+.tab-item.active.leaderboard-tab i {
+    background: rgba(33, 150, 243, 0.15);
+    color: #2196F3;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3), 0 2px 6px rgba(33, 150, 243, 0.2);
+}
+
+.tab-item.active.leaderboard-tab::before {
+    background: #2196F3;
+}
+
+.tab-item.active.form-tab i {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3), 0 2px 6px rgba(76, 175, 80, 0.2);
+}
+
+.tab-item.active.form-tab::before {
+    background: #4CAF50;
+}
