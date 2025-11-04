@@ -29,23 +29,26 @@ function toggleNotificationsPanel() {
     overlay.classList.toggle('show', isOpen);
     
     if (isOpen) {
-        loadRecentNotifications();
-        
         // Clear the badge when opening notifications
         if (badge) {
             badge.style.display = 'none';
         }
         
         // Mark all notifications as read when opening panel
-        setTimeout(() => {
-            fetch('/api/notifications/read-all', { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('[Notifications] Marked all as read');
-                    updateNotificationBadge();
-                })
-                .catch(error => console.error('[Notifications] Error marking as read:', error));
-        }, 500);
+        console.log('[Notifications] Opening panel - marking all as read');
+        fetch('/api/notifications/read-all', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log('[Notifications] Marked all as read, response:', data);
+                // Reload notifications after marking as read
+                loadRecentNotifications();
+                updateNotificationBadge();
+            })
+            .catch(error => {
+                console.error('[Notifications] Error marking as read:', error);
+                // Still load notifications even if marking as read fails
+                loadRecentNotifications();
+            });
         
         // Check for data updates when opening notifications
         if (window.realtimeUpdates && typeof window.realtimeUpdates.check === 'function') {
@@ -72,9 +75,12 @@ function loadRecentNotifications() {
     const content = document.getElementById('notificationsContent');
     if (!content) return;
     
+    console.log('[Notifications] Loading recent notifications');
+    
     fetch('/api/notifications?limit=10&offset=0')
         .then(response => response.json())
         .then(data => {
+            console.log('[Notifications] Loaded', data.notifications?.length || 0, 'notifications');
             if (data.notifications && data.notifications.length > 0) {
                 displayNotifications(data.notifications);
             } else {

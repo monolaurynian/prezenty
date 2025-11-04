@@ -2072,32 +2072,6 @@ app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/api/notifications/read-all', requireAuth, async (req, res) => {
-    try {
-        const userId = req.session.userId;
-
-        console.log(`✓✓ [NOTIFICATIONS] Marking all notifications as read for user ${userId}`);
-
-        if (DEMO_MODE) {
-            return res.json({ success: true });
-        }
-
-        await ensureNotificationsTable();
-
-        await pool.execute(
-            'UPDATE notifications SET is_read = TRUE WHERE user_id = ? AND is_read = FALSE',
-            [userId]
-        );
-
-        console.log(`✅ [NOTIFICATIONS] All notifications marked as read for user ${userId}`);
-
-        res.json({ success: true });
-    } catch (err) {
-        console.error('❌ [NOTIFICATIONS] Error marking all as read:', err);
-        handleDbError(err, res, 'Błąd podczas oznaczania wszystkich powiadomień');
-    }
-});
-
 // Leaderboard API - Get most active users
 app.get('/api/leaderboard', async (req, res) => {
     try {
