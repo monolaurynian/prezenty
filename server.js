@@ -1743,8 +1743,8 @@ app.get('/api/notifications/debug', requireAuth, async (req, res) => {
     }
 });
 
-// Notification Center API Endpoints
-
+// Notification Center API Endpoints - DEPRECATED (use endpoints below)
+/*
 // Get notifications for current user
 app.get('/api/notifications', requireAuth, async (req, res) => {
     try {
@@ -1910,6 +1910,7 @@ app.post('/api/notifications/read-all', requireAuth, async (req, res) => {
         res.status(500).json({ error: 'Failed to mark all as read' });
     }
 });
+*/
 
 // Test notification endpoint
 app.post('/api/test-notification', requireAuth, async (req, res) => {
