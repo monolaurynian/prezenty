@@ -2481,6 +2481,46 @@ app.post('/api/formularz/present', async (req, res) => {
             // Continue anyway - cache errors shouldn't fail the request
         }
 
+        // Create in-app notification for other users
+        try {
+            // Get recipient name for notification
+            let notificationRecipientName = recipientName.trim();
+            if (recipientId) {
+                try {
+                    const [recipientRows] = await pool.execute('SELECT name FROM recipients WHERE id = ?', [recipientId]);
+                    if (recipientRows.length > 0) {
+                        notificationRecipientName = recipientRows[0].name;
+                    }
+                } catch (err) {
+                    console.error('[Formularz] Error getting recipient name for notification:', err);
+                }
+            }
+
+            await createNotification('present_added', createdByUserId || 0, {
+                presentId: presentId,
+                presentTitle: presentTitle.trim(),
+                recipientId: recipientId,
+                recipientName: notificationRecipientName
+            });
+
+            // Send push notification to other users (non-blocking)
+            const notificationTitle = 'Nowy prezent!';
+            const notificationBody = `Dodano nowy prezent "${presentTitle.trim()}" dla ${notificationRecipientName}`;
+            console.log(`📢 [FORMULARZ] Triggering notification for new present: "${presentTitle.trim()}" (ID: ${presentId})`);
+
+            sendNotificationToUsers(createdByUserId || 0, notificationTitle, notificationBody, {
+                presentId: presentId,
+                presentTitle: presentTitle.trim(),
+                recipientName: notificationRecipientName
+            }).catch(err => {
+                // Log error but don't fail the present creation
+                console.error('❌ [FORMULARZ] Failed to send notification (present was created successfully):', err);
+            });
+        } catch (notificationErr) {
+            console.error('[Formularz] Non-fatal error creating notifications:', notificationErr);
+            // Continue anyway - notification errors shouldn't fail the request
+        }
+
         res.json({ success: true, presentId: presentId });
     } catch (err) {
         console.error('[Formularz] Database error:', err);

@@ -22,6 +22,7 @@
             transform: translateY(0) !important;
             visibility: visible !important;
         }
+
         .tab-bar-menu-overlay.show {
             opacity: 1 !important;
             visibility: visible !important;
@@ -137,11 +138,11 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .top-menu-container .container {
             overflow: hidden;
         }
-        
+
         .top-menu-container h4 {
             white-space: nowrap;
             overflow: hidden;
@@ -172,12 +173,12 @@
         .top-menu-container {
             display: none !important;
         }
-        
+
         /* Add top margin to content */
         body {
             padding-top: 40px !important;
         }
-        
+
         .container {
             margin-top: 20px !important;
         }
@@ -315,7 +316,7 @@
             display: block;
             width: 100%;
         }
-        
+
         .card-header.bg-red .card-title i {
             color: white !important;
         }
@@ -684,7 +685,9 @@
         </div>
     </div>
 
-    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;"></div>
+    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;">
+    </div>
 
     <div class="tab-bar-menu-panel" id="tabBarMenuPanel">
         <div class="tab-bar-menu-header">
@@ -706,12 +709,14 @@
                 <i class="ri-bookmark-line"></i>
                 <span>Zarezerwowane Prezenty</span>
             </a>
-            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item"
+                onclick="localStorage.setItem('openEditTab', 'true');">
                 <i class="ri-edit-line"></i>
                 <span>Edytuj Moje Prezenty</span>
             </a>
             <div class="tab-bar-menu-divider"></div>
-            <a href="#" class="tab-bar-menu-item settings-item" onclick="alert('Funkcja ustawień będzie dostępna wkrótce!'); toggleTabBarMenu(); return false;">
+            <a href="#" class="tab-bar-menu-item settings-item"
+                onclick="alert('Funkcja ustawień będzie dostępna wkrótce!'); toggleTabBarMenu(); return false;">
                 <i class="ri-settings-3-line"></i>
                 <span>Ustawienia</span>
             </a>
@@ -722,22 +727,30 @@
         </div>
     </div>
 
-    <div class="tab-bar-notifications-panel" id="notificationsPanel" style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
-        <div class="tab-bar-notifications-header" style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
-            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
-            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()" style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
+    <div class="tab-bar-notifications-panel" id="notificationsPanel"
+        style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="tab-bar-notifications-header"
+            style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
+            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i
+                    class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
+            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()"
+                style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
                 <i class="ri-close-line"></i>
             </button>
         </div>
-        <div class="tab-bar-notifications-content" id="notificationsContent" style="flex: 1; overflow-y: auto; background: #ffffff;">
+        <div class="tab-bar-notifications-content" id="notificationsContent"
+            style="flex: 1; overflow-y: auto; background: #ffffff;">
             <div class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Ładowanie...</span>
                 </div>
             </div>
         </div>
-        <div class="tab-bar-notifications-view-all" style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
-            <a href="activity.html" style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie powiadomienia</a>
+        <div class="tab-bar-notifications-view-all"
+            style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
+            <a href="activity.html"
+                style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie
+                powiadomienia</a>
         </div>
     </div>
 

@@ -924,7 +924,7 @@
             const positions = ['first', 'second', 'third'];
 
             podium.innerHTML = top3.map((user, index) => `
-                <div class="podium-place ${positions[index]}">
+                <div class="podium-place ${positions[index]}" onclick="navigateToUserInRecipients('${user.username}')" style="cursor: pointer;">
                     ${index === 0 ? '<div class="podium-crown">👑</div>' : ''}
                     <div class="podium-rank">${medals[index]}</div>
                     <div class="podium-avatar-container">
@@ -952,7 +952,7 @@
             
             usersList.innerHTML = users.map((user, index) => {
                 return `
-                    <div class="user-card">
+                    <div class="user-card" onclick="navigateToUserInRecipients('${user.username}')" style="cursor: pointer;">
                         <div class="user-rank">#${index + 1}</div>
                         <img src="${user.profile_picture || '/images/default-avatar.svg'}" 
                              alt="${user.username}" 
@@ -973,6 +973,13 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        function navigateToUserInRecipients(username) {
+            // Store the username to scroll to in sessionStorage
+            sessionStorage.setItem('scrollToRecipient', username);
+            // Navigate to recipients page with a hash to trigger scroll
+            window.location.href = '/recipients.html?scrollTo=' + encodeURIComponent(username);
         }
 
         // Calculate days to Christmas
