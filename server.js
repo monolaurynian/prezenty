@@ -1884,6 +1884,8 @@ app.post('/api/notifications/:id/read', requireAuth, async (req, res) => {
     }
 });
 
+*/
+
 // Mark all notifications as read
 app.post('/api/notifications/read-all', requireAuth, async (req, res) => {
     try {
@@ -1910,7 +1912,6 @@ app.post('/api/notifications/read-all', requireAuth, async (req, res) => {
         res.status(500).json({ error: 'Failed to mark all as read' });
     }
 });
-*/
 
 // Test notification endpoint
 app.post('/api/test-notification', requireAuth, async (req, res) => {

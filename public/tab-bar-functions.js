@@ -40,18 +40,14 @@ function toggleNotificationsPanel() {
             .then(response => response.json())
             .then(data => {
                 console.log('[Notifications] Marked all as read, response:', data);
-                // Reload notifications after a short delay to ensure database is updated
-                setTimeout(() => {
-                    loadRecentNotifications();
-                    updateNotificationBadge();
-                }, 300);
+                // Reload notifications
+                loadRecentNotifications();
+                updateNotificationBadge();
             })
             .catch(error => {
                 console.error('[Notifications] Error marking as read:', error);
                 // Still load notifications even if marking as read fails
-                setTimeout(() => {
-                    loadRecentNotifications();
-                }, 300);
+                loadRecentNotifications();
             });
         
         // Check for data updates when opening notifications
