@@ -3946,7 +3946,9 @@ function updatePresentInDOM(presentId, newTitle, newComments) {
 
 // Add a new present to the DOM immediately
 function addPresentToDOM(recipientId, present) {
-    // Find the recipient's presents list
+    const currentUserId = window._currentUserId;
+
+    // Find the recipient's card
     const recipientElement = document.querySelector(`[data-id="${recipientId}"]`);
     if (!recipientElement) {
         console.warn('[AddPresent] Recipient element not found:', recipientId);
@@ -3956,8 +3958,9 @@ function addPresentToDOM(recipientId, present) {
     // Check if this is the identified user's card (with accordion)
     const accordion = recipientElement.querySelector('.accordion');
     if (accordion) {
-        // This is the identified user - don't show the present (privacy)
-        console.log('[AddPresent] Skipping display for identified user (privacy)');
+        // This is the identified user - add to their accordion list
+        console.log('[AddPresent] Adding to identified user accordion');
+        addPresentToIdentifiedUserAccordion(recipientElement, present);
         return;
     }
 
@@ -4005,6 +4008,98 @@ function addPresentToDOM(recipientId, present) {
             presentElement.style.backgroundColor = '';
         }, 2000);
     }, 500);
+}
+
+// Add present to identified user's accordion
+function addPresentToIdentifiedUserAccordion(recipientElement, present) {
+    // Find the accordion body with the list of own presents
+    const accordionBody = recipientElement.querySelector('.accordion-body-identified');
+    if (!accordionBody) {
+        console.warn('[AddPresent] Accordion body not found');
+        return;
+    }
+
+    // Find the list-group (ul element)
+    let listGroup = accordionBody.querySelector('.list-group');
+
+    if (!listGroup) {
+        // No presents yet - need to replace the "no presents" message
+        const noPresentsMsg = accordionBody.querySelector('p.text-muted');
+        if (noPresentsMsg) {
+            noPresentsMsg.remove();
+        }
+
+        // Create the list group
+        listGroup = document.createElement('ul');
+        listGroup.className = 'list-group';
+
+        // Find where to insert (after the alert)
+        const alert = accordionBody.querySelector('.alert');
+        if (alert) {
+            alert.insertAdjacentElement('afterend', listGroup);
+        } else {
+            accordionBody.appendChild(listGroup);
+        }
+    }
+
+    // Generate the present HTML for accordion
+    const presentHTML = `
+        <li class="list-group-item present-item" data-id="${present.id}" style="opacity: 0; transition: opacity 0.5s ease-in;">
+            <div class="d-flex align-items-start flex-wrap flex-md-nowrap">
+                <div class="flex-grow-1">
+                    <div class="fw-semibold present-name">${escapeHtml(present.title)}</div>
+                    ${present.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(present.comments)}</div>` : ''}
+                </div>
+                <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto mt-2 mt-md-0">
+                    <button class="btn btn-sm btn-primary w-100 w-md-auto edit-present-btn"
+                        data-present-id="${present.id}"
+                        data-present-title="${escapeHtml(present.title)}"
+                        data-recipient-id="${present.recipient_id}"
+                        data-present-comments="${escapeHtml(present.comments || '')}"
+                        style="max-width:50px; min-width:50px;">
+                        <i class="fas fa-edit" style="color: white;"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger w-100 w-md-auto delete-present-btn"
+                        data-present-id="${present.id}"
+                        data-present-title="${escapeHtml(present.title)}"
+                        data-recipient-id="${present.recipient_id}"
+                        style="max-width:50px; min-width:50px;">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </li>
+    `;
+
+    // Add to the top of the list
+    listGroup.insertAdjacentHTML('afterbegin', presentHTML);
+
+    // Get the newly added element and fade it in
+    const newPresentElement = listGroup.firstElementChild;
+    setTimeout(() => {
+        newPresentElement.style.opacity = '1';
+    }, 50);
+
+    // Add highlight animation
+    setTimeout(() => {
+        newPresentElement.style.transition = 'background-color 0.3s ease';
+        newPresentElement.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+        setTimeout(() => {
+            newPresentElement.style.backgroundColor = '';
+        }, 2000);
+    }, 500);
+
+    // Update the accordion button text to show new count
+    const accordionButton = recipientElement.querySelector('.accordion-button');
+    if (accordionButton) {
+        const currentCount = listGroup.children.length;
+        // Update the button text with new count
+        const buttonText = accordionButton.innerHTML;
+        const countMatch = buttonText.match(/\((\d+)\)/);
+        if (countMatch) {
+            accordionButton.innerHTML = buttonText.replace(/\(\d+\)/, `(${currentCount})`);
+        }
+    }
 }
 
 // Generate HTML for a single present
