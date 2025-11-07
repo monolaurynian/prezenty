@@ -2,37 +2,74 @@ console.log('Recipients.js loading... v7.0 - Reverted to separate API calls');
 
 // Handle scrolling to present from notification
 function handleScrollToPresentFromNotification() {
+    // Don't run if we're in the process of logging out
+    if (window._isLoggingOut) return;
+    
     const presentId = sessionStorage.getItem('scrollToPresentId');
-    if (presentId) {
-        sessionStorage.removeItem('scrollToPresentId');
-        
-        // Retry scrolling with exponential backoff to handle privacy screen loading
-        const scrollToPresentWithRetry = (retries = 0, maxRetries = 10) => {
-            const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
-            if (presentElement) {
-                presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!presentId) return; // Exit early if no scroll target
+    
+    sessionStorage.removeItem('scrollToPresentId');
+    
+    let resizeObserver = null;
+    let lastScrollPosition = null;
+    
+    // Retry scrolling with exponential backoff to handle privacy screen loading
+    const scrollToPresentWithRetry = (retries = 0, maxRetries = 10) => {
+        const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
+        if (presentElement) {
+            // Scroll to the element
+            presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            lastScrollPosition = presentElement.getBoundingClientRect().top + window.scrollY;
+            
+            // Watch for layout changes (privacy screen loading) and re-adjust scroll
+            if (!resizeObserver) {
+                resizeObserver = new ResizeObserver(() => {
+                    // When layout changes, re-scroll to keep element in view
+                    if (presentElement && presentElement.offsetParent !== null) {
+                        const currentTop = presentElement.getBoundingClientRect().top + window.scrollY;
+                        const scrollDifference = currentTop - lastScrollPosition;
+                        
+                        // If layout shifted significantly, adjust scroll to keep element centered
+                        if (Math.abs(scrollDifference) > 10) {
+                            presentElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+                            lastScrollPosition = presentElement.getBoundingClientRect().top + window.scrollY;
+                            console.log('[Notification] Adjusted scroll due to layout change');
+                        }
+                    }
+                });
                 
-                // Highlight the element briefly
-                presentElement.style.transition = 'background-color 0.3s ease';
-                const originalBg = presentElement.style.backgroundColor;
-                presentElement.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
+                // Only observe the specific present element, not the entire body
+                resizeObserver.observe(presentElement);
+                
+                // Stop observing after 3 seconds (privacy screen should be loaded by then)
                 setTimeout(() => {
-                    presentElement.style.backgroundColor = originalBg;
-                }, 2000);
-                
-                console.log('[Notification] Scrolled to present:', presentId);
-            } else if (retries < maxRetries) {
-                // Retry with increasing delays to handle privacy screen loading
-                const delay = Math.min(100 + (retries * 50), 500);
-                setTimeout(() => scrollToPresentWithRetry(retries + 1, maxRetries), delay);
-            } else {
-                console.warn('[Notification] Present element not found after retries:', presentId);
+                    if (resizeObserver) {
+                        resizeObserver.disconnect();
+                        resizeObserver = null;
+                    }
+                }, 3000);
             }
-        };
-        
-        // Start scrolling after initial page load
-        setTimeout(() => scrollToPresentWithRetry(), 300);
-    }
+            
+            // Highlight the element briefly
+            presentElement.style.transition = 'background-color 0.3s ease';
+            const originalBg = presentElement.style.backgroundColor;
+            presentElement.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
+            setTimeout(() => {
+                presentElement.style.backgroundColor = originalBg;
+            }, 2000);
+            
+            console.log('[Notification] Scrolled to present:', presentId);
+        } else if (retries < maxRetries) {
+            // Retry with increasing delays to handle privacy screen loading
+            const delay = Math.min(100 + (retries * 50), 500);
+            setTimeout(() => scrollToPresentWithRetry(retries + 1, maxRetries), delay);
+        } else {
+            console.warn('[Notification] Present element not found after retries:', presentId);
+        }
+    };
+    
+    // Start scrolling after initial page load
+    setTimeout(() => scrollToPresentWithRetry(), 300);
 }
 
 // Call on page load
@@ -42,6 +79,9 @@ window.addEventListener('load', handleScrollToPresentFromNotification);
 // Global logout function - ensure it's always available
 function logout() {
     console.log('[Logout] Clearing all caches...');
+    
+    // Set flag to prevent scroll handler from interfering
+    window._isLoggingOut = true;
 
     // Clear localStorage cache
     try {

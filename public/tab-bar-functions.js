@@ -125,11 +125,11 @@ function displayNotifications(notifications) {
         const timeAgo = getTimeAgo(notif.created_at);
         
         return `
-            <div class="tab-bar-notification-item ${isUnread ? 'unread' : ''}" style="display: flex; align-items: flex-start; gap: 12px; padding: 15px 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); background: ${isUnread ? 'rgba(33, 150, 243, 0.05)' : '#ffffff'};">
-                <div class="tab-bar-notification-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: ${config.color}20; color: ${config.color}; cursor: pointer; flex-shrink: 0;" onclick="markNotificationAsRead(${notif.id})">
+            <div class="tab-bar-notification-item ${isUnread ? 'unread' : ''}" data-notification-id="${notif.id}" style="display: flex; align-items: flex-start; gap: 12px; padding: 15px 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); background: ${isUnread ? 'rgba(33, 150, 243, 0.05)' : '#ffffff'};">
+                <div class="tab-bar-notification-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: ${config.color}20; color: ${config.color}; cursor: pointer; flex-shrink: 0;">
                     <i class="${config.icon}" style="font-size: 20px;"></i>
                 </div>
-                <div class="tab-bar-notification-content" style="flex: 1; min-width: 0; cursor: pointer;" onclick="markNotificationAsRead(${notif.id})">
+                <div class="tab-bar-notification-content" style="flex: 1; min-width: 0;">
                     <div class="tab-bar-notification-message" style="font-size: 14px; color: #2d3748; margin-bottom: 4px; line-height: 1.4;">
                         ${getNotificationMessage(notif)}
                     </div>
@@ -143,6 +143,18 @@ function displayNotifications(notifications) {
     }).join('');
     
     content.innerHTML = html;
+    
+    // Add event delegation for notification items
+    content.addEventListener('click', (e) => {
+        const notificationItem = e.target.closest('.tab-bar-notification-item');
+        if (notificationItem) {
+            const notificationId = notificationItem.getAttribute('data-notification-id');
+            // Only mark as read if not clicking on a link
+            if (!e.target.closest('a')) {
+                markNotificationAsRead(notificationId);
+            }
+        }
+    });
 }
 
 // Get notification message
