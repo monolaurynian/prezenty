@@ -4,11 +4,11 @@ console.log('Recipients.js loading... v7.0 - Reverted to separate API calls');
 function handleScrollToPresentFromNotification() {
     // Don't run if we're in the process of logging out
     if (window._isLoggingOut) return;
-    
+
     const presentId = sessionStorage.getItem('scrollToPresentId');
     if (presentId) {
         sessionStorage.removeItem('scrollToPresentId');
-        
+
         // Wait for page to load, then scroll to the present
         setTimeout(() => {
             scrollToPresentById(presentId);
@@ -19,10 +19,10 @@ function handleScrollToPresentFromNotification() {
 // Scroll to a specific present
 function scrollToPresentById(presentId) {
     console.log('[Notification] Scrolling to present:', presentId);
-    
+
     // Find the present element
     const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
-    
+
     if (presentElement) {
         // Check if it's inside a collapsed accordion (identified user's presents)
         const accordion = presentElement.closest('.accordion-collapse');
@@ -38,7 +38,7 @@ function scrollToPresentById(presentId) {
                 return;
             }
         }
-        
+
         // Scroll immediately if not in accordion or already expanded
         scrollAndHighlight(presentElement);
     } else {
@@ -50,7 +50,7 @@ function scrollToPresentById(presentId) {
 function scrollAndHighlight(presentElement) {
     // Scroll to the element
     presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
+
     // Highlight the present
     presentElement.style.transition = 'background-color 0.3s ease';
     const originalBg = presentElement.style.backgroundColor;
@@ -58,7 +58,7 @@ function scrollAndHighlight(presentElement) {
     setTimeout(() => {
         presentElement.style.backgroundColor = originalBg;
     }, 3000);
-    
+
     console.log('[Notification] Scrolled to present successfully');
 }
 
@@ -71,7 +71,7 @@ window.addEventListener('load', handleScrollToPresentFromNotification);
 // Global logout function - ensure it's always available
 function logout() {
     console.log('[Logout] Clearing all caches...');
-    
+
     // Set flag to prevent scroll handler from interfering
     window._isLoggingOut = true;
 
@@ -743,11 +743,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         placeholder.style.opacity = '0';
                         setTimeout(() => {
                             placeholder.remove();
-                            
+
                             // Display complete data after fade out
                             console.log('[FastLoad] Merging cached data with identified user data');
                             displayRecipientsWithPresents(allRecipients, allPresents);
-                            
+
                             // Fade in the new content
                             const newAccordion = document.querySelector(`[data-recipient-id="${identifiedRecipientId}"] .accordion`);
                             if (newAccordion) {
@@ -1090,7 +1090,7 @@ function displayRecipientsWithPresents(recipients, presents) {
             const ownPresents = recipientPresents.filter(p => p.created_by === currentUserId);
             const accordionId = `accordion-own-${recipient.id}`;
             const isLoading = recipientPresents.length === 0 && !window._identifiedUserDataLoaded;
-            
+
             presentsHTML = `
                 <div class="accordion" id="${accordionId}" data-recipient-id="${recipient.id}">
                     <div class="accordion-item">
@@ -1282,7 +1282,7 @@ function displayRecipientsWithPresents(recipients, presents) {
 
     // Add event delegation for edit and delete buttons
     setupPresentButtonListeners();
-    
+
     // Update search autocomplete data
     if (typeof updateSearchData === 'function') {
         setTimeout(() => updateSearchData(), 100);
@@ -1762,16 +1762,16 @@ function saveProfilePicture() {
         compressImage(file, 600, 600, 0.6)
             .then(compressedDataUrl => {
                 console.log('Image compressed successfully, size:', (compressedDataUrl.length / 1024).toFixed(2), 'KB');
-                
+
                 // Check compressed size
                 const estimatedSize = compressedDataUrl.length * 0.75;
                 const maxSize = 40 * 1024 * 1024; // 40MB limit for base64
-                
+
                 if (estimatedSize > maxSize) {
                     showErrorModal('Skompresowany obraz jest nadal zbyt duży. Spróbuj użyć mniejszego zdjęcia.');
                     return;
                 }
-                
+
                 saveImageToServer(compressedDataUrl);
             })
             .catch(error => {
@@ -1962,7 +1962,7 @@ function updatePresentCheckStatus(id, isChecked, presentItem) {
                 updateProgressBar(presentItem);
                 presentItem.classList.remove('updating');
                 presentItem.classList.remove('animating');
-                
+
                 // Trigger soft reload to update cache
                 if (typeof softReloadRecipients === 'function') {
                     softReloadRecipients();
@@ -2764,7 +2764,7 @@ function openAddRecipientModal() {
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('addRecipientModal'));
     modal.show();
-    
+
     // Auto-focus on name input after modal is shown
     document.getElementById('addRecipientModal').addEventListener('shown.bs.modal', function () {
         document.getElementById('recipientName').focus();
@@ -2980,7 +2980,7 @@ function reservePresentFromRecipients(presentId, button, previousState) {
                     currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'cancel')`);
                     currentButton.setAttribute('title', 'Usuń rezerwację');
                 }
-                
+
                 // Trigger soft reload to update cache
                 if (typeof softReloadRecipients === 'function') {
                     softReloadRecipients();
@@ -3041,7 +3041,7 @@ function cancelReservationFromRecipients(presentId, button, previousState) {
                     currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'reserve')`);
                     currentButton.setAttribute('title', 'Zarezerwuj prezent');
                 }
-                
+
                 // Trigger soft reload to update cache
                 if (typeof softReloadRecipients === 'function') {
                     softReloadRecipients();
@@ -3163,32 +3163,22 @@ displayRecipientsWithPresents = function (recipients, presents) {
 document.addEventListener('DOMContentLoaded', function () {
     let scrollPosition = 0;
 
-    // Handle modal hidden events to ensure proper focus management
+    // Handle modal events to ensure proper focus management and scroll position
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
         modal.addEventListener('show.bs.modal', function (e) {
-            // Save current scroll position
+            // Save current scroll position once
             scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-            
+
             // Ensure modal is properly accessible when shown
             this.removeAttribute('aria-hidden');
-            
-            // Prevent scrolling by keeping the scroll position
-            setTimeout(() => {
-                window.scrollTo(0, scrollPosition);
-            }, 0);
-        });
-
-        modal.addEventListener('shown.bs.modal', function () {
-            // Restore scroll position after modal is shown
-            window.scrollTo(0, scrollPosition);
         });
 
         modal.addEventListener('hidden.bs.modal', function () {
             // Move focus to body when modal is hidden to prevent aria-hidden issues
             document.body.focus();
-            
-            // Restore scroll position
+
+            // Restore scroll position once after modal closes
             window.scrollTo(0, scrollPosition);
         });
     });
@@ -3262,17 +3252,17 @@ function saveNewProfilePicture() {
             console.log('Image compressed successfully');
             console.log('- Base64 string length:', compressedDataUrl.length);
             console.log('- Size:', sizeKB, 'KB (', sizeMB, 'MB)');
-            
+
             // Check compressed size (base64 string length / 1.37 ≈ actual bytes)
             const estimatedSize = compressedDataUrl.length * 0.75; // rough estimate
             const maxSize = 40 * 1024 * 1024; // 40MB limit for base64
-            
+
             if (estimatedSize > maxSize) {
                 throw new Error('Skompresowany obraz jest nadal zbyt duży. Spróbuj użyć mniejszego zdjęcia.');
             }
-            
+
             console.log('Sending image to server...');
-            
+
             // Send compressed image as JSON
             return fetch(`/api/recipients/${recipientId}/profile-picture`, {
                 method: 'POST',
@@ -3715,6 +3705,9 @@ function softReloadRecipients() {
             const recipients = combinedData.recipients || [];
             const presentsData = combinedData.presents || [];
 
+            // Store old cache for comparison
+            const oldCache = window._dataCache;
+
             // Update cache
             const cacheData = { recipients, presents: presentsData, identificationStatus };
             window._dataCache = cacheData;
@@ -3725,12 +3718,8 @@ function softReloadRecipients() {
             // Save to persistent cache
             saveToPersistentCache(cacheData);
 
-            // Update display without full re-render - just update the data in background
-            // Don't call displayRecipientsWithPresents to avoid page refresh
-            console.log('Data updated in cache without re-rendering');
-            
-            // Only update identification status UI elements without full reload
-            updateIdentificationStatusOnly(recipients, identificationStatus);
+            // Smart update: only update changed elements
+            updateChangedElementsOnly(oldCache, cacheData);
         })
         .catch(error => {
             console.error('Error in soft reload:', error);
@@ -3741,30 +3730,102 @@ function softReloadRecipients() {
         });
 }
 
-// Update only identification-related UI elements without full page re-render
-function updateIdentificationStatusOnly(recipients, identificationStatus) {
-    if (!identificationStatus || !identificationStatus.isIdentified) {
+// Smart update: only update elements that changed
+function updateChangedElementsOnly(oldCache, newCache) {
+    if (!oldCache || !oldCache.presents || !newCache || !newCache.presents) {
+        console.log('[SmartUpdate] No old cache, skipping smart update');
         return;
     }
-    
-    // Update current user ID
-    currentUserId = identificationStatus.userId;
-    
-    // Find which recipient is identified
-    const identifiedRecipient = recipients.find(r => r.identified_by === currentUserId);
-    
-    if (identifiedRecipient) {
-        console.log('Updated identification status for:', identifiedRecipient.name);
-        
-        // Update any identification buttons/badges in the UI without full reload
-        const recipientElement = document.querySelector(`[data-recipient-id="${identifiedRecipient.id}"]`);
-        if (recipientElement) {
-            // Add identified class if needed
-            recipientElement.classList.add('identified-recipient');
+
+    const oldPresents = oldCache.presents;
+    const newPresents = newCache.presents;
+
+    // Find changed presents
+    newPresents.forEach(newPresent => {
+        const oldPresent = oldPresents.find(p => p.id === newPresent.id);
+
+        if (!oldPresent) {
+            // New present added - could add it to DOM, but for now just log
+            console.log('[SmartUpdate] New present detected:', newPresent.id);
+            return;
         }
+
+        // Check if reservation status changed
+        if (oldPresent.reserved_by !== newPresent.reserved_by) {
+            console.log('[SmartUpdate] Reservation changed for present:', newPresent.id);
+            updatePresentReservationUI(newPresent);
+        }
+
+        // Check if checked status changed
+        if (oldPresent.is_checked !== newPresent.is_checked) {
+            console.log('[SmartUpdate] Check status changed for present:', newPresent.id);
+            updatePresentCheckUI(newPresent);
+        }
+    });
+
+    // Check for identification changes
+    if (oldCache.identificationStatus?.isIdentified !== newCache.identificationStatus?.isIdentified) {
+        console.log('[SmartUpdate] Identification status changed, full reload needed');
+        // For identification changes, we need a full reload
+        displayRecipientsWithPresents(newCache.recipients, newCache.presents);
     }
 }
 
+// Update present reservation UI without full reload
+function updatePresentReservationUI(present) {
+    const presentElement = document.querySelector(`[data-id="${present.id}"]`);
+    if (!presentElement) return;
+
+    const reserveBtn = presentElement.querySelector('.reserve-btn');
+    if (!reserveBtn) return;
+
+    const currentUserId = window._currentUserId;
+
+    // Update button based on reservation status
+    if (present.reserved_by === currentUserId) {
+        // Reserved by current user
+        reserveBtn.className = 'btn btn-danger btn-sm w-100 w-md-auto reserve-btn';
+        reserveBtn.innerHTML = '<i class="fas fa-xmark"></i> <span class="d-none d-md-inline">Anuluj</span>';
+        reserveBtn.setAttribute('onclick', `handleReserveClick(event, ${present.id}, 'cancel')`);
+        reserveBtn.setAttribute('title', 'Usuń rezerwację');
+        presentElement.classList.add('reserved-by-me');
+        presentElement.classList.remove('reserved-by-other');
+    } else if (present.reserved_by) {
+        // Reserved by someone else
+        reserveBtn.className = 'btn btn-secondary btn-sm w-100 w-md-auto reserve-btn';
+        reserveBtn.innerHTML = '<i class="fas fa-bookmark"></i> <span class="d-none d-md-inline">Zarezerwowane</span>';
+        reserveBtn.setAttribute('onclick', `showReservedByOtherModal('${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}')`);
+        reserveBtn.setAttribute('title', `Zarezerwowane przez: ${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}`);
+        presentElement.classList.add('reserved-by-other');
+        presentElement.classList.remove('reserved-by-me');
+    } else {
+        // Not reserved
+        reserveBtn.className = 'btn btn-outline-warning btn-sm w-100 w-md-auto reserve-btn';
+        reserveBtn.innerHTML = '<i class="fas fa-bookmark"></i> <span class="d-none d-md-inline">Zarezerwuj</span>';
+        reserveBtn.setAttribute('onclick', `handleReserveClick(event, ${present.id}, 'reserve')`);
+        reserveBtn.setAttribute('title', 'Zarezerwuj prezent');
+        presentElement.classList.remove('reserved-by-me', 'reserved-by-other');
+    }
+}
+
+// Update present check UI without full reload
+function updatePresentCheckUI(present) {
+    const presentElement = document.querySelector(`[data-id="${present.id}"]`);
+    if (!presentElement) return;
+
+    const checkbox = presentElement.querySelector('input[type="checkbox"]');
+    if (checkbox) {
+        checkbox.checked = present.is_checked;
+    }
+
+    if (present.is_checked) {
+        presentElement.classList.add('checked');
+    } else {
+        presentElement.classList.remove('checked');
+    }
+}
+
+// Update only identification-related UI elements without full page re-render
 // Toast notification system
 function showToast(message, type = 'success') {
     const toastId = `${type}Toast`;
@@ -3930,17 +3991,17 @@ function refreshRecipientsCache() {
 function filterRecipients(searchTerm) {
     const term = searchTerm.toLowerCase().trim();
     const recipientCards = document.querySelectorAll('.recipient-card');
-    
+
     recipientCards.forEach(card => {
         const recipientName = card.querySelector('.recipient-name')?.textContent.toLowerCase() || '';
         const presents = card.querySelectorAll('.present-item');
         let hasVisiblePresent = false;
-        
+
         // Check each present
         presents.forEach(present => {
             const presentTitle = present.querySelector('.present-title')?.textContent.toLowerCase() || '';
             const presentComments = present.querySelector('.present-comments')?.textContent.toLowerCase() || '';
-            
+
             if (presentTitle.includes(term) || presentComments.includes(term)) {
                 present.style.display = '';
                 hasVisiblePresent = true;
@@ -3948,7 +4009,7 @@ function filterRecipients(searchTerm) {
                 present.style.display = term ? 'none' : '';
             }
         });
-        
+
         // Show card if recipient name matches or has visible presents
         if (recipientName.includes(term) || hasVisiblePresent || !term) {
             card.style.display = '';
@@ -3963,10 +4024,10 @@ function filterRecipients(searchTerm) {
 }
 
 // Initialize search functionality when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('recipientSearch');
     if (searchInput) {
-        searchInput.addEventListener('keyup', function() {
+        searchInput.addEventListener('keyup', function () {
             filterRecipients(this.value);
         });
     }
