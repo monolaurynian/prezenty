@@ -748,7 +748,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }).catch(error => {
         console.error('Auth failed:', error);
-        window.location.href = '/';
+        // Prevent redirect loop - only redirect if we're not already redirecting
+        if (!window._isRedirecting) {
+            window._isRedirecting = true;
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 100);
+        }
     });
 
     // Profile picture preview

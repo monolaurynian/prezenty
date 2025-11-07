@@ -242,14 +242,8 @@
                 loginMessage.style.display = 'block';
             }
 
-            // Redirect authenticated users to /recipients on page load
-            fetch('/api/auth')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.authenticated) {
-                        window.location.href = '/recipients';
-                    }
-                });
+            // Note: Server-side redirect handles authenticated users
+            // No need for client-side auth check here to avoid redirect loops
         });
 
         function toggleToRegister(event) {
