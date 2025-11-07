@@ -589,20 +589,17 @@ document.addEventListener('DOMContentLoaded', function () {
                             if (recipientsList && !recipientsList.querySelector('.loading-placeholder')) {
                                 const placeholder = document.createElement('div');
                                 placeholder.className = 'col-12 loading-placeholder';
+                                placeholder.style.transition = 'opacity 0.3s ease-out';
+                                placeholder.style.opacity = '1';
                                 placeholder.innerHTML = `
-                                    <div class="card main-card" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107;">
-                                        <div class="card-body text-center py-4">
-                                            <div class="mb-3">
-                                                <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
-                                                    <span class="visually-hidden">Ładowanie...</span>
-                                                </div>
-                                            </div>
-                                            <h5 class="mb-2">
-                                                <i class="fas fa-gift me-2"></i>${identifiedRecipient.name}
-                                            </h5>
-                                            <p class="text-muted mb-0">
-                                                <i class="fas fa-lock me-1"></i>Ładowanie Twoich prezentów z zachowaniem prywatności...
-                                            </p>
+                                    <div class="accordion" style="transition: opacity 0.3s ease-out;">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed" type="button" disabled style="background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%); border-left: 4px solid #0d6efd; color: #084298; font-weight: 600; cursor: default;">
+                                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                                    <i class="fas fa-lock me-2"></i>Ładowanie Twoich prezentów z zachowaniem prywatności...
+                                                </button>
+                                            </h2>
                                         </div>
                                     </div>
                                 `;
@@ -688,13 +685,31 @@ document.addEventListener('DOMContentLoaded', function () {
                         ...identifiedPresents // Add fresh identified user's presents
                     ];
 
-                    // Remove placeholder
+                    // Fade out and remove placeholder
                     const placeholder = document.querySelector('.loading-placeholder');
-                    if (placeholder) placeholder.remove();
-
-                    // Display complete data
-                    console.log('[FastLoad] Merging cached data with identified user data');
-                    displayRecipientsWithPresents(allRecipients, allPresents);
+                    if (placeholder) {
+                        placeholder.style.opacity = '0';
+                        setTimeout(() => {
+                            placeholder.remove();
+                            
+                            // Display complete data after fade out
+                            console.log('[FastLoad] Merging cached data with identified user data');
+                            displayRecipientsWithPresents(allRecipients, allPresents);
+                            
+                            // Fade in the new content
+                            const newAccordion = document.querySelector(`[data-recipient-id="${identifiedRecipientId}"] .accordion`);
+                            if (newAccordion) {
+                                newAccordion.style.opacity = '0';
+                                setTimeout(() => {
+                                    newAccordion.style.opacity = '1';
+                                }, 50);
+                            }
+                        }, 300);
+                    } else {
+                        // No placeholder, just display
+                        console.log('[FastLoad] Merging cached data with identified user data');
+                        displayRecipientsWithPresents(allRecipients, allPresents);
+                    }
 
                     // Mark that identified user data is loaded
                     window._identifiedUserDataLoaded = true;
@@ -1063,7 +1078,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                                                             ${p.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
                                                         </div>
                                                         <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto mt-2 mt-md-0">
-                                                            <button class="btn btn-sm btn-outline-primary w-100 w-md-auto edit-present-btn"
+                                                            <button class="btn btn-sm btn-primary w-100 w-md-auto edit-present-btn"
                                                                 data-present-id="${p.id}"
                                                                 data-present-title="${escapeHtml(p.title)}"
                                                                 data-recipient-id="${p.recipient_id}"
@@ -3643,9 +3658,12 @@ function softReloadRecipients() {
             // Save to persistent cache
             saveToPersistentCache(cacheData);
 
-            // Update display without loading state
-            displayRecipientsWithPresents(recipients, presentsData);
-            handleIdentificationLogic(recipients, identificationStatus);
+            // Update display without full re-render - just update the data in background
+            // Don't call displayRecipientsWithPresents to avoid page refresh
+            console.log('Data updated in cache without re-rendering');
+            
+            // Only update identification status UI elements without full reload
+            updateIdentificationStatusOnly(recipients, identificationStatus);
         })
         .catch(error => {
             console.error('Error in soft reload:', error);
@@ -3654,6 +3672,30 @@ function softReloadRecipients() {
                 console.log('Using cached data after soft reload error');
             }
         });
+}
+
+// Update only identification-related UI elements without full page re-render
+function updateIdentificationStatusOnly(recipients, identificationStatus) {
+    if (!identificationStatus || !identificationStatus.isIdentified) {
+        return;
+    }
+    
+    // Update current user ID
+    currentUserId = identificationStatus.userId;
+    
+    // Find which recipient is identified
+    const identifiedRecipient = recipients.find(r => r.identified_by === currentUserId);
+    
+    if (identifiedRecipient) {
+        console.log('Updated identification status for:', identifiedRecipient.name);
+        
+        // Update any identification buttons/badges in the UI without full reload
+        const recipientElement = document.querySelector(`[data-recipient-id="${identifiedRecipient.id}"]`);
+        if (recipientElement) {
+            // Add identified class if needed
+            recipientElement.classList.add('identified-recipient');
+        }
+    }
 }
 
 // Toast notification system

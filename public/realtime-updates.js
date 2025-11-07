@@ -123,33 +123,23 @@
             const newHash = data.hash;
             
             if (lastDataHash && lastDataHash !== newHash) {
-                console.log('[Realtime] Data changed, reloading...', {
+                console.log('[Realtime] Data changed, updating cache silently...', {
                     oldHash: lastDataHash.substring(0, 8),
                     newHash: newHash.substring(0, 8),
                     counts: data.counts
                 });
                 
-                // Show loading indicator
-                const recipientsList = document.getElementById('recipientsList');
-                if (recipientsList) {
-                    recipientsList.style.opacity = '0.6';
-                }
-                
-                // Reload the data
-                if (typeof loadRecipientsAndPresents === 'function') {
-                    await loadRecipientsAndPresents();
+                // Update cache in background without reloading the page
+                if (typeof softReloadRecipients === 'function') {
+                    // Use soft reload which updates cache without re-rendering
+                    softReloadRecipients();
                     
                     // Show subtle notification
                     if (typeof showInfoToast === 'function') {
-                        showInfoToast('✨ Dane zostały zaktualizowane');
+                        showInfoToast('✨ Dane zaktualizowane');
                     }
-                } else if (typeof window.loadRecipients === 'function') {
-                    await window.loadRecipients();
-                }
-                
-                // Restore opacity
-                if (recipientsList) {
-                    recipientsList.style.opacity = '1';
+                } else {
+                    console.log('[Realtime] softReloadRecipients not available, skipping update');
                 }
             } else if (lastDataHash) {
                 console.log('[Realtime] No changes detected');
