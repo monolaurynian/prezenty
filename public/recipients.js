@@ -32,16 +32,36 @@ function setupFilterPersistence() {
     const recipientsList = document.getElementById('recipientsList');
     if (!recipientsList) return;
     
-    const observer = new MutationObserver(() => {
-        if (activeFilterPresentId) {
-            console.log('[Filter] DOM changed, reapplying filter');
+    // Disconnect existing observer if any
+    if (window._filterObserver) {
+        window._filterObserver.disconnect();
+    }
+    
+    let isApplyingFilter = false;
+    
+    const observer = new MutationObserver((mutations) => {
+        // Ignore mutations caused by our own filtering
+        if (isApplyingFilter) return;
+        
+        // Check if this is a significant change (new elements added)
+        const hasNewElements = mutations.some(mutation => 
+            mutation.type === 'childList' && mutation.addedNodes.length > 0
+        );
+        
+        if (hasNewElements && activeFilterPresentId) {
+            console.log('[Filter] New elements detected, reapplying filter');
+            isApplyingFilter = true;
             filterToPresentById(activeFilterPresentId);
+            // Reset flag after a short delay
+            setTimeout(() => {
+                isApplyingFilter = false;
+            }, 100);
         }
     });
     
     observer.observe(recipientsList, {
         childList: true,
-        subtree: true
+        subtree: false // Only watch direct children, not deep changes
     });
     
     // Store observer to disconnect later

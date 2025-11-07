@@ -445,27 +445,52 @@
             present_added: {
                 icon: 'fa-gift',
                 color: '#2196F3',
-                getMessage: (data, actor) => `<strong>${actor}</strong> dodał(a) prezent "<strong>${data.presentTitle}</strong>" dla ${data.recipientName}`
+                getMessage: (data, actor) => {
+                    const presentLink = data.presentId ? 
+                        `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #2196F3; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
+                        `<strong>"${data.presentTitle}"</strong>`;
+                    return `<strong>${actor}</strong> dodał(a) prezent ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+                }
             },
             present_reserved: {
                 icon: 'fa-bookmark',
                 color: '#FF9800',
-                getMessage: (data, actor) => `<strong>${actor}</strong> zarezerwował(a) prezent "<strong>${data.presentTitle}</strong>"`
+                getMessage: (data, actor) => {
+                    const presentLink = data.presentId ? 
+                        `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #FF9800; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
+                        `<strong>"${data.presentTitle}"</strong>`;
+                    return `<strong>${actor}</strong> zarezerwował(a) prezent ${presentLink}`;
+                }
             },
             present_unreserved: {
                 icon: 'fa-bookmark-slash',
                 color: '#9E9E9E',
-                getMessage: (data, actor) => `<strong>${actor}</strong> anulował(a) rezerwację "<strong>${data.presentTitle}</strong>"`
+                getMessage: (data, actor) => {
+                    const presentLink = data.presentId ? 
+                        `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #9E9E9E; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
+                        `<strong>"${data.presentTitle}"</strong>`;
+                    return `<strong>${actor}</strong> anulował(a) rezerwację ${presentLink}`;
+                }
             },
             present_checked: {
                 icon: 'fa-check-circle',
                 color: '#4CAF50',
-                getMessage: (data, actor) => `<strong>${actor}</strong> oznaczył(a) jako kupione "<strong>${data.presentTitle}</strong>"`
+                getMessage: (data, actor) => {
+                    const presentLink = data.presentId ? 
+                        `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #4CAF50; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
+                        `<strong>"${data.presentTitle}"</strong>`;
+                    return `<strong>${actor}</strong> oznaczył(a) jako kupione ${presentLink}`;
+                }
             },
             present_unchecked: {
                 icon: 'fa-circle',
                 color: '#9E9E9E',
-                getMessage: (data, actor) => `<strong>${actor}</strong> odznaczył(a) "<strong>${data.presentTitle}</strong>"`
+                getMessage: (data, actor) => {
+                    const presentLink = data.presentId ? 
+                        `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #9E9E9E; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
+                        `<strong>"${data.presentTitle}"</strong>`;
+                    return `<strong>${actor}</strong> odznaczył(a) ${presentLink}`;
+                }
             }
         };
 
