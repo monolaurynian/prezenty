@@ -29,29 +29,9 @@ function toggleNotificationsPanel() {
     overlay.classList.toggle('show', isOpen);
     
     if (isOpen) {
-        // Mark all notifications as read when opening panel
-        console.log('[Notifications] Opening panel - marking all as read');
-        fetch('/api/notifications/read-all', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                console.log('[Notifications] Marked all as read, response:', data);
-                // Clear the badge immediately after marking as read
-                if (badge) {
-                    badge.style.display = 'none';
-                }
-                // Reload notifications
-                loadRecentNotifications();
-                updateNotificationBadge();
-            })
-            .catch(error => {
-                console.error('[Notifications] Error marking as read:', error);
-                // Still clear badge and load notifications even if marking as read fails
-                if (badge) {
-                    badge.style.display = 'none';
-                }
-                loadRecentNotifications();
-                updateNotificationBadge();
-            });
+        // Load notifications when opening panel
+        console.log('[Notifications] Opening panel - loading notifications');
+        loadRecentNotifications();
         
         // Check for data updates when opening notifications
         if (window.realtimeUpdates && typeof window.realtimeUpdates.check === 'function') {
@@ -59,6 +39,27 @@ function toggleNotificationsPanel() {
                 window.realtimeUpdates.check();
             }, 500);
         }
+    } else {
+        // Mark all notifications as read when closing panel
+        console.log('[Notifications] Closing panel - marking all as read');
+        fetch('/api/notifications/read-all', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log('[Notifications] Marked all as read, response:', data);
+                // Clear the badge after marking as read
+                if (badge) {
+                    badge.style.display = 'none';
+                }
+                updateNotificationBadge();
+            })
+            .catch(error => {
+                console.error('[Notifications] Error marking as read:', error);
+                // Still clear badge even if marking as read fails
+                if (badge) {
+                    badge.style.display = 'none';
+                }
+                updateNotificationBadge();
+            });
     }
 }
 
