@@ -927,7 +927,7 @@
                 document.getElementById('loadingSpinner').style.display = 'none';
 
                 if (data.users && data.users.length > 0) {
-                    renderLeaderboard(data.users);
+                    renderLeaderboard(data.users, data.cumulativeStats);
                 } else {
                     document.getElementById('emptyState').style.display = 'block';
                 }
@@ -938,7 +938,7 @@
             }
         }
 
-        function renderLeaderboard(users) {
+        function renderLeaderboard(users, cumulativeStats) {
             // Show podium for top 3
             if (users.length >= 3) {
                 document.getElementById('podiumSection').style.display = 'block';
@@ -949,9 +949,9 @@
             document.getElementById('rankingList').style.display = 'block';
             renderUsersList(users);
             
-            // Show cumulative progress bars for ALL users
+            // Show cumulative progress bars with stats from API
             document.getElementById('cumulativeProgressSection').style.display = 'block';
-            updateCumulativeProgress(users);
+            updateCumulativeProgress(cumulativeStats);
         }
 
         function renderPodium(top3) {
@@ -983,11 +983,18 @@
             `).join('');
         }
         
-        function updateCumulativeProgress(users) {
-            // Calculate cumulative totals from ALL users
-            const totalPresents = users.reduce((sum, u) => sum + (u.total_presents || 0), 0);
-            const totalBought = users.reduce((sum, u) => sum + (u.bought_presents || 0), 0);
-            const totalReserved = users.reduce((sum, u) => sum + (u.reserved_presents || 0), 0);
+        function updateCumulativeProgress(cumulativeStats) {
+            if (!cumulativeStats) {
+                console.warn('No cumulative stats provided');
+                return;
+            }
+            
+            // Get totals from API
+            const totalPresents = cumulativeStats.totalPresents || 0;
+            const totalBought = cumulativeStats.boughtPresents || 0;
+            const totalReserved = cumulativeStats.reservedPresents || 0;
+            
+            console.log('[Progress] Cumulative stats:', { totalPresents, totalBought, totalReserved });
             
             // Calculate percentages
             const boughtPercent = totalPresents > 0 ? Math.round((totalBought / totalPresents) * 100) : 0;
@@ -997,8 +1004,7 @@
             document.getElementById('boughtStats').textContent = `${totalBought}/${totalPresents}`;
             document.getElementById('boughtProgressBar').style.width = `${boughtPercent}%`;
             
-            // Update reserved progress - show reserved vs not reserved
-            const notReserved = totalPresents - totalReserved;
+            // Update reserved progress
             document.getElementById('reservedStats').textContent = `${totalReserved}/${totalPresents}`;
             document.getElementById('reservedProgressBar').style.width = `${reservedPercent}%`;
         }

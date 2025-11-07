@@ -2080,10 +2080,10 @@ app.get('/api/leaderboard', async (req, res) => {
         console.log('📊 [LEADERBOARD] Fetching most active users');
 
         if (DEMO_MODE) {
-            return res.json({ users: [] });
+            return res.json({ users: [], cumulativeStats: { totalPresents: 0, boughtPresents: 0, reservedPresents: 0 } });
         }
 
-        // Get users with their present count and buying progress, ordered by activity
+        // Get users with their present count, ordered by activity
         const [users] = await pool.execute(`
             SELECT 
                 u.id,
@@ -2106,9 +2106,22 @@ app.get('/api/leaderboard', async (req, res) => {
             LIMIT 10
         `);
 
-        console.log(`✅ [LEADERBOARD] Found ${users.length} active users`);
+        // Get cumulative stats from ALL presents in the system
+        const [cumulativeStats] = await pool.execute(`
+            SELECT 
+                COUNT(*) as totalPresents,
+                SUM(CASE WHEN is_checked = 1 THEN 1 ELSE 0 END) as boughtPresents,
+                SUM(CASE WHEN reserved_by IS NOT NULL THEN 1 ELSE 0 END) as reservedPresents
+            FROM presents
+        `);
 
-        res.json({ users: users });
+        console.log(`✅ [LEADERBOARD] Found ${users.length} active users`);
+        console.log(`📊 [LEADERBOARD] Cumulative stats:`, cumulativeStats[0]);
+
+        res.json({ 
+            users: users,
+            cumulativeStats: cumulativeStats[0]
+        });
     } catch (err) {
         console.error('❌ [LEADERBOARD] Error fetching leaderboard:', err);
         res.status(500).json({ error: 'Failed to fetch leaderboard' });
