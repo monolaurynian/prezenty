@@ -745,26 +745,35 @@ document.addEventListener('DOMContentLoaded', function () {
                         ...identifiedPresents // Add fresh identified user's presents
                     ];
 
-                    // Fade out and remove placeholder
+                    // Fade out only the accordion content, not the entire card
                     const placeholder = document.querySelector('.loading-placeholder');
                     if (placeholder) {
-                        placeholder.style.opacity = '0';
-                        setTimeout(() => {
-                            placeholder.remove();
+                        const accordionContent = placeholder.querySelector('.accordion');
+                        if (accordionContent) {
+                            accordionContent.style.transition = 'opacity 0.3s ease-out';
+                            accordionContent.style.opacity = '0';
 
-                            // Display complete data after fade out
+                            setTimeout(() => {
+                                // Remove the placeholder class to convert it to a real card
+                                placeholder.classList.remove('loading-placeholder');
+
+                                // Display complete data - this will replace the placeholder content
+                                console.log('[FastLoad] Merging cached data with identified user data');
+                                displayRecipientsWithPresents(allRecipients, allPresents);
+
+                                // Remove the old placeholder after new content is rendered
+                                setTimeout(() => {
+                                    if (placeholder.parentElement) {
+                                        placeholder.remove();
+                                    }
+                                }, 50);
+                            }, 300);
+                        } else {
+                            // No accordion found, remove entire placeholder
+                            placeholder.remove();
                             console.log('[FastLoad] Merging cached data with identified user data');
                             displayRecipientsWithPresents(allRecipients, allPresents);
-
-                            // Fade in the new content
-                            const newAccordion = document.querySelector(`[data-recipient-id="${identifiedRecipientId}"] .accordion`);
-                            if (newAccordion) {
-                                newAccordion.style.opacity = '0';
-                                setTimeout(() => {
-                                    newAccordion.style.opacity = '1';
-                                }, 50);
-                            }
-                        }, 300);
+                        }
                     } else {
                         // No placeholder, just display
                         console.log('[FastLoad] Merging cached data with identified user data');
@@ -3409,7 +3418,23 @@ function saveEditedPresent() {
             if (data.success) {
                 showEditPresentMessage('Prezent został zaktualizowany!', 'success');
 
-                // Refresh the list
+                // Update the present in the DOM immediately
+                updatePresentInDOM(presentId, title, comments);
+
+                // Update cache
+                if (window._dataCache && window._dataCache.presents) {
+                    const present = window._dataCache.presents.find(p => p.id == presentId);
+                    if (present) {
+                        present.title = title;
+                        present.comments = comments;
+                        present.recipient_id = recipientId;
+                    }
+                }
+
+                // Update notifications to reflect the new title
+                updateNotificationsForEditedPresent(presentId, title);
+
+                // Close modal and refresh cache in background
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editPresentModal'));
                     modal.hide();
@@ -3447,6 +3472,26 @@ if (typeof window.deletePresent !== 'function') {
             .then(data => {
                 if (data.success) {
                     showSuccessMessage('Prezent został usunięty.');
+
+                    // Remove from DOM immediately
+                    const presentElement = document.querySelector(`[data-id="${presentId}"]`);
+                    if (presentElement) {
+                        presentElement.style.transition = 'opacity 0.3s ease-out';
+                        presentElement.style.opacity = '0';
+                        setTimeout(() => {
+                            presentElement.remove();
+                        }, 300);
+                    }
+
+                    // Update cache
+                    if (window._dataCache && window._dataCache.presents) {
+                        window._dataCache.presents = window._dataCache.presents.filter(p => p.id != presentId);
+                    }
+
+                    // Cross out the present in notifications
+                    updateNotificationsForDeletedPresent(presentId);
+
+                    // Refresh cache in background
                     softReloadRecipients();
                 } else {
                     showErrorModal(data.error || 'Błąd podczas usuwania prezentu');
@@ -3842,7 +3887,97 @@ function updatePresentCheckUI(present) {
     }
 }
 
-// Update only identification-related UI elements without full page re-render
+// Update present title and comments in DOM without full reload
+function updatePresentInDOM(presentId, newTitle, newComments) {
+    const presentElement = document.querySelector(`[data-id="${presentId}"]`);
+    if (!presentElement) return;
+
+    // Update title
+    const titleElement = presentElement.querySelector('.present-name');
+    if (titleElement) {
+        titleElement.textContent = newTitle;
+    }
+
+    // Update comments
+    const commentsElement = presentElement.querySelector('.text-muted.small');
+    if (commentsElement) {
+        if (newComments) {
+            commentsElement.innerHTML = `<i class="fas fa-info-circle me-1"></i>${escapeHtml(newComments)}`;
+            commentsElement.style.display = '';
+        } else {
+            commentsElement.style.display = 'none';
+        }
+    } else if (newComments) {
+        // Add comments if they didn't exist before
+        const presentNameDiv = presentElement.querySelector('.present-name').parentElement;
+        const commentsDiv = document.createElement('div');
+        commentsDiv.className = 'text-muted small mt-1';
+        commentsDiv.innerHTML = `<i class="fas fa-info-circle me-1"></i>${escapeHtml(newComments)}`;
+        presentNameDiv.appendChild(commentsDiv);
+    }
+
+    // Add a brief highlight animation to show the change
+    presentElement.style.transition = 'background-color 0.3s ease';
+    const originalBg = presentElement.style.backgroundColor;
+    presentElement.style.backgroundColor = 'rgba(33, 150, 243, 0.1)';
+    setTimeout(() => {
+        presentElement.style.backgroundColor = originalBg;
+    }, 1000);
+}
+
+// Update notifications when a present is edited (change title in notifications)
+function updateNotificationsForEditedPresent(presentId, newTitle) {
+    const notificationItems = document.querySelectorAll('.tab-bar-notification-item');
+
+    notificationItems.forEach(item => {
+        const messageDiv = item.querySelector('.tab-bar-notification-message');
+        if (!messageDiv) return;
+
+        // Find links with this presentId
+        const presentLinks = messageDiv.querySelectorAll(`a[onclick*="scrollToPresentFromNotification(${presentId})"]`);
+
+        presentLinks.forEach(link => {
+            // Update the link text to the new title
+            link.innerHTML = `<strong>${escapeHtml(newTitle)}</strong>`;
+        });
+    });
+}
+
+// Update notifications when a present is deleted (cross it out)
+function updateNotificationsForDeletedPresent(presentId) {
+    const notificationItems = document.querySelectorAll('.tab-bar-notification-item');
+
+    notificationItems.forEach(item => {
+        const messageDiv = item.querySelector('.tab-bar-notification-message');
+        if (!messageDiv) return;
+
+        // Find links with this presentId
+        const presentLinks = messageDiv.querySelectorAll(`a[onclick*="scrollToPresentFromNotification(${presentId})"]`);
+
+        presentLinks.forEach(link => {
+            // Cross out the present name and make it gray
+            link.style.textDecoration = 'line-through';
+            link.style.color = '#999';
+            link.style.cursor = 'not-allowed';
+            link.onclick = function (e) {
+                e.preventDefault();
+                return false;
+            };
+
+            // Add a deleted indicator
+            if (!link.querySelector('.deleted-indicator')) {
+                const deletedSpan = document.createElement('span');
+                deletedSpan.className = 'deleted-indicator';
+                deletedSpan.style.color = '#999';
+                deletedSpan.style.fontSize = '0.85em';
+                deletedSpan.style.marginLeft = '4px';
+                deletedSpan.textContent = '(usunięty)';
+                link.parentElement.insertBefore(deletedSpan, link.nextSibling);
+            }
+        });
+    });
+}
+
 // Toast notification system
 function showToast(message, type = 'success') {
     const toastId = `${type}Toast`;
