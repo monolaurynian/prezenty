@@ -923,7 +923,11 @@
             const medals = ['🥇', '🥈', '🥉'];
             const positions = ['first', 'second', 'third'];
 
-            podium.innerHTML = top3.map((user, index) => `
+            podium.innerHTML = top3.map((user, index) => {
+                const boughtPercent = user.total_presents > 0 ? Math.round((user.bought_presents || 0) / user.total_presents * 100) : 0;
+                const reservedPercent = user.total_presents > 0 ? Math.round((user.reserved_presents || 0) / user.total_presents * 100) : 0;
+                
+                return `
                 <div class="podium-place ${positions[index]}" onclick="navigateToUserInRecipients('${user.username}')" style="cursor: pointer;">
                     ${index === 0 ? '<div class="podium-crown">👑</div>' : ''}
                     <div class="podium-rank">${medals[index]}</div>
@@ -940,17 +944,42 @@
                             ${user.total_presents} ${user.total_presents === 1 ? 'prezent' : 'prezentów'}
                         </div>
                     </div>
+                    <!-- Progress Bars -->
+                    <div style="width: 100%; margin-top: 15px; padding: 0 10px;">
+                        <!-- Buying Progress -->
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 4px; font-weight: 600;">
+                                <i class="fas fa-shopping-bag" style="color: #4CAF50;"></i> Kupione: ${user.bought_presents || 0}/${user.total_presents}
+                            </div>
+                            <div style="background: #e0e0e0; border-radius: 8px; height: 8px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: ${boughtPercent}%; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                        <!-- Reserved vs Available Progress -->
+                        <div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 4px; font-weight: 600;">
+                                <i class="fas fa-bookmark" style="color: #FF9800;"></i> Zarezerwowane: ${user.reserved_presents || 0}/${user.available_presents + (user.reserved_presents || 0)}
+                            </div>
+                            <div style="background: #e0e0e0; border-radius: 8px; height: 8px; overflow: hidden; display: flex;">
+                                <div style="background: linear-gradient(90deg, #FF9800, #F57C00); height: 100%; width: ${reservedPercent}%; transition: width 0.3s ease;"></div>
+                                <div style="background: #c0c0c0; height: 100%; flex: 1;"></div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="podium-base">
                         <div class="podium-position">#${index + 1}</div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function renderUsersList(users) {
             const usersList = document.getElementById('usersList');
             
             usersList.innerHTML = users.map((user, index) => {
+                const boughtPercent = user.total_presents > 0 ? Math.round((user.bought_presents || 0) / user.total_presents * 100) : 0;
+                const reservedPercent = user.total_presents > 0 ? Math.round((user.reserved_presents || 0) / (user.available_presents + (user.reserved_presents || 0)) * 100) : 0;
+                
                 return `
                     <div class="user-card" onclick="navigateToUserInRecipients('${user.username}')" style="cursor: pointer;">
                         <div class="user-rank">#${index + 1}</div>
@@ -958,13 +987,35 @@
                              alt="${user.username}" 
                              class="user-avatar"
                              onerror="this.src='/images/default-avatar.svg'">
-                        <div class="user-info">
+                        <div class="user-info" style="flex: 1;">
                             <div class="user-name">${user.username}</div>
                             <div class="user-stats">
                                 <span>
                                     <i class="fas fa-gift"></i>
                                     ${user.total_presents} ${user.total_presents === 1 ? 'prezent' : 'prezentów'}
                                 </span>
+                            </div>
+                            <!-- Progress Bars -->
+                            <div style="margin-top: 8px; width: 100%;">
+                                <!-- Buying Progress -->
+                                <div style="margin-bottom: 6px;">
+                                    <div style="font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 600;">
+                                        <i class="fas fa-shopping-bag" style="color: #4CAF50; font-size: 10px;"></i> Kupione: ${user.bought_presents || 0}/${user.total_presents}
+                                    </div>
+                                    <div style="background: #e0e0e0; border-radius: 6px; height: 6px; overflow: hidden;">
+                                        <div style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: ${boughtPercent}%; transition: width 0.3s ease;"></div>
+                                    </div>
+                                </div>
+                                <!-- Reserved vs Available Progress -->
+                                <div>
+                                    <div style="font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 600;">
+                                        <i class="fas fa-bookmark" style="color: #FF9800; font-size: 10px;"></i> Zarezerwowane: ${user.reserved_presents || 0}/${user.available_presents + (user.reserved_presents || 0)}
+                                    </div>
+                                    <div style="background: #e0e0e0; border-radius: 6px; height: 6px; overflow: hidden; display: flex;">
+                                        <div style="background: linear-gradient(90deg, #FF9800, #F57C00); height: 100%; width: ${reservedPercent}%; transition: width 0.3s ease;"></div>
+                                        <div style="background: #c0c0c0; height: 100%; flex: 1;"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="user-score">

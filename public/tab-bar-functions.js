@@ -29,25 +29,28 @@ function toggleNotificationsPanel() {
     overlay.classList.toggle('show', isOpen);
     
     if (isOpen) {
-        // Clear the badge when opening notifications
-        if (badge) {
-            badge.style.display = 'none';
-        }
-        
         // Mark all notifications as read when opening panel
         console.log('[Notifications] Opening panel - marking all as read');
         fetch('/api/notifications/read-all', { method: 'POST' })
             .then(response => response.json())
             .then(data => {
                 console.log('[Notifications] Marked all as read, response:', data);
+                // Clear the badge immediately after marking as read
+                if (badge) {
+                    badge.style.display = 'none';
+                }
                 // Reload notifications
                 loadRecentNotifications();
                 updateNotificationBadge();
             })
             .catch(error => {
                 console.error('[Notifications] Error marking as read:', error);
-                // Still load notifications even if marking as read fails
+                // Still clear badge and load notifications even if marking as read fails
+                if (badge) {
+                    badge.style.display = 'none';
+                }
                 loadRecentNotifications();
+                updateNotificationBadge();
             });
         
         // Check for data updates when opening notifications
@@ -153,22 +156,53 @@ function getNotificationMessage(notif) {
     }
     
     const actor = notif.actor_username || 'Ktoś';
+    const presentTitle = data.presentTitle || 'prezent';
+    const presentId = data.presentId;
+    const presentLink = presentId ? `<a href="#" onclick="scrollToPresentFromNotification(${presentId}); return false;" style="color: #2196F3; text-decoration: underline; cursor: pointer;"><strong>${presentTitle}</strong></a>` : `<strong>${presentTitle}</strong>`;
     
     switch(notif.type) {
         case 'recipient_added':
             return `<strong>${actor}</strong> dodał(a) osobę <strong>${data.recipientName || 'nową osobę'}</strong>`;
         case 'present_added':
-            return `<strong>${actor}</strong> dodał(a) prezent "<strong>${data.presentTitle || 'prezent'}</strong>"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+            return `<strong>${actor}</strong> dodał(a) prezent "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
         case 'present_reserved':
-            return `<strong>${actor}</strong> zarezerwował(a) "<strong>${data.presentTitle || 'prezent'}</strong>"`;
+            return `<strong>${actor}</strong> zarezerwował(a) "${presentLink}"`;
         case 'present_unreserved':
-            return `<strong>${actor}</strong> anulował(a) rezerwację "<strong>${data.presentTitle || 'prezent'}</strong>"`;
+            return `<strong>${actor}</strong> anulował(a) rezerwację "${presentLink}"`;
         case 'present_checked':
-            return `<strong>${actor}</strong> oznaczył(a) jako kupione "<strong>${data.presentTitle || 'prezent'}</strong>"`;
+            return `<strong>${actor}</strong> oznaczył(a) jako kupione "${presentLink}"`;
         case 'present_unchecked':
-            return `<strong>${actor}</strong> odznaczył(a) "<strong>${data.presentTitle || 'prezent'}</strong>"`;
+            return `<strong>${actor}</strong> odznaczył(a) "${presentLink}"`;
         default:
             return `<strong>${actor}</strong> wykonał(a) akcję`;
+    }
+}
+
+// Scroll to present from notification
+function scrollToPresentFromNotification(presentId) {
+    // Close the notifications panel
+    const panel = document.getElementById('notificationsPanel');
+    if (panel && panel.classList.contains('show')) {
+        toggleNotificationsPanel();
+    }
+    
+    // Find the present element by data-id attribute
+    const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
+    if (presentElement) {
+        // Scroll to the element
+        presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Highlight the element briefly
+        presentElement.style.transition = 'background-color 0.3s ease';
+        const originalBg = presentElement.style.backgroundColor;
+        presentElement.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
+        setTimeout(() => {
+            presentElement.style.backgroundColor = originalBg;
+        }, 2000);
+        
+        console.log('[Notification] Scrolled to present:', presentId);
+    } else {
+        console.warn('[Notification] Present element not found:', presentId);
     }
 }
 
@@ -214,12 +248,21 @@ function updateNotificationBadge() {
                 if (data.count > 0) {
                     badge.textContent = data.count > 99 ? '99+' : data.count;
                     badge.style.display = 'flex';
+                    console.log('[Badge] Updated with count:', data.count);
                 } else {
                     badge.style.display = 'none';
+                    console.log('[Badge] Hidden - no unread notifications');
                 }
             }
         })
-        .catch(error => console.error('Error fetching notification count:', error));
+        .catch(error => {
+            console.error('Error fetching notification count:', error);
+            // Hide badge on error to be safe
+            const badge = document.getElementById('activityBadge');
+            if (badge) {
+                badge.style.display = 'none';
+            }
+        });
 }
 
 // Update badge on page load and periodically
