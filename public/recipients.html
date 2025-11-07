@@ -1606,7 +1606,7 @@
             const timeAgo = getTimeAgo(notification.created_at);
 
             return `
-                <div class="notification-item ${isUnread ? 'unread' : ''}" onclick="markNotificationAsRead(${notification.id})">
+                <div class="notification-item ${isUnread ? 'unread' : ''}" onclick="handleNotificationClick(${notification.id}, ${JSON.stringify(notification.data).replace(/"/g, '&quot;')})">
                     <div class="notification-icon" style="color: ${config.color}">
                         <i class="fas ${config.icon}"></i>
                     </div>
@@ -1670,6 +1670,34 @@
             if (diffHours < 24) return `${diffHours} godz. temu`;
             if (diffDays < 7) return `${diffDays} dni temu`;
             return time.toLocaleDateString('pl-PL');
+        }
+
+        function handleNotificationClick(notificationId, data) {
+            // Mark as read
+            fetch(`/api/notifications/${notificationId}/read`, {
+                method: 'POST'
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        updateBadgeCount(result.unreadCount);
+                        loadRecentNotifications();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking notification as read:', error);
+                });
+
+            // Navigate to present if presentId is available
+            if (data && data.presentId) {
+                sessionStorage.setItem('scrollToPresentId', data.presentId);
+                if (window.location.pathname !== '/recipients') {
+                    window.location.href = '/recipients';
+                } else {
+                    // Already on recipients page, just scroll
+                    window.location.reload();
+                }
+            }
         }
 
         function markNotificationAsRead(notificationId) {
