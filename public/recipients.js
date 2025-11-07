@@ -1,9 +1,6 @@
 console.log('Recipients.js loading... v7.0 - Reverted to separate API calls');
 
-// Global variable to track active filter
-let activeFilterPresentId = null;
-
-// Handle filtering to present from notification
+// Handle scrolling to present from notification
 function handleScrollToPresentFromNotification() {
     // Don't run if we're in the process of logging out
     if (window._isLoggingOut) return;
@@ -12,171 +9,60 @@ function handleScrollToPresentFromNotification() {
     if (presentId) {
         sessionStorage.removeItem('scrollToPresentId');
         
-        // Store the filter to reapply after privacy container loads
-        activeFilterPresentId = presentId;
-        
-        // Wait for page to load, then filter to show only this present
+        // Wait for page to load, then scroll to the present
         setTimeout(() => {
-            filterToPresentById(presentId);
-            
-            // Set up a MutationObserver to reapply filter if DOM changes
-            setupFilterPersistence();
+            scrollToPresentById(presentId);
         }, 500);
     }
 }
 
-// Set up observer to maintain filter through DOM changes
-function setupFilterPersistence() {
-    if (!activeFilterPresentId) return;
+// Scroll to a specific present
+function scrollToPresentById(presentId) {
+    console.log('[Notification] Scrolling to present:', presentId);
     
-    const recipientsList = document.getElementById('recipientsList');
-    if (!recipientsList) return;
-    
-    // Disconnect existing observer if any
-    if (window._filterObserver) {
-        window._filterObserver.disconnect();
-    }
-    
-    let isApplyingFilter = false;
-    
-    const observer = new MutationObserver((mutations) => {
-        // Ignore mutations caused by our own filtering
-        if (isApplyingFilter) return;
-        
-        // Check if this is a significant change (new elements added)
-        const hasNewElements = mutations.some(mutation => 
-            mutation.type === 'childList' && mutation.addedNodes.length > 0
-        );
-        
-        if (hasNewElements && activeFilterPresentId) {
-            console.log('[Filter] New elements detected, reapplying filter');
-            isApplyingFilter = true;
-            filterToPresentById(activeFilterPresentId);
-            // Reset flag after a short delay
-            setTimeout(() => {
-                isApplyingFilter = false;
-            }, 100);
-        }
-    });
-    
-    observer.observe(recipientsList, {
-        childList: true,
-        subtree: false // Only watch direct children, not deep changes
-    });
-    
-    // Store observer to disconnect later
-    window._filterObserver = observer;
-}
-
-// Filter view to show only a specific present
-function filterToPresentById(presentId) {
-    console.log('[Notification] Filtering to present:', presentId);
-    
-    // Hide all recipient items first
-    const recipientItems = document.querySelectorAll('.recipient-item');
-    recipientItems.forEach(item => {
-        item.style.display = 'none';
-    });
-    
-    // Find and show only the recipient containing this present
+    // Find the present element
     const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
+    
     if (presentElement) {
-        const recipientItem = presentElement.closest('.recipient-item');
-        if (recipientItem) {
-            recipientItem.style.display = '';
-            
-            // Hide all other presents in this recipient
-            const allPresents = recipientItem.querySelectorAll('.present-item');
-            allPresents.forEach(p => {
-                if (p.getAttribute('data-id') !== presentId) {
-                    p.style.display = 'none';
-                }
-            });
-            
-            // Highlight the present
-            presentElement.style.transition = 'background-color 0.3s ease';
-            presentElement.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
-            
-            // Show filter banner with clear button
-            showFilterBanner(presentElement.querySelector('.present-title')?.textContent || 'prezent');
-            
-            // Scroll to top smoothly
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            console.log('[Notification] Filtered to present successfully');
+        // Check if it's inside a collapsed accordion (identified user's presents)
+        const accordion = presentElement.closest('.accordion-collapse');
+        if (accordion && !accordion.classList.contains('show')) {
+            // Expand the accordion first
+            const accordionButton = document.querySelector(`[data-bs-target="#${accordion.id}"]`);
+            if (accordionButton) {
+                accordionButton.click();
+                // Wait for accordion to expand, then scroll
+                setTimeout(() => {
+                    scrollAndHighlight(presentElement);
+                }, 350); // Bootstrap accordion transition time
+                return;
+            }
         }
+        
+        // Scroll immediately if not in accordion or already expanded
+        scrollAndHighlight(presentElement);
     } else {
         console.warn('[Notification] Present element not found:', presentId);
     }
 }
 
-// Show filter banner with clear button
-function showFilterBanner(presentTitle) {
-    // Remove existing banner if any
-    const existingBanner = document.getElementById('presentFilterBanner');
-    if (existingBanner) {
-        existingBanner.remove();
-    }
+// Helper function to scroll and highlight
+function scrollAndHighlight(presentElement) {
+    // Scroll to the element
+    presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     
-    // Create banner
-    const banner = document.createElement('div');
-    banner.id = 'presentFilterBanner';
-    banner.className = 'alert alert-info mb-3';
-    banner.style.cssText = 'position: sticky; top: 60px; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.1);';
-    banner.innerHTML = `
-        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
-            <div class="d-flex align-items-center">
-                <i class="fas fa-filter me-2"></i>
-                <span><strong>Filtr aktywny:</strong> Pokazuję tylko "${presentTitle}"</span>
-            </div>
-            <button class="btn btn-sm btn-outline-primary text-nowrap" onclick="clearPresentFilter()" style="flex-shrink: 0;">
-                <i class="fas fa-times me-1"></i>Pokaż wszystko
-            </button>
-        </div>
-    `;
+    // Highlight the present
+    presentElement.style.transition = 'background-color 0.3s ease';
+    const originalBg = presentElement.style.backgroundColor;
+    presentElement.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
+    setTimeout(() => {
+        presentElement.style.backgroundColor = originalBg;
+    }, 3000);
     
-    // Insert at the top of recipients list
-    const recipientsList = document.getElementById('recipientsList');
-    if (recipientsList && recipientsList.firstChild) {
-        recipientsList.insertBefore(banner, recipientsList.firstChild);
-    }
+    console.log('[Notification] Scrolled to present successfully');
 }
 
-// Clear present filter and show all items
-function clearPresentFilter() {
-    console.log('[Notification] Clearing present filter');
-    
-    // Clear active filter
-    activeFilterPresentId = null;
-    
-    // Disconnect observer
-    if (window._filterObserver) {
-        window._filterObserver.disconnect();
-        window._filterObserver = null;
-    }
-    
-    // Remove banner
-    const banner = document.getElementById('presentFilterBanner');
-    if (banner) {
-        banner.remove();
-    }
-    
-    // Show all recipient items
-    const recipientItems = document.querySelectorAll('.recipient-item');
-    recipientItems.forEach(item => {
-        item.style.display = '';
-    });
-    
-    // Show all presents
-    const allPresents = document.querySelectorAll('.present-item');
-    allPresents.forEach(present => {
-        present.style.display = '';
-        // Remove highlight
-        present.style.backgroundColor = '';
-    });
-    
-    console.log('[Notification] Filter cleared');
-}
+
 
 // Call on page load
 document.addEventListener('DOMContentLoaded', handleScrollToPresentFromNotification);
@@ -1130,53 +1016,62 @@ function displayRecipientsWithPresents(recipients, presents) {
         // Show surprise note for identified user, otherwise show presents
         let presentsHTML;
         if (isIdentified) {
-            // Enhanced surprise note - completely hide purchase status
-            presentsHTML = `<div class="alert alert-warning mb-0" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107;">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-gift fa-2x me-3 text-warning"></i>
-                    <div>
-                        <strong class="d-block mb-1">🎁 Niespodzianka!</strong>
-                        <span>Twoje prezenty są ukryte, żeby nie zepsuć niespodzianki. Nie możesz zobaczyć, co zostało kupione ani zarezerwowane.</span>
+            // List presents added by the current user in a collapsed accordion
+            const ownPresents = recipientPresents.filter(p => p.created_by === currentUserId);
+            const accordionId = `accordion-own-${recipient.id}`;
+            
+            presentsHTML = `
+                <div class="accordion" id="${accordionId}">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}-collapse" aria-expanded="false" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107; color: #856404; font-weight: 600;">
+                                <i class="fas fa-gift me-2"></i>
+                                🎁 Twoje prezenty (${ownPresents.length}) - kliknij aby zobaczyć
+                            </button>
+                        </h2>
+                        <div id="${accordionId}-collapse" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
+                            <div class="accordion-body">
+                                <div class="alert alert-warning mb-3" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);">
+                                    <strong>🎁 Niespodzianka!</strong><br>
+                                    Twoje prezenty są ukryte, żeby nie zepsuć niespodzianki. Nie możesz zobaczyć, co zostało kupione ani zarezerwowane.
+                                </div>
+                                ${ownPresents.length > 0 ? `
+                                    <div class="fw-bold mb-2"><i class="fas fa-list me-1"></i>Twoje dodane prezenty:</div>
+                                    <ul class="list-group">
+                                        ${ownPresents.map(p => `
+                                            <li class="list-group-item present-item" data-id="${p.id}">
+                                                <div class="d-flex align-items-start flex-wrap flex-md-nowrap">
+                                                    <div class="flex-grow-1">
+                                                        <div class="fw-semibold present-name">${escapeHtml(p.title)}</div>
+                                                        ${p.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
+                                                    </div>
+                                                    <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto mt-2 mt-md-0">
+                                                        <button class="btn btn-sm btn-outline-primary w-100 w-md-auto edit-present-btn"
+                                                            data-present-id="${p.id}"
+                                                            data-present-title="${escapeHtml(p.title)}"
+                                                            data-recipient-id="${p.recipient_id}"
+                                                            data-present-comments="${escapeHtml(p.comments || '')}"
+                                                            style="max-width:50px;">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-danger w-100 w-md-auto delete-present-btn"
+                                                            data-present-id="${p.id}"
+                                                            data-present-title="${escapeHtml(p.title)}"
+                                                            data-recipient-id="${recipient.id}"
+                                                            style="max-width:50px;">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                ` : '<p class="text-muted mb-0">Nie dodałeś jeszcze żadnych prezentów.</p>'}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>`;
-            // List presents added by the current user (created_by = currentUserId)
-            const ownPresents = recipientPresents.filter(p => p.created_by === currentUserId);
-            if (ownPresents.length > 0) {
-                presentsHTML += `
-                <div class="mt-3">
-                  <div class="fw-bold mb-2"><i class="fas fa-list me-1"></i>Twoje dodane prezenty:</div>
-                  <ul class="list-group">
-                    ${ownPresents.map(p => `
-                      <li class="list-group-item">
-                        <div class="d-flex align-items-start flex-wrap flex-md-nowrap">
-                          <div class="flex-grow-1">
-                            <div class="fw-semibold">${escapeHtml(p.title)}</div>
-                            ${p.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
-                          </div>
-                          <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto mt-2 mt-md-0">
-                            <button class="btn btn-sm btn-outline-primary w-100 w-md-auto edit-present-btn"
-                              data-present-id="${p.id}"
-                              data-present-title="${escapeHtml(p.title)}"
-                              data-recipient-id="${p.recipient_id}"
-                              data-present-comments="${escapeHtml(p.comments || '')}"
-                              style="max-width:50px;">
-                              <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger w-100 w-md-auto delete-present-btn"
-                              data-present-id="${p.id}"
-                              data-present-title="${escapeHtml(p.title)}"
-                              data-recipient-id="${recipient.id}"
-                              style="max-width:50px;">
-                              <i class="fas fa-trash-alt"></i>
-                            </button>
-                          </div>
-                        </div>
-                      </li>
-                    `).join('')}
-                  </ul>
-                </div>`;
-            }
+            `;
         } else {
             presentsHTML = (recipientPresents.length > 0 ?
                 generatePresentsList(recipientPresents) :

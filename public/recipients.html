@@ -1723,9 +1723,9 @@
             if (window.location.pathname !== '/recipients') {
                 window.location.href = '/recipients';
             } else {
-                // Already on recipients page, just filter to this present
-                if (typeof filterToPresentById === 'function') {
-                    filterToPresentById(presentId);
+                // Already on recipients page, just scroll to this present
+                if (typeof scrollToPresentById === 'function') {
+                    scrollToPresentById(presentId);
                 } else {
                     // Fallback: reload page
                     window.location.reload();
