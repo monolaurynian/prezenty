@@ -3925,58 +3925,7 @@ function updatePresentInDOM(presentId, newTitle, newComments) {
     }, 1000);
 }
 
-// Update notifications when a present is edited (change title in notifications)
-function updateNotificationsForEditedPresent(presentId, newTitle) {
-    const notificationItems = document.querySelectorAll('.tab-bar-notification-item');
-
-    notificationItems.forEach(item => {
-        const messageDiv = item.querySelector('.tab-bar-notification-message');
-        if (!messageDiv) return;
-
-        // Find links with this presentId
-        const presentLinks = messageDiv.querySelectorAll(`a[onclick*="scrollToPresentFromNotification(${presentId})"]`);
-
-        presentLinks.forEach(link => {
-            // Update the link text to the new title
-            link.innerHTML = `<strong>${escapeHtml(newTitle)}</strong>`;
-        });
-    });
-}
-
-// Update notifications when a present is deleted (cross it out)
-function updateNotificationsForDeletedPresent(presentId) {
-    const notificationItems = document.querySelectorAll('.tab-bar-notification-item');
-
-    notificationItems.forEach(item => {
-        const messageDiv = item.querySelector('.tab-bar-notification-message');
-        if (!messageDiv) return;
-
-        // Find links with this presentId
-        const presentLinks = messageDiv.querySelectorAll(`a[onclick*="scrollToPresentFromNotification(${presentId})"]`);
-
-        presentLinks.forEach(link => {
-            // Cross out the present name and make it gray
-            link.style.textDecoration = 'line-through';
-            link.style.color = '#999';
-            link.style.cursor = 'not-allowed';
-            link.onclick = function (e) {
-                e.preventDefault();
-                return false;
-            };
-
-            // Add a deleted indicator
-            if (!link.querySelector('.deleted-indicator')) {
-                const deletedSpan = document.createElement('span');
-                deletedSpan.className = 'deleted-indicator';
-                deletedSpan.style.color = '#999';
-                deletedSpan.style.fontSize = '0.85em';
-                deletedSpan.style.marginLeft = '4px';
-                deletedSpan.textContent = '(usunięty)';
-                link.parentElement.insertBefore(deletedSpan, link.nextSibling);
-            }
-        });
-    });
-}
+// Notification update functions are now in tab-bar-functions.js (shared across pages)
 
 // Toast notification system
 function showToast(message, type = 'success') {
