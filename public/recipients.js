@@ -592,19 +592,30 @@ document.addEventListener('DOMContentLoaded', function () {
                                 placeholder.style.transition = 'opacity 0.3s ease-out';
                                 placeholder.style.opacity = '1';
                                 placeholder.innerHTML = `
-                                    <div class="recipient-item" style="transition: opacity 0.3s ease-out;">
+                                    <div class="recipient-item" data-id="${identifiedRecipient.id}" id="recipient-${identifiedRecipient.id}" style="transition: opacity 0.3s ease-out;">
                                         <div class="row">
                                             <div class="col-lg-2 col-md-6 text-center">
                                                 <div class="recipient-avatar">
-                                                    <div class="profile-picture-placeholder" style="font-size: 4rem;">
+                                                    <div class="profile-picture-placeholder" style="cursor: default; font-size: 4rem;">
                                                         ${getEmojiAvatar(identifiedRecipient.name)}
                                                     </div>
                                                 </div>
+                                                
+                                                <!-- Name shown in profile section for wider screens -->
                                                 <div class="recipient-name-in-profile d-none d-lg-block">
                                                     <div class="profile-name-with-check d-flex align-items-center justify-content-center">
                                                         <h6 class="mt-2 mb-1 me-2">${escapeHtml(identifiedRecipient.name)}</h6>
                                                         <button class="btn profile-check-btn identified d-none d-lg-block" title="To jest Twój profil">
                                                             <i class="fas fa-check-circle"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Buttons in profile section -->
+                                                <div class="profile-buttons">
+                                                    <div class="mt-2 d-none d-md-block">
+                                                        <button class="btn btn-outline-primary btn-sm change-picture-btn" disabled>
+                                                            <i class="fas fa-camera me-1"></i>Zmień zdjęcie
                                                         </button>
                                                     </div>
                                                 </div>
@@ -617,23 +628,28 @@ document.addEventListener('DOMContentLoaded', function () {
                                                             <i class="fas fa-check-circle me-1"></i>To jest Twój profil
                                                         </button>
                                                     </div>
+                                                    <div class="mt-2 d-md-none">
+                                                        <button class="btn btn-outline-primary btn-sm change-picture-btn-mobile" disabled>
+                                                            <i class="fas fa-camera me-1"></i>Zmień zdjęcie
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <div class="accordion">
-                                                    <div class="accordion-item">
-                                                        <h2 class="accordion-header">
-                                                            <button class="accordion-button collapsed" type="button" disabled style="background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%); border-left: 4px solid #0d6efd; color: #084298; font-weight: 600; cursor: default;">
-                                                                <i class="fas fa-spinner fa-spin me-2"></i>
-                                                                <i class="fas fa-lock me-2"></i>Ładowanie Twoich prezentów z zachowaniem prywatności...
-                                                            </button>
-                                                        </h2>
+                                                <div class="presents-preview">
+                                                    <div class="accordion" data-recipient-id="${identifiedRecipient.id}">
+                                                        <div class="accordion-item">
+                                                            <h2 class="accordion-header">
+                                                                <button class="accordion-button collapsed accordion-button-identified" type="button" disabled style="background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%); border-left: 4px solid #0d6efd; color: #084298; font-weight: 600; cursor: default;">
+                                                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                                                    <i class="fas fa-lock me-2"></i>Ładowanie Twoich prezentów z zachowaniem prywatności...
+                                                                </button>
+                                                            </h2>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-lg-4 d-none d-lg-block">
-                                                <div class="recipient-actions">
-                                                    <button class="btn btn-outline-primary btn-sm w-100 mb-2" disabled>
-                                                        <i class="fas fa-plus me-1"></i>Dodaj prezent
-                                                    </button>
+                                            <div class="col-lg-4 col-md-12 text-end">
+                                                <div class="btn-group-vertical w-100">
+                                                    <!-- Other action buttons can be added here if needed -->
                                                 </div>
                                             </div>
                                         </div>
@@ -1946,6 +1962,11 @@ function updatePresentCheckStatus(id, isChecked, presentItem) {
                 updateProgressBar(presentItem);
                 presentItem.classList.remove('updating');
                 presentItem.classList.remove('animating');
+                
+                // Trigger soft reload to update cache
+                if (typeof softReloadRecipients === 'function') {
+                    softReloadRecipients();
+                }
             } else {
                 console.error('Failed to toggle present:', data.error);
                 // Revert optimistic update on error
@@ -2959,6 +2980,11 @@ function reservePresentFromRecipients(presentId, button, previousState) {
                     currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'cancel')`);
                     currentButton.setAttribute('title', 'Usuń rezerwację');
                 }
+                
+                // Trigger soft reload to update cache
+                if (typeof softReloadRecipients === 'function') {
+                    softReloadRecipients();
+                }
             } else {
                 // Server returned success: false - rollback
                 const errorMsg = data.error || 'Błąd podczas rezerwacji';
@@ -3014,6 +3040,11 @@ function cancelReservationFromRecipients(presentId, button, previousState) {
                     currentButton.classList.remove('updating');
                     currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'reserve')`);
                     currentButton.setAttribute('title', 'Zarezerwuj prezent');
+                }
+                
+                // Trigger soft reload to update cache
+                if (typeof softReloadRecipients === 'function') {
+                    softReloadRecipients();
                 }
             } else {
                 // Server returned success: false - rollback
