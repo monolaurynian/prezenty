@@ -801,38 +801,6 @@
         </div>
 
         <div id="podiumSection" class="podium-section" style="display: none;">
-            <!-- Cumulative Progress Bars -->
-            <div id="cumulativeProgressSection" style="background: rgba(255, 255, 255, 0.9); border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">
-                <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
-                    <i class="fas fa-chart-line me-2"></i>Ogólny Postęp
-                </h3>
-                <!-- Buying Progress -->
-                <div style="margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <label style="font-weight: 600; color: #2d3748; margin: 0;">
-                            <i class="fas fa-shopping-bag" style="color: #4CAF50; margin-right: 8px;"></i>Kupione Prezenty
-                        </label>
-                        <span id="boughtStats" style="font-weight: 600; color: #4CAF50;">0/0</span>
-                    </div>
-                    <div style="background: #e0e0e0; border-radius: 10px; height: 12px; overflow: hidden;">
-                        <div id="boughtProgressBar" style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
-                    </div>
-                </div>
-                <!-- Reserved vs Available Progress -->
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <label style="font-weight: 600; color: #2d3748; margin: 0;">
-                            <i class="fas fa-bookmark" style="color: #FF9800; margin-right: 8px;"></i>Zarezerwowane Prezenty
-                        </label>
-                        <span id="reservedStats" style="font-weight: 600; color: #FF9800;">0/0</span>
-                    </div>
-                    <div style="background: #e0e0e0; border-radius: 10px; height: 12px; overflow: hidden; display: flex;">
-                        <div id="reservedProgressBar" style="background: linear-gradient(90deg, #FF9800, #F57C00); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
-                        <div id="availableProgressBar" style="background: #c0c0c0; height: 100%; flex: 1;"></div>
-                    </div>
-                </div>
-            </div>
-
             <h2 class="text-center mb-4" style="color: #2d3748; font-weight: 700;">
                 <i class="fas fa-medal me-2"></i>Podium
             </h2>
@@ -860,6 +828,38 @@
             <h3><i class="fas fa-list-ol me-2"></i>Pełny Ranking</h3>
             <div id="usersList">
                 <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Cumulative Progress Bars - Below Leaderboard -->
+        <div id="cumulativeProgressSection" class="ranking-list" style="display: none;">
+            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
+                <i class="fas fa-chart-line me-2"></i>Ogólny Postęp
+            </h3>
+            <!-- Buying Progress -->
+            <div style="margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
+                        <i class="fas fa-shopping-bag" style="color: #4CAF50; margin-right: 8px;"></i>Kupione Prezenty
+                    </label>
+                    <span id="boughtStats" style="font-weight: 600; color: #4CAF50; font-size: 16px;">0/0</span>
+                </div>
+                <div style="background: #e0e0e0; border-radius: 10px; height: 14px; overflow: hidden;">
+                    <div id="boughtProgressBar" style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                </div>
+            </div>
+            <!-- Reserved vs Available Progress -->
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
+                        <i class="fas fa-bookmark" style="color: #FF9800; margin-right: 8px;"></i>Zarezerwowane Prezenty
+                    </label>
+                    <span id="reservedStats" style="font-weight: 600; color: #FF9800; font-size: 16px;">0/0</span>
+                </div>
+                <div style="background: #e0e0e0; border-radius: 10px; height: 14px; overflow: hidden; display: flex;">
+                    <div id="reservedProgressBar" style="background: linear-gradient(90deg, #FF9800, #F57C00); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                    <div id="availableProgressBar" style="background: #c0c0c0; height: 100%; flex: 1;"></div>
+                </div>
             </div>
         </div>
 
@@ -948,6 +948,10 @@
             // Show full ranking
             document.getElementById('rankingList').style.display = 'block';
             renderUsersList(users);
+            
+            // Show cumulative progress bars for ALL users
+            document.getElementById('cumulativeProgressSection').style.display = 'block';
+            updateCumulativeProgress(users);
         }
 
         function renderPodium(top3) {
@@ -977,27 +981,25 @@
                     </div>
                 </div>
             `).join('');
-            
-            // Update cumulative progress bars
-            updateCumulativeProgress(top3);
         }
         
         function updateCumulativeProgress(users) {
-            // Calculate cumulative totals
+            // Calculate cumulative totals from ALL users
             const totalPresents = users.reduce((sum, u) => sum + (u.total_presents || 0), 0);
             const totalBought = users.reduce((sum, u) => sum + (u.bought_presents || 0), 0);
             const totalReserved = users.reduce((sum, u) => sum + (u.reserved_presents || 0), 0);
-            const totalAvailable = users.reduce((sum, u) => sum + (u.available_presents || 0), 0);
             
+            // Calculate percentages
             const boughtPercent = totalPresents > 0 ? Math.round((totalBought / totalPresents) * 100) : 0;
-            const reservedPercent = (totalReserved + totalAvailable) > 0 ? Math.round((totalReserved / (totalReserved + totalAvailable)) * 100) : 0;
+            const reservedPercent = totalPresents > 0 ? Math.round((totalReserved / totalPresents) * 100) : 0;
             
             // Update bought progress
             document.getElementById('boughtStats').textContent = `${totalBought}/${totalPresents}`;
             document.getElementById('boughtProgressBar').style.width = `${boughtPercent}%`;
             
-            // Update reserved progress
-            document.getElementById('reservedStats').textContent = `${totalReserved}/${totalReserved + totalAvailable}`;
+            // Update reserved progress - show reserved vs not reserved
+            const notReserved = totalPresents - totalReserved;
+            document.getElementById('reservedStats').textContent = `${totalReserved}/${totalPresents}`;
             document.getElementById('reservedProgressBar').style.width = `${reservedPercent}%`;
         }
 
