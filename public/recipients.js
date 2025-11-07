@@ -640,7 +640,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                                             <h2 class="accordion-header">
                                                                 <button class="accordion-button collapsed accordion-button-identified" type="button" disabled style="background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%); border-left: 4px solid #0d6efd; color: #084298; font-weight: 600; cursor: default;">
                                                                     <i class="fas fa-spinner fa-spin me-2"></i>
-                                                                    <i class="fas fa-lock me-2"></i>Ładowanie Twoich prezentów z zachowaniem prywatności...
+                                                                    <i class="fas fa-gift me-2"></i>🎁 Ładowanie prezentów...
                                                                 </button>
                                                             </h2>
                                                         </div>
@@ -1135,14 +1135,14 @@ function displayRecipientsWithPresents(recipients, presents) {
                                                                 data-present-title="${escapeHtml(p.title)}"
                                                                 data-recipient-id="${p.recipient_id}"
                                                                 data-present-comments="${escapeHtml(p.comments || '')}"
-                                                                style="max-width:50px;">
-                                                                <i class="fas fa-edit"></i>
+                                                                style="max-width:50px; min-width:50px;">
+                                                                <i class="fas fa-edit" style="color: white;"></i>
                                                             </button>
                                                             <button class="btn btn-sm btn-danger w-100 w-md-auto delete-present-btn"
                                                                 data-present-id="${p.id}"
                                                                 data-present-title="${escapeHtml(p.title)}"
                                                                 data-recipient-id="${recipient.id}"
-                                                                style="max-width:50px;">
+                                                                style="max-width:50px; min-width:50px;">
                                                                 <i class="fas fa-trash-alt"></i>
                                                             </button>
                                                         </div>
