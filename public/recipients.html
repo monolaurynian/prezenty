@@ -52,7 +52,13 @@
     </style>
     <style>
         /* Prevent overflow and scrollbars */
-        html, body {
+        html {
+            overflow-x: hidden;
+            overflow-y: scroll; /* Always show scrollbar space to prevent layout shift */
+            max-width: 100vw;
+        }
+        
+        body {
             overflow-x: hidden;
             max-width: 100vw;
         }
