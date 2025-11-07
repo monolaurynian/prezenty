@@ -2,15 +2,55 @@ console.log('Recipients.js loading... v7.0 - Reverted to separate API calls');
 
 // Handle scrolling to present from notification
 function handleScrollToPresentFromNotification() {
+    // Don't run if we're in the process of logging out
+    if (window._isLoggingOut) return;
+    
     const presentId = sessionStorage.getItem('scrollToPresentId');
     if (presentId) {
         sessionStorage.removeItem('scrollToPresentId');
+        
+        let resizeObserver = null;
+        let lastScrollPosition = null;
         
         // Retry scrolling with exponential backoff to handle privacy screen loading
         const scrollToPresentWithRetry = (retries = 0, maxRetries = 10) => {
             const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
             if (presentElement) {
+                // Scroll to the element
                 presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                lastScrollPosition = presentElement.getBoundingClientRect().top + window.scrollY;
+                
+                // Watch for layout changes (privacy screen loading) and re-adjust scroll
+                if (!resizeObserver) {
+                    resizeObserver = new ResizeObserver(() => {
+                        // When layout changes, re-scroll to keep element in view
+                        if (presentElement && presentElement.offsetParent !== null) {
+                            const currentTop = presentElement.getBoundingClientRect().top + window.scrollY;
+                            const scrollDifference = currentTop - lastScrollPosition;
+                            
+                            // If layout shifted significantly, adjust scroll to keep element centered
+                            if (Math.abs(scrollDifference) > 10) {
+                                presentElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+                                lastScrollPosition = presentElement.getBoundingClientRect().top + window.scrollY;
+                                console.log('[Notification] Adjusted scroll due to layout change');
+                            }
+                        }
+                    });
+                    
+                    // Observe the recipients list container for layout changes
+                    const recipientsList = document.getElementById('recipientsList');
+                    if (recipientsList) {
+                        resizeObserver.observe(recipientsList);
+                    }
+                    
+                    // Stop observing after 3 seconds (privacy screen should be loaded by then)
+                    setTimeout(() => {
+                        if (resizeObserver) {
+                            resizeObserver.disconnect();
+                            resizeObserver = null;
+                        }
+                    }, 3000);
+                }
                 
                 // Highlight the element briefly
                 presentElement.style.transition = 'background-color 0.3s ease';
@@ -42,6 +82,9 @@ window.addEventListener('load', handleScrollToPresentFromNotification);
 // Global logout function - ensure it's always available
 function logout() {
     console.log('[Logout] Clearing all caches...');
+    
+    // Set flag to prevent scroll handler from interfering
+    window._isLoggingOut = true;
 
     // Clear localStorage cache
     try {
@@ -838,17 +881,17 @@ function loadRecipientsWithPresents(forceReload = false, silent = false) {
     const startTime = performance.now();
 
     Promise.all([
-        fetch('/api/recipients-with-presents').then(response => {
+        fetch('/api/recipients-with-presents', { credentials: 'include' }).then(response => {
             if (!response.ok) {
                 if (response.status === 401) {
-                    window.location.href = '/';
+                    console.warn('[API] Got 401 from /api/recipients-with-presents, will retry...');
                     throw new Error('Unauthorized');
                 }
                 throw new Error('Combined API error');
             }
             return response.json();
         }),
-        fetch('/api/user/identification').then(response => {
+        fetch('/api/user/identification', { credentials: 'include' }).then(response => {
             if (!response.ok) {
                 throw new Error('Identification API error');
             }
@@ -890,7 +933,19 @@ function loadRecipientsWithPresents(forceReload = false, silent = false) {
         })
         .catch(error => {
             console.error('Error loading data:', error);
-            if (error.message !== 'Unauthorized') {
+            if (error.message === 'Unauthorized') {
+                // Session might not be ready yet, retry after a short delay
+                console.log('[API] Retrying after 1 second due to 401...');
+                setTimeout(() => {
+                    checkAuth().then(() => {
+                        console.log('[API] Auth check passed on retry, loading data again...');
+                        loadRecipientsWithPresents(true, false);
+                    }).catch(() => {
+                        console.error('[API] Auth check failed on retry, redirecting to login');
+                        window.location.href = '/';
+                    });
+                }, 1000);
+            } else {
                 document.getElementById('recipientsList').innerHTML =
                     '<div class="alert alert-danger">Błąd podczas ładowania danych. Spróbuj odświeżyć stronę.</div>';
             }
@@ -1688,52 +1743,75 @@ function generatePresentsList(presents) {
         return '<p class="text-muted mb-0">Brak prezentów dla tej osoby</p>';
     }
 
-    // Sort presents: reserved by current user first, then unchecked, then checked at bottom
-    const sortedPresents = presents.sort((a, b) => {
-        // First, move checked items to the bottom regardless of reservation status
-        if (a.is_checked !== b.is_checked) {
-            return a.is_checked ? 1 : -1;
-        }
-        // Then sort by reservation status (reserved by current user first)
+    // Separate presents into bought and not bought
+    const boughtPresents = presents.filter(p => p.is_checked);
+    const notBoughtPresents = presents.filter(p => !p.is_checked);
+
+    // Sort not bought presents: reserved by current user first, then by creation date
+    const sortedNotBought = notBoughtPresents.sort((a, b) => {
         const aReservedByMe = a.reserved_by === currentUserId;
         const bReservedByMe = b.reserved_by === currentUserId;
         if (aReservedByMe && !bReservedByMe) return -1;
         if (!aReservedByMe && bReservedByMe) return 1;
-        // Finally by creation date (newer first)
         return new Date(b.created_at) - new Date(a.created_at);
     });
 
-    const html = `
-        <div class="presents-list presents-list-container">
-            ${sortedPresents.map((present, index) => `
-                <div class="present-item ${present.is_checked ? 'checked' : ''} ${present.reserved_by && present.reserved_by !== currentUserId ? 'reserved-by-other' : ''} ${present.reserved_by === currentUserId ? 'reserved-by-me' : ''}" data-id="${present.id}" style="transition-delay: ${index * 50}ms;">
-                    <div class="d-flex align-items-start flex-wrap flex-md-nowrap w-100 gap-2">
-                        <!-- Checkbox block -->
-                        <div class="flex-shrink-0 d-flex align-items-center" style="min-width: 36px;">
-                            <input class="form-check-input" type="checkbox" 
-                                ${present.is_checked ? 'checked' : ''} 
-                                onchange="togglePresentFromRecipients(${present.id}, this.checked)">
-                        </div>
-                        <!-- Title and comments block -->
-                        <div class="flex-grow-1">
-                            <div class="present-title-block">
-                                <h6 class="present-title mb-1">${convertUrlsToLinks(escapeHtml(present.title))}</h6>
-                                ${present.comments ? `<div class="present-comments mb-1">${formatCommentsPreview(present.comments)}</div>` : ''}
-                            </div>
-                        </div>
-                        <!-- Date block -->
-                        <div class="d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 90px;">
-                            <small class="text-muted">${present.created_at ? new Date(present.created_at).toLocaleDateString('pl-PL') : ''}</small>
-                        </div>
-                        <!-- Reservation block -->
-                        <div class="d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 120px;">
-                            ${generateReservationButton(present)}
+    // Sort bought presents by creation date (newer first)
+    const sortedBought = boughtPresents.sort((a, b) => {
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    const generatePresentItem = (present, index) => `
+        <div class="present-item ${present.is_checked ? 'checked' : ''} ${present.reserved_by && present.reserved_by !== currentUserId ? 'reserved-by-other' : ''} ${present.reserved_by === currentUserId ? 'reserved-by-me' : ''}" data-id="${present.id}" style="transition-delay: ${index * 50}ms;">
+            <div class="d-flex align-items-start flex-wrap flex-md-nowrap w-100 gap-2">
+                <div class="flex-shrink-0 d-flex align-items-center" style="min-width: 36px;">
+                    <input class="form-check-input" type="checkbox"
+                        ${present.is_checked ? 'checked' : ''}
+                        onchange="togglePresentFromRecipients(${present.id}, this.checked)">
+                </div>
+                <div class="flex-grow-1">
+                    <div class="present-title-block">
+                        <h6 class="present-title mb-1">${convertUrlsToLinks(escapeHtml(present.title))}</h6>
+                        ${present.comments ? `<div class="present-comments mb-1">${formatCommentsPreview(present.comments)}</div>` : ''}
+                    </div>
+                </div>
+                <div class="d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 90px;">
+                    <small class="text-muted">${present.created_at ? new Date(present.created_at).toLocaleDateString('pl-PL') : ''}</small>
+                </div>
+                <div class="d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 120px;">
+                    ${generateReservationButton(present)}
+                </div>
+            </div>
+        </div>
+    `;
+
+    let html = `<div class="presents-list presents-list-container">`;
+
+    // Add not bought presents
+    html += sortedNotBought.map((present, index) => generatePresentItem(present, index)).join('');
+
+    // Add bought presents in accordion if there are any
+    if (sortedBought.length > 0) {
+        const accordionId = `accordion-bought-${Math.random().toString(36).substr(2, 9)}`;
+        html += `
+            <div class="accordion mt-3" id="${accordionId}">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}-collapse" aria-expanded="false" aria-controls="${accordionId}-collapse" style="background-color: #f8f9fa; color: #28a745; font-weight: 600;">
+                            <i class="fas fa-check-circle me-2" style="color: #28a745;"></i>Kupione (${sortedBought.length})
+                        </button>
+                    </h2>
+                    <div id="${accordionId}-collapse" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
+                        <div class="accordion-body p-0">
+                            ${sortedBought.map((present, index) => generatePresentItem(present, index)).join('')}
                         </div>
                     </div>
                 </div>
-            `).join('')}
-        </div>
-    `;
+            </div>
+        `;
+    }
+
+    html += `</div>`;
 
     // Calculate container height after rendering
     setTimeout(() => {
