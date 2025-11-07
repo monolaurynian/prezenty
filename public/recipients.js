@@ -2426,7 +2426,26 @@ function addPresentFromModal() {
                 showModalMessage('addPresentMessage', 'Prezent został dodany!', 'success');
                 document.getElementById('addPresentForm').reset();
 
-                // Refresh the recipients list to show the new present
+                // Add the present to DOM immediately
+                const newPresent = {
+                    id: data.id,
+                    title: title,
+                    comments: comments,
+                    recipient_id: recipientId,
+                    reserved_by: null,
+                    reserved_by_username: null,
+                    is_checked: false,
+                    created_by: window._currentUserId
+                };
+
+                addPresentToDOM(recipientId, newPresent);
+
+                // Update cache
+                if (window._dataCache && window._dataCache.presents) {
+                    window._dataCache.presents.push(newPresent);
+                }
+
+                // Refresh cache in background
                 softReloadRecipients();
 
                 // Close modal after 1 second
@@ -3923,6 +3942,127 @@ function updatePresentInDOM(presentId, newTitle, newComments) {
     setTimeout(() => {
         presentElement.style.backgroundColor = originalBg;
     }, 1000);
+}
+
+// Add a new present to the DOM immediately
+function addPresentToDOM(recipientId, present) {
+    // Find the recipient's presents list
+    const recipientElement = document.querySelector(`[data-id="${recipientId}"]`);
+    if (!recipientElement) {
+        console.warn('[AddPresent] Recipient element not found:', recipientId);
+        return;
+    }
+
+    // Check if this is the identified user's card (with accordion)
+    const accordion = recipientElement.querySelector('.accordion');
+    if (accordion) {
+        // This is the identified user - don't show the present (privacy)
+        console.log('[AddPresent] Skipping display for identified user (privacy)');
+        return;
+    }
+
+    // Find the presents list
+    let presentsList = recipientElement.querySelector('.presents-list');
+    if (!presentsList) {
+        // Create presents list if it doesn't exist
+        const presentsPreview = recipientElement.querySelector('.presents-preview');
+        if (presentsPreview) {
+            presentsList = document.createElement('div');
+            presentsList.className = 'presents-list';
+            presentsPreview.innerHTML = '';
+            presentsPreview.appendChild(presentsList);
+        } else {
+            console.warn('[AddPresent] Presents preview not found');
+            return;
+        }
+    }
+
+    // Generate the present HTML
+    const presentHTML = generateSinglePresentHTML(present);
+
+    // Add to the top of the list with animation
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = presentHTML;
+    const presentElement = tempDiv.firstElementChild;
+
+    // Start with opacity 0
+    presentElement.style.opacity = '0';
+    presentElement.style.transition = 'opacity 0.5s ease-in';
+
+    // Insert at the beginning
+    presentsList.insertBefore(presentElement, presentsList.firstChild);
+
+    // Fade in
+    setTimeout(() => {
+        presentElement.style.opacity = '1';
+    }, 50);
+
+    // Add highlight animation
+    setTimeout(() => {
+        presentElement.style.transition = 'background-color 0.3s ease';
+        presentElement.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+        setTimeout(() => {
+            presentElement.style.backgroundColor = '';
+        }, 2000);
+    }, 500);
+}
+
+// Generate HTML for a single present
+function generateSinglePresentHTML(present) {
+    const currentUserId = window._currentUserId;
+    const isReservedByMe = present.reserved_by === currentUserId;
+    const isReservedByOther = present.reserved_by && present.reserved_by !== currentUserId;
+
+    let reserveButtonHTML = '';
+    if (isReservedByMe) {
+        reserveButtonHTML = `
+            <button class="btn btn-danger btn-sm w-100 w-md-auto reserve-btn" 
+                    onclick="handleReserveClick(event, ${present.id}, 'cancel')" 
+                    title="Usuń rezerwację">
+                <i class="fas fa-xmark"></i> <span class="d-none d-md-inline">Anuluj</span>
+            </button>
+        `;
+    } else if (isReservedByOther) {
+        reserveButtonHTML = `
+            <button class="btn btn-secondary btn-sm w-100 w-md-auto reserve-btn" 
+                    onclick="showReservedByOtherModal('${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}')" 
+                    title="Zarezerwowane przez: ${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}">
+                <i class="fas fa-bookmark"></i> <span class="d-none d-md-inline">Zarezerwowane</span>
+            </button>
+        `;
+    } else {
+        reserveButtonHTML = `
+            <button class="btn btn-outline-warning btn-sm w-100 w-md-auto reserve-btn" 
+                    onclick="handleReserveClick(event, ${present.id}, 'reserve')" 
+                    title="Zarezerwuj prezent">
+                <i class="fas fa-bookmark"></i> <span class="d-none d-md-inline">Zarezerwuj</span>
+            </button>
+        `;
+    }
+
+    const classes = ['present-item'];
+    if (present.is_checked) classes.push('checked');
+    if (isReservedByMe) classes.push('reserved-by-me');
+    if (isReservedByOther) classes.push('reserved-by-other');
+
+    return `
+        <div class="${classes.join(' ')}" data-id="${present.id}">
+            <div class="d-flex align-items-start flex-wrap flex-md-nowrap w-100 gap-2">
+                <div class="flex-shrink-0 d-flex align-items-center" style="min-width: 36px;">
+                    <input class="form-check-input" type="checkbox"
+                        ${present.is_checked ? 'checked' : ''}
+                        onchange="togglePresentFromRecipients(${present.id}, this.checked)">
+                </div>
+                <div class="flex-grow-1 present-details">
+                    <div class="fw-semibold present-name">${escapeHtml(present.title)}</div>
+                    ${present.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(present.comments)}</div>` : ''}
+                </div>
+                <div class="d-flex gap-2 flex-wrap flex-md-nowrap justify-content-center justify-content-md-end w-100 w-md-auto">
+                    ${reserveButtonHTML}
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Notification update functions are now in tab-bar-functions.js (shared across pages)
