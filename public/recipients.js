@@ -43,13 +43,17 @@ function handleScrollToPresentFromNotification() {
                         resizeObserver.observe(recipientsList);
                     }
                     
-                    // Stop observing after 3 seconds (privacy screen should be loaded by then)
+                    // Also observe the body for any layout changes
+                    resizeObserver.observe(document.body);
+                    
+                    // Stop observing after 8 seconds (privacy screen should be loaded by then)
                     setTimeout(() => {
                         if (resizeObserver) {
                             resizeObserver.disconnect();
                             resizeObserver = null;
+                            console.log('[Notification] ResizeObserver disconnected after timeout');
                         }
-                    }, 3000);
+                    }, 8000);
                 }
                 
                 // Highlight the element briefly
