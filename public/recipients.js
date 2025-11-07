@@ -6,8 +6,8 @@ function handleScrollToPresentFromNotification() {
     if (presentId) {
         sessionStorage.removeItem('scrollToPresentId');
         
-        // Wait a bit for the page to fully render
-        setTimeout(() => {
+        // Retry scrolling with exponential backoff to handle privacy screen loading
+        const scrollToPresentWithRetry = (retries = 0, maxRetries = 10) => {
             const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
             if (presentElement) {
                 presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -21,10 +21,17 @@ function handleScrollToPresentFromNotification() {
                 }, 2000);
                 
                 console.log('[Notification] Scrolled to present:', presentId);
+            } else if (retries < maxRetries) {
+                // Retry with increasing delays to handle privacy screen loading
+                const delay = Math.min(100 + (retries * 50), 500);
+                setTimeout(() => scrollToPresentWithRetry(retries + 1, maxRetries), delay);
             } else {
-                console.warn('[Notification] Present element still not found after page load:', presentId);
+                console.warn('[Notification] Present element not found after retries:', presentId);
             }
-        }, 500);
+        };
+        
+        // Start scrolling after initial page load
+        setTimeout(() => scrollToPresentWithRetry(), 300);
     }
 }
 

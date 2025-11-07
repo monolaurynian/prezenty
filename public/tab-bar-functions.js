@@ -125,11 +125,11 @@ function displayNotifications(notifications) {
         const timeAgo = getTimeAgo(notif.created_at);
         
         return `
-            <div class="tab-bar-notification-item ${isUnread ? 'unread' : ''}" onclick="markNotificationAsRead(${notif.id})" style="display: flex; align-items: flex-start; gap: 12px; padding: 15px 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); cursor: pointer; background: ${isUnread ? 'rgba(33, 150, 243, 0.05)' : '#ffffff'};">
-                <div class="tab-bar-notification-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: ${config.color}20; color: ${config.color};">
+            <div class="tab-bar-notification-item ${isUnread ? 'unread' : ''}" style="display: flex; align-items: flex-start; gap: 12px; padding: 15px 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); background: ${isUnread ? 'rgba(33, 150, 243, 0.05)' : '#ffffff'};">
+                <div class="tab-bar-notification-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: ${config.color}20; color: ${config.color}; cursor: pointer; flex-shrink: 0;" onclick="markNotificationAsRead(${notif.id})">
                     <i class="${config.icon}" style="font-size: 20px;"></i>
                 </div>
-                <div class="tab-bar-notification-content" style="flex: 1; min-width: 0;">
+                <div class="tab-bar-notification-content" style="flex: 1; min-width: 0; cursor: pointer;" onclick="markNotificationAsRead(${notif.id})">
                     <div class="tab-bar-notification-message" style="font-size: 14px; color: #2d3748; margin-bottom: 4px; line-height: 1.4;">
                         ${getNotificationMessage(notif)}
                     </div>
@@ -190,18 +190,29 @@ function scrollToPresentFromNotification(presentId) {
     // Find the present element by data-id attribute
     const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
     if (presentElement) {
-        // Scroll to the element
-        presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Scroll to the element with retry to handle privacy screen loading
+        const scrollToPresentWithRetry = (retries = 0) => {
+            const element = document.querySelector(`.present-item[data-id="${presentId}"]`);
+            if (element) {
+                // Scroll to the element
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Highlight the element briefly
+                element.style.transition = 'background-color 0.3s ease';
+                const originalBg = element.style.backgroundColor;
+                element.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
+                setTimeout(() => {
+                    element.style.backgroundColor = originalBg;
+                }, 2000);
+                
+                console.log('[Notification] Scrolled to present:', presentId);
+            } else if (retries < 3) {
+                // Retry after a short delay to account for privacy screen loading
+                setTimeout(() => scrollToPresentWithRetry(retries + 1), 200);
+            }
+        };
         
-        // Highlight the element briefly
-        presentElement.style.transition = 'background-color 0.3s ease';
-        const originalBg = presentElement.style.backgroundColor;
-        presentElement.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
-        setTimeout(() => {
-            presentElement.style.backgroundColor = originalBg;
-        }, 2000);
-        
-        console.log('[Notification] Scrolled to present:', presentId);
+        scrollToPresentWithRetry();
     } else {
         // If present element not found, navigate to recipients page
         console.warn('[Notification] Present element not found on current page, navigating to recipients...');
