@@ -197,6 +197,25 @@
             align-items: center !important;
             min-height: 100vh !important;
         }
+
+        /* Position modal lower on mobile for easier reach */
+        @media (max-width: 768px) {
+            .modal-dialog-centered-mobile {
+                display: flex !important;
+                align-items: flex-end !important;
+                min-height: calc(100vh - 100px) !important;
+                margin-bottom: 20px !important;
+            }
+        }
+
+        /* On desktop, center normally */
+        @media (min-width: 769px) {
+            .modal-dialog-centered-mobile {
+                display: flex !important;
+                align-items: center !important;
+                min-height: 100vh !important;
+            }
+        }
         
         /* Prevent body scroll when modal is open */
         body.modal-open {
@@ -1194,7 +1213,7 @@
 
     <!-- Reserved By Other Modal -->
     <div class="modal fade" id="reservedByOtherModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered-mobile">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title text-warning">
@@ -1632,50 +1651,50 @@
                     icon: 'fa-gift',
                     color: '#2196F3',
                     getMessage: (data) => {
-                        if (data.presentId) {
-                            return `dodał(a) prezent <span class="notification-present-link" onclick="event.stopPropagation(); navigateToPresent(${data.presentId})" style="color: #2196F3; text-decoration: underline; cursor: pointer;">"${data.presentTitle}"</span> dla ${data.recipientName}`;
-                        }
-                        return `dodał(a) prezent "${data.presentTitle}" dla ${data.recipientName}`;
+                        const presentLink = data.presentId ? 
+                            `<a href="#" onclick="navigateToPresent(${data.presentId}); return false;" style="color: #2196F3; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></a>` : 
+                            `<strong>"${data.presentTitle}"</strong>`;
+                        return `dodał(a) prezent ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
                     }
                 },
                 present_reserved: {
                     icon: 'fa-bookmark',
                     color: '#FF9800',
                     getMessage: (data) => {
-                        if (data.presentId) {
-                            return `zarezerwował(a) prezent <span class="notification-present-link" onclick="event.stopPropagation(); navigateToPresent(${data.presentId})" style="color: #FF9800; text-decoration: underline; cursor: pointer;">"${data.presentTitle}"</span>`;
-                        }
-                        return `zarezerwował(a) prezent "${data.presentTitle}"`;
+                        const presentLink = data.presentId ? 
+                            `<a href="#" onclick="navigateToPresent(${data.presentId}); return false;" style="color: #FF9800; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></a>` : 
+                            `<strong>"${data.presentTitle}"</strong>`;
+                        return `zarezerwował(a) prezent ${presentLink}`;
                     }
                 },
                 present_unreserved: {
                     icon: 'fa-bookmark-slash',
                     color: '#9E9E9E',
                     getMessage: (data) => {
-                        if (data.presentId) {
-                            return `anulował(a) rezerwację <span class="notification-present-link" onclick="event.stopPropagation(); navigateToPresent(${data.presentId})" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;">"${data.presentTitle}"</span>`;
-                        }
-                        return `anulował(a) rezerwację "${data.presentTitle}"`;
+                        const presentLink = data.presentId ? 
+                            `<a href="#" onclick="navigateToPresent(${data.presentId}); return false;" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></a>` : 
+                            `<strong>"${data.presentTitle}"</strong>`;
+                        return `anulował(a) rezerwację ${presentLink}`;
                     }
                 },
                 present_checked: {
                     icon: 'fa-check-circle',
                     color: '#4CAF50',
                     getMessage: (data) => {
-                        if (data.presentId) {
-                            return `oznaczył(a) jako kupione <span class="notification-present-link" onclick="event.stopPropagation(); navigateToPresent(${data.presentId})" style="color: #4CAF50; text-decoration: underline; cursor: pointer;">"${data.presentTitle}"</span>`;
-                        }
-                        return `oznaczył(a) jako kupione "${data.presentTitle}"`;
+                        const presentLink = data.presentId ? 
+                            `<a href="#" onclick="navigateToPresent(${data.presentId}); return false;" style="color: #4CAF50; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></a>` : 
+                            `<strong>"${data.presentTitle}"</strong>`;
+                        return `oznaczył(a) jako kupione ${presentLink}`;
                     }
                 },
                 present_unchecked: {
                     icon: 'fa-circle',
                     color: '#9E9E9E',
                     getMessage: (data) => {
-                        if (data.presentId) {
-                            return `odznaczył(a) <span class="notification-present-link" onclick="event.stopPropagation(); navigateToPresent(${data.presentId})" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;">"${data.presentTitle}"</span>`;
-                        }
-                        return `odznaczył(a) "${data.presentTitle}"`;
+                        const presentLink = data.presentId ? 
+                            `<a href="#" onclick="navigateToPresent(${data.presentId}); return false;" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></a>` : 
+                            `<strong>"${data.presentTitle}"</strong>`;
+                        return `odznaczył(a) ${presentLink}`;
                     }
                 }
             };
@@ -1697,16 +1716,22 @@
             return time.toLocaleDateString('pl-PL');
         }
 
-        function navigateToPresent(presentId) {
+        // Make navigateToPresent globally accessible
+        window.navigateToPresent = function(presentId) {
             console.log('[Notification] Navigating to present:', presentId);
             sessionStorage.setItem('scrollToPresentId', presentId);
             if (window.location.pathname !== '/recipients') {
                 window.location.href = '/recipients';
             } else {
-                // Already on recipients page, just scroll
-                window.location.reload();
+                // Already on recipients page, just filter to this present
+                if (typeof filterToPresentById === 'function') {
+                    filterToPresentById(presentId);
+                } else {
+                    // Fallback: reload page
+                    window.location.reload();
+                }
             }
-        }
+        };
 
         function handleNotificationClick(notificationId, data) {
             // Mark as read

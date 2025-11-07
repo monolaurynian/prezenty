@@ -1,6 +1,6 @@
 console.log('Recipients.js loading... v7.0 - Reverted to separate API calls');
 
-// Handle scrolling to present from notification
+// Handle filtering to present from notification
 function handleScrollToPresentFromNotification() {
     // Don't run if we're in the process of logging out
     if (window._isLoggingOut) return;
@@ -9,74 +9,110 @@ function handleScrollToPresentFromNotification() {
     if (presentId) {
         sessionStorage.removeItem('scrollToPresentId');
         
-        let resizeObserver = null;
-        let lastScrollPosition = null;
-        
-        // Retry scrolling with exponential backoff to handle privacy screen loading
-        const scrollToPresentWithRetry = (retries = 0, maxRetries = 10) => {
-            const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
-            if (presentElement) {
-                // Scroll to the element
-                presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                lastScrollPosition = presentElement.getBoundingClientRect().top + window.scrollY;
-                
-                // Watch for layout changes (privacy screen loading) and re-adjust scroll
-                if (!resizeObserver) {
-                    resizeObserver = new ResizeObserver(() => {
-                        // When layout changes, re-scroll to keep element in view
-                        if (presentElement && presentElement.offsetParent !== null) {
-                            const currentTop = presentElement.getBoundingClientRect().top + window.scrollY;
-                            const scrollDifference = currentTop - lastScrollPosition;
-                            
-                            // If layout shifted significantly, adjust scroll to keep element centered
-                            if (Math.abs(scrollDifference) > 10) {
-                                presentElement.scrollIntoView({ behavior: 'auto', block: 'center' });
-                                lastScrollPosition = presentElement.getBoundingClientRect().top + window.scrollY;
-                                console.log('[Notification] Adjusted scroll due to layout change');
-                            }
-                        }
-                    });
-                    
-                    // Observe the recipients list container for layout changes
-                    const recipientsList = document.getElementById('recipientsList');
-                    if (recipientsList) {
-                        resizeObserver.observe(recipientsList);
-                    }
-                    
-                    // Also observe the body for any layout changes
-                    resizeObserver.observe(document.body);
-                    
-                    // Stop observing after 8 seconds (privacy screen should be loaded by then)
-                    setTimeout(() => {
-                        if (resizeObserver) {
-                            resizeObserver.disconnect();
-                            resizeObserver = null;
-                            console.log('[Notification] ResizeObserver disconnected after timeout');
-                        }
-                    }, 8000);
-                }
-                
-                // Highlight the element briefly
-                presentElement.style.transition = 'background-color 0.3s ease';
-                const originalBg = presentElement.style.backgroundColor;
-                presentElement.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
-                setTimeout(() => {
-                    presentElement.style.backgroundColor = originalBg;
-                }, 2000);
-                
-                console.log('[Notification] Scrolled to present:', presentId);
-            } else if (retries < maxRetries) {
-                // Retry with increasing delays to handle privacy screen loading
-                const delay = Math.min(100 + (retries * 50), 500);
-                setTimeout(() => scrollToPresentWithRetry(retries + 1, maxRetries), delay);
-            } else {
-                console.warn('[Notification] Present element not found after retries:', presentId);
-            }
-        };
-        
-        // Start scrolling after initial page load
-        setTimeout(() => scrollToPresentWithRetry(), 300);
+        // Wait for page to load, then filter to show only this present
+        setTimeout(() => {
+            filterToPresentById(presentId);
+        }, 500);
     }
+}
+
+// Filter view to show only a specific present
+function filterToPresentById(presentId) {
+    console.log('[Notification] Filtering to present:', presentId);
+    
+    // Hide all recipient items first
+    const recipientItems = document.querySelectorAll('.recipient-item');
+    recipientItems.forEach(item => {
+        item.style.display = 'none';
+    });
+    
+    // Find and show only the recipient containing this present
+    const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
+    if (presentElement) {
+        const recipientItem = presentElement.closest('.recipient-item');
+        if (recipientItem) {
+            recipientItem.style.display = '';
+            
+            // Hide all other presents in this recipient
+            const allPresents = recipientItem.querySelectorAll('.present-item');
+            allPresents.forEach(p => {
+                if (p.getAttribute('data-id') !== presentId) {
+                    p.style.display = 'none';
+                }
+            });
+            
+            // Highlight the present
+            presentElement.style.transition = 'background-color 0.3s ease';
+            presentElement.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
+            
+            // Show filter banner with clear button
+            showFilterBanner(presentElement.querySelector('.present-title')?.textContent || 'prezent');
+            
+            // Scroll to top smoothly
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            console.log('[Notification] Filtered to present successfully');
+        }
+    } else {
+        console.warn('[Notification] Present element not found:', presentId);
+    }
+}
+
+// Show filter banner with clear button
+function showFilterBanner(presentTitle) {
+    // Remove existing banner if any
+    const existingBanner = document.getElementById('presentFilterBanner');
+    if (existingBanner) {
+        existingBanner.remove();
+    }
+    
+    // Create banner
+    const banner = document.createElement('div');
+    banner.id = 'presentFilterBanner';
+    banner.className = 'alert alert-info d-flex align-items-center justify-content-between mb-3';
+    banner.style.cssText = 'position: sticky; top: 60px; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.1);';
+    banner.innerHTML = `
+        <div>
+            <i class="fas fa-filter me-2"></i>
+            <strong>Filtr aktywny:</strong> Pokazuję tylko "${presentTitle}"
+        </div>
+        <button class="btn btn-sm btn-outline-primary" onclick="clearPresentFilter()">
+            <i class="fas fa-times me-1"></i>Pokaż wszystko
+        </button>
+    `;
+    
+    // Insert at the top of recipients list
+    const recipientsList = document.getElementById('recipientsList');
+    if (recipientsList && recipientsList.firstChild) {
+        recipientsList.insertBefore(banner, recipientsList.firstChild);
+    }
+}
+
+// Clear present filter and show all items
+function clearPresentFilter() {
+    console.log('[Notification] Clearing present filter');
+    
+    // Remove banner
+    const banner = document.getElementById('presentFilterBanner');
+    if (banner) {
+        banner.remove();
+    }
+    
+    // Show all recipient items
+    const recipientItems = document.querySelectorAll('.recipient-item');
+    recipientItems.forEach(item => {
+        item.style.display = '';
+    });
+    
+    // Show all presents
+    const allPresents = document.querySelectorAll('.present-item');
+    allPresents.forEach(present => {
+        present.style.display = '';
+        // Remove highlight
+        present.style.backgroundColor = '';
+    });
+    
+    console.log('[Notification] Filter cleared');
 }
 
 // Call on page load
