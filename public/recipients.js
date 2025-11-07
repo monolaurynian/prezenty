@@ -884,17 +884,18 @@ function loadRecipientsWithPresents(forceReload = false, silent = false) {
     const startTime = performance.now();
 
     Promise.all([
-        fetch('/api/recipients-with-presents').then(response => {
+        fetch('/api/recipients-with-presents', { credentials: 'include' }).then(response => {
             if (!response.ok) {
                 if (response.status === 401) {
-                    window.location.href = '/';
+                    console.warn('[API] Got 401 from /api/recipients-with-presents, checking auth status...');
+                    // Don't immediately redirect - check if this is a session timing issue
                     throw new Error('Unauthorized');
                 }
                 throw new Error('Combined API error');
             }
             return response.json();
         }),
-        fetch('/api/user/identification').then(response => {
+        fetch('/api/user/identification', { credentials: 'include' }).then(response => {
             if (!response.ok) {
                 throw new Error('Identification API error');
             }
@@ -936,7 +937,19 @@ function loadRecipientsWithPresents(forceReload = false, silent = false) {
         })
         .catch(error => {
             console.error('Error loading data:', error);
-            if (error.message !== 'Unauthorized') {
+            if (error.message === 'Unauthorized') {
+                // Session might not be ready yet, retry after a short delay
+                console.log('[API] Retrying after 1 second due to 401...');
+                setTimeout(() => {
+                    checkAuth().then(() => {
+                        console.log('[API] Auth check passed on retry, loading data again...');
+                        loadRecipientsWithPresents(true, false);
+                    }).catch(() => {
+                        console.error('[API] Auth check failed on retry, redirecting to login');
+                        window.location.href = '/';
+                    });
+                }, 1000);
+            } else {
                 document.getElementById('recipientsList').innerHTML =
                     '<div class="alert alert-danger">Błąd podczas ładowania danych. Spróbuj odświeżyć stronę.</div>';
             }
