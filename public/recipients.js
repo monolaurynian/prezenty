@@ -1,5 +1,37 @@
 console.log('Recipients.js loading... v7.0 - Reverted to separate API calls');
 
+// Handle scrolling to present from notification
+function handleScrollToPresentFromNotification() {
+    const presentId = sessionStorage.getItem('scrollToPresentId');
+    if (presentId) {
+        sessionStorage.removeItem('scrollToPresentId');
+        
+        // Wait a bit for the page to fully render
+        setTimeout(() => {
+            const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
+            if (presentElement) {
+                presentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Highlight the element briefly
+                presentElement.style.transition = 'background-color 0.3s ease';
+                const originalBg = presentElement.style.backgroundColor;
+                presentElement.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
+                setTimeout(() => {
+                    presentElement.style.backgroundColor = originalBg;
+                }, 2000);
+                
+                console.log('[Notification] Scrolled to present:', presentId);
+            } else {
+                console.warn('[Notification] Present element still not found after page load:', presentId);
+            }
+        }, 500);
+    }
+}
+
+// Call on page load
+document.addEventListener('DOMContentLoaded', handleScrollToPresentFromNotification);
+window.addEventListener('load', handleScrollToPresentFromNotification);
+
 // Global logout function - ensure it's always available
 function logout() {
     console.log('[Logout] Clearing all caches...');

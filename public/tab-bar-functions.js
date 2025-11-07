@@ -182,8 +182,8 @@ function getNotificationMessage(notif) {
 // Scroll to present from notification
 function scrollToPresentFromNotification(presentId) {
     // Close the notifications panel
-    const panel = document.getElementById('notificationsPanel');
-    if (panel && panel.classList.contains('show')) {
+    const panel = document.getElementById('notificationsPanel') || document.getElementById('tabBarNotificationsPanel');
+    if (panel && (panel.classList.contains('show') || panel.style.transform === 'translateY(0)')) {
         toggleNotificationsPanel();
     }
     
@@ -203,7 +203,11 @@ function scrollToPresentFromNotification(presentId) {
         
         console.log('[Notification] Scrolled to present:', presentId);
     } else {
-        console.warn('[Notification] Present element not found:', presentId);
+        // If present element not found, navigate to recipients page
+        console.warn('[Notification] Present element not found on current page, navigating to recipients...');
+        // Store the present ID to scroll to after page load
+        sessionStorage.setItem('scrollToPresentId', presentId);
+        window.location.href = '/recipients.html';
     }
 }
 
