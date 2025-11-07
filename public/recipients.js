@@ -696,6 +696,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.log('[FastLoad] Merging cached data with identified user data');
                     displayRecipientsWithPresents(allRecipients, allPresents);
 
+                    // Mark that identified user data is loaded
+                    window._identifiedUserDataLoaded = true;
+
                     // Update cache
                     window._dataCache = {
                         recipients: allRecipients,
@@ -1019,54 +1022,69 @@ function displayRecipientsWithPresents(recipients, presents) {
             // List presents added by the current user in a collapsed accordion
             const ownPresents = recipientPresents.filter(p => p.created_by === currentUserId);
             const accordionId = `accordion-own-${recipient.id}`;
+            const isLoading = recipientPresents.length === 0 && !window._identifiedUserDataLoaded;
             
             presentsHTML = `
-                <div class="accordion" id="${accordionId}">
+                <div class="accordion" id="${accordionId}" data-recipient-id="${recipient.id}">
                     <div class="accordion-item">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}-collapse" aria-expanded="false" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107; color: #856404; font-weight: 600;">
-                                <i class="fas fa-gift me-2"></i>
-                                🎁 Twoje prezenty (${ownPresents.length}) - kliknij aby zobaczyć
+                            <button class="accordion-button collapsed accordion-button-identified" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}-collapse" aria-expanded="false" style="background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%); border-left: 4px solid #0d6efd; color: #084298; font-weight: 600;">
+                                ${isLoading ? `
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    <i class="fas fa-lock me-2"></i>Ładowanie Twoich prezentów z zachowaniem niespodzianki...
+                                ` : `
+                                    <i class="fas fa-gift me-2"></i>
+                                    🎁 Twoje prezenty (${ownPresents.length}) - kliknij aby zobaczyć
+                                `}
                             </button>
                         </h2>
                         <div id="${accordionId}-collapse" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
-                            <div class="accordion-body">
-                                <div class="alert alert-warning mb-3" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);">
-                                    <strong>🎁 Niespodzianka!</strong><br>
-                                    Twoje prezenty są ukryte, żeby nie zepsuć niespodzianki. Nie możesz zobaczyć, co zostało kupione ani zarezerwowane.
-                                </div>
-                                ${ownPresents.length > 0 ? `
-                                    <div class="fw-bold mb-2"><i class="fas fa-list me-1"></i>Twoje dodane prezenty:</div>
-                                    <ul class="list-group">
-                                        ${ownPresents.map(p => `
-                                            <li class="list-group-item present-item" data-id="${p.id}">
-                                                <div class="d-flex align-items-start flex-wrap flex-md-nowrap">
-                                                    <div class="flex-grow-1">
-                                                        <div class="fw-semibold present-name">${escapeHtml(p.title)}</div>
-                                                        ${p.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
+                            <div class="accordion-body accordion-body-identified">
+                                ${isLoading ? `
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-primary mb-3" role="status">
+                                            <span class="visually-hidden">Ładowanie...</span>
+                                        </div>
+                                        <p class="text-muted">Ładowanie Twoich prezentów z zachowaniem niespodzianki...</p>
+                                    </div>
+                                ` : `
+                                    <div class="alert alert-info mb-3" style="background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%); border-left: 4px solid #0d6efd;">
+                                        <strong>🎁 Niespodzianka!</strong><br>
+                                        Nie możesz zobaczyć które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki!
+                                    </div>
+                                    ${ownPresents.length > 0 ? `
+                                        <div class="fw-bold mb-2"><i class="fas fa-list me-1"></i>Twoje dodane prezenty:</div>
+                                        <ul class="list-group">
+                                            ${ownPresents.map(p => `
+                                                <li class="list-group-item present-item" data-id="${p.id}">
+                                                    <div class="d-flex align-items-start flex-wrap flex-md-nowrap">
+                                                        <div class="flex-grow-1">
+                                                            <div class="fw-semibold present-name">${escapeHtml(p.title)}</div>
+                                                            ${p.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
+                                                        </div>
+                                                        <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto mt-2 mt-md-0">
+                                                            <button class="btn btn-sm btn-outline-primary w-100 w-md-auto edit-present-btn"
+                                                                data-present-id="${p.id}"
+                                                                data-present-title="${escapeHtml(p.title)}"
+                                                                data-recipient-id="${p.recipient_id}"
+                                                                data-present-comments="${escapeHtml(p.comments || '')}"
+                                                                style="max-width:50px;">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger w-100 w-md-auto delete-present-btn"
+                                                                data-present-id="${p.id}"
+                                                                data-present-title="${escapeHtml(p.title)}"
+                                                                data-recipient-id="${recipient.id}"
+                                                                style="max-width:50px;">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto mt-2 mt-md-0">
-                                                        <button class="btn btn-sm btn-outline-primary w-100 w-md-auto edit-present-btn"
-                                                            data-present-id="${p.id}"
-                                                            data-present-title="${escapeHtml(p.title)}"
-                                                            data-recipient-id="${p.recipient_id}"
-                                                            data-present-comments="${escapeHtml(p.comments || '')}"
-                                                            style="max-width:50px;">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                        <button class="btn btn-sm btn-danger w-100 w-md-auto delete-present-btn"
-                                                            data-present-id="${p.id}"
-                                                            data-present-title="${escapeHtml(p.title)}"
-                                                            data-recipient-id="${recipient.id}"
-                                                            style="max-width:50px;">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        `).join('')}
-                                    </ul>
-                                ` : '<p class="text-muted mb-0">Nie dodałeś jeszcze żadnych prezentów.</p>'}
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    ` : '<p class="text-muted mb-0">Nie dodałeś jeszcze żadnych prezentów.</p>'}
+                                `}
                             </div>
                         </div>
                     </div>

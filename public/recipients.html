@@ -1652,7 +1652,7 @@
                     color: '#2196F3',
                     getMessage: (data) => {
                         const presentLink = data.presentId ? 
-                            `<a href="#" onclick="event.stopPropagation(); navigateToPresent(${data.presentId}); return false;" style="color: #2196F3; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></a>` : 
+                            `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #2196F3; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
                         return `dodał(a) prezent ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
                     }
@@ -1662,7 +1662,7 @@
                     color: '#FF9800',
                     getMessage: (data) => {
                         const presentLink = data.presentId ? 
-                            `<a href="#" onclick="event.stopPropagation(); navigateToPresent(${data.presentId}); return false;" style="color: #FF9800; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></a>` : 
+                            `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #FF9800; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
                         return `zarezerwował(a) prezent ${presentLink}`;
                     }
@@ -1672,7 +1672,7 @@
                     color: '#9E9E9E',
                     getMessage: (data) => {
                         const presentLink = data.presentId ? 
-                            `<a href="#" onclick="event.stopPropagation(); navigateToPresent(${data.presentId}); return false;" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></a>` : 
+                            `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
                         return `anulował(a) rezerwację ${presentLink}`;
                     }
@@ -1682,7 +1682,7 @@
                     color: '#4CAF50',
                     getMessage: (data) => {
                         const presentLink = data.presentId ? 
-                            `<a href="#" onclick="event.stopPropagation(); navigateToPresent(${data.presentId}); return false;" style="color: #4CAF50; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></a>` : 
+                            `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #4CAF50; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
                         return `oznaczył(a) jako kupione ${presentLink}`;
                     }
@@ -1692,7 +1692,7 @@
                     color: '#9E9E9E',
                     getMessage: (data) => {
                         const presentLink = data.presentId ? 
-                            `<a href="#" onclick="event.stopPropagation(); navigateToPresent(${data.presentId}); return false;" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></a>` : 
+                            `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
                         return `odznaczył(a) ${presentLink}`;
                     }
