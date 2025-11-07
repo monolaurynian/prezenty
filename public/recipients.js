@@ -1830,3 +1830,285 @@ style="transition-delay: ${index * 50}ms;">
 
 
 
+
+
+// Persistent cache functions
+function saveToPersistentCache(data) {
+    try {
+        // Check for large comments before optimization
+        const largeComments = data.presents.filter(p => p.comments && p.comments.length > 1000);
+        if (largeComments.length > 0) {
+            console.log(`[Cache] Found ${largeComments.length} presents with large comments (>1000 chars)`);
+            largeComments.forEach(p => {
+                console.log(`[Cache] Present "${p.title}" has ${p.comments.length} char comment`);
+            });
+        }
+
+        // Optimize data before saving - remove large fields
+        const optimizedData = {
+            recipients: data.recipients.map(r => ({
+                id: r.id,
+                name: r.name,
+                identified_by: r.identified_by,
+                identified_by_username: r.identified_by_username,
+                profile_picture: r.profile_picture // Just the URL, not BLOB
+            })),
+            presents: data.presents.map(p => ({
+                id: p.id,
+                title: p.title,
+                recipient_id: p.recipient_id,
+                // Truncate comments to 200 chars to save more space
+                comments: p.comments ? p.comments.substring(0, 200) : null,
+                is_checked: p.is_checked,
+                reserved_by: p.reserved_by,
+                reserved_by_username: p.reserved_by_username,
+                recipient_name: p.recipient_name,
+                created_by: p.created_by,
+                created_at: p.created_at
+            })),
+            identificationStatus: data.identificationStatus,
+            timestamp: Date.now()
+        };
+
+        const jsonString = JSON.stringify(optimizedData);
+        const sizeKB = (jsonString.length / 1024).toFixed(2);
+        console.log(`[Cache] Attempting to save ${sizeKB}KB to localStorage`);
+
+        // Try to save
+        localStorage.setItem('recipientsCache', jsonString);
+        console.log('[Cache] Data saved successfully');
+    } catch (error) {
+        console.error('[Cache] Error saving:', error);
+
+        // If quota exceeded, disable caching
+        if (error.name === 'QuotaExceededError') {
+            console.warn('[Cache] Quota exceeded - disabling cache. App will work without it.');
+
+            // Clear ALL localStorage to free up space
+            try {
+                localStorage.clear();
+                console.log('[Cache] localStorage cleared');
+            } catch (e) {
+                console.error('[Cache] Could not clear localStorage:', e);
+            }
+
+            // Don't try to save again - just continue without cache
+            // The app will work fine, just slower on refresh
+        }
+    }
+}
+
+function loadFromPersistentCache() {
+    try {
+        const cached = localStorage.getItem('recipientsCache');
+        if (cached) {
+            const cacheData = JSON.parse(cached);
+            const age = Date.now() - cacheData.timestamp;
+
+            // Cache valid for 5 minutes
+            if (age < 300000) {
+                return cacheData;
+            } else {
+                console.log('[Cache] Persistent cache expired');
+                localStorage.removeItem('recipientsCache');
+            }
+        }
+    } catch (error) {
+        console.error('[Cache] Error loading from persistent cache:', error);
+        localStorage.removeItem('recipientsCache');
+    }
+    return null;
+}
+
+function clearPersistentCache() {
+    try {
+        localStorage.removeItem('recipientsCache');
+        console.log('[Cache] Persistent cache cleared');
+    } catch (error) {
+        console.error('[Cache] Error clearing persistent cache:', error);
+    }
+}
+
+function clearRecipientsCache() {
+    clearPersistentCache();
+    window._dataCache = null;
+    window._dataCacheTimestamp = null;
+}
+
+
+// Display recipients data with privacy handling
+function displayRecipientsData(recipients, presents, identificationStatus) {
+    // Add instant load class for smooth fade-in
+    const recipientsList = document.getElementById('recipientsList');
+    if (recipientsList) {
+        recipientsList.classList.add('instant-load');
+    }
+
+    // Store identification status for later use
+    window._cachedIdentificationStatus = identificationStatus;
+
+    // Store data globally for other functions
+    window._allPresentsByRecipient = {};
+    presents.forEach(present => {
+        if (!window._allPresentsByRecipient[present.recipient_id]) {
+            window._allPresentsByRecipient[present.recipient_id] = [];
+        }
+        window._allPresentsByRecipient[present.recipient_id].push(present);
+    });
+
+    // Display the recipients
+    displayRecipientsWithPresents(recipients, presents);
+
+    // PRIVACY FIX: If user is identified in cache, hide their presents immediately
+    if (identificationStatus && identificationStatus.isIdentified && identificationStatus.userId) {
+        console.log('[Privacy] Applying privacy filter from cache');
+        // Find the identified recipient and hide their presents
+        const identifiedRecipient = recipients.find(r => r.identified_by === identificationStatus.userId);
+        if (identifiedRecipient) {
+            // Hide presents for this recipient immediately
+            const recipientCard = document.querySelector(`[data-id="${identifiedRecipient.id}"]`);
+            if (recipientCard) {
+                const presentsContainer = recipientCard.querySelector('.presents-list, .recipient-presents');
+                if (presentsContainer) {
+                    // Temporarily hide until auth completes
+                    presentsContainer.style.opacity = '0.3';
+                    presentsContainer.style.pointerEvents = 'none';
+                    console.log('[Privacy] Temporarily hiding presents for recipient:', identifiedRecipient.name);
+                }
+            }
+        }
+    }
+}
+
+// Handle identification logic
+function handleIdentificationLogic(recipients, identificationStatus) {
+    console.log('handleIdentificationLogic called with:', {
+        currentUserId,
+        recipients: recipients.map(r => ({ id: r.id, name: r.name, identified_by: r.identified_by })),
+        identificationStatus
+    });
+
+    // Ensure currentUserId is set
+    if (!currentUserId) {
+        console.warn('currentUserId not set, skipping identification logic');
+        return;
+    }
+
+    // First check the identification status from the API
+    if (identificationStatus.isIdentified && identificationStatus.identifiedRecipient) {
+        console.log('User is already identified according to API:', identificationStatus.identifiedRecipient.name, '- skipping identification flow');
+        return;
+    }
+
+    // Also check if user is already identified as any recipient in the recipients list
+    const alreadyIdentified = recipients.find(recipient =>
+        recipient.identified_by === currentUserId
+    );
+
+    console.log('Already identified check:', { currentUserId, alreadyIdentified });
+
+    if (alreadyIdentified) {
+        console.log('User is already identified as:', alreadyIdentified.name, '- skipping identification flow');
+        return; // Don't show any identification modals
+    }
+
+    // Only show identification flow if user is not identified at all
+    console.log('User is not identified, checking for identification options...');
+
+    // Find matching recipient by username (for first-time identification)
+    const matchingRecipient = recipients.find(recipient =>
+        recipient.name.toLowerCase() === identificationStatus.username?.toLowerCase() &&
+        !recipient.identified_by
+    );
+
+    if (matchingRecipient) {
+        console.log('Found matching unidentified recipient:', matchingRecipient.name);
+        setTimeout(() => {
+            identifyAsRecipient(matchingRecipient.id, matchingRecipient.name, true);
+        }, 500);
+    } else {
+        console.log('No matching recipient found, showing selection modal');
+        setTimeout(() => {
+            showRecipientSelectionModal();
+        }, 500);
+    }
+}
+
+// Refresh recipients cache
+function refreshRecipientsCache() {
+    return Promise.all([
+        fetch('/api/recipients', { credentials: 'include' }).then(response => response.json()),
+        fetch('/api/user/identification', { credentials: 'include' }).then(response => response.json())
+    ])
+        .then(([recipients, identificationStatus]) => {
+            window._cachedRecipients = recipients;
+            window._cachedIdentificationStatus = identificationStatus;
+            return { recipients, identificationStatus };
+        });
+}
+
+// Toast notification system
+function showToast(message, type = 'success') {
+    const toastId = `${type}Toast`;
+    const messageId = `${type}ToastMessage`;
+
+    const toastElement = document.getElementById(toastId);
+    const messageElement = document.getElementById(messageId);
+
+    if (toastElement && messageElement) {
+        messageElement.textContent = message;
+        const toast = new bootstrap.Toast(toastElement, {
+            autohide: true,
+            delay: type === 'error' ? 5000 : 3000
+        });
+        toast.show();
+    }
+}
+
+function showSuccessToast(message) {
+    showToast(message, 'success');
+}
+
+function showErrorToast(message) {
+    showToast(message, 'error');
+}
+
+function showInfoToast(message) {
+    showToast(message, 'info');
+}
+
+// Add missing loadRecipients function for the refresh button
+function loadRecipients() {
+    console.log('Refreshing recipients data...');
+    showInfoToast('Odświeżanie danych...');
+    // Clear all caches when refreshing
+    clearRecipientsCache();
+    loadRecipientsWithPresents(true); // Force reload
+}
+
+// Soft reload for background updates
+function softReloadRecipients() {
+    console.log('Soft reloading recipients in background...');
+    return Promise.all([
+        fetch('/api/recipients-with-presents', { credentials: 'include' }).then(r => r.json()),
+        fetch('/api/user/identification', { credentials: 'include' }).then(r => r.json())
+    ])
+        .then(([combinedData, identificationStatus]) => {
+            const recipients = combinedData.recipients || [];
+            const presents = combinedData.presents || [];
+
+            // Update cache
+            window._dataCache = { recipients, presents, identificationStatus };
+            window._dataCacheTimestamp = Date.now();
+            saveToPersistentCache(window._dataCache);
+
+            console.log('Soft reload completed');
+        })
+        .catch(error => {
+            console.error('Error in soft reload:', error);
+            // Fallback to cached data if available
+            if (window._dataCache) {
+                console.log('Using cached data after soft reload error');
+            }
+        });
+}
