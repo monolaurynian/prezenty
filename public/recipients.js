@@ -306,6 +306,9 @@ function performSearch(query) {
 }
 
 function applyFilter() {
+    // Save scroll position before filtering
+    const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+
     const recipientItems = document.querySelectorAll('.recipient-item');
 
     recipientItems.forEach(item => {
@@ -337,6 +340,11 @@ function applyFilter() {
 
         // Hide recipient if no presents match filter
         item.style.display = hasVisiblePresent ? '' : 'none';
+    });
+
+    // Restore scroll position after filtering to prevent jumping
+    requestAnimationFrame(() => {
+        window.scrollTo(0, scrollPosition);
     });
 }
 
@@ -3766,8 +3774,17 @@ function updateChangedElementsOnly(oldCache, newCache) {
     // Check for identification changes
     if (oldCache.identificationStatus?.isIdentified !== newCache.identificationStatus?.isIdentified) {
         console.log('[SmartUpdate] Identification status changed, full reload needed');
+
+        // Save scroll position before reload
+        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+
         // For identification changes, we need a full reload
         displayRecipientsWithPresents(newCache.recipients, newCache.presents);
+
+        // Restore scroll position after a brief delay to allow DOM update
+        setTimeout(() => {
+            window.scrollTo(0, scrollPosition);
+        }, 50);
     }
 }
 
