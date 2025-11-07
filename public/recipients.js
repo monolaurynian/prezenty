@@ -101,16 +101,18 @@ function showFilterBanner(presentTitle) {
     // Create banner
     const banner = document.createElement('div');
     banner.id = 'presentFilterBanner';
-    banner.className = 'alert alert-info d-flex align-items-center justify-content-between mb-3';
+    banner.className = 'alert alert-info mb-3';
     banner.style.cssText = 'position: sticky; top: 60px; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.1);';
     banner.innerHTML = `
-        <div>
-            <i class="fas fa-filter me-2"></i>
-            <strong>Filtr aktywny:</strong> Pokazuję tylko "${presentTitle}"
+        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-filter me-2"></i>
+                <span><strong>Filtr aktywny:</strong> Pokazuję tylko "${presentTitle}"</span>
+            </div>
+            <button class="btn btn-sm btn-outline-primary text-nowrap" onclick="clearPresentFilter()" style="flex-shrink: 0;">
+                <i class="fas fa-times me-1"></i>Pokaż wszystko
+            </button>
         </div>
-        <button class="btn btn-sm btn-outline-primary" onclick="clearPresentFilter()">
-            <i class="fas fa-times me-1"></i>Pokaż wszystko
-        </button>
     `;
     
     // Insert at the top of recipients list
