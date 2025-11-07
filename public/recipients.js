@@ -1095,13 +1095,13 @@ function displayRecipientsWithPresents(recipients, presents) {
                 <div class="accordion" id="${accordionId}" data-recipient-id="${recipient.id}">
                     <div class="accordion-item">
                         <h2 class="accordion-header">
-                            <button class="accordion-button collapsed accordion-button-identified" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}-collapse" aria-expanded="false" style="background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%); border-left: 4px solid #0d6efd; color: #084298; font-weight: 600;">
+                            <button class="accordion-button collapsed accordion-button-identified" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}-collapse" aria-expanded="false" style="background-color: #cfe2ff; color: #084298; font-weight: 600;">
                                 ${isLoading ? `
                                     <i class="fas fa-spinner fa-spin me-2"></i>
                                     <i class="fas fa-lock me-2"></i>Ładowanie Twoich prezentów z zachowaniem niespodzianki...
                                 ` : `
                                     <i class="fas fa-gift me-2"></i>
-                                    🎁 Twoje prezenty (${ownPresents.length}) - kliknij aby zobaczyć
+                                    Twoje prezenty (${ownPresents.length}) - kliknij aby edytować
                                 `}
                             </button>
                         </h2>
