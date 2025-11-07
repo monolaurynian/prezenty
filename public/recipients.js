@@ -1,5 +1,8 @@
 console.log('Recipients.js loading... v7.0 - Reverted to separate API calls');
 
+// Global variable to track active filter
+let activeFilterPresentId = null;
+
 // Handle filtering to present from notification
 function handleScrollToPresentFromNotification() {
     // Don't run if we're in the process of logging out
@@ -9,11 +12,40 @@ function handleScrollToPresentFromNotification() {
     if (presentId) {
         sessionStorage.removeItem('scrollToPresentId');
         
+        // Store the filter to reapply after privacy container loads
+        activeFilterPresentId = presentId;
+        
         // Wait for page to load, then filter to show only this present
         setTimeout(() => {
             filterToPresentById(presentId);
+            
+            // Set up a MutationObserver to reapply filter if DOM changes
+            setupFilterPersistence();
         }, 500);
     }
+}
+
+// Set up observer to maintain filter through DOM changes
+function setupFilterPersistence() {
+    if (!activeFilterPresentId) return;
+    
+    const recipientsList = document.getElementById('recipientsList');
+    if (!recipientsList) return;
+    
+    const observer = new MutationObserver(() => {
+        if (activeFilterPresentId) {
+            console.log('[Filter] DOM changed, reapplying filter');
+            filterToPresentById(activeFilterPresentId);
+        }
+    });
+    
+    observer.observe(recipientsList, {
+        childList: true,
+        subtree: true
+    });
+    
+    // Store observer to disconnect later
+    window._filterObserver = observer;
 }
 
 // Filter view to show only a specific present
@@ -91,6 +123,15 @@ function showFilterBanner(presentTitle) {
 // Clear present filter and show all items
 function clearPresentFilter() {
     console.log('[Notification] Clearing present filter');
+    
+    // Clear active filter
+    activeFilterPresentId = null;
+    
+    // Disconnect observer
+    if (window._filterObserver) {
+        window._filterObserver.disconnect();
+        window._filterObserver = null;
+    }
     
     // Remove banner
     const banner = document.getElementById('presentFilterBanner');
