@@ -2063,6 +2063,18 @@ function updateProgressBar(presentItem) {
         const iconHTML = icon ? icon.outerHTML : '<i class="fas fa-gift me-1"></i>';
         progressText.innerHTML = `${iconHTML}Prezenty: ${checkedPresents}/${totalPresents} zakupione`;
     }
+    
+    // Update accordion "Kupione" count
+    updateAccordionBoughtCount(recipientItem, checkedPresents);
+}
+
+// Update the "Kupione" accordion count
+function updateAccordionBoughtCount(recipientItem, checkedPresents) {
+    const accordion = recipientItem.querySelector('.accordion-button');
+    if (accordion) {
+        // Update the count in the accordion button text
+        accordion.innerHTML = accordion.innerHTML.replace(/Kupione \(\d+\)/, `Kupione (${checkedPresents})`);
+    }
 }
 
 // Helper function to animate present transitions

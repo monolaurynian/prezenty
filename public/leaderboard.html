@@ -831,47 +831,7 @@
             </div>
         </div>
 
-        <!-- Cumulative Progress Bars - Below Leaderboard -->
-        <div id="cumulativeProgressSection" class="ranking-list" style="display: none;">
-            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
-                <i class="fas fa-chart-line me-2"></i>Ogólny Postęp
-            </h3>
-            <!-- Buying Progress -->
-            <div style="margin-bottom: 25px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
-                        <i class="fas fa-shopping-bag" style="color: #4CAF50; margin-right: 8px;"></i>Kupione Prezenty
-                    </label>
-                    <span id="boughtStats" style="font-weight: 600; color: #4CAF50; font-size: 16px;">0/0</span>
-                </div>
-                <div style="background: #e0e0e0; border-radius: 10px; height: 14px; overflow: hidden;">
-                    <div id="boughtProgressBar" style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
-                </div>
-            </div>
-            <!-- Reserved vs Available Progress -->
-            <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
-                        <i class="fas fa-bookmark" style="color: #FF9800; margin-right: 8px;"></i>Zarezerwowane Prezenty
-                    </label>
-                    <span id="reservedStats" style="font-weight: 600; color: #FF9800; font-size: 16px;">0/0</span>
-                </div>
-                <div style="background: #e0e0e0; border-radius: 10px; height: 14px; overflow: hidden; display: flex;">
-                    <div id="reservedProgressBar" style="background: linear-gradient(90deg, #FF9800, #F57C00); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
-                    <div id="availableProgressBar" style="background: #c0c0c0; height: 100%; flex: 1;"></div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Available Presents List -->
-        <div id="availablePresentsSection" class="ranking-list" style="display: none;">
-            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
-                <i class="fas fa-gifts me-2"></i>Dostępne Prezenty
-            </h3>
-            <div id="availablePresentsList">
-                <!-- Will be populated by JavaScript -->
-            </div>
-        </div>
 
         <div id="emptyState" class="ranking-list" style="display: none;">
             <div class="empty-state">
@@ -958,148 +918,7 @@
             // Show full ranking
             document.getElementById('rankingList').style.display = 'block';
             renderUsersList(users);
-            
-            // Show cumulative progress bars with stats from API
-            document.getElementById('cumulativeProgressSection').style.display = 'block';
-            updateCumulativeProgress(cumulativeStats);
-            
-            // Show available presents
-            loadAvailablePresents();
         }
-        
-        function loadAvailablePresents() {
-            Promise.all([
-                fetch('/api/recipients-with-presents').then(r => r.json()),
-                fetch('/api/user/identification').then(r => r.json())
-            ])
-                .then(([data, identificationStatus]) => {
-                    const presents = data.presents || [];
-                    const recipients = data.recipients || [];
-                    
-                    // Find identified recipient ID
-                    const identifiedRecipientId = identificationStatus.isIdentified ? 
-                        recipients.find(r => r.identified_by === identificationStatus.userId)?.id : null;
-                    
-                    // Filter for unreserved presents, excluding identified user's presents
-                    const availablePresents = presents.filter(p => 
-                        !p.reserved_by && 
-                        !p.is_checked && 
-                        p.recipient_id !== identifiedRecipientId
-                    );
-                    
-                    if (availablePresents.length > 0) {
-                        document.getElementById('availablePresentsSection').style.display = 'block';
-                        renderAvailablePresents(availablePresents, recipients);
-                    }
-                })
-                .catch(error => console.error('Error loading presents:', error));
-        }
-        
-        function renderAvailablePresents(presents, recipients) {
-            const container = document.getElementById('availablePresentsList');
-            
-            // Group presents by recipient
-            const presentsByRecipient = {};
-            presents.forEach(present => {
-                if (!presentsByRecipient[present.recipient_id]) {
-                    presentsByRecipient[present.recipient_id] = [];
-                }
-                presentsByRecipient[present.recipient_id].push(present);
-            });
-            
-            let html = '';
-            Object.keys(presentsByRecipient).forEach(recipientId => {
-                const recipient = recipients.find(r => r.id == recipientId);
-                if (!recipient) return;
-                
-                const recipientPresents = presentsByRecipient[recipientId];
-                
-                html += `
-                    <div style="margin-bottom: 25px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                        <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-user-circle" style="color: #667eea;"></i>
-                            ${escapeHtml(recipient.name)}
-                            <span style="background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500;">
-                                ${recipientPresents.length} ${recipientPresents.length === 1 ? 'prezent' : 'prezentów'}
-                            </span>
-                        </h5>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            ${recipientPresents.map(present => `
-                                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #4CAF50;">
-                                    <div style="flex: 1; min-width: 0;">
-                                        <div style="font-weight: 500; color: #2d3748; margin-bottom: 4px; word-wrap: break-word; overflow-wrap: break-word;">
-                                            <i class="fas fa-gift" style="color: #4CAF50; margin-right: 8px;"></i>
-                                            ${makeLinksClickable(escapeHtml(present.title))}
-                                        </div>
-                                        ${present.comments ? `
-                                            <div style="font-size: 13px; color: #718096; margin-left: 28px; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;">
-                                                ${makeLinksClickable(escapeHtml(present.comments))}
-                                            </div>
-                                        ` : ''}
-                                    </div>
-                                    <a href="/recipients.html" class="btn btn-sm btn-success" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0;">
-                                        <i class="fas fa-bookmark me-1"></i>Zarezerwuj
-                                    </a>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        function makeLinksClickable(text) {
-            // URL regex pattern
-            const urlPattern = /(https?:\/\/[^\s<]+)/g;
-            const urls = text.match(urlPattern);
-            
-            // If URLs found, display them on separate lines
-            if (urls && urls.length > 0) {
-                let result = text;
-                const linksList = urls.map(url => {
-                    // Remove trailing punctuation
-                    let cleanUrl = url;
-                    const punctuation = /[.,;:!?)]+$/;
-                    const match = url.match(punctuation);
-                    if (match) {
-                        cleanUrl = url.slice(0, -match[0].length);
-                    }
-                    
-                    // Shorten display text if URL is too long
-                    let displayText = cleanUrl;
-                    if (cleanUrl.length > 50) {
-                        displayText = cleanUrl.substring(0, 47) + '...';
-                    }
-                    
-                    return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2196F3; text-decoration: underline; word-break: break-all; display: inline-block;">${displayText}</a>`;
-                }).join('<br>');
-                
-                // Replace all URLs with placeholder
-                urls.forEach(url => {
-                    result = result.replace(url, '');
-                });
-                
-                // Clean up extra spaces and add links at the end
-                result = result.trim().replace(/\s+/g, ' ');
-                if (result) {
-                    return result + '<br>' + linksList;
-                } else {
-                    return linksList;
-                }
-            }
-            
-            // No URLs - return text as is
-            return text;
-        }
-
         function renderPodium(top3) {
             const podium = document.getElementById('podium');
             const medals = ['🥇', '🥈', '🥉'];
@@ -1128,33 +947,6 @@
                 </div>
             `).join('');
         }
-        
-        function updateCumulativeProgress(cumulativeStats) {
-            if (!cumulativeStats) {
-                console.warn('No cumulative stats provided');
-                return;
-            }
-            
-            // Get totals from API
-            const totalPresents = cumulativeStats.totalPresents || 0;
-            const totalBought = cumulativeStats.boughtPresents || 0;
-            const totalReserved = cumulativeStats.reservedPresents || 0;
-            
-            console.log('[Progress] Cumulative stats:', { totalPresents, totalBought, totalReserved });
-            
-            // Calculate percentages
-            const boughtPercent = totalPresents > 0 ? Math.round((totalBought / totalPresents) * 100) : 0;
-            const reservedPercent = totalPresents > 0 ? Math.round((totalReserved / totalPresents) * 100) : 0;
-            
-            // Update bought progress
-            document.getElementById('boughtStats').textContent = `${totalBought}/${totalPresents}`;
-            document.getElementById('boughtProgressBar').style.width = `${boughtPercent}%`;
-            
-            // Update reserved progress
-            document.getElementById('reservedStats').textContent = `${totalReserved}/${totalPresents}`;
-            document.getElementById('reservedProgressBar').style.width = `${reservedPercent}%`;
-        }
-
         function renderUsersList(users) {
             const usersList = document.getElementById('usersList');
             
@@ -1251,6 +1043,11 @@
             </button>
         </div>
         <div class="tab-bar-menu-content">
+            <a href="statystyki.html" class="tab-bar-menu-item stats-item">
+                <i class="ri-bar-chart-line"></i>
+                <span>Statystyki</span>
+            </a>
+            <div class="tab-bar-menu-divider"></div>
             <a href="recipients.html" class="tab-bar-menu-item add-person-item">
                 <i class="ri-user-add-line"></i>
                 <span>Dodaj Osobę</span>

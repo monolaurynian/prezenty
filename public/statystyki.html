@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statystyki - Prezentownik</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link href="bottom-tab-bar.css?v=15" rel="stylesheet">
+    <style>
+        body {
+            background: url('seba.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            z-index: -1;
+        }
+
+        .stats-navbar {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .stats-navbar .container-fluid {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stats-navbar .navbar-brand {
+            margin: 0 auto;
+        }
+
+        .stats-navbar .brand-text {
+            color: white;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .stats-container {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 1200px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats-container h3 {
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+            text-align: center !important;
+        }
+
+        @media (max-width: 768px) {
+            .stats-container {
+                padding: 20px;
+                margin: 15px auto;
+            }
+        }
+    </style>
+</head>
+<body class="has-tab-bar">
+    <div class="background-overlay"></div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark stats-navbar">
+        <div class="container-fluid">
+            <div class="navbar-brand">
+                <div class="brand-container" style="display: flex; align-items: center; gap: 15px;">
+                    <div class="brand-logo-container">
+                        <img src="seba_logo.png" alt="Logo" style="width: 40px; height: 40px; border-radius: 8px;">
+                    </div>
+                    <span class="brand-text">
+                        <i class="fas fa-chart-bar me-2"></i>Statystyki
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Cumulative Progress Bars -->
+        <div id="cumulativeProgressSection" class="stats-container">
+            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
+                <i class="fas fa-chart-line me-2"></i>Ogólny Postęp
+            </h3>
+            <!-- Buying Progress -->
+            <div style="margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
+                        <i class="fas fa-shopping-bag" style="color: #4CAF50; margin-right: 8px;"></i>Kupione Prezenty
+                    </label>
+                    <span id="boughtStats" style="font-weight: 600; color: #4CAF50; font-size: 16px;">0/0</span>
+                </div>
+                <div style="background: #e0e0e0; border-radius: 10px; height: 14px; overflow: hidden;">
+                    <div id="boughtProgressBar" style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                </div>
+            </div>
+            <!-- Reserved vs Available Progress -->
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
+                        <i class="fas fa-bookmark" style="color: #FF9800; margin-right: 8px;"></i>Zarezerwowane Prezenty
+                    </label>
+                    <span id="reservedStats" style="font-weight: 600; color: #FF9800; font-size: 16px;">0/0</span>
+                </div>
+                <div style="background: #e0e0e0; border-radius: 10px; height: 14px; overflow: hidden; display: flex;">
+                    <div id="reservedProgressBar" style="background: linear-gradient(90deg, #FF9800, #F57C00); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                    <div id="availableProgressBar" style="background: #c0c0c0; height: 100%; flex: 1;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Presents List -->
+        <div id="availablePresentsSection" class="stats-container">
+            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
+                <i class="fas fa-gifts me-2"></i>Dostępne Prezenty
+            </h3>
+            <div id="availablePresentsList">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Ładowanie...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Reservations -->
+        <div id="myReservationsSection" class="stats-container">
+            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
+                <i class="fas fa-bookmark me-2"></i>Moje Rezerwacje
+            </h3>
+            <div id="myReservationsList">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Ładowanie...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bought Presents -->
+        <div id="boughtPresentsSection" class="stats-container">
+            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
+                <i class="fas fa-check-circle me-2"></i>Kupione
+            </h3>
+            <div id="boughtPresentsList">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Ładowanie...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/leaderboard');
+                const data = await response.json();
+                
+                if (data.cumulativeStats) {
+                    updateCumulativeProgress(data.cumulativeStats);
+                }
+                
+                loadAvailablePresents();
+                loadMyReservations();
+                loadBoughtPresents();
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        function updateCumulativeProgress(cumulativeStats) {
+            const totalPresents = cumulativeStats.totalPresents || 0;
+            const totalBought = cumulativeStats.boughtPresents || 0;
+            const totalReserved = cumulativeStats.reservedPresents || 0;
+            
+            const boughtPercent = totalPresents > 0 ? Math.round((totalBought / totalPresents) * 100) : 0;
+            const reservedPercent = totalPresents > 0 ? Math.round((totalReserved / totalPresents) * 100) : 0;
+            
+            document.getElementById('boughtStats').textContent = `${totalBought}/${totalPresents}`;
+            document.getElementById('boughtProgressBar').style.width = `${boughtPercent}%`;
+            
+            document.getElementById('reservedStats').textContent = `${totalReserved}/${totalPresents}`;
+            document.getElementById('reservedProgressBar').style.width = `${reservedPercent}%`;
+        }
+        
+        function loadAvailablePresents() {
+            Promise.all([
+                fetch('/api/recipients-with-presents').then(r => r.json()),
+                fetch('/api/user/identification').then(r => r.json())
+            ])
+                .then(([data, identificationStatus]) => {
+                    const presents = data.presents || [];
+                    const recipients = data.recipients || [];
+                    
+                    const identifiedRecipientId = identificationStatus.isIdentified ? 
+                        recipients.find(r => r.identified_by === identificationStatus.userId)?.id : null;
+                    
+                    const availablePresents = presents.filter(p => 
+                        !p.reserved_by && 
+                        !p.is_checked && 
+                        p.recipient_id !== identifiedRecipientId
+                    );
+                    
+                    renderAvailablePresents(availablePresents, recipients);
+                })
+                .catch(error => console.error('Error loading presents:', error));
+        }
+        
+        function renderAvailablePresents(presents, recipients) {
+            const container = document.getElementById('availablePresentsList');
+            
+            if (presents.length === 0) {
+                container.innerHTML = '<div class="text-center py-5"><p class="text-muted">Brak dostępnych prezentów</p></div>';
+                return;
+            }
+            
+            const presentsByRecipient = {};
+            presents.forEach(present => {
+                if (!presentsByRecipient[present.recipient_id]) {
+                    presentsByRecipient[present.recipient_id] = [];
+                }
+                presentsByRecipient[present.recipient_id].push(present);
+            });
+            
+            let html = '';
+            Object.keys(presentsByRecipient).forEach(recipientId => {
+                const recipient = recipients.find(r => r.id == recipientId);
+                if (!recipient) return;
+                
+                const recipientPresents = presentsByRecipient[recipientId];
+                
+                html += `
+                    <div style="margin-bottom: 25px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-user-circle" style="color: #667eea;"></i>
+                            ${escapeHtml(recipient.name)}
+                            <span style="background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500;">
+                                ${recipientPresents.length} ${recipientPresents.length === 1 ? 'prezent' : 'prezentów'}
+                            </span>
+                        </h5>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            ${recipientPresents.map(present => `
+                                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #4CAF50;">
+                                    <div style="flex: 1; min-width: 0; display: flex; gap: 8px;">
+                                        <i class="fas fa-gift" style="color: #4CAF50; margin-top: 2px; flex-shrink: 0;"></i>
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div style="font-weight: 500; color: #2d3748; margin-bottom: 4px; word-wrap: break-word; overflow-wrap: break-word;">
+                                                ${makeLinksClickable(escapeHtml(present.title))}
+                                            </div>
+                                            ${present.comments ? `
+                                                <div style="font-size: 13px; color: #718096; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;">
+                                                    ${makeLinksClickable(escapeHtml(present.comments))}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-sm btn-success" onclick="reservePresentFromStats(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0;">
+                                        <i class="fas fa-bookmark me-1"></i>Zarezerwuj
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function makeLinksClickable(text) {
+            const urlPattern = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g;
+            const urls = [];
+            let match;
+            while ((match = urlPattern.exec(text)) !== null) {
+                urls.push(match[1]);
+            }
+            
+            if (urls.length > 0) {
+                // Remove URLs from text
+                let textOnly = text;
+                urls.forEach(url => {
+                    textOnly = textOnly.replace(url, '');
+                });
+                
+                // Clean up extra whitespace
+                textOnly = textOnly.trim().replace(/\s+/g, ' ');
+                
+                // Create links list with li style
+                const linksList = urls.map(url => {
+                    let cleanUrl = url.replace(/[.,;:!?)]+$/, '');
+                    let displayText = cleanUrl;
+                    if (cleanUrl.length > 60) {
+                        displayText = cleanUrl.substring(0, 57) + '...';
+                    }
+                    return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: flex-start;"><span style="margin-right: 4px; flex-shrink: 0;">🔗</span><a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2196F3; text-decoration: underline; word-break: break-all;">${escapeHtml(displayText)}</a></li>`;
+                }).join('');
+                
+                const urlList = `<ul style="margin: 8px 0 8px 0; padding-left: 0; list-style: none;">${linksList}</ul>`;
+                
+                if (textOnly) {
+                    return textOnly + '<br>' + urlList;
+                } else {
+                    return urlList;
+                }
+            }
+            
+            return text;
+        }
+        
+        function loadMyReservations() {
+            Promise.all([
+                fetch('/api/recipients-with-presents').then(r => r.json()),
+                fetch('/api/user/identification').then(r => r.json())
+            ])
+                .then(([data, identificationStatus]) => {
+                    const presents = data.presents || [];
+                    const recipients = data.recipients || [];
+                    const userId = identificationStatus.userId;
+                    
+                    // Filter for presents reserved by current user
+                    const myReservations = presents.filter(p => 
+                        p.reserved_by === userId && !p.is_checked
+                    );
+                    
+                    renderPresentsList(myReservations, recipients, 'myReservationsList', 'Brak zarezerwowanych prezentów');
+                })
+                .catch(error => console.error('Error loading reservations:', error));
+        }
+        
+        function loadBoughtPresents() {
+            Promise.all([
+                fetch('/api/recipients-with-presents').then(r => r.json()),
+                fetch('/api/user/identification').then(r => r.json())
+            ])
+                .then(([data, identificationStatus]) => {
+                    const presents = data.presents || [];
+                    const recipients = data.recipients || [];
+                    const userId = identificationStatus.userId;
+                    
+                    // Filter for bought presents reserved by current user
+                    const boughtPresents = presents.filter(p => 
+                        p.reserved_by === userId && p.is_checked
+                    );
+                    
+                    renderPresentsList(boughtPresents, recipients, 'boughtPresentsList', 'Brak kupionych prezentów');
+                })
+                .catch(error => console.error('Error loading bought presents:', error));
+        }
+        
+        function renderPresentsList(presents, recipients, containerId, emptyMessage) {
+            const container = document.getElementById(containerId);
+            
+            if (presents.length === 0) {
+                container.innerHTML = `<div class="text-center py-5"><p class="text-muted">${emptyMessage}</p></div>`;
+                return;
+            }
+            
+            const presentsByRecipient = {};
+            presents.forEach(present => {
+                if (!presentsByRecipient[present.recipient_id]) {
+                    presentsByRecipient[present.recipient_id] = [];
+                }
+                presentsByRecipient[present.recipient_id].push(present);
+            });
+            
+            let html = '';
+            Object.keys(presentsByRecipient).forEach(recipientId => {
+                const recipient = recipients.find(r => r.id == recipientId);
+                if (!recipient) return;
+                
+                const recipientPresents = presentsByRecipient[recipientId];
+                
+                html += `
+                    <div style="margin-bottom: 25px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-user-circle" style="color: #667eea;"></i>
+                            ${escapeHtml(recipient.name)}
+                            <span style="background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500;">
+                                ${recipientPresents.length} ${recipientPresents.length === 1 ? 'prezent' : 'prezentów'}
+                            </span>
+                        </h5>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            ${recipientPresents.map(present => `
+                                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid ${present.is_checked ? '#4CAF50' : '#FF9800'};">
+                                    <div style="display: flex; gap: 8px; flex: 1; min-width: 0;">
+                                        <i class="fas fa-gift" style="color: ${present.is_checked ? '#4CAF50' : '#FF9800'}; margin-top: 2px; flex-shrink: 0;"></i>
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div style="font-weight: 500; color: #2d3748; margin-bottom: 4px; word-wrap: break-word; overflow-wrap: break-word;">
+                                                ${makeLinksClickable(escapeHtml(present.title))}
+                                            </div>
+                                            ${present.comments ? `
+                                                <div style="font-size: 13px; color: #718096; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;">
+                                                    ${makeLinksClickable(escapeHtml(present.comments))}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+                                        ${present.is_checked ? `
+                                            <button class="btn btn-sm btn-outline-danger" onclick="unmarkAsBoughtFromStats(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
+                                                <i class="fas fa-undo me-1"></i>Anuluj Zakup
+                                            </button>
+                                        ` : `
+                                            <button class="btn btn-sm btn-success" onclick="markAsBoughtFromStats(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
+                                                <i class="fas fa-check me-1"></i>Kupione
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="unreservePresentFromStats(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
+                                                <i class="fas fa-times me-1"></i>Anuluj Rezerwację
+                                            </button>
+                                        `}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function reservePresentFromStats(presentId) {
+            // Find and disable the button
+            const button = event.target.closest('button');
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Rezerwuję...';
+            }
+            
+            fetch(`/api/presents/${presentId}/reserve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success feedback
+                        if (button) {
+                            button.innerHTML = '<i class="fas fa-check me-1"></i>Zarezerwowano!';
+                            button.classList.remove('btn-success');
+                            button.classList.add('btn-outline-success');
+                        }
+                        
+                        // Reload the sections after a short delay
+                        setTimeout(() => {
+                            loadAvailablePresents();
+                            loadMyReservations();
+                            loadStats();
+                        }, 500);
+                    } else {
+                        alert('Błąd: ' + (data.error || 'Nie udało się zarezerwować prezentu'));
+                        if (button) {
+                            button.disabled = false;
+                            button.innerHTML = '<i class="fas fa-bookmark me-1"></i>Zarezerwuj';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Wystąpił błąd podczas rezerwowania prezentu');
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = '<i class="fas fa-bookmark me-1"></i>Zarezerwuj';
+                    }
+                });
+        }
+        
+        function markAsBoughtFromStats(presentId) {
+            if (!confirm('Czy na pewno chcesz oznaczyć ten prezent jako kupiony?')) {
+                return;
+            }
+            
+            // Find and disable the button
+            const button = event.target.closest('button');
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Przetwarzanie...';
+            }
+            
+            fetch(`/api/presents/${presentId}/check`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_checked: true })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success feedback
+                        if (button) {
+                            button.innerHTML = '<i class="fas fa-check me-1"></i>Gotowe!';
+                            button.classList.remove('btn-success');
+                            button.classList.add('btn-outline-success');
+                        }
+                        
+                        // Reload the sections after a short delay
+                        setTimeout(() => {
+                            loadMyReservations();
+                            loadBoughtPresents();
+                            loadStats();
+                        }, 500);
+                    } else {
+                        alert('Błąd: ' + (data.error || 'Nie udało się oznaczyć prezentu'));
+                        if (button) {
+                            button.disabled = false;
+                            button.innerHTML = '<i class="fas fa-check me-1"></i>Kupione';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Wystąpił błąd podczas oznaczania prezentu');
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = '<i class="fas fa-check me-1"></i>Kupione';
+                    }
+                });
+        }
+        
+        function unmarkAsBoughtFromStats(presentId) {
+            if (!confirm('Czy na pewno chcesz anulować zakup tego prezentu? Prezent pozostanie zarezerwowany.')) {
+                return;
+            }
+            
+            // Find and disable the button
+            const button = event.target.closest('button');
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Anulowanie...';
+            }
+            
+            fetch(`/api/presents/${presentId}/check`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_checked: false })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success feedback
+                        if (button) {
+                            button.innerHTML = '<i class="fas fa-check me-1"></i>Anulowano!';
+                        }
+                        
+                        // Reload the sections after a short delay
+                        setTimeout(() => {
+                            loadMyReservations();
+                            loadBoughtPresents();
+                            loadStats();
+                        }, 500);
+                    } else {
+                        alert('Błąd: ' + (data.error || 'Nie udało się anulować zakupu'));
+                        if (button) {
+                            button.disabled = false;
+                            button.innerHTML = '<i class="fas fa-undo me-1"></i>Anuluj Zakup';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Wystąpił błąd podczas anulowania zakupu');
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = '<i class="fas fa-undo me-1"></i>Anuluj Zakup';
+                    }
+                });
+        }
+        
+        function unreservePresentFromStats(presentId) {
+            if (!confirm('Czy na pewno chcesz anulować rezerwację tego prezentu?')) {
+                return;
+            }
+            
+            // Find and disable the button
+            const button = event.target.closest('button');
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Anulowanie...';
+            }
+            
+            fetch(`/api/presents/${presentId}/reserve`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success feedback
+                        if (button) {
+                            button.innerHTML = '<i class="fas fa-check me-1"></i>Anulowano!';
+                        }
+                        
+                        // Reload the sections after a short delay
+                        setTimeout(() => {
+                            loadMyReservations();
+                            loadBoughtPresents();
+                            loadAvailablePresents();
+                            loadStats();
+                        }, 500);
+                    } else {
+                        alert('Błąd: ' + (data.error || 'Nie udało się anulować rezerwacji'));
+                        if (button) {
+                            button.disabled = false;
+                            button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj Rezerwację';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Wystąpił błąd podczas anulowania rezerwacji');
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj Rezerwację';
+                    }
+                });
+        }
+        
+        function logout() {
+            fetch('/logout', { method: 'POST' })
+                .then(() => window.location.href = '/')
+                .catch(() => window.location.href = '/');
+        }
+
+        loadStats();
+    </script>
+
+    <!-- Bottom Tab Bar -->
+    <div class="bottom-tab-bar">
+        <div class="tab-bar-container">
+            <a href="recipients.html" class="tab-item home-tab">
+                <i class="ri-gift-line"></i>
+                <span>Prezenty</span>
+            </a>
+            <a href="#" class="tab-item activity-tab" onclick="toggleNotificationsPanel(); return false;">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-notification-3-line"></i>
+                    <span class="notification-badge" id="activityBadge" style="display: none;"></span>
+                </div>
+                <span>Aktywność</span>
+            </a>
+            <div class="tab-spacer"></div>
+            <a href="leaderboard.html" class="tab-item leaderboard-tab">
+                <i class="ri-trophy-line"></i>
+                <span>Ranking</span>
+            </a>
+            <a href="formularz.html" class="tab-item form-tab">
+                <i class="ri-file-list-3-line"></i>
+                <span>Dodaj Prezent</span>
+            </a>
+        </div>
+        <div class="tab-fab" onclick="toggleTabBarMenu()">
+            <i class="ri-menu-line"></i>
+        </div>
+    </div>
+
+    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;"></div>
+
+    <div class="tab-bar-menu-panel" id="tabBarMenuPanel">
+        <div class="tab-bar-menu-header">
+            <h5><i class="ri-menu-line me-2"></i>Menu</h5>
+            <button class="tab-bar-menu-close" onclick="toggleTabBarMenu()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-menu-content">
+            <a href="statystyki.html" class="tab-bar-menu-item stats-item">
+                <i class="ri-bar-chart-line"></i>
+                <span>Statystyki</span>
+            </a>
+            <div class="tab-bar-menu-divider"></div>
+            <a href="recipients.html" class="tab-bar-menu-item add-person-item">
+                <i class="ri-user-add-line"></i>
+                <span>Dodaj Osobę</span>
+            </a>
+            <a href="formularz.html" class="tab-bar-menu-item add-present-item">
+                <i class="ri-gift-line"></i>
+                <span>Dodaj Prezent</span>
+            </a>
+            <a href="recipients.html" class="tab-bar-menu-item reserved-item">
+                <i class="ri-bookmark-line"></i>
+                <span>Zarezerwowane Prezenty</span>
+            </a>
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
+                <i class="ri-edit-line"></i>
+                <span>Edytuj Moje Prezenty</span>
+            </a>
+            <div class="tab-bar-menu-divider"></div>
+            <a href="#" class="tab-bar-menu-item settings-item" onclick="alert('Funkcja ustawień będzie dostępna wkrótce!'); toggleTabBarMenu(); return false;">
+                <i class="ri-settings-3-line"></i>
+                <span>Ustawienia</span>
+            </a>
+            <a href="#" class="tab-bar-menu-item logout-item" onclick="logout(); return false;">
+                <i class="ri-logout-box-r-line"></i>
+                <span>Wyloguj</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="tab-bar-notifications-panel" id="notificationsPanel" style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="tab-bar-notifications-header" style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
+            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
+            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()" style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-notifications-content" id="notificationsContent" style="flex: 1; overflow-y: auto; background: #ffffff;">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Ładowanie...</span>
+                </div>
+            </div>
+        </div>
+        <div class="tab-bar-notifications-view-all" style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
+            <a href="activity.html" style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie powiadomienia</a>
+        </div>
+    </div>
+
+    <script src="tab-bar-functions.js"></script>
+</body>
+</html>
