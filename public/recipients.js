@@ -2202,22 +2202,53 @@ function handleReserveClick(event, presentId, action) {
 }
 
 function formatCommentsPreview(comments) {
-    // Truncate long comments and make URLs clickable
-    const maxLength = 500;
-    let truncated = comments.length > maxLength ?
-        comments.substring(0, maxLength) + '...' : comments;
-
-    // Regex to match URLs and domain-like words
-    // Matches http(s)://... or www.... or anything.something
-    const urlRegex = /((https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?)/gi;
-    return truncated.replace(urlRegex, (match, p1, p2) => {
-        // If it already starts with http/https, use as is
-        let url = match;
-        if (!/^https?:\/\//i.test(match)) {
-            url = 'https://' + match;
-        }
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${match}</a>`;
+    if (!comments) return '';
+    
+    // Extract URLs first (including those with % and special chars)
+    const urlPattern = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g;
+    const urls = [];
+    let match;
+    while ((match = urlPattern.exec(comments)) !== null) {
+        urls.push(match[1]);
+    }
+    
+    // Remove URLs from text
+    let textOnly = comments;
+    urls.forEach(url => {
+        textOnly = textOnly.replace(url, '');
     });
+    
+    // Clean up extra whitespace
+    textOnly = textOnly.trim().replace(/\s+/g, ' ');
+    
+    // Escape the text portion
+    let result = escapeHtml(textOnly);
+    
+    // Add URLs as list items if any exist
+    if (urls.length > 0) {
+        const linksList = urls.map(url => {
+            // Clean trailing punctuation
+            let cleanUrl = url.replace(/[.,;:!?)]+$/, '');
+            
+            // Shorten display text if too long
+            let displayText = cleanUrl;
+            if (cleanUrl.length > 60) {
+                displayText = cleanUrl.substring(0, 57) + '...';
+            }
+            
+            return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: flex-start;"><span style="margin-right: 4px; flex-shrink: 0;">🔗</span><a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2196F3; text-decoration: underline; word-break: break-all;">${escapeHtml(displayText)}</a></li>`;
+        }).join('');
+        
+        const urlList = `<ul style="margin: 8px 0 8px 0; padding-left: 0; list-style: none;">${linksList}</ul>`;
+        
+        if (result) {
+            result += '<br>' + urlList;
+        } else {
+            result = urlList;
+        }
+    }
+    
+    return result;
 }
 
 function convertUrlsToLinks(text) {
@@ -2300,7 +2331,49 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-
+function convertUrlsToLinks(text) {
+    // URL regex pattern
+    const urlPattern = /(https?:\/\/[^\s<]+)/g;
+    const urls = text.match(urlPattern);
+    
+    // If URLs found, display them on separate lines
+    if (urls && urls.length > 0) {
+        let result = text;
+        const linksList = urls.map(url => {
+            // Remove trailing punctuation
+            let cleanUrl = url;
+            const punctuation = /[.,;:!?)]+$/;
+            const match = url.match(punctuation);
+            if (match) {
+                cleanUrl = url.slice(0, -match[0].length);
+            }
+            
+            // Shorten display text if URL is too long
+            let displayText = cleanUrl;
+            if (cleanUrl.length > 50) {
+                displayText = cleanUrl.substring(0, 47) + '...';
+            }
+            
+            return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2196F3; text-decoration: underline; word-break: break-all; display: inline-block;">${displayText}</a>`;
+        }).join('<br>');
+        
+        // Replace all URLs with placeholder
+        urls.forEach(url => {
+            result = result.replace(url, '');
+        });
+        
+        // Clean up extra spaces and add links at the end
+        result = result.trim().replace(/\s+/g, ' ');
+        if (result) {
+            return result + '<br>' + linksList;
+        } else {
+            return linksList;
+        }
+    }
+    
+    // No URLs - return text as is
+    return text;
+}
 
 // Modal functions
 function openAddPresentModal() {
