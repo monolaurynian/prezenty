@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="styles.deduped.min.css">
     <link href="bottom-tab-bar.css?v=15" rel="stylesheet">
     <style>
         body {
@@ -265,9 +266,9 @@
                         </h5>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             ${recipientPresents.map(present => `
-                                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #4CAF50;">
+                                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #ffcc00;">
                                     <div style="flex: 1; min-width: 0; display: flex; gap: 8px;">
-                                        <i class="fas fa-gift" style="color: #4CAF50; margin-top: 2px; flex-shrink: 0;"></i>
+                                        <i class="fas fa-gift" style="color:  #ffcc00; margin-top: 2px; flex-shrink: 0;"></i>
                                         <div style="flex: 1; min-width: 0;">
                                             <div style="font-weight: 500; color: #2d3748; margin-bottom: 4px; word-wrap: break-word; overflow-wrap: break-word;">
                                                 ${makeLinksClickable(escapeHtml(present.title))}
@@ -279,7 +280,13 @@
                                             ` : ''}
                                         </div>
                                     </div>
-                                    <button class="btn btn-sm btn-success" onclick="reservePresentFromStats(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0;">
+                                    <button class=" 
+                                    
+                            
+                                    btn  btn-sm " onclick="reservePresentFromStats(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0;  color: #ffc107;
+    border-color: #ffc107;   border: 2px solid  #ffcc00;;
+    color:  #ffcc00;;
+ ">
                                         <i class="fas fa-bookmark me-1"></i>Zarezerwuj
                                     </button>
                                 </div>
@@ -436,7 +443,7 @@
                                                 <i class="fas fa-check me-1"></i>Kupione
                                             </button>
                                             <button class="btn btn-sm btn-outline-danger" onclick="unreservePresentFromStats(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
-                                                <i class="fas fa-times me-1"></i>Anuluj Rezerwację
+                                                <i class="fas fa-times me-1"></i>Anuluj 
                                             </button>
                                         `}
                                     </div>
