@@ -212,11 +212,18 @@
                 fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include' // Important: include cookies
                 })
-                    .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                    .then(response => {
+                        console.log('Login response status:', response.status);
+                        console.log('Login response headers:', response.headers);
+                        return response.json().then(data => ({ status: response.status, body: data }));
+                    })
                     .then(({ status, body }) => {
+                        console.log('Login response:', { status, body });
                         if (status === 200 && body.success) {
+                            console.log('Login successful, redirecting to /');
                             // Add transition effect before redirect
                             document.getElementById('loginHeader').classList.remove('loaded');
                             document.getElementById('loginBody').classList.remove('loaded');
@@ -224,10 +231,12 @@
                                 window.location.href = '/';
                             }, 300);
                         } else {
+                            console.error('Login failed:', body.error);
                             showError(body.error || 'Błąd logowania');
                         }
                     })
                     .catch(error => {
+                        console.error('Login error:', error);
                         showError('Błąd połączenia z serwerem');
                     })
                     .finally(() => {

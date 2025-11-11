@@ -366,6 +366,7 @@ app.use(express.static('public', {
 
 // Create session store
 let sessionConfig = {
+    name: 'prezenty.sid', // Explicit session cookie name
     secret: process.env.SESSION_SECRET || 'prezenty_secret',
     resave: false,
     saveUninitialized: false,
@@ -373,7 +374,8 @@ let sessionConfig = {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         httpOnly: true,
         secure: false, // Set to true only if using HTTPS
-        sameSite: 'lax'
+        sameSite: 'lax',
+        path: '/' // Ensure cookie is available for all paths
     }
 };
 
@@ -448,10 +450,19 @@ app.get('/api/updates', requireAuth, (req, res) => {
 });
 
 app.get('/', (req, res) => {
+    console.log('Root route accessed - Session:', {
+        userId: req.session.userId,
+        username: req.session.username,
+        sessionID: req.sessionID,
+        cookie: req.session.cookie
+    });
+    
     // If user is authenticated, show home (homepage/dashboard)
     if (req.session.userId) {
+        console.log('User authenticated, serving home.html');
         res.sendFile(path.join(__dirname, 'public', 'home.html'));
     } else {
+        console.log('User not authenticated, serving index.html (login)');
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     }
 });
@@ -509,7 +520,20 @@ app.post('/api/login', async (req, res) => {
             console.log('Demo login successful for user:', username);
             req.session.userId = 1;
             req.session.username = username;
-            res.json({ success: true, user: { id: 1, username: username } });
+            
+            // Save session explicitly
+            req.session.save((err) => {
+                if (err) {
+                    console.error('Session save error:', err);
+                    return res.status(500).json({ error: 'Błąd zapisu sesji' });
+                }
+                console.log('Session saved successfully:', {
+                    userId: req.session.userId,
+                    username: req.session.username,
+                    sessionID: req.sessionID
+                });
+                res.json({ success: true, user: { id: 1, username: username } });
+            });
         } else {
             return res.status(401).json({ error: 'Wprowadź nazwę użytkownika i hasło' });
         }
@@ -531,7 +555,19 @@ app.post('/api/login', async (req, res) => {
 
         console.log('Session created:', { userId: req.session.userId, username: req.session.username });
 
-        res.json({ success: true, user: { id: user.id, username: user.username } });
+        // Save session explicitly
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.status(500).json({ error: 'Błąd zapisu sesji' });
+            }
+            console.log('Session saved successfully:', {
+                userId: req.session.userId,
+                username: req.session.username,
+                sessionID: req.sessionID
+            });
+            res.json({ success: true, user: { id: user.id, username: user.username } });
+        });
     } catch (err) {
         console.error('Database error during login:', err);
         return handleDbError(err, res, 'Błąd serwera');
@@ -546,10 +582,18 @@ app.post('/api/logout', (req, res) => {
 
 // Check auth status
 app.get('/api/auth', (req, res) => {
-    console.log('Auth check - session:', { userId: req.session.userId, username: req.session.username });
+    console.log('Auth check - Full session details:', {
+        userId: req.session.userId,
+        username: req.session.username,
+        sessionID: req.sessionID,
+        cookie: req.session.cookie,
+        headers: req.headers.cookie
+    });
     if (req.session.userId) {
+        console.log('Auth check: User IS authenticated');
         res.json({ authenticated: true, user: { id: req.session.userId, username: req.session.username } });
     } else {
+        console.log('Auth check: User NOT authenticated');
         res.json({ authenticated: false });
     }
 });
