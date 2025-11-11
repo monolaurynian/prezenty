@@ -2254,7 +2254,7 @@ function formatCommentsPreview(comments) {
                 displayText = cleanUrl.substring(0, 57) + '...';
             }
 
-            return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: flex-start;"><span style="margin-right: 4px; flex-shrink: 0;">🔗</span><a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2196F3; text-decoration: underline; word-break: break-all;">${escapeHtml(displayText)}</a></li>`;
+            return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: flex-start; gap: 8px;"><span style="margin-top: 2px; flex-shrink: 0;">🔗</span><a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2196F3; text-decoration: underline; word-break: break-all;">${escapeHtml(displayText)}</a></li>`;
         }).join('');
 
         const urlList = `<ul style="margin: 8px 0 8px 0; padding-left: 0; list-style: none;">${linksList}</ul>`;
