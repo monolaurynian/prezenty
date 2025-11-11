@@ -156,6 +156,20 @@
             </div>
         </div>
 
+        <!-- My Profile Card -->
+        <div id="myProfileSection" class="stats-container" style="display: none;">
+            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
+                <i class="fas fa-user-circle me-2"></i>Mój Profil
+            </h3>
+            <div id="myProfileCard">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Ładowanie...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Available Presents List -->
         <div id="availablePresentsSection" class="stats-container">
             <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
@@ -246,6 +260,7 @@
         checkAuth().then(() => {
             console.log('User authenticated, loading stats');
             loadStats();
+            loadMyProfile();
             
             // Check identification status and show modal if needed
             checkIdentificationStatus();
@@ -330,6 +345,112 @@
 
             document.getElementById('reservedStats').textContent = `${totalReserved}/${totalPresents}`;
             document.getElementById('reservedProgressBar').style.width = `${reservedPercent}%`;
+        }
+
+        function loadMyProfile() {
+            Promise.all([
+                fetch('/api/recipients-with-presents').then(r => r.json()),
+                fetch('/api/user/identification').then(r => r.json())
+            ])
+                .then(([data, identificationStatus]) => {
+                    if (!identificationStatus.isIdentified) {
+                        // User not identified, hide profile section
+                        document.getElementById('myProfileSection').style.display = 'none';
+                        return;
+                    }
+
+                    const presents = data.presents || [];
+                    const recipients = data.recipients || [];
+                    const identifiedRecipient = recipients.find(r => r.identified_by === identificationStatus.userId);
+
+                    if (!identifiedRecipient) {
+                        document.getElementById('myProfileSection').style.display = 'none';
+                        return;
+                    }
+
+                    // Show profile section
+                    document.getElementById('myProfileSection').style.display = 'block';
+
+                    // Get user's own presents
+                    const ownPresents = presents.filter(p => 
+                        p.recipient_id === identifiedRecipient.id && 
+                        p.created_by === identificationStatus.userId
+                    );
+
+                    renderMyProfile(identifiedRecipient, ownPresents);
+                })
+                .catch(error => console.error('Error loading profile:', error));
+        }
+
+        function renderMyProfile(recipient, ownPresents) {
+            const container = document.getElementById('myProfileCard');
+            
+            const avatarHTML = recipient.profile_picture
+                ? `<img src="/api/recipients/${recipient.id}/profile-picture" 
+                       alt="${escapeHtml(recipient.name)}" 
+                       style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
+                       onclick="openProfilePicturePreview(${recipient.id}, '${escapeHtml(recipient.name).replace(/'/g, "\\'")}', '/api/recipients/${recipient.id}/profile-picture')"
+                       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                   <div style="display: none; width: 80px; height: 80px; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                       ${getEmojiAvatar(recipient.name)}
+                   </div>`
+                : `<div style="display: flex; width: 80px; height: 80px; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                       ${getEmojiAvatar(recipient.name)}
+                   </div>`;
+
+            container.innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+                        ${avatarHTML}
+                        <div style="flex: 1; min-width: 200px;">
+                            <h4 style="color: #2d3748; font-weight: 600; margin-bottom: 8px;">${escapeHtml(recipient.name)}</h4>
+                            <p style="color: #718096; margin: 0;">
+                                <i class="fas fa-gift me-1"></i>${ownPresents.length} ${ownPresents.length === 1 ? 'prezent' : 'prezentów'}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion" id="accordionOwnPresents">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOwnPresents" 
+                                    style="background-color: #cfe2ff; color: #084298; font-weight: 600;">
+                                    <i class="fas fa-gift me-2"></i>
+                                    Twoje prezenty (${ownPresents.length}) - kliknij aby edytować
+                                </button>
+                            </h2>
+                            <div id="collapseOwnPresents" class="accordion-collapse collapse">
+                                <div class="accordion-body" style="background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%);">
+                                    <div class="alert alert-info mb-3" style="border-left: 4px solid #0d6efd;">
+                                        <strong>🎁 Niespodzianka!</strong><br>
+                                        Nie możesz zobaczyć które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki!
+                                    </div>
+                                    ${ownPresents.length > 0 ? `
+                                        <div class="fw-bold mb-2"><i class="fas fa-list me-1"></i>Twoje dodane prezenty:</div>
+                                        <ul class="list-group">
+                                            ${ownPresents.map(p => `
+                                                <li class="list-group-item">
+                                                    <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
+                                                        <div class="flex-grow-1">
+                                                            <div class="fw-semibold">${escapeHtml(p.title)}</div>
+                                                            ${p.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
+                                                        </div>
+                                                        <div class="d-flex gap-2">
+                                                            <a href="formularz.html?edit=${p.id}" class="btn btn-sm btn-primary" style="min-width:50px;">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    ` : '<p class="text-muted mb-0">Nie dodałeś jeszcze żadnych prezentów.</p>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         function loadAvailablePresents() {
