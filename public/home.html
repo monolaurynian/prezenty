@@ -401,6 +401,10 @@
 
                     const presents = data.presents || [];
                     const recipients = data.recipients || [];
+                    
+                    // Cache recipients for edit modal
+                    window._cachedRecipients = recipients;
+                    
                     const identifiedRecipient = recipients.find(r => r.identified_by === identificationStatus.userId);
 
                     if (!identifiedRecipient) {
