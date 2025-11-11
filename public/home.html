@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-        <link rel="stylesheet" href="styles.deduped.min.css">
+    <link rel="stylesheet" href="styles.deduped.min.css">
     <link href="bottom-tab-bar.css?v=15" rel="stylesheet">
     <style>
         body {
@@ -80,6 +81,7 @@
         }
     </style>
 </head>
+
 <body class="has-tab-bar">
     <div class="background-overlay"></div>
 
@@ -113,7 +115,9 @@
                     <span id="boughtStats" style="font-weight: 600; color: #4CAF50; font-size: 16px;">0/0</span>
                 </div>
                 <div style="background: #e0e0e0; border-radius: 10px; height: 14px; overflow: hidden;">
-                    <div id="boughtProgressBar" style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                    <div id="boughtProgressBar"
+                        style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.5s ease;">
+                    </div>
                 </div>
             </div>
             <!-- Reserved vs Available Progress -->
@@ -125,7 +129,9 @@
                     <span id="reservedStats" style="font-weight: 600; color: #FF9800; font-size: 16px;">0/0</span>
                 </div>
                 <div style="background: #e0e0e0; border-radius: 10px; height: 14px; overflow: hidden; display: flex;">
-                    <div id="reservedProgressBar" style="background: linear-gradient(90deg, #FF9800, #F57C00); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                    <div id="reservedProgressBar"
+                        style="background: linear-gradient(90deg, #FF9800, #F57C00); height: 100%; width: 0%; transition: width 0.5s ease;">
+                    </div>
                     <div id="availableProgressBar" style="background: #c0c0c0; height: 100%; flex: 1;"></div>
                 </div>
             </div>
@@ -175,25 +181,25 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Fast loader (load first for instant cache access) -->
     <script src="fast-loader.js"></script>
-    
+
     <script>
         // Flag to prevent recipients.js from auto-initializing
         window.SKIP_RECIPIENTS_INIT = true;
-        
+
         // Set current user ID for recipients.js functions
         window._currentUserId = null;
     </script>
-    
+
     <!-- Load recipients.js for shared functions (but don't auto-init) -->
     <script src="recipients.js?v=7&t=1111111111"></script>
-    
+
     <!-- Non-critical scripts (defer to load after page is interactive) -->
     <script src="update-checker.js" defer></script>
     <script src="realtime-updates.js" defer></script>
-    
+
     <script>
         // Check authentication
         function checkAuth() {
@@ -216,7 +222,7 @@
                     throw error;
                 });
         }
-        
+
         // Check auth on page load
         checkAuth().then(() => {
             console.log('User authenticated, loading stats');
@@ -225,23 +231,23 @@
             console.log('Auth failed, redirecting to login');
         });
     </script>
-    
+
     <script>
         function getEmojiAvatar(name) {
             const emojis = ['😀', '😃', '😄', '😁', '😆', '😊', '😎', '🤓', '🥳', '😇', '🤗', '🤩', '😺', '😸', '😻', '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵'];
             const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % emojis.length;
             return emojis[index];
         }
-        
+
         async function loadStats() {
             try {
                 const response = await fetch('/api/leaderboard');
                 const data = await response.json();
-                
+
                 if (data.cumulativeStats) {
                     updateCumulativeProgress(data.cumulativeStats);
                 }
-                
+
                 loadAvailablePresents();
                 loadMyReservations();
                 loadBoughtPresents();
@@ -249,22 +255,22 @@
                 console.error('Error loading stats:', error);
             }
         }
-        
+
         function updateCumulativeProgress(cumulativeStats) {
             const totalPresents = cumulativeStats.totalPresents || 0;
             const totalBought = cumulativeStats.boughtPresents || 0;
             const totalReserved = cumulativeStats.reservedPresents || 0;
-            
+
             const boughtPercent = totalPresents > 0 ? Math.round((totalBought / totalPresents) * 100) : 0;
             const reservedPercent = totalPresents > 0 ? Math.round((totalReserved / totalPresents) * 100) : 0;
-            
+
             document.getElementById('boughtStats').textContent = `${totalBought}/${totalPresents}`;
             document.getElementById('boughtProgressBar').style.width = `${boughtPercent}%`;
-            
+
             document.getElementById('reservedStats').textContent = `${totalReserved}/${totalPresents}`;
             document.getElementById('reservedProgressBar').style.width = `${reservedPercent}%`;
         }
-        
+
         function loadAvailablePresents() {
             Promise.all([
                 fetch('/api/recipients-with-presents').then(r => r.json()),
@@ -273,29 +279,29 @@
                 .then(([data, identificationStatus]) => {
                     const presents = data.presents || [];
                     const recipients = data.recipients || [];
-                    
-                    const identifiedRecipientId = identificationStatus.isIdentified ? 
+
+                    const identifiedRecipientId = identificationStatus.isIdentified ?
                         recipients.find(r => r.identified_by === identificationStatus.userId)?.id : null;
-                    
-                    const availablePresents = presents.filter(p => 
-                        !p.reserved_by && 
-                        !p.is_checked && 
+
+                    const availablePresents = presents.filter(p =>
+                        !p.reserved_by &&
+                        !p.is_checked &&
                         p.recipient_id !== identifiedRecipientId
                     );
-                    
+
                     renderAvailablePresents(availablePresents, recipients);
                 })
                 .catch(error => console.error('Error loading presents:', error));
         }
-        
+
         function renderAvailablePresents(presents, recipients) {
             const container = document.getElementById('availablePresentsList');
-            
+
             if (presents.length === 0) {
                 container.innerHTML = '<div class="text-center py-5"><p class="text-muted">Brak dostępnych prezentów</p></div>';
                 return;
             }
-            
+
             const presentsByRecipient = {};
             presents.forEach(present => {
                 if (!presentsByRecipient[present.recipient_id]) {
@@ -303,15 +309,15 @@
                 }
                 presentsByRecipient[present.recipient_id].push(present);
             });
-            
+
             let html = '';
             Object.keys(presentsByRecipient).forEach(recipientId => {
                 const recipient = recipients.find(r => r.id == recipientId);
                 if (!recipient) return;
-                
+
                 const recipientPresents = presentsByRecipient[recipientId];
-                
-                const avatarHTML = recipient.profile_picture 
+
+                const avatarHTML = recipient.profile_picture
                     ? `<img src="/api/recipients/${recipient.id}/profile-picture" 
                            alt="${escapeHtml(recipient.name)}" 
                            style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0;"
@@ -322,7 +328,7 @@
                     : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
                            ${getEmojiAvatar(recipient.name)}
                        </div>`;
-                
+
                 html += `
                     <div style="margin-bottom: 25px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                         <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
@@ -348,7 +354,7 @@
                                             ` : ''}
                                         </div>
                                     </div>
-                                    <button class="btn btn-outline-warning btn-sm" onclick="reservePresent(event, ${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0;">
+                                    <button class="btn btn-sm" onclick="reservePresent(event, ${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; color: #ffcc00; border-color: #ffc107; border: 2px solid #ffcc00;">
                                         <i class="fas fa-bookmark me-1"></i>Zarezerwuj
                                     </button>
                                 </div>
@@ -357,16 +363,16 @@
                     </div>
                 `;
             });
-            
+
             container.innerHTML = html;
         }
-        
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
-        
+
         function makeLinksClickable(text) {
             const urlPattern = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g;
             const urls = [];
@@ -374,17 +380,17 @@
             while ((match = urlPattern.exec(text)) !== null) {
                 urls.push(match[1]);
             }
-            
+
             if (urls.length > 0) {
                 // Remove URLs from text
                 let textOnly = text;
                 urls.forEach(url => {
                     textOnly = textOnly.replace(url, '');
                 });
-                
+
                 // Clean up extra whitespace
                 textOnly = textOnly.trim().replace(/\s+/g, ' ');
-                
+
                 // Create links list with li style
                 const linksList = urls.map(url => {
                     let cleanUrl = url.replace(/[.,;:!?)]+$/, '');
@@ -394,19 +400,19 @@
                     }
                     return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: flex-start;"><span style="margin-right: 4px; flex-shrink: 0;">🔗</span><a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2196F3; text-decoration: underline; word-break: break-all;">${escapeHtml(displayText)}</a></li>`;
                 }).join('');
-                
+
                 const urlList = `<ul style="margin: 8px 0 8px 0; padding-left: 0; list-style: none;">${linksList}</ul>`;
-                
+
                 if (textOnly) {
                     return textOnly + '<br>' + urlList;
                 } else {
                     return urlList;
                 }
             }
-            
+
             return text;
         }
-        
+
         function loadMyReservations() {
             Promise.all([
                 fetch('/api/recipients-with-presents').then(r => r.json()),
@@ -416,17 +422,17 @@
                     const presents = data.presents || [];
                     const recipients = data.recipients || [];
                     const userId = identificationStatus.userId;
-                    
+
                     // Filter for presents reserved by current user
-                    const myReservations = presents.filter(p => 
+                    const myReservations = presents.filter(p =>
                         p.reserved_by === userId && !p.is_checked
                     );
-                    
+
                     renderPresentsList(myReservations, recipients, 'myReservationsList', 'Brak zarezerwowanych prezentów');
                 })
                 .catch(error => console.error('Error loading reservations:', error));
         }
-        
+
         function loadBoughtPresents() {
             Promise.all([
                 fetch('/api/recipients-with-presents').then(r => r.json()),
@@ -436,25 +442,25 @@
                     const presents = data.presents || [];
                     const recipients = data.recipients || [];
                     const userId = identificationStatus.userId;
-                    
+
                     // Filter for bought presents reserved by current user
-                    const boughtPresents = presents.filter(p => 
+                    const boughtPresents = presents.filter(p =>
                         p.reserved_by === userId && p.is_checked
                     );
-                    
+
                     renderPresentsList(boughtPresents, recipients, 'boughtPresentsList', 'Brak kupionych prezentów');
                 })
                 .catch(error => console.error('Error loading bought presents:', error));
         }
-        
+
         function renderPresentsList(presents, recipients, containerId, emptyMessage) {
             const container = document.getElementById(containerId);
-            
+
             if (presents.length === 0) {
                 container.innerHTML = `<div class="text-center py-5"><p class="text-muted">${emptyMessage}</p></div>`;
                 return;
             }
-            
+
             const presentsByRecipient = {};
             presents.forEach(present => {
                 if (!presentsByRecipient[present.recipient_id]) {
@@ -462,15 +468,15 @@
                 }
                 presentsByRecipient[present.recipient_id].push(present);
             });
-            
+
             let html = '';
             Object.keys(presentsByRecipient).forEach(recipientId => {
                 const recipient = recipients.find(r => r.id == recipientId);
                 if (!recipient) return;
-                
+
                 const recipientPresents = presentsByRecipient[recipientId];
-                
-                const avatarHTML = recipient.profile_picture 
+
+                const avatarHTML = recipient.profile_picture
                     ? `<img src="/api/recipients/${recipient.id}/profile-picture" 
                            alt="${escapeHtml(recipient.name)}" 
                            style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0;"
@@ -481,7 +487,7 @@
                     : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
                            ${getEmojiAvatar(recipient.name)}
                        </div>`;
-                
+
                 html += `
                     <div style="margin-bottom: 25px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                         <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
@@ -527,27 +533,60 @@
                     </div>
                 `;
             });
-            
+
             container.innerHTML = html;
         }
-        
+
         // Wrapper functions for statystyki page that call API and reload sections
         function reservePresent(event, presentId) {
-            // Use recipients.js function for reserve
-            handleReserveClick(event, presentId, 'reserve');
-            
-            // Reload sections after a delay to move present to "Reserved" bucket
-            setTimeout(() => {
-                loadAvailablePresents();
-                loadMyReservations();
-                loadStats();
-            }, 500);
+            // Find and disable the button
+            const button = event.target.closest('button');
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Rezerwuję...';
+            }
+
+            fetch(`/api/presents/${presentId}/reserve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success feedback
+                        if (button) {
+                            button.innerHTML = '<i class="fas fa-check me-1"></i>Zarezerwowano!';
+                            button.classList.remove('btn-success');
+                            button.classList.add('btn-outline-success');
+                        }
+                        // Reload the sections after a short delay
+                        setTimeout(() => {
+                            loadAvailablePresents();
+                            loadMyReservations();
+                            loadStats();
+                        }, 500);
+                    } else {
+                        alert('Błąd: ' + (data.error || 'Nie udało się zarezerwować prezentu'));
+                        if (button) {
+                            button.disabled = false;
+                            button.innerHTML = '<i class="fas fa-bookmark me-1"></i>Zarezerwuj';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Wystąpił błąd podczas rezerwowania prezentu');
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = '<i class="fas fa-bookmark me-1"></i>Zarezerwuj';
+                    }
+                });
         }
-        
+
         function unreservePresent(event, presentId) {
             // Use recipients.js function for unreserve
             handleReserveClick(event, presentId, 'cancel');
-            
+
             // Reload sections after a delay to move present to "Available" bucket
             setTimeout(() => {
                 loadAvailablePresents();
@@ -556,43 +595,43 @@
                 loadStats();
             }, 500);
         }
-        
+
         function markAsBought(presentId) {
             fetch(`/api/presents/${presentId}/check`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_checked: true })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload sections to move present to "Bought" bucket
-                    loadMyReservations();
-                    loadBoughtPresents();
-                    loadStats();
-                }
-            })
-            .catch(error => console.error('Error marking as bought:', error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload sections to move present to "Bought" bucket
+                        loadMyReservations();
+                        loadBoughtPresents();
+                        loadStats();
+                    }
+                })
+                .catch(error => console.error('Error marking as bought:', error));
         }
-        
+
         function markAsUnbought(presentId) {
             fetch(`/api/presents/${presentId}/check`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_checked: false })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload sections to move present back to "Reserved" bucket
-                    loadMyReservations();
-                    loadBoughtPresents();
-                    loadStats();
-                }
-            })
-            .catch(error => console.error('Error unmarking as bought:', error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload sections to move present back to "Reserved" bucket
+                        loadMyReservations();
+                        loadBoughtPresents();
+                        loadStats();
+                    }
+                })
+                .catch(error => console.error('Error unmarking as bought:', error));
         }
-        
+
         function logout() {
             fetch('/logout', { method: 'POST' })
                 .then(() => window.location.href = '/')
@@ -631,7 +670,9 @@
         </div>
     </div>
 
-    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;"></div>
+    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;">
+    </div>
 
     <div class="tab-bar-menu-panel" id="tabBarMenuPanel">
         <div class="tab-bar-menu-header">
@@ -658,12 +699,14 @@
                 <i class="ri-bookmark-line"></i>
                 <span>Zarezerwowane Prezenty</span>
             </a>
-            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item"
+                onclick="localStorage.setItem('openEditTab', 'true');">
                 <i class="ri-edit-line"></i>
                 <span>Edytuj Moje Prezenty</span>
             </a>
             <div class="tab-bar-menu-divider"></div>
-            <a href="#" class="tab-bar-menu-item settings-item" onclick="alert('Funkcja ustawień będzie dostępna wkrótce!'); toggleTabBarMenu(); return false;">
+            <a href="#" class="tab-bar-menu-item settings-item"
+                onclick="alert('Funkcja ustawień będzie dostępna wkrótce!'); toggleTabBarMenu(); return false;">
                 <i class="ri-settings-3-line"></i>
                 <span>Ustawienia</span>
             </a>
@@ -674,22 +717,30 @@
         </div>
     </div>
 
-    <div class="tab-bar-notifications-panel" id="notificationsPanel" style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
-        <div class="tab-bar-notifications-header" style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
-            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
-            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()" style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
+    <div class="tab-bar-notifications-panel" id="notificationsPanel"
+        style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="tab-bar-notifications-header"
+            style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
+            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i
+                    class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
+            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()"
+                style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
                 <i class="ri-close-line"></i>
             </button>
         </div>
-        <div class="tab-bar-notifications-content" id="notificationsContent" style="flex: 1; overflow-y: auto; background: #ffffff;">
+        <div class="tab-bar-notifications-content" id="notificationsContent"
+            style="flex: 1; overflow-y: auto; background: #ffffff;">
             <div class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Ładowanie...</span>
                 </div>
             </div>
         </div>
-        <div class="tab-bar-notifications-view-all" style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
-            <a href="activity.html" style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie powiadomienia</a>
+        <div class="tab-bar-notifications-view-all"
+            style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
+            <a href="activity.html"
+                style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie
+                powiadomienia</a>
         </div>
     </div>
 
@@ -814,9 +865,10 @@
                             <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
                         </div>
                         <h6 class="text-muted mb-3">Czy na pewno chcesz anulować identyfikację?</h6>
-                        <p class="mb-0">Przestaniesz być zidentyfikowany jako <strong id="cancelIdentificationRecipientName"
-                                class="text-primary"></strong></p>
-                        <small class="text-muted d-block mt-2">Będziesz mógł ponownie się zidentyfikować w każdej chwili</small>
+                        <p class="mb-0">Przestaniesz być zidentyfikowany jako <strong
+                                id="cancelIdentificationRecipientName" class="text-primary"></strong></p>
+                        <small class="text-muted d-block mt-2">Będziesz mógł ponownie się zidentyfikować w każdej
+                            chwili</small>
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center">
@@ -833,4 +885,5 @@
 
     <script src="tab-bar-functions.js"></script>
 </body>
+
 </html>

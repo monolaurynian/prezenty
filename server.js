@@ -348,6 +348,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 // For HTML files: no cache (always fetch latest)
 // For assets (CSS, JS, images): cache but revalidate
 app.use(express.static('public', {
+    index: false, // Don't serve index.html automatically - let route handlers decide
     setHeaders: (res, path) => {
         if (path.endsWith('.html')) {
             // HTML files should never be cached
@@ -367,16 +368,25 @@ app.use(express.static('public', {
 // Trust proxy if behind reverse proxy (for HTTPS)
 app.set('trust proxy', 1);
 
+// Detect if running on HTTPS (production)
+const isProduction = process.env.NODE_ENV === 'production' || process.env.HTTPS === 'true';
+
+console.log('Session configuration:', {
+    isProduction,
+    NODE_ENV: process.env.NODE_ENV,
+    HTTPS: process.env.HTTPS
+});
+
 // Create session store
 let sessionConfig = {
     name: 'prezenty.sid', // Explicit session cookie name
     secret: process.env.SESSION_SECRET || 'prezenty_secret',
-    resave: false,
+    resave: true, // Force session to be saved back to store (needed for memory store)
     saveUninitialized: false,
     cookie: { 
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // true for HTTPS in production
+        secure: isProduction, // true for HTTPS in production
         sameSite: 'lax',
         path: '/' // Ensure cookie is available for all paths
     }
@@ -453,12 +463,15 @@ app.get('/api/updates', requireAuth, (req, res) => {
 });
 
 app.get('/', (req, res) => {
+    console.log('========================================');
+    console.log('ROOT ROUTE HIT!');
     console.log('Root route accessed - Session:', {
         userId: req.session.userId,
         username: req.session.username,
         sessionID: req.sessionID,
         cookie: req.session.cookie
     });
+    console.log('========================================');
     
     // If user is authenticated, show home (homepage/dashboard)
     if (req.session.userId) {

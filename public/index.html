@@ -230,8 +230,9 @@
                             // Wait longer to ensure session is saved
                             setTimeout(() => {
                                 console.log('Redirecting to / now');
+                                console.log('About to redirect - check server console for "Root route accessed" log');
                                 window.location.href = '/';
-                            }, 1000);
+                            }, 3000);
                         } else {
                             console.error('Login failed:', body.error);
                             showError(body.error || 'Błąd logowania');
@@ -270,8 +271,6 @@
         }
     </script>
 
-    <!-- Auto-update checker -->
-    <script src="update-checker.js"></script>
 </body>
 
 </html>
