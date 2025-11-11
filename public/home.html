@@ -246,9 +246,51 @@
         checkAuth().then(() => {
             console.log('User authenticated, loading stats');
             loadStats();
+            
+            // Check identification status and show modal if needed
+            checkIdentificationStatus();
         }).catch(() => {
             console.log('Auth failed, redirecting to login');
         });
+        
+        // Check if user needs to identify themselves
+        function checkIdentificationStatus() {
+            Promise.all([
+                fetch('/api/recipients').then(r => r.json()),
+                fetch('/api/user/identification').then(r => r.json())
+            ]).then(([recipients, identificationStatus]) => {
+                // Call the identification logic from recipients.js
+                if (typeof window.checkAndPromptIdentification === 'function') {
+                    window.checkAndPromptIdentification(recipients, identificationStatus);
+                } else {
+                    // Fallback: manually check and show modal
+                    const alreadyIdentified = recipients.find(r => r.identified_by === window._currentUserId);
+                    
+                    if (!alreadyIdentified && !identificationStatus.isIdentified) {
+                        const matchingRecipient = recipients.find(r =>
+                            r.name.toLowerCase() === identificationStatus.username?.toLowerCase() &&
+                            !r.identified_by
+                        );
+                        
+                        if (matchingRecipient) {
+                            setTimeout(() => {
+                                if (typeof identifyAsRecipient === 'function') {
+                                    identifyAsRecipient(matchingRecipient.id, matchingRecipient.name, true);
+                                }
+                            }, 500);
+                        } else {
+                            setTimeout(() => {
+                                if (typeof showRecipientSelectionModal === 'function') {
+                                    showRecipientSelectionModal();
+                                }
+                            }, 500);
+                        }
+                    }
+                }
+            }).catch(error => {
+                console.error('Error checking identification:', error);
+            });
+        }
     </script>
 
     <script>
@@ -572,18 +614,16 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Show success feedback
+                        // Change button to "Anuluj" so user can cancel reservation
                         if (button) {
-                            button.innerHTML = '<i class="fas fa-check me-1"></i>Zarezerwowano!';
-                            button.classList.remove('btn-success');
-                            button.classList.add('btn-outline-success');
+                            button.disabled = false;
+                            button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj';
+                            button.className = 'btn btn-sm';
+                            button.style.cssText = 'white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; color: #dc3545; border-color: #dc3545; border: 2px solid #dc3545;';
+                            button.onclick = function(e) { unreservePresent(e, presentId); };
                         }
-                        // Reload the sections after a short delay
-                        setTimeout(() => {
-                            loadAvailablePresents();
-                            loadMyReservations();
-                            loadStats();
-                        }, 500);
+                        // Update stats without reloading the whole page
+                        loadStats();
                     } else {
                         alert('Błąd: ' + (data.error || 'Nie udało się zarezerwować prezentu'));
                         if (button) {
@@ -603,16 +643,46 @@
         }
 
         function unreservePresent(event, presentId) {
-            // Use recipients.js function for unreserve
-            handleReserveClick(event, presentId, 'cancel');
+            // Find and disable the button
+            const button = event.target.closest('button');
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Anulowanie...';
+            }
 
-            // Reload sections after a delay to move present to "Available" bucket
-            setTimeout(() => {
-                loadAvailablePresents();
-                loadMyReservations();
-                loadBoughtPresents();
-                loadStats();
-            }, 500);
+            fetch(`/api/presents/${presentId}/reserve`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Change button back to "Zarezerwuj"
+                        if (button) {
+                            button.disabled = false;
+                            button.innerHTML = '<i class="fas fa-bookmark me-1"></i>Zarezerwuj';
+                            button.className = 'btn btn-sm';
+                            button.style.cssText = 'white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; color: #ffcc00; border-color: #ffc107; border: 2px solid #ffcc00;';
+                            button.onclick = function(e) { reservePresent(e, presentId); };
+                        }
+                        // Update stats without reloading the whole page
+                        loadStats();
+                    } else {
+                        alert('Błąd: ' + (data.error || 'Nie udało się anulować rezerwacji'));
+                        if (button) {
+                            button.disabled = false;
+                            button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Wystąpił błąd podczas anulowania rezerwacji');
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj';
+                    }
+                });
         }
 
         function markAsBought(presentId) {
