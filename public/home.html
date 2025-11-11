@@ -158,13 +158,23 @@
 
         <!-- My Profile Card -->
         <div id="myProfileSection" class="stats-container" style="display: none;">
-            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
-                <i class="fas fa-user-circle me-2"></i>Mój Profil
-            </h3>
-            <div id="myProfileCard">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Ładowanie...</span>
+            <div class="accordion" id="accordionProfile">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProfile" aria-expanded="true" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600;">
+                            <i class="fas fa-user-circle me-2"></i>Mój Profil
+                        </button>
+                    </h2>
+                    <div id="collapseProfile" class="accordion-collapse collapse show" data-bs-parent="#accordionProfile">
+                        <div class="accordion-body" style="padding: 0;">
+                            <div id="myProfileCard">
+                                <div class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Ładowanie...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -172,13 +182,23 @@
 
         <!-- Available Presents List -->
         <div id="availablePresentsSection" class="stats-container">
-            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
-                <i class="fas fa-gifts me-2"></i>Dostępne Prezenty
-            </h3>
-            <div id="availablePresentsList">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Ładowanie...</span>
+            <div class="accordion" id="accordionAvailable">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAvailable" aria-expanded="true" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; font-weight: 600;">
+                            <i class="fas fa-gifts me-2"></i>Dostępne Prezenty
+                        </button>
+                    </h2>
+                    <div id="collapseAvailable" class="accordion-collapse collapse show" data-bs-parent="#accordionAvailable">
+                        <div class="accordion-body" style="padding: 0;">
+                            <div id="availablePresentsList">
+                                <div class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Ładowanie...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -186,13 +206,23 @@
 
         <!-- My Reservations -->
         <div id="myReservationsSection" class="stats-container">
-            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
-                <i class="fas fa-bookmark me-2"></i>Moje Rezerwacje
-            </h3>
-            <div id="myReservationsList">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Ładowanie...</span>
+            <div class="accordion" id="accordionReservations">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReservations" aria-expanded="true" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; font-weight: 600;">
+                            <i class="fas fa-bookmark me-2"></i>Moje Rezerwacje
+                        </button>
+                    </h2>
+                    <div id="collapseReservations" class="accordion-collapse collapse show" data-bs-parent="#accordionReservations">
+                        <div class="accordion-body" style="padding: 0;">
+                            <div id="myReservationsList">
+                                <div class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Ładowanie...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -200,13 +230,23 @@
 
         <!-- Bought Presents -->
         <div id="boughtPresentsSection" class="stats-container">
-            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
-                <i class="fas fa-check-circle me-2"></i>Kupione
-            </h3>
-            <div id="boughtPresentsList">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Ładowanie...</span>
+            <div class="accordion" id="accordionBought">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBought" aria-expanded="true" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; font-weight: 600;">
+                            <i class="fas fa-check-circle me-2"></i>Kupione
+                        </button>
+                    </h2>
+                    <div id="collapseBought" class="accordion-collapse collapse show" data-bs-parent="#accordionBought">
+                        <div class="accordion-body" style="padding: 0;">
+                            <div id="boughtPresentsList">
+                                <div class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Ładowanie...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -400,14 +440,12 @@
 
             container.innerHTML = `
                 <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px;">
                         ${avatarHTML}
-                        <div style="flex: 1; min-width: 200px;">
-                            <h4 style="color: #2d3748; font-weight: 600; margin-bottom: 8px;">${escapeHtml(recipient.name)}</h4>
-                            <p style="color: #718096; margin: 0;">
-                                <i class="fas fa-gift me-1"></i>${ownPresents.length} ${ownPresents.length === 1 ? 'prezent' : 'prezentów'}
-                            </p>
-                        </div>
+                        <h4 style="color: #2d3748; font-weight: 600; margin-top: 15px; margin-bottom: 8px;">${escapeHtml(recipient.name)}</h4>
+                        <p style="color: #718096; margin: 0;">
+                            <i class="fas fa-gift me-1"></i>${ownPresents.length} ${ownPresents.length === 1 ? 'prezent' : 'prezentów'}
+                        </p>
                     </div>
                     
                     <div class="accordion" id="accordionOwnPresents">
@@ -436,9 +474,14 @@
                                                             ${p.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
                                                         </div>
                                                         <div class="d-flex gap-2">
-                                                            <a href="formularz.html?edit=${p.id}" class="btn btn-sm btn-primary" style="min-width:50px;">
+                                                            <button class="btn btn-sm btn-primary" style="min-width:50px;" 
+                                                                onclick="editPresentInProfile(${p.id}, '${escapeHtml(p.title).replace(/'/g, "\\'")}', ${p.recipient_id}, '${escapeHtml(p.comments || '').replace(/'/g, "\\'")}')">
                                                                 <i class="fas fa-edit"></i>
-                                                            </a>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger" style="min-width:50px;" 
+                                                                onclick="deletePresentInProfile(${p.id}, '${escapeHtml(p.title).replace(/'/g, "\\'")}')">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </li>
@@ -451,6 +494,41 @@
                     </div>
                 </div>
             `;
+        }
+
+        function editPresentInProfile(presentId, title, recipientId, comments) {
+            // Use the editPresent function from recipients.js if available
+            if (typeof editPresent === 'function') {
+                editPresent(presentId, title, recipientId, comments);
+            } else {
+                // Fallback: redirect to formularz with edit parameter
+                window.location.href = `formularz.html?edit=${presentId}`;
+            }
+        }
+
+        function deletePresentInProfile(presentId, title) {
+            if (!confirm(`Czy na pewno chcesz usunąć prezent "${title}"?`)) {
+                return;
+            }
+
+            fetch(`/api/presents/${presentId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload profile to show updated list
+                        loadMyProfile();
+                        loadStats();
+                    } else {
+                        alert('Błąd: ' + (data.error || 'Nie udało się usunąć prezentu'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Wystąpił błąd podczas usuwania prezentu');
+                });
         }
 
         function loadAvailablePresents() {
