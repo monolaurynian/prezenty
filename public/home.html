@@ -5,17 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Statystyki - Prezentownik</title>
-    
+
     <!-- Force cache refresh for users with old version -->
     <script>
-        (function() {
+        (function () {
             const PAGE_VERSION = '2.0.0'; // Increment this when making breaking changes
             const storedVersion = localStorage.getItem('homePageVersion');
-            
+
             if (storedVersion !== PAGE_VERSION) {
                 console.log('New version detected, clearing cache...');
                 localStorage.setItem('homePageVersion', PAGE_VERSION);
-                
+
                 // Only reload once to prevent infinite loop
                 if (!sessionStorage.getItem('homePageReloaded')) {
                     sessionStorage.setItem('homePageReloaded', 'true');
@@ -161,11 +161,14 @@
             <div class="accordion" id="accordionProfile">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProfile" aria-expanded="true" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600;">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseProfile" aria-expanded="true"
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600;">
                             <i class="fas fa-user-circle me-2"></i>Mój Profil
                         </button>
                     </h2>
-                    <div id="collapseProfile" class="accordion-collapse collapse show" data-bs-parent="#accordionProfile">
+                    <div id="collapseProfile" class="accordion-collapse collapse show"
+                        data-bs-parent="#accordionProfile">
                         <div class="accordion-body" style="padding: 0;">
                             <div id="myProfileCard">
                                 <div class="text-center py-5">
@@ -185,11 +188,14 @@
             <div class="accordion" id="accordionAvailable">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAvailable" aria-expanded="true" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; font-weight: 600;">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseAvailable" aria-expanded="true"
+                            style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; font-weight: 600;">
                             <i class="fas fa-gifts me-2"></i>Dostępne Prezenty
                         </button>
                     </h2>
-                    <div id="collapseAvailable" class="accordion-collapse collapse show" data-bs-parent="#accordionAvailable">
+                    <div id="collapseAvailable" class="accordion-collapse collapse show"
+                        data-bs-parent="#accordionAvailable">
                         <div class="accordion-body" style="padding: 0;">
                             <div id="availablePresentsList">
                                 <div class="text-center py-5">
@@ -209,11 +215,14 @@
             <div class="accordion" id="accordionReservations">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReservations" aria-expanded="true" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; font-weight: 600;">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseReservations" aria-expanded="true"
+                            style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; font-weight: 600;">
                             <i class="fas fa-bookmark me-2"></i>Moje Rezerwacje
                         </button>
                     </h2>
-                    <div id="collapseReservations" class="accordion-collapse collapse show" data-bs-parent="#accordionReservations">
+                    <div id="collapseReservations" class="accordion-collapse collapse show"
+                        data-bs-parent="#accordionReservations">
                         <div class="accordion-body" style="padding: 0;">
                             <div id="myReservationsList">
                                 <div class="text-center py-5">
@@ -233,7 +242,9 @@
             <div class="accordion" id="accordionBought">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBought" aria-expanded="true" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; font-weight: 600;">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseBought" aria-expanded="true"
+                            style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; font-weight: 600;">
                             <i class="fas fa-check-circle me-2"></i>Kupione
                         </button>
                     </h2>
@@ -298,16 +309,45 @@
 
         // Check auth on page load
         checkAuth().then(() => {
-            console.log('User authenticated, loading stats');
-            loadStats();
-            loadMyProfile();
-            
+            console.log('User authenticated, loading all data');
+            loadAllData();
+
             // Check identification status and show modal if needed
             checkIdentificationStatus();
         }).catch(() => {
             console.log('Auth failed, redirecting to login');
         });
-        
+
+        // Optimized: Load all data with a single API call
+        function loadAllData() {
+            Promise.all([
+                fetch('/api/recipients-with-presents').then(r => r.json()),
+                fetch('/api/user/identification').then(r => r.json()),
+                fetch('/api/leaderboard').then(r => r.json())
+            ])
+                .then(([combinedData, identificationStatus, leaderboardData]) => {
+                    const presents = combinedData.presents || [];
+                    const recipients = combinedData.recipients || [];
+
+                    // Cache for edit modal
+                    window._cachedRecipients = recipients;
+
+                    // Update stats
+                    if (leaderboardData.cumulativeStats) {
+                        updateCumulativeProgress(leaderboardData.cumulativeStats);
+                    }
+
+                    // Load profile
+                    loadMyProfileWithData(recipients, presents, identificationStatus);
+
+                    // Load all sections with the same data
+                    loadAvailablePresentsWithData(presents, recipients, identificationStatus);
+                    loadMyReservationsWithData(presents, recipients, identificationStatus);
+                    loadBoughtPresentsWithData(presents, recipients, identificationStatus);
+                })
+                .catch(error => console.error('Error loading data:', error));
+        }
+
         // Check if user needs to identify themselves
         function checkIdentificationStatus() {
             Promise.all([
@@ -320,13 +360,13 @@
                 } else {
                     // Fallback: manually check and show modal
                     const alreadyIdentified = recipients.find(r => r.identified_by === window._currentUserId);
-                    
+
                     if (!alreadyIdentified && !identificationStatus.isIdentified) {
                         const matchingRecipient = recipients.find(r =>
                             r.name.toLowerCase() === identificationStatus.username?.toLowerCase() &&
                             !r.identified_by
                         );
-                        
+
                         if (matchingRecipient) {
                             setTimeout(() => {
                                 if (typeof identifyAsRecipient === 'function') {
@@ -393,42 +433,37 @@
                 fetch('/api/user/identification').then(r => r.json())
             ])
                 .then(([data, identificationStatus]) => {
-                    if (!identificationStatus.isIdentified) {
-                        // User not identified, hide profile section
-                        document.getElementById('myProfileSection').style.display = 'none';
-                        return;
-                    }
-
-                    const presents = data.presents || [];
-                    const recipients = data.recipients || [];
-                    
-                    // Cache recipients for edit modal
-                    window._cachedRecipients = recipients;
-                    
-                    const identifiedRecipient = recipients.find(r => r.identified_by === identificationStatus.userId);
-
-                    if (!identifiedRecipient) {
-                        document.getElementById('myProfileSection').style.display = 'none';
-                        return;
-                    }
-
-                    // Show profile section
-                    document.getElementById('myProfileSection').style.display = 'block';
-
-                    // Get user's own presents
-                    const ownPresents = presents.filter(p => 
-                        p.recipient_id === identifiedRecipient.id && 
-                        p.created_by === identificationStatus.userId
-                    );
-
-                    renderMyProfile(identifiedRecipient, ownPresents);
+                    loadMyProfileWithData(data.recipients, data.presents, identificationStatus);
                 })
                 .catch(error => console.error('Error loading profile:', error));
         }
 
+        function loadMyProfileWithData(recipients, presents, identificationStatus) {
+            if (!identificationStatus.isIdentified) {
+                document.getElementById('myProfileSection').style.display = 'none';
+                return;
+            }
+
+            const identifiedRecipient = recipients.find(r => r.identified_by === identificationStatus.userId);
+
+            if (!identifiedRecipient) {
+                document.getElementById('myProfileSection').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('myProfileSection').style.display = 'block';
+
+            const ownPresents = presents.filter(p =>
+                p.recipient_id === identifiedRecipient.id &&
+                p.created_by === identificationStatus.userId
+            );
+
+            renderMyProfile(identifiedRecipient, ownPresents);
+        }
+
         function renderMyProfile(recipient, ownPresents) {
             const container = document.getElementById('myProfileCard');
-            
+
             const avatarHTML = recipient.profile_picture
                 ? `<img src="/api/recipients/${recipient.id}/profile-picture" 
                        alt="${escapeHtml(recipient.name)}" 
@@ -505,7 +540,7 @@
         }
 
         // Event delegation for edit and delete buttons in profile
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             // Edit button
             if (e.target.closest('.edit-present-btn-profile')) {
                 const btn = e.target.closest('.edit-present-btn-profile');
@@ -513,7 +548,7 @@
                 const title = btn.dataset.presentTitle;
                 const recipientId = btn.dataset.recipientId;
                 const comments = btn.dataset.presentComments;
-                
+
                 // Use the editPresent function from recipients.js if available
                 if (typeof editPresent === 'function') {
                     editPresent(presentId, title, recipientId, comments);
@@ -522,13 +557,13 @@
                     window.location.href = `formularz.html?edit=${presentId}`;
                 }
             }
-            
+
             // Delete button
             if (e.target.closest('.delete-present-btn-profile')) {
                 const btn = e.target.closest('.delete-present-btn-profile');
                 const presentId = btn.dataset.presentId;
                 const title = btn.dataset.presentTitle;
-                
+
                 if (!confirm(`Czy na pewno chcesz usunąć prezent "${title}"?`)) {
                     return;
                 }
@@ -560,21 +595,22 @@
                 fetch('/api/user/identification').then(r => r.json())
             ])
                 .then(([data, identificationStatus]) => {
-                    const presents = data.presents || [];
-                    const recipients = data.recipients || [];
-
-                    const identifiedRecipientId = identificationStatus.isIdentified ?
-                        recipients.find(r => r.identified_by === identificationStatus.userId)?.id : null;
-
-                    const availablePresents = presents.filter(p =>
-                        !p.reserved_by &&
-                        !p.is_checked &&
-                        p.recipient_id !== identifiedRecipientId
-                    );
-
-                    renderAvailablePresents(availablePresents, recipients);
+                    loadAvailablePresentsWithData(data.presents, data.recipients, identificationStatus);
                 })
                 .catch(error => console.error('Error loading presents:', error));
+        }
+
+        function loadAvailablePresentsWithData(presents, recipients, identificationStatus) {
+            const identifiedRecipientId = identificationStatus.isIdentified ?
+                recipients.find(r => r.identified_by === identificationStatus.userId)?.id : null;
+
+            const availablePresents = presents.filter(p =>
+                !p.reserved_by &&
+                !p.is_checked &&
+                p.recipient_id !== identifiedRecipientId
+            );
+
+            renderAvailablePresents(availablePresents, recipients);
         }
 
         function renderAvailablePresents(presents, recipients) {
@@ -703,18 +739,15 @@
                 fetch('/api/user/identification').then(r => r.json())
             ])
                 .then(([data, identificationStatus]) => {
-                    const presents = data.presents || [];
-                    const recipients = data.recipients || [];
-                    const userId = identificationStatus.userId;
-
-                    // Filter for presents reserved by current user
-                    const myReservations = presents.filter(p =>
-                        p.reserved_by === userId && !p.is_checked
-                    );
-
-                    renderPresentsList(myReservations, recipients, 'myReservationsList', 'Brak zarezerwowanych prezentów');
+                    loadMyReservationsWithData(data.presents, data.recipients, identificationStatus);
                 })
                 .catch(error => console.error('Error loading reservations:', error));
+        }
+
+        function loadMyReservationsWithData(presents, recipients, identificationStatus) {
+            const userId = identificationStatus.userId;
+            const myReservations = presents.filter(p => p.reserved_by === userId && !p.is_checked);
+            renderPresentsList(myReservations, recipients, 'myReservationsList', 'Brak zarezerwowanych prezentów');
         }
 
         function loadBoughtPresents() {
@@ -723,18 +756,15 @@
                 fetch('/api/user/identification').then(r => r.json())
             ])
                 .then(([data, identificationStatus]) => {
-                    const presents = data.presents || [];
-                    const recipients = data.recipients || [];
-                    const userId = identificationStatus.userId;
-
-                    // Filter for bought presents reserved by current user
-                    const boughtPresents = presents.filter(p =>
-                        p.reserved_by === userId && p.is_checked
-                    );
-
-                    renderPresentsList(boughtPresents, recipients, 'boughtPresentsList', 'Brak kupionych prezentów');
+                    loadBoughtPresentsWithData(data.presents, data.recipients, identificationStatus);
                 })
                 .catch(error => console.error('Error loading bought presents:', error));
+        }
+
+        function loadBoughtPresentsWithData(presents, recipients, identificationStatus) {
+            const userId = identificationStatus.userId;
+            const boughtPresents = presents.filter(p => p.reserved_by === userId && p.is_checked);
+            renderPresentsList(boughtPresents, recipients, 'boughtPresentsList', 'Brak kupionych prezentów');
         }
 
         function renderPresentsList(presents, recipients, containerId, emptyMessage) {
@@ -844,7 +874,7 @@
                             button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj';
                             button.className = 'btn btn-sm';
                             button.style.cssText = 'white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; color: #dc3545; border-color: #dc3545; border: 2px solid #dc3545;';
-                            button.onclick = function(e) { unreservePresent(e, presentId); };
+                            button.onclick = function (e) { unreservePresent(e, presentId); };
                         }
                         // Update stats without reloading the whole page
                         loadStats();
@@ -887,7 +917,7 @@
                             button.innerHTML = '<i class="fas fa-bookmark me-1"></i>Zarezerwuj';
                             button.className = 'btn btn-sm';
                             button.style.cssText = 'white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; color: #ffcc00; border-color: #ffc107; border: 2px solid #ffcc00;';
-                            button.onclick = function(e) { reservePresent(e, presentId); };
+                            button.onclick = function (e) { reservePresent(e, presentId); };
                         }
                         // Update stats without reloading the whole page
                         loadStats();
