@@ -443,12 +443,26 @@ app.get('/api/updates', requireAuth, (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    // If user is authenticated, redirect to recipients page
+    // If user is authenticated, show home (homepage/dashboard)
     if (req.session.userId) {
-        res.redirect('/recipients');
+        res.sendFile(path.join(__dirname, 'public', 'home.html'));
     } else {
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     }
+});
+
+app.get('/home', (req, res) => {
+    // Redirect to root (home is the homepage)
+    if (!req.session.userId) {
+        res.redirect('/');
+    } else {
+        res.sendFile(path.join(__dirname, 'public', 'home.html'));
+    }
+});
+
+app.get('/statystyki', (req, res) => {
+    // Legacy route - redirect to home
+    res.redirect('/');
 });
 
 app.get('/recipients', (req, res) => {

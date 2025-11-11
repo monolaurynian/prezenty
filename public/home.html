@@ -176,7 +176,23 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Fast loader (load first for instant cache access) -->
+    <script src="fast-loader.js"></script>
+    
+    <!-- Main app (critical - load immediately) -->
+    <script src="recipients.js?v=7&t=1111111111"></script>
+    
+    <!-- Non-critical scripts (defer to load after page is interactive) -->
+    <script src="update-checker.js" defer></script>
+    <script src="realtime-updates.js" defer></script>
+    
     <script>
+        function getEmojiAvatar(name) {
+            const emojis = ['😀', '😃', '😄', '😁', '😆', '😊', '😎', '🤓', '🥳', '😇', '🤗', '🤩', '😺', '😸', '😻', '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵'];
+            const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % emojis.length;
+            return emojis[index];
+        }
+        
         async function loadStats() {
             try {
                 const response = await fetch('/api/leaderboard');
@@ -255,10 +271,22 @@
                 
                 const recipientPresents = presentsByRecipient[recipientId];
                 
+                const avatarHTML = recipient.profile_picture 
+                    ? `<img src="/api/recipients/${recipient.id}/profile-picture" 
+                           alt="${escapeHtml(recipient.name)}" 
+                           style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0;"
+                           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                       <div style="display: none; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
+                           ${getEmojiAvatar(recipient.name)}
+                       </div>`
+                    : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
+                           ${getEmojiAvatar(recipient.name)}
+                       </div>`;
+                
                 html += `
                     <div style="margin-bottom: 25px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                         <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-user-circle" style="color: #667eea;"></i>
+                            ${avatarHTML}
                             ${escapeHtml(recipient.name)}
                             <span style="background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500;">
                                 ${recipientPresents.length} ${recipientPresents.length === 1 ? 'prezent' : 'prezentów'}
@@ -280,13 +308,7 @@
                                             ` : ''}
                                         </div>
                                     </div>
-                                    <button class=" 
-                                    
-                            
-                                    btn  btn-sm " onclick="reservePresentFromStats(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0;  color: #ffc107;
-    border-color: #ffc107;   border: 2px solid  #ffcc00;;
-    color:  #ffcc00;;
- ">
+                                    <button class="btn btn-outline-warning btn-sm" onclick="reservePresent(event, ${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0;">
                                         <i class="fas fa-bookmark me-1"></i>Zarezerwuj
                                     </button>
                                 </div>
@@ -408,10 +430,22 @@
                 
                 const recipientPresents = presentsByRecipient[recipientId];
                 
+                const avatarHTML = recipient.profile_picture 
+                    ? `<img src="/api/recipients/${recipient.id}/profile-picture" 
+                           alt="${escapeHtml(recipient.name)}" 
+                           style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0;"
+                           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                       <div style="display: none; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
+                           ${getEmojiAvatar(recipient.name)}
+                       </div>`
+                    : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
+                           ${getEmojiAvatar(recipient.name)}
+                       </div>`;
+                
                 html += `
                     <div style="margin-bottom: 25px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                         <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-user-circle" style="color: #667eea;"></i>
+                            ${avatarHTML}
                             ${escapeHtml(recipient.name)}
                             <span style="background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500;">
                                 ${recipientPresents.length} ${recipientPresents.length === 1 ? 'prezent' : 'prezentów'}
@@ -435,15 +469,15 @@
                                     </div>
                                     <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
                                         ${present.is_checked ? `
-                                            <button class="btn btn-sm btn-outline-danger" onclick="unmarkAsBoughtFromStats(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
+                                            <button class="btn btn-sm btn-outline-danger" onclick="markAsUnbought(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
                                                 <i class="fas fa-undo me-1"></i>Anuluj Zakup
                                             </button>
                                         ` : `
-                                            <button class="btn btn-sm btn-success" onclick="markAsBoughtFromStats(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
+                                            <button class="btn btn-sm btn-success" onclick="markAsBought(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
                                                 <i class="fas fa-check me-1"></i>Kupione
                                             </button>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="unreservePresentFromStats(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
-                                                <i class="fas fa-times me-1"></i>Anuluj 
+                                            <button class="btn btn-sm btn-outline-danger" onclick="unreservePresent(event, ${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
+                                                <i class="fas fa-times me-1"></i>Anuluj
                                             </button>
                                         `}
                                     </div>
@@ -457,199 +491,66 @@
             container.innerHTML = html;
         }
         
-        function reservePresentFromStats(presentId) {
-            // Find and disable the button
-            const button = event.target.closest('button');
-            if (button) {
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Rezerwuję...';
-            }
+        // Wrapper functions for statystyki page that call API and reload sections
+        function reservePresent(event, presentId) {
+            // Use recipients.js function for reserve
+            handleReserveClick(event, presentId, 'reserve');
             
-            fetch(`/api/presents/${presentId}/reserve`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Show success feedback
-                        if (button) {
-                            button.innerHTML = '<i class="fas fa-check me-1"></i>Zarezerwowano!';
-                            button.classList.remove('btn-success');
-                            button.classList.add('btn-outline-success');
-                        }
-                        
-                        // Reload the sections after a short delay
-                        setTimeout(() => {
-                            loadAvailablePresents();
-                            loadMyReservations();
-                            loadStats();
-                        }, 500);
-                    } else {
-                        alert('Błąd: ' + (data.error || 'Nie udało się zarezerwować prezentu'));
-                        if (button) {
-                            button.disabled = false;
-                            button.innerHTML = '<i class="fas fa-bookmark me-1"></i>Zarezerwuj';
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Wystąpił błąd podczas rezerwowania prezentu');
-                    if (button) {
-                        button.disabled = false;
-                        button.innerHTML = '<i class="fas fa-bookmark me-1"></i>Zarezerwuj';
-                    }
-                });
+            // Reload sections after a delay to move present to "Reserved" bucket
+            setTimeout(() => {
+                loadAvailablePresents();
+                loadMyReservations();
+                loadStats();
+            }, 500);
         }
         
-        function markAsBoughtFromStats(presentId) {
-            if (!confirm('Czy na pewno chcesz oznaczyć ten prezent jako kupiony?')) {
-                return;
-            }
+        function unreservePresent(event, presentId) {
+            // Use recipients.js function for unreserve
+            handleReserveClick(event, presentId, 'cancel');
             
-            // Find and disable the button
-            const button = event.target.closest('button');
-            if (button) {
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Przetwarzanie...';
-            }
-            
+            // Reload sections after a delay to move present to "Available" bucket
+            setTimeout(() => {
+                loadAvailablePresents();
+                loadMyReservations();
+                loadBoughtPresents();
+                loadStats();
+            }, 500);
+        }
+        
+        function markAsBought(presentId) {
             fetch(`/api/presents/${presentId}/check`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_checked: true })
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Show success feedback
-                        if (button) {
-                            button.innerHTML = '<i class="fas fa-check me-1"></i>Gotowe!';
-                            button.classList.remove('btn-success');
-                            button.classList.add('btn-outline-success');
-                        }
-                        
-                        // Reload the sections after a short delay
-                        setTimeout(() => {
-                            loadMyReservations();
-                            loadBoughtPresents();
-                            loadStats();
-                        }, 500);
-                    } else {
-                        alert('Błąd: ' + (data.error || 'Nie udało się oznaczyć prezentu'));
-                        if (button) {
-                            button.disabled = false;
-                            button.innerHTML = '<i class="fas fa-check me-1"></i>Kupione';
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Wystąpił błąd podczas oznaczania prezentu');
-                    if (button) {
-                        button.disabled = false;
-                        button.innerHTML = '<i class="fas fa-check me-1"></i>Kupione';
-                    }
-                });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload sections to move present to "Bought" bucket
+                    loadMyReservations();
+                    loadBoughtPresents();
+                    loadStats();
+                }
+            })
+            .catch(error => console.error('Error marking as bought:', error));
         }
         
-        function unmarkAsBoughtFromStats(presentId) {
-            if (!confirm('Czy na pewno chcesz anulować zakup tego prezentu? Prezent pozostanie zarezerwowany.')) {
-                return;
-            }
-            
-            // Find and disable the button
-            const button = event.target.closest('button');
-            if (button) {
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Anulowanie...';
-            }
-            
+        function markAsUnbought(presentId) {
             fetch(`/api/presents/${presentId}/check`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_checked: false })
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Show success feedback
-                        if (button) {
-                            button.innerHTML = '<i class="fas fa-check me-1"></i>Anulowano!';
-                        }
-                        
-                        // Reload the sections after a short delay
-                        setTimeout(() => {
-                            loadMyReservations();
-                            loadBoughtPresents();
-                            loadStats();
-                        }, 500);
-                    } else {
-                        alert('Błąd: ' + (data.error || 'Nie udało się anulować zakupu'));
-                        if (button) {
-                            button.disabled = false;
-                            button.innerHTML = '<i class="fas fa-undo me-1"></i>Anuluj Zakup';
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Wystąpił błąd podczas anulowania zakupu');
-                    if (button) {
-                        button.disabled = false;
-                        button.innerHTML = '<i class="fas fa-undo me-1"></i>Anuluj Zakup';
-                    }
-                });
-        }
-        
-        function unreservePresentFromStats(presentId) {
-            if (!confirm('Czy na pewno chcesz anulować rezerwację tego prezentu?')) {
-                return;
-            }
-            
-            // Find and disable the button
-            const button = event.target.closest('button');
-            if (button) {
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Anulowanie...';
-            }
-            
-            fetch(`/api/presents/${presentId}/reserve`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload sections to move present back to "Reserved" bucket
+                    loadMyReservations();
+                    loadBoughtPresents();
+                    loadStats();
+                }
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Show success feedback
-                        if (button) {
-                            button.innerHTML = '<i class="fas fa-check me-1"></i>Anulowano!';
-                        }
-                        
-                        // Reload the sections after a short delay
-                        setTimeout(() => {
-                            loadMyReservations();
-                            loadBoughtPresents();
-                            loadAvailablePresents();
-                            loadStats();
-                        }, 500);
-                    } else {
-                        alert('Błąd: ' + (data.error || 'Nie udało się anulować rezerwacji'));
-                        if (button) {
-                            button.disabled = false;
-                            button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj Rezerwację';
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Wystąpił błąd podczas anulowania rezerwacji');
-                    if (button) {
-                        button.disabled = false;
-                        button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj Rezerwację';
-                    }
-                });
+            .catch(error => console.error('Error unmarking as bought:', error));
         }
         
         function logout() {
@@ -664,9 +565,9 @@
     <!-- Bottom Tab Bar -->
     <div class="bottom-tab-bar">
         <div class="tab-bar-container">
-            <a href="recipients.html" class="tab-item home-tab">
-                <i class="ri-gift-line"></i>
-                <span>Prezenty</span>
+            <a href="/" class="tab-item home-tab active">
+                <i class="ri-home-line"></i>
+                <span>Strona Główna</span>
             </a>
             <a href="#" class="tab-item activity-tab" onclick="toggleNotificationsPanel(); return false;">
                 <div class="tab-icon-wrapper">
@@ -700,11 +601,11 @@
             </button>
         </div>
         <div class="tab-bar-menu-content">
-            <a href="statystyki.html" class="tab-bar-menu-item stats-item">
-                <i class="ri-bar-chart-line"></i>
-                <span>Statystyki</span>
-            </a>
             <div class="tab-bar-menu-divider"></div>
+            <a href="recipients.html" class="tab-bar-menu-item">
+                <i class="ri-gift-2-line"></i>
+                <span>Wszystkie prezenty</span>
+            </a>
             <a href="recipients.html" class="tab-bar-menu-item add-person-item">
                 <i class="ri-user-add-line"></i>
                 <span>Dodaj Osobę</span>

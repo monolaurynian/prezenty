@@ -747,7 +747,7 @@
             </button>
         </div>
         <div class="sidebar-content">
-            <a href="/recipients.html" class="sidebar-item">
+            <a href="/" class="sidebar-item">
                 <i class="fas fa-home"></i>
                 <span>Strona Główna</span>
             </a>
@@ -919,44 +919,71 @@
             document.getElementById('rankingList').style.display = 'block';
             renderUsersList(users);
         }
+        function getEmojiAvatar(name) {
+            const emojis = ['😀', '😃', '😄', '😁', '😆', '😊', '😎', '🤓', '🥳', '😇', '🤗', '🤩', '😺', '😸', '😻', '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵'];
+            const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % emojis.length;
+            return emojis[index];
+        }
+
         function renderPodium(top3) {
             const podium = document.getElementById('podium');
             const medals = ['🥇', '🥈', '🥉'];
             const positions = ['first', 'second', 'third'];
 
-            podium.innerHTML = top3.map((user, index) => `
-                <div class="podium-place ${positions[index]}" onclick="navigateToUserInRecipients('${user.username}')" style="cursor: pointer;">
-                    ${index === 0 ? '<div class="podium-crown">👑</div>' : ''}
-                    <div class="podium-rank">${medals[index]}</div>
-                    <div class="podium-avatar-container">
-                        <img src="${user.profile_picture || '/images/default-avatar.svg'}" 
-                             alt="${user.username}" 
-                             class="podium-avatar"
-                             onerror="this.src='/images/default-avatar.svg'">
-                    </div>
-                    <div class="podium-name">${user.username}</div>
-                    <div class="podium-stats">
-                        <div class="stat-item">
-                            <i class="fas fa-gift"></i>
-                            ${user.total_presents} ${user.total_presents === 1 ? 'prezent' : 'prezentów'}
+            podium.innerHTML = top3.map((user, index) => {
+                const avatarHTML = user.profile_picture 
+                    ? `<img src="${user.profile_picture}" 
+                           alt="${user.username}" 
+                           class="podium-avatar"
+                           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                       <div class="podium-avatar-emoji" style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%;">
+                           ${getEmojiAvatar(user.username)}
+                       </div>`
+                    : `<div class="podium-avatar-emoji" style="display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%;">
+                           ${getEmojiAvatar(user.username)}
+                       </div>`;
+                
+                return `
+                    <div class="podium-place ${positions[index]}" onclick="navigateToUserInRecipients('${user.username}')" style="cursor: pointer;">
+                        ${index === 0 ? '<div class="podium-crown">👑</div>' : ''}
+                        <div class="podium-rank">${medals[index]}</div>
+                        <div class="podium-avatar-container">
+                            ${avatarHTML}
+                        </div>
+                        <div class="podium-name">${user.username}</div>
+                        <div class="podium-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-gift"></i>
+                                ${user.total_presents} ${user.total_presents === 1 ? 'prezent' : 'prezentów'}
+                            </div>
+                        </div>
+                        <div class="podium-base">
+                            <div class="podium-position">#${index + 1}</div>
                         </div>
                     </div>
-                    <div class="podium-base">
-                        <div class="podium-position">#${index + 1}</div>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
         function renderUsersList(users) {
             const usersList = document.getElementById('usersList');
             
-            usersList.innerHTML = users.map((user, index) => `
+            usersList.innerHTML = users.map((user, index) => {
+                const avatarHTML = user.profile_picture 
+                    ? `<img src="${user.profile_picture}" 
+                           alt="${user.username}" 
+                           class="user-avatar"
+                           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                       <div class="user-avatar-emoji" style="display: none; width: 60px; height: 60px; align-items: center; justify-content: center; font-size: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
+                           ${getEmojiAvatar(user.username)}
+                       </div>`
+                    : `<div class="user-avatar-emoji" style="display: flex; width: 60px; height: 60px; align-items: center; justify-content: center; font-size: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
+                           ${getEmojiAvatar(user.username)}
+                       </div>`;
+                
+                return `
                     <div class="user-card" onclick="navigateToUserInRecipients('${user.username}')" style="cursor: pointer;">
                         <div class="user-rank">#${index + 1}</div>
-                        <img src="${user.profile_picture || '/images/default-avatar.svg'}" 
-                             alt="${user.username}" 
-                             class="user-avatar"
-                             onerror="this.src='/images/default-avatar.svg'">
+                        ${avatarHTML}
                         <div class="user-info">
                             <div class="user-name">${user.username}</div>
                             <div class="user-stats">
@@ -970,7 +997,8 @@
                             <i class="fas fa-star me-1"></i>${user.total_presents}
                         </div>
                     </div>
-                `).join('');
+                `;
+            }).join('');
         }
 
         function navigateToUserInRecipients(username) {
@@ -1007,9 +1035,9 @@
     <!-- Bottom Tab Bar -->
     <div class="bottom-tab-bar">
         <div class="tab-bar-container">
-            <a href="recipients.html" class="tab-item home-tab">
-                <i class="ri-gift-line"></i>
-                <span>Prezenty</span>
+            <a href="/" class="tab-item home-tab">
+                <i class="ri-home-line"></i>
+                <span>Strona Główna</span>
             </a>
             <a href="#" class="tab-item activity-tab" onclick="toggleNotificationsPanel(); return false;">
                 <div class="tab-icon-wrapper">
@@ -1043,11 +1071,11 @@
             </button>
         </div>
         <div class="tab-bar-menu-content">
-            <a href="statystyki.html" class="tab-bar-menu-item stats-item">
-                <i class="ri-bar-chart-line"></i>
-                <span>Statystyki</span>
-            </a>
             <div class="tab-bar-menu-divider"></div>
+            <a href="recipients.html" class="tab-bar-menu-item">
+                <i class="ri-gift-2-line"></i>
+                <span>Wszystkie prezenty</span>
+            </a>
             <a href="recipients.html" class="tab-bar-menu-item add-person-item">
                 <i class="ri-user-add-line"></i>
                 <span>Dodaj Osobę</span>
