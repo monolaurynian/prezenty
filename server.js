@@ -364,6 +364,9 @@ app.use(express.static('public', {
     }
 }));
 
+// Trust proxy if behind reverse proxy (for HTTPS)
+app.set('trust proxy', 1);
+
 // Create session store
 let sessionConfig = {
     name: 'prezenty.sid', // Explicit session cookie name
@@ -373,7 +376,7 @@ let sessionConfig = {
     cookie: { 
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         httpOnly: true,
-        secure: false, // Set to true only if using HTTPS
+        secure: process.env.NODE_ENV === 'production', // true for HTTPS in production
         sameSite: 'lax',
         path: '/' // Ensure cookie is available for all paths
     }

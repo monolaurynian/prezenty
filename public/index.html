@@ -223,13 +223,15 @@
                     .then(({ status, body }) => {
                         console.log('Login response:', { status, body });
                         if (status === 200 && body.success) {
-                            console.log('Login successful, redirecting to /');
+                            console.log('Login successful, waiting for session to save...');
                             // Add transition effect before redirect
                             document.getElementById('loginHeader').classList.remove('loaded');
                             document.getElementById('loginBody').classList.remove('loaded');
+                            // Wait longer to ensure session is saved
                             setTimeout(() => {
+                                console.log('Redirecting to / now');
                                 window.location.href = '/';
-                            }, 300);
+                            }, 1000);
                         } else {
                             console.error('Login failed:', body.error);
                             showError(body.error || 'Błąd logowania');
