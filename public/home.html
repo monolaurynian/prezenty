@@ -381,7 +381,8 @@
                 const avatarHTML = recipient.profile_picture
                     ? `<img src="/api/recipients/${recipient.id}/profile-picture" 
                            alt="${escapeHtml(recipient.name)}" 
-                           style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0;"
+                           style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; cursor: pointer;"
+                           onclick="openProfilePicturePreview(${recipient.id}, '${escapeHtml(recipient.name).replace(/'/g, "\\'")}', '/api/recipients/${recipient.id}/profile-picture')"
                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                        <div style="display: none; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
                            ${getEmojiAvatar(recipient.name)}
@@ -540,7 +541,8 @@
                 const avatarHTML = recipient.profile_picture
                     ? `<img src="/api/recipients/${recipient.id}/profile-picture" 
                            alt="${escapeHtml(recipient.name)}" 
-                           style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0;"
+                           style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; cursor: pointer;"
+                           onclick="openProfilePicturePreview(${recipient.id}, '${escapeHtml(recipient.name).replace(/'/g, "\\'")}', '/api/recipients/${recipient.id}/profile-picture')"
                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                        <div style="display: none; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
                            ${getEmojiAvatar(recipient.name)}
@@ -683,6 +685,20 @@
                         button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj';
                     }
                 });
+        }
+
+        function openProfilePicturePreview(recipientId, recipientName, profilePictureUrl) {
+            const modal = document.getElementById('profilePreviewModal');
+            const previewImage = document.getElementById('profilePreviewImage');
+            const previewName = document.getElementById('profilePreviewName');
+
+            if (modal && previewImage && previewName) {
+                previewImage.src = profilePictureUrl;
+                previewName.textContent = recipientName;
+
+                const bootstrapModal = new bootstrap.Modal(modal);
+                bootstrapModal.show();
+            }
         }
 
         function markAsBought(presentId) {
@@ -977,6 +993,23 @@
                     <button type="button" class="btn btn-danger" onclick="confirmCancelIdentification()">
                         <i class="fas fa-check me-1"></i>Tak, anuluj
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Picture Preview Modal -->
+    <div class="modal fade profile-preview-modal" id="profilePreviewModal" tabindex="-1"
+        aria-labelledby="profilePreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="profilePreviewModalLabel">Podgląd zdjęcia profilowego</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="profilePreviewImage" class="profile-preview-image" alt="Zdjęcie profilowe">
+                    <div id="profilePreviewName" class="profile-preview-name mt-3"></div>
                 </div>
             </div>
         </div>
