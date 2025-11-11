@@ -179,12 +179,52 @@
     <!-- Fast loader (load first for instant cache access) -->
     <script src="fast-loader.js"></script>
     
-    <!-- Main app (critical - load immediately) -->
+    <script>
+        // Flag to prevent recipients.js from auto-initializing
+        window.SKIP_RECIPIENTS_INIT = true;
+        
+        // Set current user ID for recipients.js functions
+        window._currentUserId = null;
+    </script>
+    
+    <!-- Load recipients.js for shared functions (but don't auto-init) -->
     <script src="recipients.js?v=7&t=1111111111"></script>
     
     <!-- Non-critical scripts (defer to load after page is interactive) -->
     <script src="update-checker.js" defer></script>
     <script src="realtime-updates.js" defer></script>
+    
+    <script>
+        // Check authentication
+        function checkAuth() {
+            return fetch('/api/auth', {
+                credentials: 'include'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.authenticated) {
+                        console.warn('User not authenticated, redirecting to login');
+                        window.location.href = '/';
+                        throw new Error('Not authenticated');
+                    }
+                    // Set current user ID for recipients.js functions
+                    window._currentUserId = data.user.id;
+                    return data.user;
+                })
+                .catch(error => {
+                    console.error('Auth check error:', error);
+                    throw error;
+                });
+        }
+        
+        // Check auth on page load
+        checkAuth().then(() => {
+            console.log('User authenticated, loading stats');
+            loadStats();
+        }).catch(() => {
+            console.log('Auth failed, redirecting to login');
+        });
+    </script>
     
     <script>
         function getEmojiAvatar(name) {

@@ -701,6 +701,12 @@ document.addEventListener('DOMContentLoaded', function () {
         persistentCache = null;
     }
 
+    // Skip initialization if flag is set (e.g., on home.html)
+    if (window.SKIP_RECIPIENTS_INIT) {
+        console.log('[Recipients.js] Skipping auto-initialization (SKIP_RECIPIENTS_INIT flag set)');
+        return;
+    }
+
     // Initialize UI components
     initializeSearchAndFilter();
     initializeFAB();
