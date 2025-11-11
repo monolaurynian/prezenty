@@ -185,7 +185,7 @@
             <div class="accordion" id="accordionAvailable">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAvailable" aria-expanded="true" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; font-weight: 600;">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAvailable" aria-expanded="true" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; font-weight: 600;">
                             <i class="fas fa-gifts me-2"></i>Dostępne Prezenty
                         </button>
                     </h2>
@@ -474,12 +474,16 @@
                                                             ${p.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
                                                         </div>
                                                         <div class="d-flex gap-2">
-                                                            <button class="btn btn-sm btn-primary" style="min-width:50px;" 
-                                                                onclick="editPresentInProfile(${p.id}, '${escapeHtml(p.title).replace(/'/g, "\\'")}', ${p.recipient_id}, '${escapeHtml(p.comments || '').replace(/'/g, "\\'")}')">
+                                                            <button class="btn btn-sm btn-primary edit-present-btn-profile" style="min-width:50px;" 
+                                                                data-present-id="${p.id}"
+                                                                data-present-title="${escapeHtml(p.title)}"
+                                                                data-recipient-id="${p.recipient_id}"
+                                                                data-present-comments="${escapeHtml(p.comments || '')}">
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
-                                                            <button class="btn btn-sm btn-danger" style="min-width:50px;" 
-                                                                onclick="deletePresentInProfile(${p.id}, '${escapeHtml(p.title).replace(/'/g, "\\'")}')">
+                                                            <button class="btn btn-sm btn-danger delete-present-btn-profile" style="min-width:50px;" 
+                                                                data-present-id="${p.id}"
+                                                                data-present-title="${escapeHtml(p.title)}">
                                                                 <i class="fas fa-trash-alt"></i>
                                                             </button>
                                                         </div>
@@ -496,40 +500,55 @@
             `;
         }
 
-        function editPresentInProfile(presentId, title, recipientId, comments) {
-            // Use the editPresent function from recipients.js if available
-            if (typeof editPresent === 'function') {
-                editPresent(presentId, title, recipientId, comments);
-            } else {
-                // Fallback: redirect to formularz with edit parameter
-                window.location.href = `formularz.html?edit=${presentId}`;
+        // Event delegation for edit and delete buttons in profile
+        document.addEventListener('click', function(e) {
+            // Edit button
+            if (e.target.closest('.edit-present-btn-profile')) {
+                const btn = e.target.closest('.edit-present-btn-profile');
+                const presentId = btn.dataset.presentId;
+                const title = btn.dataset.presentTitle;
+                const recipientId = btn.dataset.recipientId;
+                const comments = btn.dataset.presentComments;
+                
+                // Use the editPresent function from recipients.js if available
+                if (typeof editPresent === 'function') {
+                    editPresent(presentId, title, recipientId, comments);
+                } else {
+                    // Fallback: redirect to formularz with edit parameter
+                    window.location.href = `formularz.html?edit=${presentId}`;
+                }
             }
-        }
+            
+            // Delete button
+            if (e.target.closest('.delete-present-btn-profile')) {
+                const btn = e.target.closest('.delete-present-btn-profile');
+                const presentId = btn.dataset.presentId;
+                const title = btn.dataset.presentTitle;
+                
+                if (!confirm(`Czy na pewno chcesz usunąć prezent "${title}"?`)) {
+                    return;
+                }
 
-        function deletePresentInProfile(presentId, title) {
-            if (!confirm(`Czy na pewno chcesz usunąć prezent "${title}"?`)) {
-                return;
-            }
-
-            fetch(`/api/presents/${presentId}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Reload profile to show updated list
-                        loadMyProfile();
-                        loadStats();
-                    } else {
-                        alert('Błąd: ' + (data.error || 'Nie udało się usunąć prezentu'));
-                    }
+                fetch(`/api/presents/${presentId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Wystąpił błąd podczas usuwania prezentu');
-                });
-        }
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload profile to show updated list
+                            loadMyProfile();
+                            loadStats();
+                        } else {
+                            alert('Błąd: ' + (data.error || 'Nie udało się usunąć prezentu'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Wystąpił błąd podczas usuwania prezentu');
+                    });
+            }
+        });
 
         function loadAvailablePresents() {
             Promise.all([
@@ -901,6 +920,13 @@
         }
 
         function markAsBought(presentId) {
+            // Find the button and show spinner
+            const button = event.target.closest('button');
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Zapisywanie...';
+            }
+
             fetch(`/api/presents/${presentId}/check`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -913,9 +939,22 @@
                         loadMyReservations();
                         loadBoughtPresents();
                         loadStats();
+                    } else {
+                        alert('Błąd: ' + (data.error || 'Nie udało się oznaczyć prezentu'));
+                        if (button) {
+                            button.disabled = false;
+                            button.innerHTML = '<i class="fas fa-check me-1"></i>Kupione';
+                        }
                     }
                 })
-                .catch(error => console.error('Error marking as bought:', error));
+                .catch(error => {
+                    console.error('Error marking as bought:', error);
+                    alert('Wystąpił błąd podczas oznaczania prezentu');
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = '<i class="fas fa-check me-1"></i>Kupione';
+                    }
+                });
         }
 
         function markAsUnbought(presentId) {

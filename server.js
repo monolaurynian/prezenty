@@ -2331,49 +2331,6 @@ async function isUserIdentifiedAsRecipient(userId, recipientId) {
 }
 
 // Create notification for relevant users
-async function createNotification(type, actorId, data) {
-    if (DEMO_MODE) {
-        console.log('📝 [NOTIFICATIONS] Demo mode - notification not created:', { type, actorId, data });
-        return;
-    }
-
-    try {
-        // Ensure table exists
-        await ensureNotificationsTable();
-
-        // Get all users except the actor
-        const [users] = await pool.execute(
-            'SELECT id FROM users WHERE id != ?',
-            [actorId]
-        );
-
-        console.log(`📢 [NOTIFICATIONS] Creating ${type} notifications for ${users.length} user(s)`);
-
-        // Create notification for each eligible user
-        for (const user of users) {
-            // Check privacy: skip if user is identified as the recipient in present notifications
-            if (type.includes('present_') && data.recipientId) {
-                const isIdentified = await isUserIdentifiedAsRecipient(user.id, data.recipientId);
-                if (isIdentified) {
-                    console.log(`🔒 [NOTIFICATIONS] Skipping notification for user ${user.id} (identified as recipient ${data.recipientId})`);
-                    continue;
-                }
-            }
-
-            // Create notification
-            await pool.execute(
-                'INSERT INTO notifications (user_id, type, actor_id, data) VALUES (?, ?, ?, ?)',
-                [user.id, type, actorId, JSON.stringify(data)]
-            );
-        }
-
-        console.log(`✅ [NOTIFICATIONS] Created ${type} notifications successfully`);
-    } catch (err) {
-        console.error('❌ [NOTIFICATIONS] Error creating notification:', err);
-        // Don't throw - notifications are non-critical
-    }
-}
-
 // Cancel reservation
 app.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => {
     clearCombinedDataCache();
