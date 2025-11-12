@@ -9,17 +9,37 @@
     <!-- Force cache refresh for users with old version -->
     <script>
         (function () {
-            const PAGE_VERSION = '2.0.0'; // Increment this when making breaking changes
+            const PAGE_VERSION = '3.0.0'; // Increment this when making breaking changes
             const storedVersion = localStorage.getItem('homePageVersion');
 
             if (storedVersion !== PAGE_VERSION) {
-                console.log('New version detected, clearing cache...');
+                console.log('New version detected, clearing cache and service worker...');
                 localStorage.setItem('homePageVersion', PAGE_VERSION);
+
+                // Clear service worker cache
+                if ('caches' in window) {
+                    caches.keys().then(function (names) {
+                        for (let name of names) {
+                            caches.delete(name);
+                        }
+                    });
+                }
+
+                // Unregister service worker to force fresh install
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                        for (let registration of registrations) {
+                            registration.unregister();
+                        }
+                    });
+                }
 
                 // Only reload once to prevent infinite loop
                 if (!sessionStorage.getItem('homePageReloaded')) {
                     sessionStorage.setItem('homePageReloaded', 'true');
-                    window.location.reload(true);
+                    setTimeout(() => {
+                        window.location.reload(true);
+                    }, 500);
                 }
             }
         })();
