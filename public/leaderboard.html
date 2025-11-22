@@ -824,6 +824,15 @@
             </div>
         </div>
 
+        <!-- Activity Leaderboard (Bought & Reserved) -->
+        <div id="activityLeaderboard" class="ranking-list" style="display: none;">
+            <h3><i class="fas fa-fire me-2"></i>Najbardziej Aktywni</h3>
+            <p style="text-align: center; color: #718096; margin-bottom: 20px;">Użytkownicy, którzy kupili i zarezerwowali najwięcej prezentów</p>
+            <div id="activityList">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
         <div id="rankingList" class="ranking-list" style="display: none;">
             <h3><i class="fas fa-list-ol me-2"></i>Pełny Ranking</h3>
             <div id="usersList">
@@ -915,9 +924,60 @@
                 renderPodium(users.slice(0, 3));
             }
 
+            // Show activity leaderboard (bought + reserved)
+            document.getElementById('activityLeaderboard').style.display = 'block';
+            renderActivityLeaderboard(users);
+
             // Show full ranking
             document.getElementById('rankingList').style.display = 'block';
             renderUsersList(users);
+        }
+
+        function renderActivityLeaderboard(users) {
+            // Sort by bought + reserved presents
+            const sortedUsers = [...users].sort((a, b) => {
+                const aActivity = (parseInt(a.bought_presents) || 0) + (parseInt(a.reserved_presents) || 0);
+                const bActivity = (parseInt(b.bought_presents) || 0) + (parseInt(b.reserved_presents) || 0);
+                return bActivity - aActivity;
+            }).slice(0, 10); // Top 10
+
+            const activityList = document.getElementById('activityList');
+            activityList.innerHTML = sortedUsers.map((user, index) => {
+                const boughtCount = parseInt(user.bought_presents) || 0;
+                const reservedCount = parseInt(user.reserved_presents) || 0;
+                const totalActivity = boughtCount + reservedCount;
+
+                if (totalActivity === 0) return ''; // Skip users with no activity
+
+                const avatarHTML = user.profile_picture
+                    ? `<img src="${user.profile_picture}" alt="${user.username}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">`
+                    : `<div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white;">${getEmojiAvatar(user.username)}</div>`;
+
+                return `
+                    <div class="user-card" style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: white; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                            <div style="font-size: 20px; font-weight: 700; color: #718096; min-width: 30px;">#${index + 1}</div>
+                            ${avatarHTML}
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: #2d3748; font-size: 16px;">${user.username}</div>
+                                <div style="font-size: 13px; color: #718096;">
+                                    <i class="fas fa-check-circle" style="color: #4CAF50;"></i> ${boughtCount} kupione
+                                    <span style="margin: 0 8px;">•</span>
+                                    <i class="fas fa-bookmark" style="color: #FF9800;"></i> ${reservedCount} zarezerwowane
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 24px; font-weight: 700; color: #667eea;">${totalActivity}</div>
+                            <div style="font-size: 12px; color: #718096;">aktywność</div>
+                        </div>
+                    </div>
+                `;
+            }).filter(html => html !== '').join('');
+
+            if (activityList.innerHTML === '') {
+                activityList.innerHTML = '<p style="text-align: center; color: #718096;">Brak aktywności</p>';
+            }
         }
         function getEmojiAvatar(name) {
             const emojis = ['😀', '😃', '😄', '😁', '😆', '😊', '😎', '🤓', '🥳', '😇', '🤗', '🤩', '😺', '😸', '😻', '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵'];
