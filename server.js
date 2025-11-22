@@ -2175,7 +2175,9 @@ app.get('/api/leaderboard', async (req, res) => {
                 COUNT(DISTINCT p.id) as total_presents,
                 SUM(CASE WHEN p.is_checked = 1 THEN 1 ELSE 0 END) as bought_presents,
                 SUM(CASE WHEN p.reserved_by IS NOT NULL THEN 1 ELSE 0 END) as reserved_presents,
-                SUM(CASE WHEN p.is_checked = 0 AND p.reserved_by IS NULL THEN 1 ELSE 0 END) as available_presents
+                SUM(CASE WHEN p.is_checked = 0 AND p.reserved_by IS NULL THEN 1 ELSE 0 END) as available_presents,
+                (SELECT COUNT(*) FROM presents WHERE reserved_by = u.id AND is_checked = 1) as user_bought_count,
+                (SELECT COUNT(*) FROM presents WHERE reserved_by = u.id) as user_reserved_count
             FROM users u
             LEFT JOIN presents p ON p.created_by = u.id
             LEFT JOIN recipients r ON r.name = u.username

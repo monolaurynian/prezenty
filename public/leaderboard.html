@@ -824,10 +824,20 @@
             </div>
         </div>
 
+        <!-- Activity Podium -->
+        <div id="activityPodiumSection" class="podium-section" style="display: none;">
+            <h2 class="text-center mb-4" style="color: #2d3748; font-weight: 700;">
+                <i class="fas fa-fire me-2"></i>Najbardziej Aktywni
+            </h2>
+            <p style="text-align: center; color: #718096; margin-bottom: 30px;">Użytkownicy, którzy kupili i zarezerwowali najwięcej prezentów</p>
+            <div class="podium" id="activityPodium">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
         <!-- Activity Leaderboard (Bought & Reserved) -->
         <div id="activityLeaderboard" class="ranking-list" style="display: none;">
-            <h3><i class="fas fa-fire me-2"></i>Najbardziej Aktywni</h3>
-            <p style="text-align: center; color: #718096; margin-bottom: 20px;">Użytkownicy, którzy kupili i zarezerwowali najwięcej prezentów</p>
+            <h3><i class="fas fa-list-ol me-2"></i>Pełna Lista Aktywności</h3>
             <div id="activityList">
                 <!-- Will be populated by JavaScript -->
             </div>
@@ -918,15 +928,28 @@
         }
 
         function renderLeaderboard(users, cumulativeStats) {
-            // Show podium for top 3
-            if (users.length >= 3) {
-                document.getElementById('podiumSection').style.display = 'block';
-                renderPodium(users.slice(0, 3));
+            // Sort users by activity for activity podium
+            const activitySorted = [...users].sort((a, b) => {
+                const aActivity = (parseInt(a.user_bought_count) || 0) + (parseInt(a.user_reserved_count) || 0);
+                const bActivity = (parseInt(b.user_bought_count) || 0) + (parseInt(b.user_reserved_count) || 0);
+                return bActivity - aActivity;
+            });
+
+            // Show activity podium for top 3 active users
+            if (activitySorted.length >= 3 && (parseInt(activitySorted[0].user_bought_count) || 0) + (parseInt(activitySorted[0].user_reserved_count) || 0) > 0) {
+                document.getElementById('activityPodiumSection').style.display = 'block';
+                renderActivityPodium(activitySorted.slice(0, 3));
             }
 
             // Show activity leaderboard (bought + reserved)
             document.getElementById('activityLeaderboard').style.display = 'block';
             renderActivityLeaderboard(users);
+
+            // Show podium for top 3 (by total presents added)
+            if (users.length >= 3) {
+                document.getElementById('podiumSection').style.display = 'block';
+                renderPodium(users.slice(0, 3));
+            }
 
             // Show full ranking
             document.getElementById('rankingList').style.display = 'block';
@@ -934,17 +957,17 @@
         }
 
         function renderActivityLeaderboard(users) {
-            // Sort by bought + reserved presents
+            // Sort by bought + reserved presents (by the user, not for them)
             const sortedUsers = [...users].sort((a, b) => {
-                const aActivity = (parseInt(a.bought_presents) || 0) + (parseInt(a.reserved_presents) || 0);
-                const bActivity = (parseInt(b.bought_presents) || 0) + (parseInt(b.reserved_presents) || 0);
+                const aActivity = (parseInt(a.user_bought_count) || 0) + (parseInt(a.user_reserved_count) || 0);
+                const bActivity = (parseInt(b.user_bought_count) || 0) + (parseInt(b.user_reserved_count) || 0);
                 return bActivity - aActivity;
             }).slice(0, 10); // Top 10
 
             const activityList = document.getElementById('activityList');
             activityList.innerHTML = sortedUsers.map((user, index) => {
-                const boughtCount = parseInt(user.bought_presents) || 0;
-                const reservedCount = parseInt(user.reserved_presents) || 0;
+                const boughtCount = parseInt(user.user_bought_count) || 0;
+                const reservedCount = parseInt(user.user_reserved_count) || 0;
                 const totalActivity = boughtCount + reservedCount;
 
                 if (totalActivity === 0) return ''; // Skip users with no activity
@@ -983,6 +1006,58 @@
             const emojis = ['😀', '😃', '😄', '😁', '😆', '😊', '😎', '🤓', '🥳', '😇', '🤗', '🤩', '😺', '😸', '😻', '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵'];
             const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % emojis.length;
             return emojis[index];
+        }
+
+        function renderActivityPodium(top3) {
+            const podium = document.getElementById('activityPodium');
+            const medals = ['🥇', '🥈', '🥉'];
+            const positions = ['first', 'second', 'third'];
+
+            podium.innerHTML = top3.map((user, index) => {
+                const boughtCount = parseInt(user.user_bought_count) || 0;
+                const reservedCount = parseInt(user.user_reserved_count) || 0;
+                const totalActivity = boughtCount + reservedCount;
+
+                const emojiSize = index === 0 ? '140px' : (index === 1 ? '110px' : '100px');
+                const emojiFontSize = index === 0 ? '4rem' : (index === 1 ? '3.5rem' : '3rem');
+                
+                const avatarHTML = user.profile_picture 
+                    ? `<img src="${user.profile_picture}" 
+                           alt="${user.username}" 
+                           class="podium-avatar"
+                           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                       <div class="podium-avatar-emoji podium-avatar" style="display: none; width: ${emojiSize}; height: ${emojiSize}; align-items: center; justify-content: center; font-size: ${emojiFontSize}; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%;">
+                           ${getEmojiAvatar(user.username)}
+                       </div>`
+                    : `<div class="podium-avatar-emoji podium-avatar" style="display: flex; width: ${emojiSize}; height: ${emojiSize}; align-items: center; justify-content: center; font-size: ${emojiFontSize}; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%;">
+                           ${getEmojiAvatar(user.username)}
+                       </div>`;
+                
+                return `
+                    <div class="podium-place ${positions[index]}" onclick="navigateToUserInRecipients('${user.username}')" style="cursor: pointer;">
+                        ${index === 0 ? '<div class="podium-crown">👑</div>' : ''}
+                        <div class="podium-rank">${medals[index]}</div>
+                        <div class="podium-avatar-container">
+                            ${avatarHTML}
+                        </div>
+                        <div class="podium-name">${user.username}</div>
+                        <div class="podium-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-fire" style="color: #FF6B6B;"></i>
+                                ${totalActivity} aktywność
+                            </div>
+                            <div class="stat-item" style="font-size: 0.85em; color: #718096;">
+                                <i class="fas fa-check-circle" style="color: #4CAF50;"></i> ${boughtCount}
+                                <span style="margin: 0 4px;">•</span>
+                                <i class="fas fa-bookmark" style="color: #FF9800;"></i> ${reservedCount}
+                            </div>
+                        </div>
+                        <div class="podium-base">
+                            <div class="podium-position">#${index + 1}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderPodium(top3) {
