@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,7 @@
             transform: translateY(0) !important;
             visibility: visible !important;
         }
+
         .tab-bar-menu-overlay.show {
             opacity: 1 !important;
             visibility: visible !important;
@@ -29,7 +31,8 @@
         }
 
         /* Prevent overflow and scrollbars */
-        html, body {
+        html,
+        body {
             overflow-x: hidden;
             max-width: 100vw;
         }
@@ -252,7 +255,7 @@
             padding: 40px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
-        
+
         .podium-section h2 {
             color: white !important;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
@@ -289,6 +292,7 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -305,8 +309,15 @@
         }
 
         @keyframes bounce {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-10px); }
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-10px);
+            }
         }
 
         .podium-avatar-container {
@@ -425,7 +436,7 @@
             max-width: 1200px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
-        
+
         .ranking-list h3 {
             color: white !important;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
@@ -712,6 +723,7 @@
         }
     </style>
 </head>
+
 <body class="has-tab-bar">
     <!-- Background Overlay -->
     <div class="background-overlay"></div>
@@ -723,11 +735,12 @@
             <button class="hamburger-menu-btn navbar-hamburger" onclick="toggleSidebar()" aria-label="Menu">
                 <i class="fas fa-bars"></i>
             </button>
-            
+
             <div class="navbar-brand">
                 <div class="brand-container">
                     <div class="brand-logo-container">
-                        <img src="seba_logo.png" alt="Logo" class="brand-logo" style="width: 40px; height: 40px; border-radius: 8px;">
+                        <img src="seba_logo.png" alt="Logo" class="brand-logo"
+                            style="width: 40px; height: 40px; border-radius: 8px;">
                     </div>
                     <span class="brand-text">
                         <i class="fas fa-trophy me-2"></i>Ranking Użytkowników
@@ -784,11 +797,16 @@
     <div class="container">
         <div class="leaderboard-header">
             <!-- Christmas Countdown -->
-            <div class="christmas-countdown" id="christmasCountdown" style="text-align: center; margin-bottom: 0; padding: 12px 20px; background: url('seba.jpg') center center; background-size: cover; border-radius: 15px; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(244, 67, 54, 0.85); backdrop-filter: blur(5px);"></div>
-                <div style="position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: center; gap: 12px;">
+            <div class="christmas-countdown" id="christmasCountdown"
+                style="text-align: center; margin-bottom: 0; padding: 12px 20px; background: url('seba.jpg') center center; background-size: cover; border-radius: 15px; position: relative; overflow: hidden;">
+                <div
+                    style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(244, 67, 54, 0.85); backdrop-filter: blur(5px);">
+                </div>
+                <div
+                    style="position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: center; gap: 12px;">
                     <div style="font-size: 24px; line-height: 1;">🎄</div>
-                    <div style="font-size: 15px; font-weight: 600; color: white; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); line-height: 1.4;">
+                    <div
+                        style="font-size: 15px; font-weight: 600; color: white; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); line-height: 1.4;">
                         <span id="daysToChristmas">Ładowanie...</span>
                     </div>
                 </div>
@@ -807,17 +825,25 @@
             <div class="podium" id="podium">
                 <!-- Will be populated by JavaScript -->
             </div>
-            
+
             <!-- Call to Action - moved under podium -->
-            <div class="cta-section" style="margin-top: 40px; text-align: center; padding: 60px 40px; background: url('seba.jpg') center center; background-size: cover; border-radius: 20px; color: white; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(244, 67, 54, 0.7); backdrop-filter: blur(10px);"></div>
+            <div class="cta-section"
+                style="margin-top: 40px; text-align: center; padding: 60px 40px; background: url('seba.jpg') center center; background-size: cover; border-radius: 20px; color: white; position: relative; overflow: hidden;">
+                <div
+                    style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(244, 67, 54, 0.7); backdrop-filter: blur(10px);">
+                </div>
                 <div style="position: relative; z-index: 1;">
-                    <i class="fas fa-rocket" style="font-size: 48px; margin-bottom: 20px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.8)) drop-shadow(0 8px 24px rgba(0,0,0,0.6));"></i>
-                    <h3 style="margin-bottom: 15px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 4px 16px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5);">Dołącz do Rankingu!</h3>
-                    <p style="font-size: 18px; margin-bottom: 25px; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 4px 16px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5);">
+                    <i class="fas fa-rocket"
+                        style="font-size: 48px; margin-bottom: 20px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.8)) drop-shadow(0 8px 24px rgba(0,0,0,0.6));"></i>
+                    <h3
+                        style="margin-bottom: 15px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 4px 16px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5);">
+                        Dołącz do Rankingu!</h3>
+                    <p
+                        style="font-size: 18px; margin-bottom: 25px; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 4px 16px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5);">
                         Dodawaj prezenty, pomagaj innym i wspinaj się na szczyt leaderboardu
                     </p>
-                    <a href="/recipients.html" class="btn btn-light btn-lg" style="padding: 15px 40px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 8px 30px rgba(0,0,0,0.4);">
+                    <a href="/recipients.html" class="btn btn-light btn-lg"
+                        style="padding: 15px 40px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 8px 30px rgba(0,0,0,0.4);">
                         <i class="fas fa-gift me-2"></i>Dodaj Prezent
                     </a>
                 </div>
@@ -829,7 +855,8 @@
             <h2 class="text-center mb-4" style="color: #2d3748; font-weight: 700;">
                 <i class="fas fa-fire me-2"></i>Najbardziej Aktywni
             </h2>
-            <p style="text-align: center; color: #718096; margin-bottom: 30px;">Użytkownicy, którzy kupili i zarezerwowali najwięcej prezentów</p>
+            <p style="text-align: center; color: #718096; margin-bottom: 30px;">Użytkownicy, którzy kupili i
+                zarezerwowali najwięcej prezentów</p>
             <div class="podium" id="activityPodium">
                 <!-- Will be populated by JavaScript -->
             </div>
@@ -858,10 +885,12 @@
                 <h3>Brak aktywnych użytkowników</h3>
                 <p>Bądź pierwszym, który doda prezenty i pojawi się w rankingu!</p>
             </div>
-            
+
             <!-- Call to Action for Empty State -->
-            <div style="text-align: center; margin-top: 30px; padding: 40px; background: rgba(244, 67, 54, 0.7); backdrop-filter: blur(10px); border-radius: 20px;">
-                <a href="/recipients.html" class="btn btn-light btn-lg" style="padding: 15px 40px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            <div
+                style="text-align: center; margin-top: 30px; padding: 40px; background: rgba(244, 67, 54, 0.7); backdrop-filter: blur(10px); border-radius: 20px;">
+                <a href="/recipients.html" class="btn btn-light btn-lg"
+                    style="padding: 15px 40px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
                     <i class="fas fa-gift me-2"></i>Dodaj Pierwszy Prezent
                 </a>
             </div>
@@ -869,23 +898,23 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Sidebar Menu Script -->
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebarMenu');
             const overlay = document.getElementById('sidebarOverlay');
-            
+
             sidebar.classList.toggle('active');
             overlay.classList.toggle('active');
         }
 
         // Close sidebar when clicking on a link (except settings)
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const sidebarItems = document.querySelectorAll('.sidebar-item');
             sidebarItems.forEach(item => {
                 if (!item.getAttribute('onclick')?.includes('openSettingsModal')) {
-                    item.addEventListener('click', function(e) {
+                    item.addEventListener('click', function (e) {
                         if (this.getAttribute('href') !== '#') {
                             toggleSidebar();
                         }
@@ -906,7 +935,7 @@
                 .catch(() => window.location.href = '/');
         }
     </script>
-    
+
     <script>
         async function loadLeaderboard() {
             try {
@@ -1020,8 +1049,8 @@
 
                 const emojiSize = index === 0 ? '140px' : (index === 1 ? '110px' : '100px');
                 const emojiFontSize = index === 0 ? '4rem' : (index === 1 ? '3.5rem' : '3rem');
-                
-                const avatarHTML = user.profile_picture 
+
+                const avatarHTML = user.profile_picture
                     ? `<img src="${user.profile_picture}" 
                            alt="${user.username}" 
                            class="podium-avatar"
@@ -1032,7 +1061,7 @@
                     : `<div class="podium-avatar-emoji podium-avatar" style="display: flex; width: ${emojiSize}; height: ${emojiSize}; align-items: center; justify-content: center; font-size: ${emojiFontSize}; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%;">
                            ${getEmojiAvatar(user.username)}
                        </div>`;
-                
+
                 return `
                     <div class="podium-place ${positions[index]}" onclick="navigateToUserInRecipients('${user.username}')" style="cursor: pointer;">
                         ${index === 0 ? '<div class="podium-crown">👑</div>' : ''}
@@ -1068,8 +1097,8 @@
             podium.innerHTML = top3.map((user, index) => {
                 const emojiSize = index === 0 ? '140px' : (index === 1 ? '110px' : '100px');
                 const emojiFontSize = index === 0 ? '4rem' : (index === 1 ? '3.5rem' : '3rem');
-                
-                const avatarHTML = user.profile_picture 
+
+                const avatarHTML = user.profile_picture
                     ? `<img src="${user.profile_picture}" 
                            alt="${user.username}" 
                            class="podium-avatar"
@@ -1080,7 +1109,7 @@
                     : `<div class="podium-avatar-emoji podium-avatar" style="display: flex; width: ${emojiSize}; height: ${emojiSize}; align-items: center; justify-content: center; font-size: ${emojiFontSize}; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%;">
                            ${getEmojiAvatar(user.username)}
                        </div>`;
-                
+
                 return `
                     <div class="podium-place ${positions[index]}" onclick="navigateToUserInRecipients('${user.username}')" style="cursor: pointer;">
                         ${index === 0 ? '<div class="podium-crown">👑</div>' : ''}
@@ -1104,9 +1133,9 @@
         }
         function renderUsersList(users) {
             const usersList = document.getElementById('usersList');
-            
+
             usersList.innerHTML = users.map((user, index) => {
-                const avatarHTML = user.profile_picture 
+                const avatarHTML = user.profile_picture
                     ? `<img src="${user.profile_picture}" 
                            alt="${user.username}" 
                            class="user-avatar"
@@ -1117,7 +1146,7 @@
                     : `<div class="user-avatar-emoji user-avatar" style="display: flex; align-items: center; justify-content: center; font-size: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                            ${getEmojiAvatar(user.username)}
                        </div>`;
-                
+
                 return `
                     <div class="user-card" onclick="navigateToUserInRecipients('${user.username}')" style="cursor: pointer;">
                         <div class="user-rank">#${index + 1}</div>
@@ -1158,7 +1187,7 @@
             }
 
             const daysUntilChristmas = Math.ceil((christmas - now) / (1000 * 60 * 60 * 24));
-            
+
             const countdownElement = document.getElementById('daysToChristmas');
             if (countdownElement) {
                 countdownElement.innerHTML = `Do Świąt Bożego Narodzenia<br>zostało ${daysUntilChristmas} ${daysUntilChristmas === 1 ? 'dzień' : 'dni'}`;
@@ -1199,7 +1228,9 @@
         </div>
     </div>
 
-    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;"></div>
+    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;">
+    </div>
 
     <div class="tab-bar-menu-panel" id="tabBarMenuPanel">
         <div class="tab-bar-menu-header">
@@ -1226,12 +1257,14 @@
                 <i class="ri-bookmark-line"></i>
                 <span>Zarezerwowane Prezenty</span>
             </a>
-            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item"
+                onclick="localStorage.setItem('openEditTab', 'true');">
                 <i class="ri-edit-line"></i>
                 <span>Edytuj Moje Prezenty</span>
             </a>
             <div class="tab-bar-menu-divider"></div>
-            <a href="#" class="tab-bar-menu-item settings-item" onclick="alert('Funkcja ustawień będzie dostępna wkrótce!'); toggleTabBarMenu(); return false;">
+            <a href="#" class="tab-bar-menu-item settings-item"
+                onclick="alert('Funkcja ustawień będzie dostępna wkrótce!'); toggleTabBarMenu(); return false;">
                 <i class="ri-settings-3-line"></i>
                 <span>Ustawienia</span>
             </a>
@@ -1242,25 +1275,34 @@
         </div>
     </div>
 
-    <div class="tab-bar-notifications-panel" id="notificationsPanel" style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
-        <div class="tab-bar-notifications-header" style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
-            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
-            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()" style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
+    <div class="tab-bar-notifications-panel" id="notificationsPanel"
+        style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="tab-bar-notifications-header"
+            style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
+            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i
+                    class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
+            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()"
+                style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
                 <i class="ri-close-line"></i>
             </button>
         </div>
-        <div class="tab-bar-notifications-content" id="notificationsContent" style="flex: 1; overflow-y: auto; background: #ffffff;">
+        <div class="tab-bar-notifications-content" id="notificationsContent"
+            style="flex: 1; overflow-y: auto; background: #ffffff;">
             <div class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Ładowanie...</span>
                 </div>
             </div>
         </div>
-        <div class="tab-bar-notifications-view-all" style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
-            <a href="activity.html" style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie powiadomienia</a>
+        <div class="tab-bar-notifications-view-all"
+            style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
+            <a href="activity.html"
+                style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie
+                powiadomienia</a>
         </div>
     </div>
 
     <script src="tab-bar-functions.js"></script>
 </body>
+
 </html>
