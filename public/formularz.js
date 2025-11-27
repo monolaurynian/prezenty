@@ -511,9 +511,9 @@ function displayMyPresents(presents) {
         html += `
             <div class="list-group-item">
                 <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">${escapeHtml(present.title)}</h6>
-                        ${present.comments ? `<p class="mb-1 text-muted small">${escapeHtml(present.comments)}</p>` : ''}
+                    <div class="flex-grow-1" style="min-width: 0; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
+                        <h6 class="mb-1" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">${makeLinksClickable(escapeHtml(present.title))}</h6>
+                        ${present.comments ? `<p class="mb-1 text-muted small" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">${makeLinksClickable(escapeHtml(present.comments))}</p>` : ''}
                         <small class="text-muted">
                             <i class="fas fa-calendar me-1"></i>${formatDate(present.created_at)}
                         </small>
@@ -533,6 +533,46 @@ function displayMyPresents(presents) {
     
     html += '</div>';
     myPresentsList.innerHTML = html;
+}
+
+function makeLinksClickable(text) {
+    const urlPattern = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g;
+    const urls = [];
+    let match;
+    while ((match = urlPattern.exec(text)) !== null) {
+        urls.push(match[1]);
+    }
+
+    if (urls.length > 0) {
+        // Remove URLs from text
+        let textOnly = text;
+        urls.forEach(url => {
+            textOnly = textOnly.replace(url, '');
+        });
+
+        // Clean up extra whitespace
+        textOnly = textOnly.trim().replace(/\s+/g, ' ');
+
+        // Create links list with li style
+        const linksList = urls.map(url => {
+            let cleanUrl = url.replace(/[.,;:!?)]+$/, '');
+            let displayText = cleanUrl;
+            if (cleanUrl.length > 60) {
+                displayText = cleanUrl.substring(0, 57) + '...';
+            }
+            return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: flex-start;"><span style="margin-right: 4px; flex-shrink: 0;">🔗</span><a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2196F3; text-decoration: underline; word-break: break-all;">${escapeHtml(displayText)}</a></li>`;
+        }).join('');
+
+        const urlList = `<ul style="margin: 8px 0 8px 0; padding-left: 0; list-style: none;">${linksList}</ul>`;
+
+        if (textOnly) {
+            return textOnly + '<br>' + urlList;
+        } else {
+            return urlList;
+        }
+    }
+
+    return text;
 }
 
 function openEditPresentModal(id, title, comments, recipientId) {
