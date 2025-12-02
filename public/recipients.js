@@ -1934,11 +1934,11 @@ function generatePresentsList(presents) {
             <div class="accordion mt-3" id="${accordionId}">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}-collapse" aria-expanded="false" aria-controls="${accordionId}-collapse" style="background-color: #f8f9fa; color: #28a745; font-weight: 600;">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}-collapse" aria-expanded="true" aria-controls="${accordionId}-collapse" style="background-color: #f8f9fa; color: #28a745; font-weight: 600;">
                             <i class="fas fa-check-circle me-2" style="color: #28a745;"></i>Kupione (${sortedBought.length})
                         </button>
                     </h2>
-                    <div id="${accordionId}-collapse" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
+                    <div id="${accordionId}-collapse" class="accordion-collapse collapse show" data-bs-parent="#${accordionId}">
                         <div class="accordion-body p-0">
                             ${sortedBought.map((present, index) => generatePresentItem(present, index)).join('')}
                         </div>
