@@ -20,29 +20,60 @@ function handleScrollToPresentFromNotification() {
 function scrollToPresentById(presentId) {
     console.log('[Notification] Scrolling to present:', presentId);
 
-    // Find the present element
-    const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
+    // Function to find and scroll to present
+    const findAndScroll = () => {
+        // Find the present element
+        const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
 
-    if (presentElement) {
-        // Check if it's inside a collapsed accordion (identified user's presents)
-        const accordion = presentElement.closest('.accordion-collapse');
-        if (accordion && !accordion.classList.contains('show')) {
-            // Expand the accordion first
-            const accordionButton = document.querySelector(`[data-bs-target="#${accordion.id}"]`);
-            if (accordionButton) {
-                accordionButton.click();
-                // Wait for accordion to expand, then scroll
-                setTimeout(() => {
-                    scrollAndHighlight(presentElement);
-                }, 350); // Bootstrap accordion transition time
-                return;
+        if (presentElement) {
+            // Check if it's inside a collapsed accordion (identified user's presents)
+            const accordion = presentElement.closest('.accordion-collapse');
+            if (accordion && !accordion.classList.contains('show')) {
+                // Expand the accordion first
+                const accordionButton = document.querySelector(`[data-bs-target="#${accordion.id}"]`);
+                if (accordionButton) {
+                    accordionButton.click();
+                    // Wait for accordion to expand, then scroll
+                    setTimeout(() => {
+                        scrollAndHighlight(presentElement);
+                    }, 350); // Bootstrap accordion transition time
+                    return;
+                }
             }
-        }
 
-        // Scroll immediately if not in accordion or already expanded
-        scrollAndHighlight(presentElement);
-    } else {
-        console.warn('[Notification] Present element not found:', presentId);
+            // Check if it's inside a collapsed recipient card
+            const recipientCard = presentElement.closest('.recipient-card');
+            if (recipientCard) {
+                const collapseElement = recipientCard.querySelector('.collapse');
+                if (collapseElement && !collapseElement.classList.contains('show')) {
+                    // Expand the recipient card first
+                    const cardButton = recipientCard.querySelector('[data-bs-toggle="collapse"]');
+                    if (cardButton) {
+                        cardButton.click();
+                        // Wait for card to expand, then scroll
+                        setTimeout(() => {
+                            scrollAndHighlight(presentElement);
+                        }, 350);
+                        return;
+                    }
+                }
+            }
+
+            // Scroll immediately if not in accordion or already expanded
+            scrollAndHighlight(presentElement);
+        } else {
+            console.warn('[Notification] Present element not found:', presentId);
+        }
+    };
+
+    // Try immediately
+    findAndScroll();
+
+    // If not found, wait for data to load and try again
+    if (!document.querySelector(`.present-item[data-id="${presentId}"]`)) {
+        console.log('[Notification] Present not found yet, waiting for data to load...');
+        setTimeout(findAndScroll, 1000);
+        setTimeout(findAndScroll, 2000);
     }
 }
 

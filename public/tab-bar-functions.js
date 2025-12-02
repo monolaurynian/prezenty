@@ -179,13 +179,13 @@ function getNotificationMessage(notif) {
         case 'present_added':
             return `<strong>${actor}</strong> dodał(a) prezent "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
         case 'present_reserved':
-            return `<strong>${actor}</strong> zarezerwował(a) "${presentLink}"`;
+            return `<strong>${actor}</strong> zarezerwował(a) "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
         case 'present_unreserved':
-            return `<strong>${actor}</strong> anulował(a) rezerwację "${presentLink}"`;
+            return `<strong>${actor}</strong> anulował(a) rezerwację "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
         case 'present_checked':
-            return `<strong>${actor}</strong> oznaczył(a) jako kupione "${presentLink}"`;
+            return `<strong>${actor}</strong> oznaczył(a) jako kupione "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
         case 'present_unchecked':
-            return `<strong>${actor}</strong> odznaczył(a) "${presentLink}"`;
+            return `<strong>${actor}</strong> odznaczył(a) "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
         default:
             return `<strong>${actor}</strong> wykonał(a) akcję`;
     }
