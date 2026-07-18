@@ -543,6 +543,15 @@ app.get('/activity', (req, res) => {
     }
 });
 
+app.get('/ustawienia', (req, res) => {
+    // If user is not authenticated, redirect to login page
+    if (!req.session.userId) {
+        res.redirect('/');
+    } else {
+        res.sendFile(path.join(__dirname, 'public', 'ustawienia.html'));
+    }
+});
+
 app.get('/rezerwacje', (req, res) => {
     // If user is not authenticated, redirect to login page
     if (!req.session.userId) {

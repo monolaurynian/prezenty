@@ -651,13 +651,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                                 </div>
                                                 
                                                 <!-- Buttons in profile section -->
-                                                <div class="profile-buttons">
-                                                    <div class="mt-2 d-none d-md-block">
-                                                        <button class="btn btn-outline-primary btn-sm change-picture-btn" disabled>
-                                                            <i class="fas fa-camera me-1"></i>Zmień zdjęcie
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                                <div class="profile-buttons"></div>
                                             </div>
                                             <div class="col-lg-6 col-md-6">
                                                 <div class="mb-2 d-lg-none">
@@ -1295,13 +1289,6 @@ function displayRecipientsWithPresents(recipients, presents) {
                         <!-- Buttons in profile section -->
                         <div class="profile-buttons">
                             
-                            ${!isIdentifiedByOther ? `
-                                <div class="mt-2 d-none d-md-block">
-                                    <button class="btn btn-outline-primary btn-sm change-picture-btn" onclick="openChangePictureModal(${recipient.id})">
-                                        <i class="fas fa-camera me-1"></i>Zmień zdjęcie
-                                    </button>
-                                </div>
-                            ` : ''}
                             <div class="mt-2 d-none d-md-block">
                                 <button class="btn btn-outline-secondary btn-sm" onclick="shareFormularzLink('${escapeHtml(recipient.name)}')" title="Wyślij tej osobie link do formularza życzeń">
                                     <i class="fas fa-share-alt me-1"></i>Udostępnij formularz
@@ -1325,13 +1312,6 @@ function displayRecipientsWithPresents(recipients, presents) {
                                 <div class="mt-2">
                                     <button class="btn btn-outline-success btn-sm identify-btn" onclick="cancelIdentification(${recipient.id}, '${escapeHtml(recipient.name)}')">
                                         <i class="fas fa-check-circle me-1"></i>To jest Twój profil
-                                    </button>
-                                </div>
-                            ` : ''}
-                            ${!isIdentifiedByOther ? `
-                                <div class="mt-2 d-md-none">
-                                    <button class="btn btn-outline-primary btn-sm change-picture-btn-mobile" onclick="openChangePictureModal(${recipient.id})">
-                                        <i class="fas fa-camera me-1"></i>Zmień zdjęcie
                                     </button>
                                 </div>
                             ` : ''}

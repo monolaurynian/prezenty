@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ustawienia - Życzenia Prezentowe</title>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="theme-color" content="#F44336">
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="seba_logo.png">
+    <link rel="apple-touch-icon" href="seba_logo.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.deduped.min.css" rel="stylesheet">
+    <style>
+        html, body { overflow-x: hidden; max-width: 100vw; }
+        body {
+            background-image: url('seba.jpg') !important;
+            background-attachment: fixed !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+        }
+        .background-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px) saturate(180%);
+            -webkit-backdrop-filter: blur(10px) saturate(180%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border-radius: 16px;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .glass-card * { color: white; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+        .glass-card .form-control, .glass-card .form-select {
+            color: #212529; text-shadow: none;
+            background: rgba(255, 255, 255, 0.92);
+        }
+        .glass-card .btn { text-shadow: none; }
+        .section-title {
+            font-weight: 700; font-size: 17px;
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 4px;
+        }
+        .section-desc { font-size: 14px; opacity: 0.85; margin-bottom: 14px; }
+        .profile-pic {
+            width: 96px; height: 96px; border-radius: 50%;
+            object-fit: cover; border: 3px solid rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.2);
+            font-size: 44px; display: flex; align-items: center; justify-content: center;
+        }
+        .toast-container { z-index: 9999; }
+        #successToast, #errorToast, #successToast *, #errorToast * { text-shadow: none; }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+
+    <div class="container mt-4 mb-5" style="max-width: 640px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="/" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Powrót
+            </a>
+            <h5 class="mb-0 text-white" style="text-shadow: 0 2px 6px rgba(0,0,0,0.7);">
+                <i class="fas fa-cog me-2"></i>Ustawienia
+            </h5>
+        </div>
+
+        <!-- My profile -->
+        <div class="glass-card p-4" id="profileSection">
+            <div class="section-title"><i class="fas fa-user-circle"></i>Mój profil</div>
+            <div class="section-desc">Powiedz aplikacji, kim jesteś na liście osób. Dzięki temu nie zobaczysz spoilerów o swoich prezentach.</div>
+            <div id="profileContent">
+                <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-light"></div></div>
+            </div>
+        </div>
+
+        <!-- Add person -->
+        <div class="glass-card p-4" id="dodaj-osobe">
+            <div class="section-title"><i class="fas fa-user-plus"></i>Dodaj osobę</div>
+            <div class="section-desc">Dodaj kogoś do listy obdarowywanych (np. kogoś bez konta).</div>
+            <div class="d-flex gap-2 flex-wrap">
+                <input type="text" id="newPersonName" class="form-control" placeholder="Imię i nazwisko" style="max-width: 320px;">
+                <button class="btn btn-light fw-semibold" style="color:#212529;" onclick="addPerson()">
+                    <i class="fas fa-plus me-1"></i>Dodaj
+                </button>
+            </div>
+            <div id="addPersonMessage" class="alert mt-3 mb-0" style="display:none;"></div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="glass-card p-4">
+            <div class="section-title"><i class="fas fa-bell"></i>Powiadomienia</div>
+            <div class="section-desc">Dostawaj powiadomienia o nowych prezentach i rezerwacjach.</div>
+            <div id="notifContent">
+                <button class="btn btn-light fw-semibold" style="color:#212529;" id="enableNotifBtn" onclick="enableNotifications()">
+                    <i class="fas fa-bell me-1"></i>Włącz powiadomienia
+                </button>
+            </div>
+        </div>
+
+        <!-- Account -->
+        <div class="glass-card p-4">
+            <div class="section-title"><i class="fas fa-id-badge"></i>Konto</div>
+            <div class="section-desc">Zalogowano jako: <strong id="accountUsername">...</strong></div>
+            <button class="btn btn-outline-light" onclick="logout()">
+                <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
+            </button>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body"><i class="fas fa-check-circle me-2"></i><span id="successToastMessage"></span></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body"><i class="fas fa-exclamation-circle me-2"></i><span id="errorToastMessage"></span></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let myIdentification = null;
+
+        // Register service worker (needed for push notifications)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/auth')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.authenticated) { window.location.href = '/'; return; }
+                    document.getElementById('accountUsername').textContent = data.user.username;
+                    loadProfile();
+                    updateNotifSection();
+                })
+                .catch(() => { window.location.href = '/'; });
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : String(text);
+            return div.innerHTML;
+        }
+
+        function showToast(message, type) {
+            const el = document.getElementById(`${type}Toast`);
+            document.getElementById(`${type}ToastMessage`).textContent = message;
+            new bootstrap.Toast(el, { autohide: true, delay: type === 'error' ? 5000 : 3000 }).show();
+        }
+
+        // ===== My profile =====
+        function loadProfile() {
+            Promise.all([
+                fetch('/api/user/identification').then(r => r.json()),
+                fetch('/api/recipients').then(r => r.json())
+            ])
+                .then(([ident, recipients]) => {
+                    myIdentification = ident;
+                    renderProfile(ident, Array.isArray(recipients) ? recipients : (recipients.recipients || []));
+                })
+                .catch(() => {
+                    document.getElementById('profileContent').innerHTML =
+                        '<p class="mb-0">Nie udało się załadować profilu. <a href="#" onclick="loadProfile(); return false;" style="color:white;">Spróbuj ponownie</a></p>';
+                });
+        }
+
+        function renderProfile(ident, recipients) {
+            const content = document.getElementById('profileContent');
+
+            if (ident.isIdentified && ident.identifiedRecipient) {
+                const rec = ident.identifiedRecipient;
+                content.innerHTML = `
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="profile-pic" id="profilePicBox">
+                            <img src="/api/recipients/${rec.id}/profile-picture" alt=""
+                                 style="width:100%; height:100%; border-radius:50%; object-fit:cover;"
+                                 onerror="this.style.display='none'; this.parentElement.textContent='🎅';">
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold" style="font-size:18px;">${escapeHtml(rec.name)}</div>
+                            <div style="font-size:13px; opacity:0.85;">
+                                <i class="fas fa-eye-slash me-1"></i>Twoje prezenty są przed Tobą ukryte 🙈
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap mt-3">
+                        <label class="btn btn-light btn-sm fw-semibold" style="color:#212529;">
+                            <i class="fas fa-camera me-1"></i>Zmień zdjęcie
+                            <input type="file" accept="image/*" hidden onchange="uploadPicture(this, ${rec.id})">
+                        </label>
+                        <button class="btn btn-outline-light btn-sm" onclick="cancelIdentification(${rec.id})">
+                            <i class="fas fa-user-slash me-1"></i>To nie ja - anuluj
+                        </button>
+                    </div>`;
+                return;
+            }
+
+            // Not identified - offer the unclaimed recipients
+            const free = recipients.filter(r => !r.identified_by);
+            content.innerHTML = `
+                <p style="font-size:14px;">Nie jesteś jeszcze zidentyfikowany(-a). Wybierz siebie z listy:</p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <select id="identifySelect" class="form-select" style="max-width: 320px;">
+                        <option value="">Wybierz osobę...</option>
+                        ${free.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('')}
+                    </select>
+                    <button class="btn btn-light fw-semibold" style="color:#212529;" onclick="identifySelf()">
+                        <i class="fas fa-user-check me-1"></i>To jestem ja
+                    </button>
+                </div>
+                ${free.length === 0 ? '<p class="mt-2 mb-0" style="font-size:13px; opacity:0.85;">Brak wolnych osób - dodaj siebie w sekcji poniżej.</p>' : ''}`;
+        }
+
+        function identifySelf() {
+            const id = document.getElementById('identifySelect').value;
+            if (!id) { showToast('Wybierz osobę z listy', 'error'); return; }
+            fetch(`/api/recipients/${id}/identify`, { method: 'POST' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        showToast('Zidentyfikowano! Twoje prezenty będą przed Tobą ukryte.', 'success');
+                        try { localStorage.removeItem('recipientsCache'); } catch (e) {}
+                        loadProfile();
+                    } else {
+                        showToast(d.error || 'Nie udało się zidentyfikować', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+        }
+
+        function cancelIdentification(id) {
+            fetch(`/api/recipients/${id}/identify`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        showToast('Identyfikacja anulowana', 'success');
+                        try { localStorage.removeItem('recipientsCache'); } catch (e) {}
+                        loadProfile();
+                    } else {
+                        showToast(d.error || 'Nie udało się anulować', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+        }
+
+        function uploadPicture(input, recipientId) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { showToast('Wybierz plik graficzny', 'error'); return; }
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                fetch(`/api/recipients/${recipientId}/profile-picture`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ profile_picture: reader.result })
+                })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.success) {
+                            showToast('Zdjęcie zaktualizowane!', 'success');
+                            try { localStorage.removeItem('recipientsCache'); } catch (e) {}
+                            loadProfile();
+                        } else {
+                            showToast(d.error || 'Nie udało się zapisać zdjęcia', 'error');
+                        }
+                    })
+                    .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ===== Add person =====
+        function addPerson() {
+            const input = document.getElementById('newPersonName');
+            const msg = document.getElementById('addPersonMessage');
+            const name = input.value.trim();
+            msg.style.display = 'none';
+            if (!name) { showToast('Wpisz imię i nazwisko', 'error'); return; }
+
+            fetch('/api/recipients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            })
+                .then(r => r.json().then(data => ({ ok: r.ok, data })))
+                .then(({ ok, data }) => {
+                    if (ok && (data.success || data.id)) {
+                        showToast(`Dodano: ${name} 🎉`, 'success');
+                        input.value = '';
+                        try { localStorage.removeItem('recipientsCache'); } catch (e) {}
+                        loadProfile(); // refresh the identify dropdown
+                    } else {
+                        msg.className = 'alert alert-danger mt-3 mb-0';
+                        msg.textContent = data.error || 'Nie udało się dodać osoby';
+                        msg.style.display = 'block';
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+        }
+
+        // ===== Notifications =====
+        function updateNotifSection() {
+            const content = document.getElementById('notifContent');
+            if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+                content.innerHTML = '<p class="mb-0" style="font-size:14px;">Ta przeglądarka nie obsługuje powiadomień.</p>';
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                subscribeToPush(); // make sure subscription is registered
+                content.innerHTML = '<p class="mb-0" style="font-size:14px;"><i class="fas fa-check-circle me-1" style="color:#7CFC90;"></i>Powiadomienia są włączone na tym urządzeniu.</p>';
+            } else if (Notification.permission === 'denied') {
+                content.innerHTML = '<p class="mb-0" style="font-size:14px;"><i class="fas fa-bell-slash me-1"></i>Powiadomienia są zablokowane. Zmień to w ustawieniach przeglądarki.</p>';
+            }
+            // 'default' - leave the enable button as-is
+        }
+
+        function enableNotifications() {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    showToast('Powiadomienia włączone!', 'success');
+                    subscribeToPush();
+                }
+                updateNotifSection();
+            });
+        }
+
+        function subscribeToPush() {
+            fetch('/api/vapid-public-key')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.webPushAvailable) throw new Error('push unavailable');
+                    return navigator.serviceWorker.ready.then(reg =>
+                        reg.pushManager.getSubscription().then(existing =>
+                            existing || reg.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: urlBase64ToUint8Array(data.publicKey)
+                            })
+                        )
+                    );
+                })
+                .then(subscription => fetch('/api/notifications/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(subscription)
+                }))
+                .catch(err => console.warn('Push subscription failed:', err.message));
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+            return outputArray;
+        }
+
+        // ===== Account =====
+        function logout() {
+            fetch('/api/logout', { method: 'POST' })
+                .finally(() => { window.location.href = '/'; });
+        }
+    </script>
+</body>
+</html>

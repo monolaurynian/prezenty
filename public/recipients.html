@@ -762,44 +762,9 @@
     </div>
 
     <div class="container mt-4">
-        <!-- AWS-Style Action Cards -->
-        <div class="aws-action-section mb-4">
-            <div class="row g-3">
-                <div class="col-lg-4 col-md-4 col-4">
-                    <div class="card main-card compact-card aws-action-card" onclick="openAddPresentModal()"
-                        data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+K">
-                        <div class="card-body text-center d-flex flex-column justify-content-center">
-                            <div class="aws-action-icon mb-3">
-                                <i class="fas fa-gift"></i>
-                            </div>
-                            <h6 class="aws-action-title mb-0">Dodaj Prezent</h6>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-4 col-4">
-                    <div class="card main-card compact-card aws-action-card" onclick="openAddRecipientModal()"
-                        data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+P">
-                        <div class="card-body text-center d-flex flex-column justify-content-center">
-                            <div class="aws-action-icon mb-3">
-                                <i class="fas fa-user-plus"></i>
-                            </div>
-                            <h6 class="aws-action-title mb-0">Dodaj Osobę</h6>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-4 col-4">
-                    <div class="card main-card compact-card aws-action-card" onclick="openReservedPresentsModal()"
-                        data-bs-toggle="tooltip" data-bs-placement="top" title="Skrót: Ctrl+B">
-                        <div class="card-body text-center d-flex flex-column justify-content-center">
-                            <div class="aws-action-icon mb-3">
-                                <i class="fas fa-bookmark"></i>
-                            </div>
-                            <h6 class="aws-action-title mb-0">Rezerwacje</h6>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Action cards removed: adding presents lives in the formularz,
+             adding people in Ustawienia, reservations at /rezerwacje.
+             Keyboard shortcuts (Ctrl+K, Ctrl+P, Ctrl+B) still work. -->
 
         <!-- AWS-Style Main Content -->
         <div class="card main-card aws-main-content">
@@ -2157,8 +2122,7 @@
 
         function openSettingsModal() {
             toggleSidebar();
-            // Add settings modal functionality here
-            alert('Funkcja ustawień będzie dostępna wkrótce!');
+            window.location.href = '/ustawienia';
         }
     </script>
 
@@ -2397,7 +2361,7 @@
                 <span>Archiwum</span>
             </a>
             <!-- Settings -->
-            <a href="#" class="tab-bar-menu-item settings-item" onclick="alert('Funkcja ustawień będzie dostępna wkrótce!'); toggleTabBarMenu(); return false;">
+            <a href="ustawienia.html" class="tab-bar-menu-item settings-item">
                 <i class="ri-settings-3-line"></i>
                 <span>Ustawienia</span>
             </a>
