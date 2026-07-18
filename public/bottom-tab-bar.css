@@ -1,12 +1,14 @@
-/* Bottom Tab Bar - Solid Style */
+/* Bottom Tab Bar - Dark Glass Style (matches the app's glass design) */
 .bottom-tab-bar {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: #ffffff !important;
-    border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08) !important;
+    background: rgba(22, 28, 38, 0.75) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35) !important;
     z-index: 1000;
     padding: 8px 0 max(8px, env(safe-area-inset-bottom));
 }
@@ -29,13 +31,18 @@
     justify-content: center;
     flex: 1;
     text-decoration: none;
-    color: #666;
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 8px 4px;
     cursor: pointer;
     position: relative;
     min-width: 64px;
     max-width: 100px;
+}
+
+.tab-item:hover {
+    color: #ffffff;
 }
 
 /* Icon wrapper for badge positioning */
@@ -710,66 +717,66 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
     border: 2px solid rgba(255, 255, 255, 0.4) !important;
 }
 
-/* Icon specific colors - Inactive state with circles */
+/* Icon specific colors - brighter chips for the dark glass bar */
 .tab-item.home-tab i {
-    background: rgba(244, 67, 54, 0.1);
-    color: #F44336;
+    background: rgba(244, 67, 54, 0.22);
+    color: #FF8A80;
 }
 
 .tab-item.activity-tab i {
-    background: rgba(255, 152, 0, 0.1);
-    color: #FF9800;
+    background: rgba(255, 152, 0, 0.22);
+    color: #FFB74D;
 }
 
 .tab-item.leaderboard-tab i {
-    background: rgba(33, 150, 243, 0.1);
-    color: #2196F3;
+    background: rgba(33, 150, 243, 0.22);
+    color: #64B5F6;
 }
 
 .tab-item.form-tab i {
-    background: rgba(76, 175, 80, 0.1);
-    color: #4CAF50;
+    background: rgba(76, 175, 80, 0.22);
+    color: #81C784;
 }
 
-/* Icon specific colors when active with stronger circles */
+/* Icon specific colors when active - vivid on dark glass */
 .tab-item.active.home-tab i {
-    background: rgba(244, 67, 54, 0.15);
-    color: #F44336;
-    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3), 0 2px 6px rgba(244, 67, 54, 0.2);
+    background: rgba(244, 67, 54, 0.32);
+    color: #FF8A80;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4), 0 2px 6px rgba(244, 67, 54, 0.25);
 }
 
 .tab-item.active.home-tab::before {
-    background: #F44336;
+    background: #FF8A80;
 }
 
 .tab-item.active.activity-tab i {
-    background: rgba(255, 152, 0, 0.15);
-    color: #FF9800;
-    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3), 0 2px 6px rgba(255, 152, 0, 0.2);
+    background: rgba(255, 152, 0, 0.32);
+    color: #FFB74D;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4), 0 2px 6px rgba(255, 152, 0, 0.25);
 }
 
 .tab-item.active.activity-tab::before {
-    background: #FF9800;
+    background: #FFB74D;
 }
 
 .tab-item.active.leaderboard-tab i {
-    background: rgba(33, 150, 243, 0.15);
-    color: #2196F3;
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3), 0 2px 6px rgba(33, 150, 243, 0.2);
+    background: rgba(33, 150, 243, 0.32);
+    color: #64B5F6;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4), 0 2px 6px rgba(33, 150, 243, 0.25);
 }
 
 .tab-item.active.leaderboard-tab::before {
-    background: #2196F3;
+    background: #64B5F6;
 }
 
 .tab-item.active.form-tab i {
-    background: rgba(76, 175, 80, 0.15);
-    color: #4CAF50;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3), 0 2px 6px rgba(76, 175, 80, 0.2);
+    background: rgba(76, 175, 80, 0.32);
+    color: #81C784;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4), 0 2px 6px rgba(76, 175, 80, 0.25);
 }
 
 .tab-item.active.form-tab::before {
-    background: #4CAF50;
+    background: #81C784;
 }
 
 /* ===== Secondary quick-action tiles at the bottom of the menu sheet =====
