@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Statystyki - Prezentownik</title>
+    <title>Strona Główna - Prezentownik</title>
 
     <!-- Force cache refresh for users with old version -->
     <script>
@@ -135,7 +135,7 @@
                         <img src="seba_logo.png" alt="Logo" style="width: 40px; height: 40px; border-radius: 8px;">
                     </div>
                     <span class="brand-text">
-                        <i class="fas fa-chart-bar me-2"></i>Statystyki
+                        <i class="fas fa-home me-2"></i>Strona Główna
                     </span>
                 </div>
             </div>
@@ -179,32 +179,8 @@
             </div>
         </div>
 
-        <!-- My Profile Card -->
-        <div id="myProfileSection" class="stats-container" style="display: none;">
-            <div class="accordion" id="accordionProfile">
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseProfile" aria-expanded="true"
-                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600;">
-                            <i class="fas fa-user-circle me-2"></i>Mój Profil
-                        </button>
-                    </h2>
-                    <div id="collapseProfile" class="accordion-collapse collapse show"
-                        data-bs-parent="#accordionProfile">
-                        <div class="accordion-body" style="padding: 0;">
-                            <div id="myProfileCard">
-                                <div class="text-center py-5">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Ładowanie...</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- My Profile card removed - profile lives in Ustawienia,
+             own presents editing lives in the formularz edit tab -->
 
         <!-- Available Presents List -->
         <div id="availablePresentsSection" class="stats-container">
@@ -450,167 +426,9 @@
             document.getElementById('reservedProgressBar').style.width = `${reservedPercent}%`;
         }
 
-        function loadMyProfile() {
-            Promise.all([
-                fetch('/api/recipients-with-presents').then(r => r.json()),
-                fetch('/api/user/identification').then(r => r.json())
-            ])
-                .then(([data, identificationStatus]) => {
-                    loadMyProfileWithData(data.recipients, data.presents, identificationStatus);
-                })
-                .catch(error => console.error('Error loading profile:', error));
-        }
-
-        function loadMyProfileWithData(recipients, presents, identificationStatus) {
-            if (!identificationStatus.isIdentified) {
-                document.getElementById('myProfileSection').style.display = 'none';
-                return;
-            }
-
-            const identifiedRecipient = recipients.find(r => r.identified_by === identificationStatus.userId);
-
-            if (!identifiedRecipient) {
-                document.getElementById('myProfileSection').style.display = 'none';
-                return;
-            }
-
-            document.getElementById('myProfileSection').style.display = 'block';
-
-            const ownPresents = presents.filter(p =>
-                p.recipient_id === identifiedRecipient.id &&
-                p.created_by === identificationStatus.userId
-            );
-
-            renderMyProfile(identifiedRecipient, ownPresents);
-        }
-
-        function renderMyProfile(recipient, ownPresents) {
-            const container = document.getElementById('myProfileCard');
-
-            const avatarHTML = recipient.profile_picture
-                ? `<img src="/api/recipients/${recipient.id}/profile-picture" 
-                       alt="${escapeHtml(recipient.name)}" 
-                       style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
-                       onclick="openProfilePicturePreview(${recipient.id}, '${escapeHtml(recipient.name).replace(/'/g, "\\'")}', '/api/recipients/${recipient.id}/profile-picture')"
-                       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                   <div style="display: none; width: 80px; height: 80px; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                       ${getEmojiAvatar(recipient.name)}
-                   </div>`
-                : `<div style="display: flex; width: 80px; height: 80px; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                       ${getEmojiAvatar(recipient.name)}
-                   </div>`;
-
-            container.innerHTML = `
-                <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px;">
-                        ${avatarHTML}
-                        <h4 style="color: #2d3748; font-weight: 600; margin-top: 15px; margin-bottom: 8px;">${escapeHtml(recipient.name)}</h4>
-                        <p style="color: #718096; margin: 0;">
-                            <i class="fas fa-gift me-1"></i>${ownPresents.length} ${ownPresents.length === 1 ? 'prezent' : 'prezentów'}
-                        </p>
-                    </div>
-                    
-                    <div class="accordion" id="accordionOwnPresents">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOwnPresents" 
-                                    style="background-color: #cfe2ff; color: #084298; font-weight: 600;">
-                                    <i class="fas fa-gift me-2"></i>
-                                    Twoje prezenty (${ownPresents.length}) - kliknij aby edytować
-                                </button>
-                            </h2>
-                            <div id="collapseOwnPresents" class="accordion-collapse collapse">
-                                <div class="accordion-body" style="background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%);">
-                                    <div class="alert alert-info mb-3" style="border-left: 4px solid #0d6efd;">
-                                        <strong>🎁 Niespodzianka!</strong><br>
-                                        Nie możesz zobaczyć które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki!
-                                    </div>
-                                    ${ownPresents.length > 0 ? `
-                                        <div class="fw-bold mb-2"><i class="fas fa-list me-1"></i>Twoje dodane prezenty:</div>
-                                        <ul class="list-group">
-                                            ${ownPresents.map(p => `
-                                                <li class="list-group-item">
-                                                    <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
-                                                        <div class="flex-grow-1" style="min-width: 0; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
-                                                            <div class="fw-semibold" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">${makeLinksClickable(escapeHtml(p.title))}</div>
-                                                            ${p.comments ? `<div class="text-muted small mt-1" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;"><i class="fas fa-info-circle me-1"></i>${makeLinksClickable(escapeHtml(p.comments))}</div>` : ''}
-                                                        </div>
-                                                        <div class="d-flex gap-2">
-                                                            <button class="btn btn-sm btn-primary edit-present-btn-profile" style="min-width:50px;" 
-                                                                data-present-id="${p.id}"
-                                                                data-present-title="${escapeHtml(p.title)}"
-                                                                data-recipient-id="${p.recipient_id}"
-                                                                data-present-comments="${escapeHtml(p.comments || '')}">
-                                                                <i class="fas fa-edit"></i>
-                                                            </button>
-                                                            <button class="btn btn-sm btn-danger delete-present-btn-profile" style="min-width:50px;" 
-                                                                data-present-id="${p.id}"
-                                                                data-present-title="${escapeHtml(p.title)}">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            `).join('')}
-                                        </ul>
-                                    ` : '<p class="text-muted mb-0">Nie dodałeś jeszcze żadnych prezentów.</p>'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Event delegation for edit and delete buttons in profile
-        document.addEventListener('click', function (e) {
-            // Edit button
-            if (e.target.closest('.edit-present-btn-profile')) {
-                const btn = e.target.closest('.edit-present-btn-profile');
-                const presentId = btn.dataset.presentId;
-                const title = btn.dataset.presentTitle;
-                const recipientId = btn.dataset.recipientId;
-                const comments = btn.dataset.presentComments;
-
-                // Use the editPresent function from recipients.js if available
-                if (typeof editPresent === 'function') {
-                    editPresent(presentId, title, recipientId, comments);
-                } else {
-                    // Fallback: redirect to formularz with edit parameter
-                    window.location.href = `formularz.html?edit=${presentId}`;
-                }
-            }
-
-            // Delete button
-            if (e.target.closest('.delete-present-btn-profile')) {
-                const btn = e.target.closest('.delete-present-btn-profile');
-                const presentId = btn.dataset.presentId;
-                const title = btn.dataset.presentTitle;
-
-                if (!confirm(`Czy na pewno chcesz usunąć prezent "${title}"?`)) {
-                    return;
-                }
-
-                fetch(`/api/presents/${presentId}`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Reload profile to show updated list
-                            loadMyProfile();
-                            loadStats();
-                        } else {
-                            alert('Błąd: ' + (data.error || 'Nie udało się usunąć prezentu'));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Wystąpił błąd podczas usuwania prezentu');
-                    });
-            }
-        });
+        // Profile card removed from homepage - kept as a no-op so shared
+        // data-loading code that still calls it doesn't break
+        function loadMyProfileWithData() { /* profile lives in /ustawienia now */ }
 
         function loadAvailablePresents() {
             Promise.all([
