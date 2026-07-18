@@ -1,14 +1,18 @@
-/* Bottom Tab Bar - White Glass Style (frosted, background shows through) */
+/* Bottom Tab Bar - Glass Card Style
+   Exactly matches the present-list cards (rgba 0.15 + blur + white border),
+   so the bar reads as part of the same design system and white text with
+   dark shadow stays readable over any background */
 .bottom-tab-bar {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.82) !important;
-    backdrop-filter: blur(16px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.6) !important;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.18) !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(10px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-bottom: none !important;
+    box-shadow: 0 -8px 32px 0 rgba(0, 0, 0, 0.37) !important;
     /* Rounded top corners - matches the menu/notification sheets (20px) */
     border-radius: 20px 20px 0 0;
     z-index: 1000;
@@ -33,7 +37,7 @@
     justify-content: center;
     flex: 1;
     text-decoration: none;
-    color: #4a5568;
+    color: rgba(255, 255, 255, 0.92);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 8px 4px;
     cursor: pointer;
@@ -43,7 +47,7 @@
 }
 
 .tab-item:hover {
-    color: #2d3748;
+    color: #ffffff;
 }
 
 /* Icon wrapper for badge positioning */
@@ -115,12 +119,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #3f4652;
+    color: rgba(255, 255, 255, 0.92);
     font-variant-numeric: tabular-nums;
     -webkit-font-smoothing: antialiased;
-    /* Soft white halo: keeps labels readable when a busy part of the
-       photo shows through the frosted bar */
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9), 0 0 6px rgba(255, 255, 255, 0.7);
+    /* Dark shadow like the card text - readable over any background */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .tab-item.active {
@@ -132,10 +135,10 @@
     font-weight: 700 !important;
 }
 
-.tab-item.active.home-tab span { color: #F44336; }
-.tab-item.active.activity-tab span { color: #FF9800; }
-.tab-item.active.leaderboard-tab span { color: #2196F3; }
-.tab-item.active.form-tab span { color: #4CAF50; }
+.tab-item.active.home-tab span { color: #FF8A80; }
+.tab-item.active.activity-tab span { color: #FFB74D; }
+.tab-item.active.leaderboard-tab span { color: #64B5F6; }
+.tab-item.active.form-tab span { color: #81C784; }
 
 /* Active indicator line */
 .tab-item::before {
@@ -735,66 +738,66 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
     border: 2px solid rgba(255, 255, 255, 0.4) !important;
 }
 
-/* Icon specific colors - saturated chips for the white glass bar */
+/* Icon specific colors - bright chips readable on the glass bar */
 .tab-item.home-tab i {
-    background: rgba(244, 67, 54, 0.12);
-    color: #F44336;
+    background: rgba(244, 67, 54, 0.25);
+    color: #FF8A80;
 }
 
 .tab-item.activity-tab i {
-    background: rgba(255, 152, 0, 0.12);
-    color: #FF9800;
+    background: rgba(255, 152, 0, 0.25);
+    color: #FFB74D;
 }
 
 .tab-item.leaderboard-tab i {
-    background: rgba(33, 150, 243, 0.12);
-    color: #2196F3;
+    background: rgba(33, 150, 243, 0.25);
+    color: #64B5F6;
 }
 
 .tab-item.form-tab i {
-    background: rgba(76, 175, 80, 0.12);
-    color: #4CAF50;
+    background: rgba(76, 175, 80, 0.25);
+    color: #81C784;
 }
 
-/* Icon specific colors when active - stronger chips on white glass */
+/* Icon specific colors when active - vivid chips on the glass bar */
 .tab-item.active.home-tab i {
-    background: rgba(244, 67, 54, 0.18);
-    color: #F44336;
-    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3), 0 2px 6px rgba(244, 67, 54, 0.2);
+    background: rgba(244, 67, 54, 0.35);
+    color: #FF8A80;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4), 0 2px 6px rgba(244, 67, 54, 0.25);
 }
 
 .tab-item.active.home-tab::before {
-    background: #F44336;
+    background: #FF8A80;
 }
 
 .tab-item.active.activity-tab i {
-    background: rgba(255, 152, 0, 0.18);
-    color: #FF9800;
-    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3), 0 2px 6px rgba(255, 152, 0, 0.2);
+    background: rgba(255, 152, 0, 0.35);
+    color: #FFB74D;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4), 0 2px 6px rgba(255, 152, 0, 0.25);
 }
 
 .tab-item.active.activity-tab::before {
-    background: #FF9800;
+    background: #FFB74D;
 }
 
 .tab-item.active.leaderboard-tab i {
-    background: rgba(33, 150, 243, 0.18);
-    color: #2196F3;
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3), 0 2px 6px rgba(33, 150, 243, 0.2);
+    background: rgba(33, 150, 243, 0.35);
+    color: #64B5F6;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4), 0 2px 6px rgba(33, 150, 243, 0.25);
 }
 
 .tab-item.active.leaderboard-tab::before {
-    background: #2196F3;
+    background: #64B5F6;
 }
 
 .tab-item.active.form-tab i {
-    background: rgba(76, 175, 80, 0.18);
-    color: #4CAF50;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3), 0 2px 6px rgba(76, 175, 80, 0.2);
+    background: rgba(76, 175, 80, 0.35);
+    color: #81C784;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4), 0 2px 6px rgba(76, 175, 80, 0.25);
 }
 
 .tab-item.active.form-tab::before {
-    background: #4CAF50;
+    background: #81C784;
 }
 
 /* ===== Secondary quick-action tiles at the bottom of the menu sheet =====
