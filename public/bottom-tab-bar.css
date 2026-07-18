@@ -9,7 +9,6 @@
     bottom: max(12px, env(safe-area-inset-bottom));
     left: 12px;
     right: 12px;
-    max-width: 600px;
     margin: 0 auto;
     /* Nearly opaque so text contrast is stable regardless of what
        scrolls behind the floating bar */
@@ -28,11 +27,33 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
-    max-width: 600px;
+    max-width: 100%;
     margin: 0 auto;
     position: relative;
     padding: 0 16px;
     height: 64px;
+}
+
+/* Dock width tracks the content container widths (Bootstrap breakpoints
+   minus gutters), so the bar and the cards align on every screen size */
+@media (min-width: 576px) {
+    .bottom-tab-bar { max-width: 512px; }
+}
+
+@media (min-width: 768px) {
+    .bottom-tab-bar { max-width: 692px; }
+}
+
+@media (min-width: 992px) {
+    .bottom-tab-bar { max-width: 932px; }
+}
+
+@media (min-width: 1200px) {
+    .bottom-tab-bar { max-width: 1112px; }
+}
+
+@media (min-width: 1400px) {
+    .bottom-tab-bar { max-width: 1292px; }
 }
 
 .tab-item {
