@@ -9,6 +9,8 @@
     -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
     border-top: 1px solid rgba(255, 255, 255, 0.6) !important;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.18) !important;
+    /* Rounded top corners - matches the menu/notification sheets (20px) */
+    border-radius: 20px 20px 0 0;
     z-index: 1000;
     padding: 8px 0 max(8px, env(safe-area-inset-bottom));
 }
