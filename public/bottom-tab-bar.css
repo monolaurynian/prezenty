@@ -771,3 +771,25 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
 .tab-item.active.form-tab::before {
     background: #4CAF50;
 }
+
+/* ===== "Więcej" collapsible section in the tab bar menu ===== */
+.tab-bar-more-toggle {
+    display: flex;
+    align-items: center;
+}
+
+.tab-bar-more-toggle .more-chevron {
+    margin-left: auto;
+    transition: transform 0.25s ease;
+    color: #8e8e93;
+}
+
+.tab-bar-more-toggle.open .more-chevron {
+    transform: rotate(180deg);
+}
+
+.tab-bar-more-section {
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
+    margin: 0 8px;
+}

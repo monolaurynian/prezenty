@@ -12,6 +12,24 @@ function toggleTabBarMenu() {
     
     overlay.classList.toggle('show');
     panel.classList.toggle('show');
+
+    // Collapse the "Więcej" section whenever the menu is (re)opened,
+    // so the sheet always starts compact with primary items in thumb reach
+    if (panel.classList.contains('show')) {
+        const moreSection = panel.querySelector('.tab-bar-more-section');
+        const moreToggle = panel.querySelector('.tab-bar-more-toggle');
+        if (moreSection) moreSection.style.display = 'none';
+        if (moreToggle) moreToggle.classList.remove('open');
+    }
+}
+
+// Expand/collapse the "Więcej" (more) section in the tab bar menu
+function toggleTabBarMoreSection(toggleEl) {
+    const section = toggleEl.nextElementSibling;
+    if (!section) return;
+    const isOpen = section.style.display !== 'none';
+    section.style.display = isOpen ? 'none' : 'block';
+    toggleEl.classList.toggle('open', !isOpen);
 }
 
 // Toggle notifications panel

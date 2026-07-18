@@ -36,7 +36,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="styles.deduped.min.css" rel="stylesheet">
     <link href="aws-design.css?v=3" rel="stylesheet">
-    <link href="bottom-tab-bar.css?v=15" rel="stylesheet">
+    <link href="bottom-tab-bar.css?v=16" rel="stylesheet">
     <link href="filters.css?v=6" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
@@ -2327,50 +2327,44 @@
             </button>
         </div>
         <div class="tab-bar-menu-content">
-            
-            <div class="tab-bar-menu-divider"></div>
-            
-            <!-- Add Person -->
-            <a href="#" class="tab-bar-menu-item add-person-item" onclick="openAddRecipientModal(); toggleTabBarMenu(); return false;">
-                <i class="ri-user-add-line"></i>
-                <span>Dodaj Osobę</span>
-            </a>
-            
-            <!-- Add Present -->
+            <!-- Primary actions - kept in easy thumb reach -->
             <a href="#" class="tab-bar-menu-item add-present-item" onclick="openAddPresentModal(); toggleTabBarMenu(); return false;">
                 <i class="ri-gift-line"></i>
                 <span>Dodaj Prezent</span>
             </a>
-            
-            <!-- Reserved Presents -->
             <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
                 <i class="ri-bookmark-line"></i>
                 <span>Zarezerwowane Prezenty</span>
             </a>
-            
-            <!-- Edit My Presents -->
-            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
-                <i class="ri-edit-line"></i>
-                <span>Edytuj Moje Prezenty</span>
-            </a>
-            
             <div class="tab-bar-menu-divider"></div>
-            
-            <a href="archiwum.html" class="tab-bar-menu-item">
-                <i class="ri-archive-line"></i>
-                <span>Archiwum</span>
+            <!-- Rarely used items live under "Więcej" -->
+            <a href="#" class="tab-bar-menu-item tab-bar-more-toggle" onclick="toggleTabBarMoreSection(this); return false;">
+                <i class="ri-more-2-line"></i>
+                <span>Więcej</span>
+                <i class="ri-arrow-down-s-line more-chevron"></i>
             </a>
-            <!-- Settings -->
-            <a href="ustawienia.html" class="tab-bar-menu-item settings-item">
-                <i class="ri-settings-3-line"></i>
-                <span>Ustawienia</span>
-            </a>
-            
-            <!-- Logout -->
-            <a href="#" class="tab-bar-menu-item logout-item" onclick="logout(); return false;">
-                <i class="ri-logout-box-r-line"></i>
-                <span>Wyloguj</span>
-            </a>
+            <div class="tab-bar-more-section" style="display: none;">
+                <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
+                    <i class="ri-edit-line"></i>
+                    <span>Edytuj Moje Prezenty</span>
+                </a>
+                <a href="#" class="tab-bar-menu-item add-person-item" onclick="openAddRecipientModal(); toggleTabBarMenu(); return false;">
+                    <i class="ri-user-add-line"></i>
+                    <span>Dodaj Osobę</span>
+                </a>
+                <a href="archiwum.html" class="tab-bar-menu-item">
+                    <i class="ri-archive-line"></i>
+                    <span>Archiwum</span>
+                </a>
+                <a href="ustawienia.html" class="tab-bar-menu-item settings-item">
+                    <i class="ri-settings-3-line"></i>
+                    <span>Ustawienia</span>
+                </a>
+                <a href="#" class="tab-bar-menu-item logout-item" onclick="logout(); return false;">
+                    <i class="ri-logout-box-r-line"></i>
+                    <span>Wyloguj</span>
+                </a>
+            </div>
         </div>
     </div>
 
