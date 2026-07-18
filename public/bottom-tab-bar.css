@@ -87,8 +87,13 @@
 /* Icon wrapper for badge positioning */
 .tab-icon-wrapper {
     position: relative;
-    display: inline-block;
-    margin-bottom: 6px;
+    /* Flex (not inline-block) so no baseline gap sneaks in, and the same
+       bottom margin as bare icons - keeps all labels on one line */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2px;
+    height: 32px;
 }
 
 /* Remove double margin for icons inside wrapper */
