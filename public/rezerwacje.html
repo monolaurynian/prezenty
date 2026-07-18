@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zarezerwowane Prezenty - Życzenia Prezentowe</title>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="theme-color" content="#F44336">
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="seba_logo.png">
+    <link rel="apple-touch-icon" href="seba_logo.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.deduped.min.css" rel="stylesheet">
+    <style>
+        html, body { overflow-x: hidden; max-width: 100vw; }
+        body {
+            background-image: url('seba.jpg') !important;
+            background-attachment: fixed !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+        }
+        .background-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px) saturate(180%);
+            -webkit-backdrop-filter: blur(10px) saturate(180%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border-radius: 16px;
+            color: white;
+        }
+        .glass-card * { color: white; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+        .section-header {
+            font-weight: 700;
+            font-size: 17px;
+            margin: 18px 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .reserved-present {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            transition: opacity 0.3s ease;
+        }
+        .reserved-present.bought { opacity: 0.75; }
+        .reserved-present .for-whom { font-size: 13px; opacity: 0.85; }
+        .reserved-present .btn { text-shadow: none; }
+        .btn-buy {
+            background: #4CAF50; border: none; color: white; font-weight: 600;
+        }
+        .btn-buy:hover { background: #45a049; color: white; }
+        .btn-unbuy {
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white;
+        }
+        .btn-cancel-res {
+            background: transparent; border: 1px solid rgba(255,99,71,0.7); color: #ffb3a7;
+        }
+        .btn-cancel-res:hover { background: rgba(255,99,71,0.25); color: white; }
+        .toast-container { z-index: 9999; }
+        #successToast, #errorToast, #successToast *, #errorToast * { text-shadow: none; }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+
+    <div class="container mt-4 mb-5" style="max-width: 720px;">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <a href="/" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Powrót
+            </a>
+            <a href="/recipients.html" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-gifts me-1"></i>Wszystkie prezenty
+            </a>
+        </div>
+
+        <div class="glass-card p-4">
+            <h4 class="mb-1"><i class="fas fa-bookmark me-2" style="color: #FFB74D;"></i>Zarezerwowane Prezenty</h4>
+            <p class="mb-2" style="opacity: 0.85;">Prezenty, które zarezerwowałeś(-aś) dla innych.</p>
+
+            <div id="reservedContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-light" role="status">
+                        <span class="visually-hidden">Ładowanie...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body"><i class="fas fa-check-circle me-2"></i><span id="successToastMessage"></span></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body"><i class="fas fa-exclamation-circle me-2"></i><span id="errorToastMessage"></span></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentUserId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/auth')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.authenticated) { window.location.href = '/'; return; }
+                    currentUserId = data.user.id;
+                    loadReserved();
+                })
+                .catch(() => { window.location.href = '/'; });
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : String(text);
+            return div.innerHTML;
+        }
+
+        function showToast(message, type) {
+            const el = document.getElementById(`${type}Toast`);
+            document.getElementById(`${type}ToastMessage`).textContent = message;
+            new bootstrap.Toast(el, { autohide: true, delay: type === 'error' ? 5000 : 3000 }).show();
+        }
+
+        function loadReserved() {
+            fetch('/api/presents/all')
+                .then(r => r.json())
+                .then(presents => {
+                    const mine = presents.filter(p => p.reserved_by === currentUserId);
+                    render(mine);
+                })
+                .catch(() => {
+                    document.getElementById('reservedContent').innerHTML = `
+                        <div class="text-center py-4">
+                            <p>Nie udało się załadować rezerwacji.</p>
+                            <button class="btn btn-outline-light btn-sm" onclick="loadReserved()">
+                                <i class="fas fa-rotate-right me-1"></i>Spróbuj ponownie
+                            </button>
+                        </div>`;
+                });
+        }
+
+        function render(presents) {
+            const content = document.getElementById('reservedContent');
+
+            if (presents.length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-5">
+                        <div style="font-size: 48px;">🔖</div>
+                        <h5 class="mt-2">Nie masz żadnych rezerwacji</h5>
+                        <p style="opacity: 0.85;">Zarezerwuj prezenty na liście, żeby nikt Cię nie ubiegł!</p>
+                        <a href="/recipients.html" class="btn btn-light mt-2 fw-semibold" style="text-shadow: none; color: #212529;">
+                            <i class="fas fa-gifts me-1"></i>Przeglądaj prezenty
+                        </a>
+                    </div>`;
+                return;
+            }
+
+            const toBuy = presents.filter(p => !p.is_checked);
+            const bought = presents.filter(p => p.is_checked);
+
+            const presentHTML = (p) => `
+                <div class="reserved-present ${p.is_checked ? 'bought' : ''}" data-id="${p.id}">
+                    <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">${p.is_checked ? '<i class="fas fa-check-circle me-1" style="color:#7CFC90;"></i>' : ''}${escapeHtml(p.title)}</div>
+                            <div class="for-whom"><i class="fas fa-user me-1"></i>dla: ${escapeHtml(p.recipient_name || 'nieznana osoba')}</div>
+                            ${p.comments ? `<div style="font-size:13px; opacity:0.8;"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            ${p.is_checked
+                                ? `<button class="btn btn-sm btn-unbuy" onclick="setBought(${p.id}, false)"><i class="fas fa-rotate-left me-1"></i>Cofnij kupione</button>`
+                                : `<button class="btn btn-sm btn-buy" onclick="setBought(${p.id}, true)"><i class="fas fa-shopping-bag me-1"></i>Kupione</button>
+                                   <button class="btn btn-sm btn-cancel-res" onclick="cancelReservation(${p.id})"><i class="fas fa-xmark me-1"></i>Anuluj</button>`}
+                        </div>
+                    </div>
+                </div>`;
+
+            content.innerHTML = `
+                ${toBuy.length ? `<div class="section-header"><i class="fas fa-cart-shopping" style="color:#FFB74D;"></i>Do kupienia (${toBuy.length})</div>` : ''}
+                ${toBuy.map(presentHTML).join('')}
+                ${bought.length ? `<div class="section-header"><i class="fas fa-check-circle" style="color:#7CFC90;"></i>Kupione (${bought.length})</div>` : ''}
+                ${bought.map(presentHTML).join('')}`;
+        }
+
+        function setBought(id, isChecked) {
+            fetch(`/api/presents/${id}/check`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_checked: isChecked })
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        showToast(isChecked ? 'Oznaczono jako kupione 🛍️' : 'Cofnięto oznaczenie', 'success');
+                        loadReserved();
+                    } else {
+                        showToast(d.error || 'Nie udało się zapisać zmiany', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+        }
+
+        function cancelReservation(id) {
+            fetch(`/api/presents/${id}/reserve`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        showToast('Rezerwacja anulowana', 'success');
+                        loadReserved();
+                    } else {
+                        showToast(d.error || 'Nie udało się anulować rezerwacji', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+        }
+    </script>
+</body>
+</html>
