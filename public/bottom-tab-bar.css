@@ -101,10 +101,11 @@
 }
 
 .tab-item span {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
     font-size: 11px !important;
-    font-weight: 600 !important;
+    font-weight: 500 !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    letter-spacing: 0.2px;
+    letter-spacing: 0.3px;
     margin-top: 4px;
     text-align: center;
     line-height: 1.2;
@@ -112,11 +113,24 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: #6b7280;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
 }
 
 .tab-item.active {
     color: inherit;
 }
+
+/* Active label: heavier weight + the tab's accent color, iOS-style */
+.tab-item.active span {
+    font-weight: 700 !important;
+}
+
+.tab-item.active.home-tab span { color: #F44336; }
+.tab-item.active.activity-tab span { color: #FF9800; }
+.tab-item.active.leaderboard-tab span { color: #2196F3; }
+.tab-item.active.form-tab span { color: #4CAF50; }
 
 /* Active indicator line */
 .tab-item::before {
@@ -663,8 +677,8 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
     }
     
     .tab-item span {
-        font-size: 9px;
-        letter-spacing: 0;
+        font-size: 10px !important;
+        letter-spacing: 0.2px;
     }
     
     .tab-fab {
