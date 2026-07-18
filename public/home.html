@@ -50,6 +50,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styles.deduped.min.css">
     <link href="bottom-tab-bar.css?v=16" rel="stylesheet">
+    <link href="app-theme.css?v=1" rel="stylesheet">
     <style>
         body {
             background: url('seba.jpg') no-repeat center center fixed;
@@ -70,10 +71,9 @@
         }
 
         .stats-navbar {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+            /* Unified black-fade top bar (see app-theme.css) */
             padding: 1rem 0;
             margin-bottom: 2rem;
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
 
         .stats-navbar .container-fluid {
@@ -97,13 +97,16 @@
         }
 
         .stats-container {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
+            /* Dark glass card - unified app look */
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px) saturate(180%);
+            -webkit-backdrop-filter: blur(10px) saturate(180%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 20px;
             padding: 40px;
             margin: 20px auto;
             max-width: 1200px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
         .stats-container h3 {
@@ -142,18 +145,18 @@
     <div class="container">
         <!-- Cumulative Progress Bars -->
         <div id="cumulativeProgressSection" class="stats-container">
-            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
+            <h3 style="color: white; font-weight: 700; margin-bottom: 20px; text-align: center; text-shadow: 0 2px 6px rgba(0,0,0,0.6);">
                 <i class="fas fa-chart-line me-2"></i>Ogólny Postęp
             </h3>
             <!-- Buying Progress -->
             <div style="margin-bottom: 25px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
-                        <i class="fas fa-shopping-bag" style="color: #4CAF50; margin-right: 8px;"></i>Kupione Prezenty
+                    <label style="font-weight: 600; color: white; margin: 0; font-size: 16px; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">
+                        <i class="fas fa-shopping-bag" style="color: #7CDB8F; margin-right: 8px;"></i>Kupione Prezenty
                     </label>
-                    <span id="boughtStats" style="font-weight: 600; color: #4CAF50; font-size: 16px;">0/0</span>
+                    <span id="boughtStats" style="font-weight: 600; color: #7CDB8F; font-size: 16px; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">0/0</span>
                 </div>
-                <div style="background: #e0e0e0; border-radius: 10px; height: 14px; overflow: hidden;">
+                <div style="background: rgba(255, 255, 255, 0.25); border-radius: 10px; height: 14px; overflow: hidden;">
                     <div id="boughtProgressBar"
                         style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.5s ease;">
                     </div>
@@ -162,16 +165,16 @@
             <!-- Reserved vs Available Progress -->
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
-                        <i class="fas fa-bookmark" style="color: #FF9800; margin-right: 8px;"></i>Zarezerwowane Prezenty
+                    <label style="font-weight: 600; color: white; margin: 0; font-size: 16px; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">
+                        <i class="fas fa-bookmark" style="color: #FFB74D; margin-right: 8px;"></i>Zarezerwowane Prezenty
                     </label>
-                    <span id="reservedStats" style="font-weight: 600; color: #FF9800; font-size: 16px;">0/0</span>
+                    <span id="reservedStats" style="font-weight: 600; color: #FFB74D; font-size: 16px; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">0/0</span>
                 </div>
-                <div style="background: #e0e0e0; border-radius: 10px; height: 14px; overflow: hidden; display: flex;">
+                <div style="background: rgba(255, 255, 255, 0.25); border-radius: 10px; height: 14px; overflow: hidden; display: flex;">
                     <div id="reservedProgressBar"
                         style="background: linear-gradient(90deg, #FF9800, #F57C00); height: 100%; width: 0%; transition: width 0.5s ease;">
                     </div>
-                    <div id="availableProgressBar" style="background: #c0c0c0; height: 100%; flex: 1;"></div>
+                    <div id="availableProgressBar" style="background: transparent; height: 100%; flex: 1;"></div>
                 </div>
             </div>
         </div>
@@ -1114,10 +1117,6 @@
                     onclick="localStorage.setItem('openEditTab', 'true');">
                     <i class="ri-edit-line"></i>
                     <span>Edytuj Moje Prezenty</span>
-                </a>
-                <a href="ustawienia.html#dodaj-osobe" class="tab-bar-menu-item add-person-item">
-                    <i class="ri-user-add-line"></i>
-                    <span>Dodaj Osobę</span>
                 </a>
                 <a href="archiwum.html" class="tab-bar-menu-item">
                     <i class="ri-archive-line"></i>

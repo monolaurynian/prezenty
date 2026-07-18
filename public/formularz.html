@@ -16,6 +16,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.deduped.min.css">
     <link href="bottom-tab-bar.css?v=16" rel="stylesheet">
+    <link href="app-theme.css?v=1" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
         .tab-bar-notifications-panel.show {
@@ -129,9 +130,8 @@
             border-radius: 12px;
         }
 
-        /* Top menu container */
+        /* Top menu container - unified black-fade top bar (see app-theme.css) */
         .top-menu-container {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
             padding: 2rem 0;
             margin-bottom: 2rem;
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
@@ -722,10 +722,6 @@
                     onclick="localStorage.setItem('openEditTab', 'true');">
                     <i class="ri-edit-line"></i>
                     <span>Edytuj Moje Prezenty</span>
-                </a>
-                <a href="ustawienia.html#dodaj-osobe" class="tab-bar-menu-item add-person-item">
-                    <i class="ri-user-add-line"></i>
-                    <span>Dodaj Osobę</span>
                 </a>
                 <a href="archiwum.html" class="tab-bar-menu-item">
                     <i class="ri-archive-line"></i>

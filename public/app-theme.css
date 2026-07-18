@@ -1,0 +1,54 @@
+/* ============================================================
+   Prezenty shared theme - unified look for all subpages
+   Design language:
+   - seba.jpg fixed background with dark overlay
+   - black-fade top bar (no solid color navbars)
+   - dark glass cards (rgba 255,255,255,0.15 + blur) with white text
+   - red (#F44336) only as a card-header accent
+   ============================================================ */
+
+/* --- Contrast guards: never white icons/text on light buttons ---
+   Repeated class names raise specificity above the broad
+   ".page .card * { color: white !important }" rules used on some pages */
+.btn.btn-light,
+.btn.btn-light.btn-light *,
+.btn.btn-warning,
+.btn.btn-warning.btn-warning *,
+.btn.btn-white,
+.btn.btn-white.btn-white * {
+    color: #212529 !important;
+    text-shadow: none !important;
+}
+
+/* Bootstrap turns outline-light buttons white on hover/active -
+   make sure their content goes dark at the same time */
+.btn.btn-outline-light:hover,
+.btn.btn-outline-light.btn-outline-light:hover *,
+.btn.btn-outline-light:active,
+.btn.btn-outline-light.btn-outline-light:active *,
+.btn.btn-outline-light.active,
+.btn.btn-outline-light.btn-outline-light.active * {
+    color: #212529 !important;
+    text-shadow: none !important;
+}
+
+/* --- Unified top bar: black fade, like recipients/activity --- */
+.app-topbar,
+.stats-navbar,
+.leaderboard-navbar,
+.top-menu-container {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0)) !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* --- Unified glass card (for pages that want to opt in) --- */
+.glass-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border-radius: 16px;
+    color: white;
+}
