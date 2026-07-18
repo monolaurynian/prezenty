@@ -940,8 +940,13 @@
                 <span>Zarezerwowane Prezenty</span>
             </a>
             <div class="tab-bar-menu-divider"></div>
-            <!-- Rarely used items live under "Więcej" -->
-            <a href="#" class="tab-bar-menu-item tab-bar-more-toggle" onclick="toggleTabBarMoreSection(this); return false;">
+            <a href="ustawienia.html" class="tab-bar-menu-item settings-item">
+                <i class="ri-settings-3-line"></i>
+                <span>Ustawienia</span>
+            </a>
+            <!-- Rarely used items live under "Więcej" (inline toggle - works even with a stale cached JS file) -->
+            <a href="#" class="tab-bar-menu-item tab-bar-more-toggle"
+                onclick="var s=this.nextElementSibling;var o=s.style.display!=='none';s.style.display=o?'none':'block';this.classList.toggle('open',!o);return false;">
                 <i class="ri-more-2-line"></i>
                 <span>Więcej</span>
                 <i class="ri-arrow-down-s-line more-chevron"></i>
@@ -954,10 +959,6 @@
                 <a href="archiwum.html" class="tab-bar-menu-item">
                     <i class="ri-archive-line"></i>
                     <span>Archiwum</span>
-                </a>
-                <a href="ustawienia.html" class="tab-bar-menu-item settings-item">
-                    <i class="ri-settings-3-line"></i>
-                    <span>Ustawienia</span>
                 </a>
                 <a href="#" class="tab-bar-menu-item logout-item" onclick="logout(); return false;">
                     <i class="ri-logout-box-r-line"></i>
@@ -986,6 +987,6 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js"></script>
+    <script src="tab-bar-functions.js?v=2"></script>
 </body>
 </html>

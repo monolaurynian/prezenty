@@ -2932,13 +2932,27 @@ app.get('/api/archive/presents', requireAuth, async (req, res) => {
     try {
         await ensureArchiveTable();
         const [rows] = await pool.execute(`
-            SELECT title, recipient_name, comments, is_checked,
+            SELECT title, recipient_id, recipient_name, comments, is_checked,
                    reserved_by_username, created_by_username, created_at
             FROM presents_archive
             WHERE archive_year = ?
             ORDER BY recipient_name, title
         `, [year]);
-        res.json({ presents: rows });
+
+        // Spoiler protection: the identified recipient must not learn who
+        // reserved/bought their own presents - mask names server-side so
+        // they never even reach the browser
+        const identified = await getUserIdentification(req.session.userId);
+        const presents = rows.map(p => {
+            const isOwn = identified && p.recipient_id === identified.id;
+            const { recipient_id, ...rest } = p;
+            if (isOwn) {
+                return { ...rest, reserved_by_username: null, spoiler: true };
+            }
+            return rest;
+        });
+
+        res.json({ presents });
     } catch (err) {
         handleDbError(err, res, 'Błąd podczas pobierania archiwum');
     }

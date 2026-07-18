@@ -70,8 +70,19 @@
             border-radius: 10px;
             padding: 10px 14px;
             margin-bottom: 8px;
+            /* Long words and URLs must wrap instead of overflowing */
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            min-width: 0;
         }
         .archive-present .status { font-size: 13px; opacity: 0.85; }
+        /* Spoiler: blurred fake name so the recipient can't see who bought/reserved */
+        .spoiler-name {
+            filter: blur(5px);
+            user-select: none;
+            -webkit-user-select: none;
+            pointer-events: none;
+        }
         /* Modal is on white background - normal colors */
         .modal-content, .modal-content * { color: #212529; text-shadow: none; }
     </style>
@@ -242,15 +253,30 @@
                         </div>
                         ${p.comments ? `<div style="font-size:13px; opacity:0.8;">${escapeHtml(p.comments)}</div>` : ''}
                         <div class="status">
-                            ${p.is_checked
-                                ? `🛍️ Kupione${p.reserved_by_username ? ' przez: ' + escapeHtml(p.reserved_by_username) : ''}`
-                                : (p.reserved_by_username
-                                    ? `🔖 Zarezerwowane przez: ${escapeHtml(p.reserved_by_username)} (niekupione)`
-                                    : '⚪ Nikt nie zarezerwował')}
+                            ${statusLine(p)}
                         </div>
                     </div>
                 `).join('')}
             `).join('');
+        }
+
+        // Status line for one present. For the logged-in user's own presents
+        // the server sends spoiler=true and strips the name - we show a
+        // blurred placeholder instead (the blurred text is fake, not the real name).
+        function statusLine(p) {
+            const hiddenName = '<span class="spoiler-name">Tajny Mikołaj</span> 🙈';
+            if (p.is_checked) {
+                if (p.spoiler) return `🛍️ Kupione przez: ${hiddenName}`;
+                return `🛍️ Kupione${p.reserved_by_username ? ' przez: ' + escapeHtml(p.reserved_by_username) : ''}`;
+            }
+            if (p.spoiler) {
+                // Don't reveal whether anyone reserved it either
+                return `🔖 Status rezerwacji: ${hiddenName}`;
+            }
+            if (p.reserved_by_username) {
+                return `🔖 Zarezerwowane przez: ${escapeHtml(p.reserved_by_username)} (niekupione)`;
+            }
+            return '⚪ Nikt nie zarezerwował';
         }
 
         function showLoadError() {
