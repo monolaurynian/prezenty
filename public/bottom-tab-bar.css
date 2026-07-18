@@ -772,24 +772,43 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
     background: #4CAF50;
 }
 
-/* ===== "Więcej" collapsible section in the tab bar menu ===== */
-.tab-bar-more-toggle {
+/* ===== Secondary quick-action tiles at the bottom of the menu sheet =====
+   Compact icon tiles (like share-sheet quick actions) instead of an accordion */
+.tab-bar-menu-secondary {
     display: flex;
+    gap: 10px;
+    padding: 6px 16px 14px;
+}
+
+.tab-bar-menu-tile {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 8px 12px;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.05);
+    text-decoration: none;
+    color: #2d3748;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background 0.15s ease, transform 0.1s ease;
 }
 
-.tab-bar-more-toggle .more-chevron {
-    margin-left: auto;
-    transition: transform 0.25s ease;
-    color: #8e8e93;
+.tab-bar-menu-tile i {
+    font-size: 22px;
+    color: #4a5568;
 }
 
-.tab-bar-more-toggle.open .more-chevron {
-    transform: rotate(180deg);
+.tab-bar-menu-tile:hover,
+.tab-bar-menu-tile:active {
+    background: rgba(0, 0, 0, 0.1);
+    color: #2d3748;
+    transform: scale(0.98);
 }
 
-.tab-bar-more-section {
-    background: rgba(0, 0, 0, 0.04);
-    border-radius: 12px;
-    margin: 0 8px;
+.tab-bar-menu-tile.tile-logout i {
+    color: #ff3b30;
 }

@@ -15,7 +15,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.deduped.min.css">
-    <link href="bottom-tab-bar.css?v=16" rel="stylesheet">
+    <link href="bottom-tab-bar.css?v=17" rel="stylesheet">
     <link href="app-theme.css?v=1" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
@@ -710,29 +710,23 @@
                 <i class="ri-bookmark-line"></i>
                 <span>Zarezerwowane Prezenty</span>
             </a>
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item"
+                onclick="localStorage.setItem('openEditTab', 'true');">
+                <i class="ri-edit-line"></i>
+                <span>Edytuj Moje Prezenty</span>
+            </a>
             <div class="tab-bar-menu-divider"></div>
-            <a href="ustawienia.html" class="tab-bar-menu-item settings-item">
-                <i class="ri-settings-3-line"></i>
-                <span>Ustawienia</span>
-            </a>
-            <!-- Rarely used items live under "Więcej" (inline toggle - works even with a stale cached JS file) -->
-            <a href="#" class="tab-bar-menu-item tab-bar-more-toggle"
-                onclick="var s=this.nextElementSibling;var o=s.style.display!=='none';s.style.display=o?'none':'block';this.classList.toggle('open',!o);return false;">
-                <i class="ri-more-2-line"></i>
-                <span>Więcej</span>
-                <i class="ri-arrow-down-s-line more-chevron"></i>
-            </a>
-            <div class="tab-bar-more-section" style="display: none;">
-                <a href="formularz.html" class="tab-bar-menu-item edit-presents-item"
-                    onclick="localStorage.setItem('openEditTab', 'true');">
-                    <i class="ri-edit-line"></i>
-                    <span>Edytuj Moje Prezenty</span>
+            <!-- Secondary quick actions: compact tiles, share-sheet style -->
+            <div class="tab-bar-menu-secondary">
+                <a href="ustawienia.html" class="tab-bar-menu-tile">
+                    <i class="ri-settings-3-line"></i>
+                    <span>Ustawienia</span>
                 </a>
-                <a href="archiwum.html" class="tab-bar-menu-item">
+                <a href="archiwum.html" class="tab-bar-menu-tile">
                     <i class="ri-archive-line"></i>
                     <span>Archiwum</span>
                 </a>
-                <a href="#" class="tab-bar-menu-item logout-item" onclick="logout(); return false;">
+                <a href="#" class="tab-bar-menu-tile tile-logout" onclick="logout(); return false;">
                     <i class="ri-logout-box-r-line"></i>
                     <span>Wyloguj</span>
                 </a>
@@ -767,7 +761,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=2"></script>
+    <script src="tab-bar-functions.js?v=3"></script>
     
     <script>
         function logout() {
