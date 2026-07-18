@@ -4,19 +4,22 @@
    dark shadow stays readable over any background */
 .bottom-tab-bar {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    /* Floating dock: same inset as the content cards, so all rounded
+       surfaces share one consistent margin */
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: 12px;
+    right: 12px;
+    max-width: 600px;
+    margin: 0 auto;
     background: rgba(255, 255, 255, 0.15) !important;
     backdrop-filter: blur(10px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
     border: 2px solid rgba(255, 255, 255, 0.3) !important;
-    border-bottom: none !important;
-    box-shadow: 0 -8px 32px 0 rgba(0, 0, 0, 0.37) !important;
-    /* Rounded top corners - matches the menu/notification sheets (20px) */
-    border-radius: 20px 20px 0 0;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+    /* Fully rounded - same radius as the glass cards */
+    border-radius: 20px;
     z-index: 1000;
-    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    padding: 6px 0;
 }
 
 .tab-bar-container {
@@ -227,13 +230,14 @@
     flex: 1;
 }
 
-/* Add padding to body to prevent content from being hidden behind tab bar */
+/* Add padding to body to prevent content from being hidden behind tab bar
+   (floating dock: bar height + 12px bottom inset) */
 body.has-tab-bar {
-    padding-bottom: 80px;
+    padding-bottom: 104px;
 }
 
 body.has-tab-bar.expanded {
-    padding-bottom: 140px;
+    padding-bottom: 164px;
 }
 
 /* Hamburger Menu Button - Glass Morphism Style */
