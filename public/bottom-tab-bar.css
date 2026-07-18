@@ -166,15 +166,23 @@
     color: inherit;
 }
 
-/* Active: single app accent for icon + label (Apple uses one tint color) */
+/* Active: filled icon + label tinted in the tab's own color
+   (Apple structure, per-tab accent) */
 .tab-item.active span {
     font-weight: 600 !important;
-    color: #F44336;
 }
 
-.tab-item.active i {
-    color: #F44336;
-}
+.tab-item.active.home-tab i,
+.tab-item.active.home-tab span { color: #E53935; }
+
+.tab-item.active.activity-tab i,
+.tab-item.active.activity-tab span { color: #EF6C00; }
+
+.tab-item.active.leaderboard-tab i,
+.tab-item.active.leaderboard-tab span { color: #1E88E5; }
+
+.tab-item.active.form-tab i,
+.tab-item.active.form-tab span { color: #43A047; }
 
 /* No indicator line (Android pattern) - selection is shown by the
    filled icon + accent tint, the iOS way */
