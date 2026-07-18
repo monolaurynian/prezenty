@@ -1290,8 +1290,8 @@ function displayRecipientsWithPresents(recipients, presents) {
                         <div class="profile-buttons">
                             
                             <div class="mt-2 d-none d-md-block">
-                                <button class="btn btn-outline-secondary btn-sm" onclick="shareFormularzLink('${escapeHtml(recipient.name)}')" title="Wyślij tej osobie link do formularza życzeń">
-                                    <i class="fas fa-share-alt me-1"></i>Udostępnij formularz
+                                <button class="btn btn-outline-secondary btn-sm" style="max-width: 100%; white-space: normal;" onclick="shareFormularzLink('${escapeHtml(recipient.name)}')" title="Wyślij tej osobie link do formularza życzeń">
+                                    <i class="fas fa-share-alt me-1"></i>Udostępnij
                                 </button>
                             </div>
                         </div>
@@ -1316,8 +1316,8 @@ function displayRecipientsWithPresents(recipients, presents) {
                                 </div>
                             ` : ''}
                             <div class="mt-2 d-md-none">
-                                <button class="btn btn-outline-secondary btn-sm" onclick="shareFormularzLink('${escapeHtml(recipient.name)}')" title="Wyślij tej osobie link do formularza życzeń">
-                                    <i class="fas fa-share-alt me-1"></i>Udostępnij formularz
+                                <button class="btn btn-outline-secondary btn-sm" style="max-width: 100%; white-space: normal;" onclick="shareFormularzLink('${escapeHtml(recipient.name)}')" title="Wyślij tej osobie link do formularza życzeń">
+                                    <i class="fas fa-share-alt me-1"></i>Udostępnij
                                 </button>
                             </div>
                         </div>

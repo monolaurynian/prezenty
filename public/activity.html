@@ -435,6 +435,34 @@
         const itemsPerPage = 20;
         let totalNotifications = 0;
 
+        // Escape then turn plain URLs into real hyperlinks (inline, shortened)
+        function escapeHtmlText(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : String(text);
+            return div.innerHTML;
+        }
+
+        function linkifyEscaped(escapedText) {
+            return escapedText.replace(/(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g, (url) => {
+                const clean = url.replace(/[.,;:!?)]+$/, '');
+                const display = clean.length > 40 ? clean.substring(0, 37) + '...' : clean;
+                return `<a href="${clean}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" style="color: #64B5F6; text-decoration: underline; word-break: break-all;">${display}</a>`;
+            });
+        }
+
+        // Present title for a notification message. If the title contains a URL
+        // we render it as a real hyperlink; otherwise it links to the present.
+        function presentLinkHtml(data, color) {
+            const safeTitle = escapeHtmlText(data.presentTitle || 'prezent');
+            const linkified = linkifyEscaped(safeTitle);
+            if (linkified !== safeTitle) {
+                return `<strong>"${linkified}"</strong>`;
+            }
+            return data.presentId ?
+                `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: ${color}; text-decoration: underline;"><strong>"${safeTitle}"</strong></a>` :
+                `<strong>"${safeTitle}"</strong>`;
+        }
+
         // Notification type configuration
         const notificationConfig = {
             recipient_added: {
@@ -445,52 +473,32 @@
             present_added: {
                 icon: 'fa-gift',
                 color: '#2196F3',
-                getMessage: (data, actor) => {
-                    const presentLink = data.presentId ? 
-                        `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #2196F3; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
-                        `<strong>"${data.presentTitle}"</strong>`;
-                    return `<strong>${actor}</strong> dodał(a) prezent ${presentLink}${forRecipient(data)}${data.viaFormularz ? ' (przez formularz)' : ''}`;
-                }
+                getMessage: (data, actor) =>
+                    `<strong>${actor}</strong> dodał(a) prezent ${presentLinkHtml(data, '#2196F3')}${forRecipient(data)}${data.viaFormularz ? ' (przez formularz)' : ''}`
             },
             present_reserved: {
                 icon: 'fa-bookmark',
                 color: '#FF9800',
-                getMessage: (data, actor) => {
-                    const presentLink = data.presentId ? 
-                        `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #FF9800; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
-                        `<strong>"${data.presentTitle}"</strong>`;
-                    return `<strong>${actor}</strong> zarezerwował(a) prezent ${presentLink}${forRecipient(data)}`;
-                }
+                getMessage: (data, actor) =>
+                    `<strong>${actor}</strong> zarezerwował(a) prezent ${presentLinkHtml(data, '#FF9800')}${forRecipient(data)}`
             },
             present_unreserved: {
                 icon: 'fa-bookmark-slash',
                 color: '#9E9E9E',
-                getMessage: (data, actor) => {
-                    const presentLink = data.presentId ? 
-                        `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #9E9E9E; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
-                        `<strong>"${data.presentTitle}"</strong>`;
-                    return `<strong>${actor}</strong> anulował(a) rezerwację ${presentLink}${forRecipient(data)}`;
-                }
+                getMessage: (data, actor) =>
+                    `<strong>${actor}</strong> anulował(a) rezerwację ${presentLinkHtml(data, '#9E9E9E')}${forRecipient(data)}`
             },
             present_checked: {
                 icon: 'fa-check-circle',
                 color: '#4CAF50',
-                getMessage: (data, actor) => {
-                    const presentLink = data.presentId ? 
-                        `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #4CAF50; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
-                        `<strong>"${data.presentTitle}"</strong>`;
-                    return `<strong>${actor}</strong> oznaczył(a) jako kupione ${presentLink}${forRecipient(data)}`;
-                }
+                getMessage: (data, actor) =>
+                    `<strong>${actor}</strong> oznaczył(a) jako kupione ${presentLinkHtml(data, '#4CAF50')}${forRecipient(data)}`
             },
             present_unchecked: {
                 icon: 'fa-circle',
                 color: '#9E9E9E',
-                getMessage: (data, actor) => {
-                    const presentLink = data.presentId ? 
-                        `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #9E9E9E; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
-                        `<strong>"${data.presentTitle}"</strong>`;
-                    return `<strong>${actor}</strong> odznaczył(a) ${presentLink}${forRecipient(data)}`;
-                }
+                getMessage: (data, actor) =>
+                    `<strong>${actor}</strong> odznaczył(a) ${presentLinkHtml(data, '#9E9E9E')}${forRecipient(data)}`
             }
         };
 
