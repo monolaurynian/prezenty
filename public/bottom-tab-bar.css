@@ -11,11 +11,13 @@
     right: 12px;
     max-width: 600px;
     margin: 0 auto;
-    background: rgba(255, 255, 255, 0.15) !important;
-    backdrop-filter: blur(10px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
-    border: 2px solid rgba(255, 255, 255, 0.3) !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+    /* Nearly opaque so text contrast is stable regardless of what
+       scrolls behind the floating bar */
+    background: rgba(255, 255, 255, 0.88) !important;
+    backdrop-filter: blur(14px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.55) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
     /* Fully rounded - same radius as the glass cards */
     border-radius: 20px;
     z-index: 1000;
@@ -40,7 +42,7 @@
     justify-content: center;
     flex: 1;
     text-decoration: none;
-    color: rgba(255, 255, 255, 0.92);
+    color: #4a5568;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 8px 4px;
     cursor: pointer;
@@ -50,7 +52,7 @@
 }
 
 .tab-item:hover {
-    color: #ffffff;
+    color: #2d3748;
 }
 
 /* Icon wrapper for badge positioning */
@@ -122,11 +124,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: rgba(255, 255, 255, 0.92);
+    color: #3f4652;
     font-variant-numeric: tabular-nums;
     -webkit-font-smoothing: antialiased;
-    /* Dark shadow like the card text - readable over any background */
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    text-shadow: none;
 }
 
 .tab-item.active {
@@ -138,10 +139,10 @@
     font-weight: 700 !important;
 }
 
-.tab-item.active.home-tab span { color: #FF8A80; }
-.tab-item.active.activity-tab span { color: #FFB74D; }
-.tab-item.active.leaderboard-tab span { color: #64B5F6; }
-.tab-item.active.form-tab span { color: #81C784; }
+.tab-item.active.home-tab span { color: #E53935; }
+.tab-item.active.activity-tab span { color: #EF6C00; }
+.tab-item.active.leaderboard-tab span { color: #1E88E5; }
+.tab-item.active.form-tab span { color: #43A047; }
 
 /* Active indicator line */
 .tab-item::before {
@@ -742,66 +743,66 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
     border: 2px solid rgba(255, 255, 255, 0.4) !important;
 }
 
-/* Icon specific colors - bright chips readable on the glass bar */
+/* Icon specific colors - saturated chips on the light bar */
 .tab-item.home-tab i {
-    background: rgba(244, 67, 54, 0.25);
-    color: #FF8A80;
+    background: rgba(244, 67, 54, 0.12);
+    color: #E53935;
 }
 
 .tab-item.activity-tab i {
-    background: rgba(255, 152, 0, 0.25);
-    color: #FFB74D;
+    background: rgba(255, 152, 0, 0.12);
+    color: #EF6C00;
 }
 
 .tab-item.leaderboard-tab i {
-    background: rgba(33, 150, 243, 0.25);
-    color: #64B5F6;
+    background: rgba(33, 150, 243, 0.12);
+    color: #1E88E5;
 }
 
 .tab-item.form-tab i {
-    background: rgba(76, 175, 80, 0.25);
-    color: #81C784;
+    background: rgba(76, 175, 80, 0.12);
+    color: #43A047;
 }
 
-/* Icon specific colors when active - vivid chips on the glass bar */
+/* Icon specific colors when active - stronger chips on the light bar */
 .tab-item.active.home-tab i {
-    background: rgba(244, 67, 54, 0.35);
-    color: #FF8A80;
-    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4), 0 2px 6px rgba(244, 67, 54, 0.25);
+    background: rgba(244, 67, 54, 0.2);
+    color: #E53935;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3), 0 2px 6px rgba(244, 67, 54, 0.2);
 }
 
 .tab-item.active.home-tab::before {
-    background: #FF8A80;
+    background: #E53935;
 }
 
 .tab-item.active.activity-tab i {
-    background: rgba(255, 152, 0, 0.35);
-    color: #FFB74D;
-    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4), 0 2px 6px rgba(255, 152, 0, 0.25);
+    background: rgba(255, 152, 0, 0.2);
+    color: #EF6C00;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3), 0 2px 6px rgba(255, 152, 0, 0.2);
 }
 
 .tab-item.active.activity-tab::before {
-    background: #FFB74D;
+    background: #EF6C00;
 }
 
 .tab-item.active.leaderboard-tab i {
-    background: rgba(33, 150, 243, 0.35);
-    color: #64B5F6;
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4), 0 2px 6px rgba(33, 150, 243, 0.25);
+    background: rgba(33, 150, 243, 0.2);
+    color: #1E88E5;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3), 0 2px 6px rgba(33, 150, 243, 0.2);
 }
 
 .tab-item.active.leaderboard-tab::before {
-    background: #64B5F6;
+    background: #1E88E5;
 }
 
 .tab-item.active.form-tab i {
-    background: rgba(76, 175, 80, 0.35);
-    color: #81C784;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4), 0 2px 6px rgba(76, 175, 80, 0.25);
+    background: rgba(76, 175, 80, 0.2);
+    color: #43A047;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3), 0 2px 6px rgba(76, 175, 80, 0.2);
 }
 
 .tab-item.active.form-tab::before {
-    background: #81C784;
+    background: #43A047;
 }
 
 /* ===== Secondary quick-action tiles at the bottom of the menu sheet =====
