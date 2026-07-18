@@ -200,3 +200,12 @@
         padding: 0 5px;
     }
 }
+
+/* --- Alignment: below the desktop-sidebar breakpoint, containers are
+   full-width (minus the standard 12px gutters), matching the floating
+   dock's 12px inset so card and dock edges line up exactly --- */
+@media (max-width: 991.98px) {
+    .container {
+        max-width: 100% !important;
+    }
+}

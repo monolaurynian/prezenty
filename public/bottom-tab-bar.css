@@ -37,27 +37,9 @@
     height: 60px;
 }
 
-/* Dock width tracks the content container widths (Bootstrap breakpoints
-   minus gutters), so the bar and the cards align on every screen size */
-@media (min-width: 576px) {
-    .bottom-tab-bar { max-width: 512px; }
-}
-
-@media (min-width: 768px) {
-    .bottom-tab-bar { max-width: 692px; }
-}
-
-@media (min-width: 992px) {
-    .bottom-tab-bar { max-width: 932px; }
-}
-
-@media (min-width: 1200px) {
-    .bottom-tab-bar { max-width: 1112px; }
-}
-
-@media (min-width: 1400px) {
-    .bottom-tab-bar { max-width: 1292px; }
-}
+/* No width caps: the dock always spans the full width minus the same
+   12px inset the content cards use, so their edges align at every size.
+   (On screens >= 992px the dock is replaced by the desktop sidebar.) */
 
 .tab-item {
     display: flex;
