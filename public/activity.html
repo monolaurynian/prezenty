@@ -449,7 +449,7 @@
                     const presentLink = data.presentId ? 
                         `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #2196F3; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
                         `<strong>"${data.presentTitle}"</strong>`;
-                    return `<strong>${actor}</strong> dodał(a) prezent ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+                    return `<strong>${actor}</strong> dodał(a) prezent ${presentLink}${forRecipient(data)}${data.viaFormularz ? ' (przez formularz)' : ''}`;
                 }
             },
             present_reserved: {
@@ -459,7 +459,7 @@
                     const presentLink = data.presentId ? 
                         `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #FF9800; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
                         `<strong>"${data.presentTitle}"</strong>`;
-                    return `<strong>${actor}</strong> zarezerwował(a) prezent ${presentLink}`;
+                    return `<strong>${actor}</strong> zarezerwował(a) prezent ${presentLink}${forRecipient(data)}`;
                 }
             },
             present_unreserved: {
@@ -469,7 +469,7 @@
                     const presentLink = data.presentId ? 
                         `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #9E9E9E; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
                         `<strong>"${data.presentTitle}"</strong>`;
-                    return `<strong>${actor}</strong> anulował(a) rezerwację ${presentLink}`;
+                    return `<strong>${actor}</strong> anulował(a) rezerwację ${presentLink}${forRecipient(data)}`;
                 }
             },
             present_checked: {
@@ -479,7 +479,7 @@
                     const presentLink = data.presentId ? 
                         `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #4CAF50; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
                         `<strong>"${data.presentTitle}"</strong>`;
-                    return `<strong>${actor}</strong> oznaczył(a) jako kupione ${presentLink}`;
+                    return `<strong>${actor}</strong> oznaczył(a) jako kupione ${presentLink}${forRecipient(data)}`;
                 }
             },
             present_unchecked: {
@@ -489,10 +489,15 @@
                     const presentLink = data.presentId ? 
                         `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: #9E9E9E; text-decoration: underline;"><strong>"${data.presentTitle}"</strong></a>` : 
                         `<strong>"${data.presentTitle}"</strong>`;
-                    return `<strong>${actor}</strong> odznaczył(a) ${presentLink}`;
+                    return `<strong>${actor}</strong> odznaczył(a) ${presentLink}${forRecipient(data)}`;
                 }
             }
         };
+
+        // Shared helper: " dla <recipient>" suffix so it's always visible who the present is for
+        function forRecipient(data) {
+            return data.recipientName ? ` dla <strong>${data.recipientName}</strong>` : '';
+        }
 
         // Load notifications
         function loadNotifications(page = 1) {
@@ -546,6 +551,80 @@
                 });
         }
 
+        // --- Grouping helpers ---
+        function parseNotifData(n) {
+            if (typeof n.data === 'string') {
+                try { return JSON.parse(n.data); } catch (e) { return {}; }
+            }
+            return n.data || {};
+        }
+
+        function getDayKey(ts) {
+            const d = new Date(ts);
+            return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        }
+
+        function getDayLabel(ts) {
+            const d = new Date(ts);
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            if (getDayKey(d) === getDayKey(today)) return 'Dzisiaj';
+            if (getDayKey(d) === getDayKey(yesterday)) return 'Wczoraj';
+            return d.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        // Turns a flat notification list into: day headers, collapsed bursts
+        // (3+ presents added in a row by the same person for the same recipient)
+        // and regular single entries
+        function groupNotificationsForDisplay(notifications) {
+            const result = [];
+            let lastDayKey = null;
+            let i = 0;
+
+            while (i < notifications.length) {
+                const n = notifications[i];
+                const dayKey = getDayKey(n.created_at);
+                if (dayKey !== lastDayKey) {
+                    result.push({ dayHeader: getDayLabel(n.created_at) });
+                    lastDayKey = dayKey;
+                }
+
+                if (n.type === 'present_added') {
+                    const nData = parseNotifData(n);
+                    const burstItems = [n];
+                    let j = i + 1;
+                    while (j < notifications.length) {
+                        const m = notifications[j];
+                        if (m.type === 'present_added' &&
+                            (m.actor_username || '') === (n.actor_username || '') &&
+                            getDayKey(m.created_at) === dayKey &&
+                            parseNotifData(m).recipientId === nData.recipientId) {
+                            burstItems.push(m);
+                            j++;
+                        } else {
+                            break;
+                        }
+                    }
+                    if (burstItems.length >= 3) {
+                        result.push({
+                            burst: {
+                                actor: n.actor_username || 'Ktoś',
+                                recipientName: nData.recipientName || null,
+                                items: burstItems
+                            }
+                        });
+                        i = j;
+                        continue;
+                    }
+                }
+
+                result.push({ notification: n });
+                i++;
+            }
+            return result;
+        }
+
         // Display notifications on activity page
         function displayActivityNotifications(notifications) {
             console.log('[Activity] Displaying activity notifications...');
@@ -566,7 +645,40 @@
                 return;
             }
             
-            const html = notifications.map(notification => {
+            // Group notifications by day, and collapse bursts (several presents
+            // added by the same person for the same recipient in a row)
+            const grouped = groupNotificationsForDisplay(notifications);
+
+            const html = grouped.map(entry => {
+                if (entry.dayHeader) {
+                    return `
+                        <div class="activity-day-header" style="padding: 14px 16px 6px; font-weight: 700; font-size: 13px;
+                             text-transform: uppercase; letter-spacing: 0.5px; color: #8e8e93;">
+                            ${entry.dayHeader}
+                        </div>`;
+                }
+                if (entry.burst) {
+                    // Collapsed burst entry
+                    const b = entry.burst;
+                    const isUnread = b.items.some(n => !n.is_read);
+                    return `
+                        <div class="notification-item ${isUnread ? 'unread' : ''}">
+                            <div class="notification-icon" style="background-color: #2196F320; color: #2196F3;">
+                                <i class="fas fa-gifts"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-message">
+                                    <strong>${b.actor}</strong> dodał(a) <strong>${b.items.length} prezentów</strong>${b.recipientName ? ' dla <strong>' + b.recipientName + '</strong>' : ''}
+                                </div>
+                                <div class="notification-time">
+                                    <i class="fas fa-clock me-1"></i>${getTimeAgo(b.items[0].created_at)}
+                                </div>
+                            </div>
+                            ${isUnread ? '<div class="notification-unread-dot"></div>' : ''}
+                        </div>`;
+                }
+
+                const notification = entry.notification;
                 let config = notificationConfig[notification.type];
                 if (!config) {
                     console.warn('[Activity] Unknown notification type:', notification.type);
@@ -601,7 +713,7 @@
                         </div>
                         <div class="notification-content">
                             <div class="notification-message">
-                                ${config.getMessage(data, notification.actor_username)}
+                                ${config.getMessage(data, notification.actor_username || 'Ktoś')}
                             </div>
                             <div class="notification-time">
                                 <i class="fas fa-clock me-1"></i>${timeAgo}
@@ -827,13 +939,17 @@
                 <i class="ri-gift-line"></i>
                 <span>Dodaj Prezent</span>
             </a>
-            <a href="recipients.html" class="tab-bar-menu-item reserved-item">
+            <a href="recipients.html#reserved" class="tab-bar-menu-item reserved-item">
                 <i class="ri-bookmark-line"></i>
                 <span>Zarezerwowane Prezenty</span>
             </a>
             <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
                 <i class="ri-edit-line"></i>
                 <span>Edytuj Moje Prezenty</span>
+            </a>
+            <a href="archiwum.html" class="tab-bar-menu-item">
+                <i class="ri-archive-line"></i>
+                <span>Archiwum</span>
             </a>
             <div class="tab-bar-menu-divider"></div>
             <a href="#" class="tab-bar-menu-item settings-item" onclick="alert('Funkcja ustawień będzie dostępna wkrótce!'); toggleTabBarMenu(); return false;">

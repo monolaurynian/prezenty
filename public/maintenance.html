@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="refresh" content="60">
+    <title>Przerwa techniczna - Prezenty</title>
+    <style>
+        /* Self-contained styles: no external assets so the page always renders */
+        :root {
+            --ios-red: #ff3b30;
+            --ios-green: #34c759;
+            --ios-background: #f2f2f7;
+            --ios-card: #fff;
+            --ios-text: #000;
+            --ios-text-secondary: #8e8e93;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--ios-background);
+            color: var(--ios-text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: var(--ios-card);
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+        .icon { font-size: 64px; margin-bottom: 16px; }
+        h1 { font-size: 24px; margin-bottom: 12px; }
+        p { font-size: 16px; color: var(--ios-text-secondary); line-height: 1.5; margin-bottom: 8px; }
+        .note { font-size: 14px; margin-top: 20px; }
+        .spinner {
+            display: inline-block;
+            width: 18px; height: 18px;
+            border: 3px solid var(--ios-background);
+            border-top-color: var(--ios-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">🎄🔧</div>
+        <h1>Przerwa techniczna</h1>
+        <p>Aplikacja Prezenty jest chwilowo niedostępna z powodu problemów z bazą danych.</p>
+        <p>Twoje dane są bezpieczne. Żadne zmiany nie zostaną utracone, ponieważ aplikacja jest zablokowana do czasu przywrócenia połączenia.</p>
+        <p class="note"><span class="spinner"></span>Strona odświeży się automatycznie...</p>
+    </div>
+    <script>
+        // Poll /health and reload as soon as the app is back
+        setInterval(async () => {
+            try {
+                const res = await fetch('/health', { cache: 'no-store' });
+                const data = await res.json();
+                if (data.mode !== 'MAINTENANCE') location.href = '/';
+            } catch (e) { /* still down, keep waiting */ }
+        }, 15000);
+    </script>
+</body>
+</html>

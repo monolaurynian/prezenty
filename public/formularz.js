@@ -188,6 +188,8 @@ function getUserIdentification() {
 function autoSelectUserName(userName) {
     // Wait a bit for recipients to load, then select the user's name
     setTimeout(() => {
+        // Don't override an explicit ?osoba= link selection
+        if (window._osobaPreselected) return;
         const recipientSelect = document.getElementById('recipientSelect');
         if (recipientSelect) {
             // Try to find and select the user's name
@@ -249,6 +251,29 @@ function loadRecipients() {
                 
                 console.log('Recipients loaded successfully. Total options:', recipientSelect.options.length);
                 
+                // Deep link support: /formularz?osoba=Babcia pre-selects that
+                // person (used by the "share form" feature). Takes priority
+                // over auto-selection based on the logged-in user.
+                const osobaParam = new URLSearchParams(window.location.search).get('osoba');
+                if (osobaParam) {
+                    for (let i = 0; i < recipientSelect.options.length; i++) {
+                        if (recipientSelect.options[i].dataset.name === osobaParam ||
+                            recipientSelect.options[i].textContent === osobaParam) {
+                            recipientSelect.value = recipientSelect.options[i].value;
+                            window._osobaPreselected = true;
+                            console.log('Pre-selected recipient from URL:', osobaParam);
+                            break;
+                        }
+                    }
+                    // Name not on the list yet - fill it in as a new name
+                    if (!window._osobaPreselected) {
+                        recipientSelect.value = '__new__';
+                        recipientSelect.dispatchEvent(new Event('change'));
+                        document.getElementById('recipientName').value = osobaParam;
+                        window._osobaPreselected = true;
+                    }
+                }
+
                 // If user is authenticated, try to auto-select their name
                 if (currentUser) {
                     getUserIdentification();

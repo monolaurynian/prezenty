@@ -51,6 +51,10 @@ let DEMO_MODE = process.env.DEMO_MODE === 'true' ||
     !process.env.DB_PASSWORD ||
     (process.env.NODE_ENV === 'development' && !process.env.DB_PASSWORD);
 
+// Set to true when the production database is unreachable; the app then serves
+// a maintenance page instead of demo data and retries the connection periodically
+let MAINTENANCE_MODE = false;
+
 // MySQL database configuration
 let dbConfig;
 let pool;
@@ -397,6 +401,22 @@ if (!DEMO_MODE && dbConfig) {
     sessionConfig.store = sessionStore;
 }
 
+// Maintenance mode: when the database is unreachable in production we block
+// the app with a clear maintenance page instead of silently serving demo data
+// (users must never mistake demo data for the real environment).
+// Registered BEFORE the session middleware so no MySQL session I/O happens.
+app.use((req, res, next) => {
+    if (!MAINTENANCE_MODE) return next();
+    if (req.path === '/health') return next();
+    if (req.path.startsWith('/api/')) {
+        return res.status(503).json({
+            error: 'Aplikacja jest tymczasowo niedostępna. Spróbuj ponownie później.',
+            maintenance: true
+        });
+    }
+    res.status(503).sendFile(path.join(__dirname, 'public', 'maintenance.html'));
+});
+
 app.use(session(sessionConfig));
 
 // Configure multer for file uploads (store in memory for database storage)
@@ -433,10 +453,10 @@ function requireAuth(req, res, next) {
 // Routes
 app.get('/health', (req, res) => {
     res.status(200).json({
-        status: 'OK',
+        status: MAINTENANCE_MODE ? 'MAINTENANCE' : 'OK',
         timestamp: new Date().toISOString(),
-        mode: DEMO_MODE ? 'DEMO' : 'PRODUCTION',
-        database: DEMO_MODE ? 'disabled' : 'enabled'
+        mode: MAINTENANCE_MODE ? 'MAINTENANCE' : (DEMO_MODE ? 'DEMO' : 'PRODUCTION'),
+        database: (DEMO_MODE || MAINTENANCE_MODE) ? 'disabled' : 'enabled'
     });
 });
 
@@ -520,6 +540,15 @@ app.get('/activity', (req, res) => {
         res.redirect('/');
     } else {
         res.sendFile(path.join(__dirname, 'public', 'activity.html'));
+    }
+});
+
+app.get('/archiwum', (req, res) => {
+    // If user is not authenticated, redirect to login page
+    if (!req.session.userId) {
+        res.redirect('/');
+    } else {
+        res.sendFile(path.join(__dirname, 'public', 'archiwum.html'));
     }
 });
 
@@ -1423,6 +1452,7 @@ app.post('/api/presents', requireAuth, async (req, res) => {
         sendNotificationToUsers(userId, notificationTitle, notificationBody, {
             presentId: result.insertId,
             presentTitle: title.trim(),
+            recipientId: recipient_id || null,
             recipientName: recipientName
         }).catch(err => {
             // Log error but don't fail the present creation
@@ -2226,10 +2256,28 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
     }
 
     try {
+        // Also exclude the user identified as the present's recipient,
+        // so nobody gets push notifications spoiling their own presents
+        let identifiedRecipientUserId = null;
+        if (data.recipientId) {
+            try {
+                const [identRows] = await pool.execute(
+                    'SELECT identified_by FROM recipients WHERE id = ?',
+                    [data.recipientId]
+                );
+                if (identRows.length > 0 && identRows[0].identified_by) {
+                    identifiedRecipientUserId = identRows[0].identified_by;
+                    console.log(`🔒 [NOTIFICATION] Also excluding user ${identifiedRecipientUserId} (identified as recipient ${data.recipientId})`);
+                }
+            } catch (e) {
+                console.error('⚠️ [NOTIFICATION] Could not check recipient identification:', e.message);
+            }
+        }
+
         const [subscriptions] = await pool.execute(`
             SELECT * FROM push_subscriptions 
-            WHERE user_id != ?
-        `, [excludeUserId]);
+            WHERE user_id != ? AND user_id != ?
+        `, [excludeUserId, identifiedRecipientUserId !== null ? identifiedRecipientUserId : excludeUserId]);
 
         console.log(`📊 [NOTIFICATION] Found ${subscriptions.length} subscription(s) to notify (excluding user ${excludeUserId})`);
 
@@ -2526,11 +2574,18 @@ app.post('/api/formularz/present', async (req, res) => {
                 }
             }
 
-            await createNotification('present_added', createdByUserId || 0, {
+            // The notification actor must be the ACTUAL submitter (if logged in),
+            // never the user identified as the recipient (createdByUserId) —
+            // otherwise the activity feed shows the wrong person as the one
+            // who added the present. Anonymous submissions get actor 0.
+            const notificationActorId = (req.session && req.session.userId) ? req.session.userId : 0;
+
+            await createNotification('present_added', notificationActorId, {
                 presentId: presentId,
                 presentTitle: presentTitle.trim(),
                 recipientId: recipientId,
-                recipientName: notificationRecipientName
+                recipientName: notificationRecipientName,
+                viaFormularz: true
             });
 
             // Send push notification to other users (non-blocking)
@@ -2538,9 +2593,10 @@ app.post('/api/formularz/present', async (req, res) => {
             const notificationBody = `Dodano nowy prezent "${presentTitle.trim()}" dla ${notificationRecipientName}`;
             console.log(`📢 [FORMULARZ] Triggering notification for new present: "${presentTitle.trim()}" (ID: ${presentId})`);
 
-            sendNotificationToUsers(createdByUserId || 0, notificationTitle, notificationBody, {
+            sendNotificationToUsers(notificationActorId, notificationTitle, notificationBody, {
                 presentId: presentId,
                 presentTitle: presentTitle.trim(),
+                recipientId: recipientId,
                 recipientName: notificationRecipientName
             }).catch(err => {
                 // Log error but don't fail the present creation
@@ -2741,6 +2797,135 @@ app.use((err, req, res, next) => {
     handleDbError(err, res, 'Błąd serwera');
 });
 
+// ===== Archive: move a finished year's presents out of the main table =====
+
+async function ensureArchiveTable() {
+    await pool.execute(`CREATE TABLE IF NOT EXISTS presents_archive (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        original_id INT NOT NULL,
+        title VARCHAR(500) NOT NULL,
+        recipient_id INT NULL,
+        recipient_name VARCHAR(255) NULL,
+        comments TEXT NULL,
+        is_checked BOOLEAN DEFAULT FALSE,
+        reserved_by INT NULL,
+        reserved_by_username VARCHAR(255) NULL,
+        created_by INT NULL,
+        created_by_username VARCHAR(255) NULL,
+        created_at TIMESTAMP NULL,
+        archive_year INT NOT NULL,
+        archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_archive_year (archive_year)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+}
+
+// Archive all current presents under a given year label and clear the slate.
+// Requires typing the confirmation word - this moves every present.
+app.post('/api/archive/run', requireAuth, async (req, res) => {
+    const { year, confirmText } = req.body;
+
+    if (DEMO_MODE) {
+        return badRequest(res, 'Archiwizacja jest niedostępna w trybie demo');
+    }
+    if (confirmText !== 'ARCHIWIZUJ') {
+        return badRequest(res, 'Wpisz ARCHIWIZUJ aby potwierdzić');
+    }
+    const archiveYear = parseInt(year);
+    if (!archiveYear || archiveYear < 2020 || archiveYear > 2100) {
+        return badRequest(res, 'Nieprawidłowy rok');
+    }
+
+    let conn;
+    try {
+        await ensureArchiveTable();
+        conn = await pool.getConnection();
+        await conn.beginTransaction();
+
+        // Copy presents with names denormalized, so the archive stays
+        // readable even if recipients/users are removed later
+        const [copied] = await conn.execute(`
+            INSERT INTO presents_archive
+                (original_id, title, recipient_id, recipient_name, comments, is_checked,
+                 reserved_by, reserved_by_username, created_by, created_by_username, created_at, archive_year)
+            SELECT p.id, p.title, p.recipient_id, r.name, p.comments, p.is_checked,
+                   p.reserved_by, ur.username, p.created_by, uc.username, p.created_at, ?
+            FROM presents p
+            LEFT JOIN recipients r ON p.recipient_id = r.id
+            LEFT JOIN users ur ON p.reserved_by = ur.id
+            LEFT JOIN users uc ON p.created_by = uc.id
+        `, [archiveYear]);
+
+        const [deleted] = await conn.execute('DELETE FROM presents');
+
+        // Fresh year, fresh activity feed
+        const [clearedNotifications] = await conn.execute('DELETE FROM notifications');
+
+        await conn.commit();
+
+        // Invalidate server-side caches
+        try {
+            cache.invalidatePresents();
+            clearCombinedDataCache();
+        } catch (e) { /* cache errors are non-fatal */ }
+
+        console.log(`🗄️ [ARCHIVE] User ${req.session.username} archived year ${archiveYear}: ` +
+            `${copied.affectedRows} presents moved, ${clearedNotifications.affectedRows} notifications cleared`);
+
+        res.json({
+            success: true,
+            archivedPresents: copied.affectedRows,
+            deletedPresents: deleted.affectedRows,
+            clearedNotifications: clearedNotifications.affectedRows,
+            year: archiveYear
+        });
+    } catch (err) {
+        if (conn) {
+            try { await conn.rollback(); } catch (e) { /* ignore */ }
+        }
+        console.error('❌ [ARCHIVE] Archiving failed:', err);
+        handleDbError(err, res, 'Błąd podczas archiwizacji');
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
+// List available archive years with counts
+app.get('/api/archive/years', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.json({ years: [] });
+    try {
+        await ensureArchiveTable();
+        const [rows] = await pool.execute(`
+            SELECT archive_year AS year, COUNT(*) AS count
+            FROM presents_archive
+            GROUP BY archive_year
+            ORDER BY archive_year DESC
+        `);
+        res.json({ years: rows });
+    } catch (err) {
+        handleDbError(err, res, 'Błąd podczas pobierania archiwum');
+    }
+});
+
+// Get archived presents for a year
+app.get('/api/archive/presents', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.json({ presents: [] });
+    const year = parseInt(req.query.year);
+    if (!year) return badRequest(res, 'Podaj rok');
+    try {
+        await ensureArchiveTable();
+        const [rows] = await pool.execute(`
+            SELECT title, recipient_name, comments, is_checked,
+                   reserved_by_username, created_by_username, created_at
+            FROM presents_archive
+            WHERE archive_year = ?
+            ORDER BY recipient_name, title
+        `, [year]);
+        res.json({ presents: rows });
+    } catch (err) {
+        handleDbError(err, res, 'Błąd podczas pobierania archiwum');
+    }
+});
+
 // Test database connection
 async function testDatabaseConnection() {
     try {
@@ -2799,19 +2984,28 @@ async function startServer() {
             // Test database connection first
             const dbConnected = await testDatabaseConnection();
             if (!dbConnected) {
-                console.error('⚠️  Database connection failed - falling back to DEMO MODE');
-                console.error('💡 Set correct DB_PASSWORD to enable database features');
+                console.error('⚠️  Database connection failed - entering MAINTENANCE MODE');
+                console.error('💡 Users will see a maintenance page until the database is reachable');
 
-                // Fall back to demo mode
-                DEMO_MODE = true;
-                console.log('🎭 Falling back to DEMO MODE for deployment');
+                MAINTENANCE_MODE = true;
 
-                // Start server in demo mode
+                // Retry the database connection every 2 minutes and
+                // automatically exit maintenance mode when it recovers
+                const retryInterval = setInterval(async () => {
+                    console.log('🔄 Retrying database connection...');
+                    const ok = await testDatabaseConnection();
+                    if (ok) {
+                        MAINTENANCE_MODE = false;
+                        clearInterval(retryInterval);
+                        console.log('✅ Database is back online - maintenance mode disabled');
+                    }
+                }, 2 * 60 * 1000);
+
+                // Start server in maintenance mode
                 app.listen(PORT, HOST, () => {
-                    console.log(`🎄 Serwer Prezenty działa na porcie ${PORT} (DEMO MODE)`);
+                    console.log(`🚧 Serwer Prezenty działa na porcie ${PORT} (MAINTENANCE MODE)`);
                     console.log(`🌐 Dostępny pod adresem: http://${HOST}:${PORT}`);
-                    console.log(`📱 DEMO MODE: Database features disabled`);
-                    console.log(`🔧 Fix database connection to enable full functionality`);
+                    console.log(`🚧 MAINTENANCE MODE: Database unreachable, serving maintenance page`);
                 }).on('error', (err) => {
                     console.error('Błąd uruchamiania serwera:', err);
                     process.exit(1);
@@ -2878,7 +3072,88 @@ function setupKeepAliveCron() {
 
 startServer();
 
+// Send a push notification to a single user's devices
+async function sendPushToUser(userId, title, body, data = {}) {
+    if (!webpush || DEMO_MODE) return;
+
+    try {
+        const [subscriptions] = await pool.execute(
+            'SELECT * FROM push_subscriptions WHERE user_id = ?',
+            [userId]
+        );
+        if (subscriptions.length === 0) return;
+
+        const payload = JSON.stringify({
+            title,
+            body,
+            icon: '/seba_logo.png',
+            badge: '/seba_logo.png',
+            tag: 'christmas-nudge',
+            data
+        });
+
+        for (const sub of subscriptions) {
+            try {
+                await webpush.sendNotification({
+                    endpoint: sub.endpoint,
+                    keys: { p256dh: sub.p256dh, auth: sub.auth }
+                }, payload);
+            } catch (error) {
+                if (error.statusCode === 410) {
+                    await pool.execute('DELETE FROM push_subscriptions WHERE id = ?', [sub.id]);
+                }
+            }
+        }
+    } catch (err) {
+        console.error('❌ [NUDGE] Error sending push to user', userId, ':', err.message);
+    }
+}
+
+// Christmas nudge: from Dec 1st to Dec 23rd, remind users daily at 17:00 UTC
+// about presents they reserved but haven't bought yet
+function setupChristmasNudgeCron() {
+    if (DEMO_MODE) {
+        console.log('ℹ️ Christmas nudge cron skipped (demo mode)');
+        return;
+    }
+
+    const job = new cron.CronJob('0 17 1-23 12 *', async function () {
+        if (MAINTENANCE_MODE || DEMO_MODE || !webpush) return;
+        try {
+            console.log('🎅 [NUDGE] Running Christmas reminder check...');
+
+            // Users with reserved but unbought presents
+            const [rows] = await pool.execute(`
+                SELECT reserved_by AS user_id, COUNT(*) AS unbought
+                FROM presents
+                WHERE reserved_by IS NOT NULL AND is_checked = 0
+                GROUP BY reserved_by
+            `);
+
+            const now = new Date();
+            const christmasEve = new Date(now.getFullYear(), 11, 24); // Dec 24
+            const daysLeft = Math.max(0, Math.ceil((christmasEve - now) / 86400000));
+
+            for (const row of rows) {
+                const n = row.unbought;
+                const phrase = n === 1 ? '1 zarezerwowany prezent' :
+                    (n >= 2 && n <= 4 ? `${n} zarezerwowane prezenty` : `${n} zarezerwowanych prezentów`);
+                const body = `Masz ${phrase} do kupienia. ` +
+                    `Do Wigilii ${daysLeft === 1 ? 'został 1 dzień' : `zostało ${daysLeft} dni`}! 🎅`;
+                await sendPushToUser(row.user_id, 'Przypomnienie świąteczne 🎄', body, { nudge: true });
+            }
+            console.log(`🎅 [NUDGE] Sent reminders to ${rows.length} user(s)`);
+        } catch (err) {
+            console.error('❌ [NUDGE] Christmas reminder failed:', err.message);
+        }
+    });
+
+    job.start();
+    console.log('✅ Christmas nudge cron started (daily 17:00 UTC, Dec 1-23)');
+}
+
 // Setup keep-alive after server starts
 setTimeout(() => {
     setupKeepAliveCron();
+    setupChristmasNudgeCron();
 }, 5000); // Wait 5 seconds for server to fully start

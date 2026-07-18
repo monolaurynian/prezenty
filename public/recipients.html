@@ -147,6 +147,52 @@
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
         }
         
+        /* Skeleton loading placeholders */
+        .skeleton-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 8px 0;
+        }
+        .skeleton-card {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.4s ease-in-out infinite;
+            border-radius: 8px;
+        }
+        .skeleton-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .skeleton-lines {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-top: 6px;
+        }
+        .skeleton-line {
+            height: 14px;
+        }
+        @keyframes skeleton-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .skeleton { animation: none; }
+        }
+
         /* Reserved presents modal - yellow background for "Do kupienia" */
         .recipients-page #reservedPresentsModal .card-header[style*="fff3cd"] {
             background-color: #ffc107 !important;
@@ -819,13 +865,35 @@
             
             <div class="card-body aws-content-body">
                 <div id="recipientsList">
-                    <div class="text-center aws-loading-state">
-                        <div class="logo-spinner" role="status">
-                            <img src="seba_logo.png" alt="Loading..." class="spinning-logo">
-                            <span class="visually-hidden">Ładowanie...</span>
+                    <!-- Skeleton placeholders: mimic recipient cards while data loads,
+                         so the layout doesn't jump and the page feels instant -->
+                    <div class="skeleton-cards" aria-hidden="true">
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div class="skeleton-lines">
+                                <div class="skeleton skeleton-line" style="width: 40%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 70%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 55%;"></div>
+                            </div>
                         </div>
-                        <p class="mt-3" style="color: white;">Ładowanie danych...</p>
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div class="skeleton-lines">
+                                <div class="skeleton skeleton-line" style="width: 50%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 65%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 45%;"></div>
+                            </div>
+                        </div>
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div class="skeleton-lines">
+                                <div class="skeleton skeleton-line" style="width: 35%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 75%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 60%;"></div>
+                            </div>
+                        </div>
                     </div>
+                    <p class="text-center visually-hidden" role="status">Ładowanie danych...</p>
                 </div>
             </div>
         </div>
@@ -1646,7 +1714,7 @@
                     </div>
                     <div class="notification-content">
                         <div class="notification-text">
-                            <strong>${notification.actor_username}</strong> ${config.getMessage(notification.data)}
+                            <strong>${notification.actor_username || 'Ktoś'}</strong> ${config.getMessage(notification.data)}
                         </div>
                         <div class="notification-time">${timeAgo}</div>
                     </div>
@@ -1679,7 +1747,7 @@
                         const presentLink = data.presentId ? 
                             `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #FF9800; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
-                        return `zarezerwował(a) prezent ${presentLink}`;
+                        return `zarezerwował(a) prezent ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
                     }
                 },
                 present_unreserved: {
@@ -1689,7 +1757,7 @@
                         const presentLink = data.presentId ? 
                             `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
-                        return `anulował(a) rezerwację ${presentLink}`;
+                        return `anulował(a) rezerwację ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
                     }
                 },
                 present_checked: {
@@ -1699,7 +1767,7 @@
                         const presentLink = data.presentId ? 
                             `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #4CAF50; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
-                        return `oznaczył(a) jako kupione ${presentLink}`;
+                        return `oznaczył(a) jako kupione ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
                     }
                 },
                 present_unchecked: {
@@ -1709,7 +1777,7 @@
                         const presentLink = data.presentId ? 
                             `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
-                        return `odznaczył(a) ${presentLink}`;
+                        return `odznaczył(a) ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
                     }
                 }
             };
@@ -2106,27 +2174,27 @@
             present_added: {
                 icon: 'fa-gift',
                 color: '#2196F3',
-                getMessage: (data, actor) => `${actor} dodał(a) prezent "${data.presentTitle}" dla ${data.recipientName}`
+                getMessage: (data, actor) => `${actor} dodał(a) prezent "${data.presentTitle}"${data.recipientName ? ' dla ' + data.recipientName : ''}`
             },
             present_reserved: {
                 icon: 'fa-bookmark',
                 color: '#FF9800',
-                getMessage: (data, actor) => `${actor} zarezerwował(a) "${data.presentTitle}"`
+                getMessage: (data, actor) => `${actor} zarezerwował(a) "${data.presentTitle}"${data.recipientName ? ' dla ' + data.recipientName : ''}`
             },
             present_unreserved: {
                 icon: 'fa-bookmark-slash',
                 color: '#9E9E9E',
-                getMessage: (data, actor) => `${actor} anulował(a) rezerwację "${data.presentTitle}"`
+                getMessage: (data, actor) => `${actor} anulował(a) rezerwację "${data.presentTitle}"${data.recipientName ? ' dla ' + data.recipientName : ''}`
             },
             present_checked: {
                 icon: 'fa-check-circle',
                 color: '#4CAF50',
-                getMessage: (data, actor) => `${actor} oznaczył(a) jako kupione "${data.presentTitle}"`
+                getMessage: (data, actor) => `${actor} oznaczył(a) jako kupione "${data.presentTitle}"${data.recipientName ? ' dla ' + data.recipientName : ''}`
             },
             present_unchecked: {
                 icon: 'fa-circle',
                 color: '#9E9E9E',
-                getMessage: (data, actor) => `${actor} odznaczył(a) "${data.presentTitle}"`
+                getMessage: (data, actor) => `${actor} odznaczył(a) "${data.presentTitle}"${data.recipientName ? ' dla ' + data.recipientName : ''}`
             }
         };
 
@@ -2324,6 +2392,10 @@
             
             <div class="tab-bar-menu-divider"></div>
             
+            <a href="archiwum.html" class="tab-bar-menu-item">
+                <i class="ri-archive-line"></i>
+                <span>Archiwum</span>
+            </a>
             <!-- Settings -->
             <a href="#" class="tab-bar-menu-item settings-item" onclick="alert('Funkcja ustawień będzie dostępna wkrótce!'); toggleTabBarMenu(); return false;">
                 <i class="ri-settings-3-line"></i>

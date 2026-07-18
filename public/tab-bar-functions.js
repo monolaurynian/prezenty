@@ -177,7 +177,7 @@ function getNotificationMessage(notif) {
         case 'recipient_added':
             return `<strong>${actor}</strong> dodał(a) osobę <strong>${data.recipientName || 'nową osobę'}</strong>`;
         case 'present_added':
-            return `<strong>${actor}</strong> dodał(a) prezent "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+            return `<strong>${actor}</strong> dodał(a) prezent "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}${data.viaFormularz ? ' (przez formularz)' : ''}`;
         case 'present_reserved':
             return `<strong>${actor}</strong> zarezerwował(a) "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
         case 'present_unreserved':

@@ -109,6 +109,23 @@
         </div>
     </div>
 
+    <!-- Cold-start overlay: shown when the server is waking up from sleep -->
+    <div id="coldStartOverlay" style="display: none; position: fixed; inset: 0; z-index: 10000;
+        background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 100%);
+        color: white; text-align: center; padding: 24px;
+        flex-direction: column; align-items: center; justify-content: center;">
+        <div style="font-size: 64px; margin-bottom: 16px;">🎄</div>
+        <h4 style="margin-bottom: 12px;">Budzimy serwer...</h4>
+        <p style="color: rgba(255,255,255,0.8); max-width: 340px; line-height: 1.5;">
+            Aplikacja drzemała, żeby oszczędzać energię jak Mikołaj przed Wigilią.
+            Za chwilę będzie gotowa!
+        </p>
+        <div class="spinner-border text-light mt-2" role="status">
+            <span class="visually-hidden">Ładowanie...</span>
+        </div>
+        <p id="coldStartTimer" style="margin-top: 16px; font-size: 14px; color: rgba(255,255,255,0.6);"></p>
+    </div>
+
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -188,6 +205,42 @@
     </script>
 
     <script>
+        // Cold-start detection: if the server doesn't answer /health quickly,
+        // it's waking up from sleep (free hosting) - show a friendly overlay
+        // instead of letting the user submit a login into the void.
+        (function detectColdStart() {
+            const overlay = document.getElementById('coldStartOverlay');
+            const timerEl = document.getElementById('coldStartTimer');
+            let overlayShown = false;
+            let secondsWaiting = 0;
+
+            const showTimer = setTimeout(() => {
+                overlayShown = true;
+                overlay.style.display = 'flex';
+                const tick = setInterval(() => {
+                    if (!overlayShown) { clearInterval(tick); return; }
+                    secondsWaiting++;
+                    timerEl.textContent = secondsWaiting >= 5 ? `Czekamy już ${secondsWaiting} s (zwykle trwa to do minuty)` : '';
+                }, 1000);
+            }, 2500); // only show if health check is slower than 2.5s
+
+            function hideOverlay() {
+                clearTimeout(showTimer);
+                if (overlayShown) {
+                    overlayShown = false;
+                    overlay.style.display = 'none';
+                }
+            }
+
+            function poll() {
+                fetch('/health', { cache: 'no-store' })
+                    .then(r => r.json())
+                    .then(() => hideOverlay())
+                    .catch(() => setTimeout(poll, 3000)); // server still asleep, retry
+            }
+            poll();
+        })();
+
         document.addEventListener('DOMContentLoaded', function () {
             // Add content transition effect
             setTimeout(() => {
@@ -223,30 +276,41 @@
                     .then(({ status, body }) => {
                         console.log('Login response:', { status, body });
                         if (status === 200 && body.success) {
-                            console.log('Login successful, waiting for session to save...');
-                            // Add transition effect before redirect
+                            // Session is saved server-side before this response
+                            // arrives, so we can redirect right away
                             document.getElementById('loginHeader').classList.remove('loaded');
                             document.getElementById('loginBody').classList.remove('loaded');
-                            // Wait longer to ensure session is saved
-                            setTimeout(() => {
-                                console.log('Redirecting to / now');
-                                console.log('About to redirect - check server console for "Root route accessed" log');
-                                window.location.href = '/';
-                            }, 3000);
+                            setTimeout(() => { window.location.href = '/'; }, 300);
                         } else {
                             console.error('Login failed:', body.error);
-                            showError(body.error || 'Błąd logowania');
+                            showError(friendlyLoginError(status, body));
                         }
                     })
                     .catch(error => {
                         console.error('Login error:', error);
-                        showError('Błąd połączenia z serwerem');
+                        showError(navigator.onLine
+                            ? 'Nie udało się połączyć z serwerem. Spróbuj ponownie za chwilę.'
+                            : 'Brak połączenia z internetem. Sprawdź sieć i spróbuj ponownie.');
                     })
                     .finally(() => {
                         submitBtn.innerHTML = originalText;
                         submitBtn.disabled = false;
                     });
             });
+
+            // Translate server/HTTP errors into human language with a next step
+            function friendlyLoginError(status, body) {
+                if (status === 401) {
+                    return body.error || 'Nieprawidłowa nazwa użytkownika lub hasło.';
+                }
+                if (status === 503 && body.maintenance) {
+                    return 'Trwa przerwa techniczna. Spróbuj ponownie za kilka minut.';
+                }
+                if (status >= 500) {
+                    return 'Coś poszło nie tak po naszej stronie. Odczekaj chwilę i spróbuj ponownie.';
+                }
+                return body.error || 'Nie udało się zalogować. Spróbuj ponownie.';
+            }
 
             function showError(message) {
                 loginMessage.textContent = message;

@@ -745,6 +745,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Check authentication and refresh data if needed
     checkAuth().then(() => {
+        // Deep link: opening recipients.html#reserved (e.g. from the homepage
+        // tab-bar menu) should immediately show the reserved presents popup
+        if (window.location.hash === '#reserved') {
+            // Clear the hash so a page refresh doesn't reopen the modal
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+            setTimeout(() => openReservedPresentsModal(), 300);
+        }
+
         // Only reload if cache is stale or missing
         const now = Date.now();
         const cacheAge = persistentCache ? (now - persistentCache.timestamp) : Infinity;
@@ -942,6 +950,26 @@ function checkAuth() {
         });
 }
 
+// Skeleton placeholder cards shown while data loads (no layout jump, feels instant)
+function getSkeletonCardsHTML(count = 3) {
+    const widths = [[40, 70, 55], [50, 65, 45], [35, 75, 60]];
+    let cards = '';
+    for (let i = 0; i < count; i++) {
+        const w = widths[i % widths.length];
+        cards += `
+            <div class="skeleton-card">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-lines">
+                    <div class="skeleton skeleton-line" style="width: ${w[0]}%;"></div>
+                    <div class="skeleton skeleton-line" style="width: ${w[1]}%;"></div>
+                    <div class="skeleton skeleton-line" style="width: ${w[2]}%;"></div>
+                </div>
+            </div>`;
+    }
+    return `<div class="skeleton-cards" aria-hidden="true">${cards}</div>
+        <p class="text-center visually-hidden" role="status">Ładowanie danych...</p>`;
+}
+
 function loadRecipientsWithPresents(forceReload = false, silent = false) {
     console.log('Loading recipients and presents...', forceReload ? '(forced)' : '', silent ? '(silent)' : '');
 
@@ -979,15 +1007,7 @@ function loadRecipientsWithPresents(forceReload = false, silent = false) {
     // Show loading state only if not silent (i.e., no cached data displayed)
     if (!silent) {
         const recipientsList = document.getElementById('recipientsList');
-        recipientsList.innerHTML = `
-            <div class="text-center aws-loading-state">
-                <div class="logo-spinner" role="status">
-                    <img src="seba_logo.png" alt="Loading..." class="spinning-logo">
-                    <span class="visually-hidden">Ładowanie...</span>
-                </div>
-                <p class="mt-3 text-muted loading-text">Ładowanie danych...</p>
-            </div>
-        `;
+        recipientsList.innerHTML = getSkeletonCardsHTML();
     }
 
     // Load data with optimized single request
@@ -1059,8 +1079,18 @@ function loadRecipientsWithPresents(forceReload = false, silent = false) {
                     });
                 }, 1000);
             } else {
-                document.getElementById('recipientsList').innerHTML =
-                    '<div class="alert alert-danger">Błąd podczas ładowania danych. Spróbuj odświeżyć stronę.</div>';
+                const offline = !navigator.onLine;
+                document.getElementById('recipientsList').innerHTML = `
+                    <div class="text-center py-5">
+                        <div style="font-size: 48px; margin-bottom: 12px;">${offline ? '📡' : '🎄'}</div>
+                        <h5>${offline ? 'Brak połączenia z internetem' : 'Nie udało się załadować danych'}</h5>
+                        <p class="text-muted">${offline
+                            ? 'Sprawdź połączenie i spróbuj ponownie.'
+                            : 'Serwer mógł się jeszcze budzić. Zwykle pomaga ponowna próba.'}</p>
+                        <button class="btn btn-primary mt-2" onclick="loadRecipientsWithPresents(true, false)">
+                            <i class="fas fa-rotate-right me-1"></i>Spróbuj ponownie
+                        </button>
+                    </div>`;
             }
         });
 }
@@ -1272,6 +1302,11 @@ function displayRecipientsWithPresents(recipients, presents) {
                                     </button>
                                 </div>
                             ` : ''}
+                            <div class="mt-2 d-none d-md-block">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="shareFormularzLink('${escapeHtml(recipient.name)}')" title="Wyślij tej osobie link do formularza życzeń">
+                                    <i class="fas fa-share-alt me-1"></i>Udostępnij formularz
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="col-lg-6 col-md-6">
@@ -1300,6 +1335,11 @@ function displayRecipientsWithPresents(recipients, presents) {
                                     </button>
                                 </div>
                             ` : ''}
+                            <div class="mt-2 d-md-none">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="shareFormularzLink('${escapeHtml(recipient.name)}')" title="Wyślij tej osobie link do formularza życzeń">
+                                    <i class="fas fa-share-alt me-1"></i>Udostępnij formularz
+                                </button>
+                            </div>
                         </div>
                         ${isIdentifiedByOther ? `
                             <div class="alert alert-warning py-2 px-3 mb-3">
@@ -2016,6 +2056,15 @@ function updatePresentCheckStatus(id, isChecked, presentItem) {
                 updateProgressBar(presentItem);
                 presentItem.classList.remove('updating');
                 presentItem.classList.remove('animating');
+
+                // Confirmation with undo (only when marking as bought -
+                // unchecking is usually itself the correction)
+                if (isChecked) {
+                    showToast('Oznaczono jako kupione 🛍️', 'success', {
+                        label: 'Cofnij',
+                        onClick: () => undoCheck(id)
+                    });
+                }
 
                 // Trigger soft reload to update cache
                 if (typeof softReloadRecipients === 'function') {
@@ -3127,7 +3176,10 @@ function reservePresentFromRecipients(presentId, button, previousState) {
         .then(data => {
             if (data.success) {
                 // Success - optimistic update is confirmed
-                showSuccessToast('Prezent zarezerwowany!');
+                showToast('Prezent zarezerwowany! 🎁', 'success', {
+                    label: 'Cofnij',
+                    onClick: () => undoReservation(presentId)
+                });
 
                 // Update button to show cancel action with correct onclick handler
                 const presentItem = document.querySelector(`[data-id="${presentId}"]`);
@@ -3188,7 +3240,10 @@ function cancelReservationFromRecipients(presentId, button, previousState) {
         .then(data => {
             if (data.success) {
                 // Success - optimistic update is confirmed
-                showSuccessToast('Rezerwacja anulowana');
+                showToast('Rezerwacja anulowana', 'success', {
+                    label: 'Cofnij',
+                    onClick: () => undoCancelReservation(presentId)
+                });
 
                 // Update button to show reserve action with correct onclick handler
                 const presentItem = document.querySelector(`[data-id="${presentId}"]`);
@@ -4285,7 +4340,9 @@ function generateSinglePresentHTML(present) {
 // Notification update functions are now in tab-bar-functions.js (shared across pages)
 
 // Toast notification system
-function showToast(message, type = 'success') {
+// Optional third argument adds an action button, e.g. an undo:
+//   showToast('Zarezerwowano', 'success', { label: 'Cofnij', onClick: () => ... })
+function showToast(message, type = 'success', action = null) {
     const toastId = `${type}Toast`;
     const messageId = `${type}ToastMessage`;
 
@@ -4294,12 +4351,101 @@ function showToast(message, type = 'success') {
 
     if (toastElement && messageElement) {
         messageElement.textContent = message;
+
+        // Remove any action button left over from a previous toast
+        const oldBtn = toastElement.querySelector('.toast-action-btn');
+        if (oldBtn) oldBtn.remove();
+
+        if (action) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-sm btn-light toast-action-btn ms-2';
+            btn.style.cssText = 'font-weight: 600; padding: 2px 12px; align-self: center; white-space: nowrap;';
+            btn.textContent = action.label;
+            btn.addEventListener('click', () => {
+                const instance = bootstrap.Toast.getInstance(toastElement);
+                if (instance) instance.hide();
+                action.onClick();
+            });
+            // Insert inside the flex container, before the close button
+            const closeBtn = toastElement.querySelector('.btn-close');
+            closeBtn.parentElement.insertBefore(btn, closeBtn);
+        }
+
         const toast = new bootstrap.Toast(toastElement, {
             autohide: true,
-            delay: type === 'error' ? 5000 : 3000
+            // Give people more time to hit "Cofnij" when there's an action
+            delay: action ? 6000 : (type === 'error' ? 5000 : 3000)
         });
         toast.show();
     }
+}
+
+// Share a wishlist form link with the recipient pre-selected, so family
+// members can add their wishes without navigating anything
+function shareFormularzLink(recipientName) {
+    const url = `${window.location.origin}/formularz?osoba=${encodeURIComponent(recipientName)}`;
+
+    if (navigator.share) {
+        navigator.share({
+            title: 'Życzenia Prezentowe 🎁',
+            text: `Wpisz swoje życzenia prezentowe (${recipientName}):`,
+            url: url
+        }).catch(() => { /* user cancelled the share sheet - not an error */ });
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url)
+            .then(() => showSuccessToast(`Link skopiowany! Wyślij go: ${recipientName}`))
+            .catch(() => window.prompt('Skopiuj link do formularza:', url));
+    } else {
+        window.prompt('Skopiuj link do formularza:', url);
+    }
+}
+
+// Undo helpers - reverse the last action and refresh the list silently
+function undoReservation(presentId) {
+    fetch(`/api/presents/${presentId}/reserve`, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                showSuccessToast('Cofnięto rezerwację');
+                softReloadRecipients();
+            } else {
+                showErrorToast(d.error || 'Nie udało się cofnąć rezerwacji');
+            }
+        })
+        .catch(() => showErrorToast('Nie udało się cofnąć rezerwacji'));
+}
+
+function undoCancelReservation(presentId) {
+    fetch(`/api/presents/${presentId}/reserve`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                showSuccessToast('Przywrócono rezerwację');
+                softReloadRecipients();
+            } else {
+                showErrorToast(d.error || 'Nie udało się przywrócić rezerwacji');
+            }
+        })
+        .catch(() => showErrorToast('Nie udało się przywrócić rezerwacji'));
+}
+
+function undoCheck(presentId) {
+    fetch(`/api/presents/${presentId}/check`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_checked: false })
+    })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                showSuccessToast('Cofnięto oznaczenie');
+                softReloadRecipients();
+            } else {
+                showErrorToast(d.error || 'Nie udało się cofnąć');
+            }
+        })
+        .catch(() => showErrorToast('Nie udało się cofnąć'));
 }
 
 function showSuccessToast(message) {
