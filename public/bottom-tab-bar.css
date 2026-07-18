@@ -68,13 +68,21 @@
     text-decoration: none;
     color: #8e8e93;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 6px 4px;
+    padding: 6px 12px 5px;
+    border-radius: 18px;
     cursor: pointer;
     position: relative;
     flex: 0 1 auto;
-    min-width: 68px;
-    max-width: 96px;
+    min-width: 72px;
+    max-width: 104px;
 }
+
+/* Selection pill behind the active tab (iOS 26 style) - a soft
+   capsule tinted in the tab's accent color wraps icon + label */
+.tab-item.active.home-tab { background: rgba(244, 67, 54, 0.12); }
+.tab-item.active.activity-tab { background: rgba(255, 152, 0, 0.14); }
+.tab-item.active.leaderboard-tab { background: rgba(33, 150, 243, 0.13); }
+.tab-item.active.form-tab { background: rgba(76, 175, 80, 0.13); }
 
 .tab-item:hover {
     color: #636366;
