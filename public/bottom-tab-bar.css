@@ -4,7 +4,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.72) !important;
+    background: rgba(255, 255, 255, 0.82) !important;
     backdrop-filter: blur(16px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
     border-top: 1px solid rgba(255, 255, 255, 0.6) !important;
@@ -113,9 +113,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #6b7280;
+    color: #3f4652;
     font-variant-numeric: tabular-nums;
     -webkit-font-smoothing: antialiased;
+    /* Soft white halo: keeps labels readable when a busy part of the
+       photo shows through the frosted bar */
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9), 0 0 6px rgba(255, 255, 255, 0.7);
 }
 
 .tab-item.active {
