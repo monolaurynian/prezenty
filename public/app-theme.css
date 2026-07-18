@@ -209,3 +209,24 @@
         max-width: 100% !important;
     }
 }
+
+/* --- Desktop with sidebar: remove the mobile-era dark top strips.
+   They span the full viewport and clash with the floating sidebar;
+   the sidebar already provides app identity and current location.
+   Page titles keep their text shadows and stay readable on the photo. --- */
+@media (min-width: 992px) {
+    body.has-desktop-nav .fixed-header-bar {
+        display: none !important;
+    }
+
+    body.has-desktop-nav .app-topbar,
+    body.has-desktop-nav .stats-navbar,
+    body.has-desktop-nav .leaderboard-navbar,
+    body.has-desktop-nav .top-menu-container,
+    body.has-desktop-nav nav.navbar {
+        background: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        backdrop-filter: none !important;
+    }
+}
