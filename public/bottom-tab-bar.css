@@ -25,13 +25,16 @@
 
 .tab-bar-container {
     display: flex;
-    justify-content: space-around;
+    /* Cluster tabs near the center (Apple-style) instead of spreading
+       them to the far edges of a wide dock */
+    justify-content: center;
+    gap: 14px;
     align-items: center;
     max-width: 100%;
     margin: 0 auto;
     position: relative;
     padding: 0 16px;
-    height: 64px;
+    height: 60px;
 }
 
 /* Dock width tracks the content container widths (Bootstrap breakpoints
@@ -63,17 +66,22 @@
     justify-content: center;
     flex: 1;
     text-decoration: none;
-    color: #4a5568;
+    color: #8e8e93;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 8px 4px;
+    padding: 6px 4px;
     cursor: pointer;
     position: relative;
-    min-width: 64px;
-    max-width: 100px;
+    flex: 0 1 auto;
+    min-width: 68px;
+    max-width: 96px;
 }
 
 .tab-item:hover {
-    color: #2d3748;
+    color: #636366;
+}
+
+.tab-item:hover i {
+    color: #636366;
 }
 
 /* Icon wrapper for badge positioning */
@@ -88,17 +96,20 @@
     margin-bottom: 0 !important;
 }
 
+/* Apple-style: bare icons, no chips or shadows behind them */
 .tab-item i {
-    font-size: 24px;
+    font-size: 25px;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     width: 40px;
-    height: 40px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 6px;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: 2px;
+    color: #8e8e93;
 }
 
 /* Notification badge */
@@ -145,7 +156,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #3f4652;
+    color: #8e8e93;
     font-variant-numeric: tabular-nums;
     -webkit-font-smoothing: antialiased;
     text-shadow: none;
@@ -155,52 +166,24 @@
     color: inherit;
 }
 
-/* Active label: heavier weight + the tab's accent color, iOS-style */
+/* Active: single app accent for icon + label (Apple uses one tint color) */
 .tab-item.active span {
-    font-weight: 700 !important;
+    font-weight: 600 !important;
+    color: #F44336;
 }
 
-.tab-item.active.home-tab span { color: #E53935; }
-.tab-item.active.activity-tab span { color: #EF6C00; }
-.tab-item.active.leaderboard-tab span { color: #1E88E5; }
-.tab-item.active.form-tab span { color: #43A047; }
+.tab-item.active i {
+    color: #F44336;
+}
 
-/* Active indicator line */
+/* No indicator line (Android pattern) - selection is shown by the
+   filled icon + accent tint, the iOS way */
 .tab-item::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%) scaleX(0);
-    width: 32px;
-    height: 3px;
-    border-radius: 0 0 3px 3px;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.tab-item.active::before {
-    transform: translateX(-50%) scaleX(1);
+    display: none;
 }
 
 .tab-item:hover:not(.active) i {
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.tab-item.home-tab:hover:not(.active) i {
-    background: rgba(244, 67, 54, 0.12);
-}
-
-.tab-item.activity-tab:hover:not(.active) i {
-    background: rgba(255, 152, 0, 0.12);
-}
-
-.tab-item.leaderboard-tab:hover:not(.active) i {
-    background: rgba(33, 150, 243, 0.12);
-}
-
-.tab-item.form-tab:hover:not(.active) i {
-    background: rgba(76, 175, 80, 0.12);
 }
 
 /* Floating Action Button (FAB) - Red Gradient Style */
@@ -247,9 +230,9 @@
                 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Spacer for FAB */
+/* Spacer for FAB - fixed slot so tabs stay clustered near the center */
 .tab-spacer {
-    flex: 1;
+    flex: 0 0 76px;
 }
 
 /* Add padding to body to prevent content from being hidden behind tab bar
@@ -764,67 +747,10 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
     border: 2px solid rgba(255, 255, 255, 0.4) !important;
 }
 
-/* Icon specific colors - saturated chips on the light bar */
-.tab-item.home-tab i {
-    background: rgba(244, 67, 54, 0.12);
-    color: #E53935;
-}
+/* Apple-style: no per-tab colors - all inactive icons neutral gray,
+   the single accent belongs to the active tab only */
 
-.tab-item.activity-tab i {
-    background: rgba(255, 152, 0, 0.12);
-    color: #EF6C00;
-}
-
-.tab-item.leaderboard-tab i {
-    background: rgba(33, 150, 243, 0.12);
-    color: #1E88E5;
-}
-
-.tab-item.form-tab i {
-    background: rgba(76, 175, 80, 0.12);
-    color: #43A047;
-}
-
-/* Icon specific colors when active - stronger chips on the light bar */
-.tab-item.active.home-tab i {
-    background: rgba(244, 67, 54, 0.2);
-    color: #E53935;
-    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3), 0 2px 6px rgba(244, 67, 54, 0.2);
-}
-
-.tab-item.active.home-tab::before {
-    background: #E53935;
-}
-
-.tab-item.active.activity-tab i {
-    background: rgba(255, 152, 0, 0.2);
-    color: #EF6C00;
-    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3), 0 2px 6px rgba(255, 152, 0, 0.2);
-}
-
-.tab-item.active.activity-tab::before {
-    background: #EF6C00;
-}
-
-.tab-item.active.leaderboard-tab i {
-    background: rgba(33, 150, 243, 0.2);
-    color: #1E88E5;
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3), 0 2px 6px rgba(33, 150, 243, 0.2);
-}
-
-.tab-item.active.leaderboard-tab::before {
-    background: #1E88E5;
-}
-
-.tab-item.active.form-tab i {
-    background: rgba(76, 175, 80, 0.2);
-    color: #43A047;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3), 0 2px 6px rgba(76, 175, 80, 0.2);
-}
-
-.tab-item.active.form-tab::before {
-    background: #43A047;
-}
+/* (per-tab active colors removed - single accent defined above) */
 
 /* ===== Secondary quick-action tiles at the bottom of the menu sheet =====
    Compact icon tiles (like share-sheet quick actions) instead of an accordion */
