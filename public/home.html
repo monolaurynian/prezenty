@@ -801,23 +801,41 @@
         }
 
         // After a successful action, quietly re-fetch and re-render from the
-        // server so the UI always converges to the truth (no manual refresh)
+        // server so the UI always converges to the truth (no manual refresh).
+        // Guards against races: reconcile results are ignored while other
+        // actions are still in flight, and stale responses are discarded -
+        // otherwise a quick "Zakupione -> Anuluj zakup" sequence could be
+        // overwritten by the reconcile of the first action.
+        let pendingOps = 0;
+        let reconcileToken = 0;
+
+        function beginOp() { pendingOps++; }
+
+        function endOp() {
+            pendingOps = Math.max(0, pendingOps - 1);
+            if (pendingOps === 0) reconcileWithServer();
+        }
+
         function reconcileWithServer() {
+            const token = ++reconcileToken;
             Promise.all([
                 fetch('/api/recipients-with-presents').then(r => r.json()),
                 fetch('/api/user/identification').then(r => r.json())
             ])
                 .then(([data, identificationStatus]) => {
+                    // Discard if a newer reconcile started or actions are pending
+                    if (token !== reconcileToken || pendingOps > 0) return;
                     window._homeData = { presents: data.presents, recipients: data.recipients, identificationStatus };
                     rerenderHomeSections();
                 })
-                .catch(() => { /* optimistic state stays; next poll fixes it */ });
+                .catch(() => { /* optimistic state stays; next action fixes it */ });
         }
 
         function reservePresent(event, presentId) {
             const d = window._homeData;
             const userId = Number((d && d.identificationStatus && d.identificationStatus.userId) || window._currentUserId);
             const prev = optimisticUpdatePresent(presentId, { reserved_by: userId, is_checked: false });
+            beginOp();
 
             fetch(`/api/presents/${presentId}/reserve`, {
                 method: 'POST',
@@ -827,7 +845,6 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
-                        reconcileWithServer();
                     } else {
                         rollbackPresent(presentId, prev);
                         alert('Błąd: ' + (data.error || 'Nie udało się zarezerwować prezentu'));
@@ -837,11 +854,13 @@
                     console.error('Error:', error);
                     rollbackPresent(presentId, prev);
                     alert('Wystąpił błąd podczas rezerwowania prezentu');
-                });
+                })
+                .finally(endOp);
         }
 
         function unreservePresent(event, presentId) {
             const prev = optimisticUpdatePresent(presentId, { reserved_by: null });
+            beginOp();
 
             fetch(`/api/presents/${presentId}/reserve`, {
                 method: 'DELETE',
@@ -851,7 +870,6 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
-                        reconcileWithServer();
                     } else {
                         rollbackPresent(presentId, prev);
                         alert('Błąd: ' + (data.error || 'Nie udało się anulować rezerwacji'));
@@ -861,7 +879,8 @@
                     console.error('Error:', error);
                     rollbackPresent(presentId, prev);
                     alert('Wystąpił błąd podczas anulowania rezerwacji');
-                });
+                })
+                .finally(endOp);
         }
 
         function openProfilePicturePreview(recipientId, recipientName, profilePictureUrl) {
@@ -881,6 +900,7 @@
         function markAsBought(presentId) {
             // Optimistic: moves instantly from "Moje Rezerwacje" to "Kupione"
             const prev = optimisticUpdatePresent(presentId, { is_checked: true });
+            beginOp();
 
             fetch(`/api/presents/${presentId}/check`, {
                 method: 'PUT',
@@ -891,7 +911,6 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
-                        reconcileWithServer();
                     } else {
                         rollbackPresent(presentId, prev);
                         alert('Błąd: ' + (data.error || 'Nie udało się oznaczyć prezentu'));
@@ -901,12 +920,14 @@
                     console.error('Error marking as bought:', error);
                     rollbackPresent(presentId, prev);
                     alert('Wystąpił błąd podczas oznaczania prezentu');
-                });
+                })
+                .finally(endOp);
         }
 
         function markAsUnbought(presentId) {
             // Optimistic: moves instantly from "Kupione" back to "Moje Rezerwacje"
             const prev = optimisticUpdatePresent(presentId, { is_checked: false });
+            beginOp();
 
             fetch(`/api/presents/${presentId}/check`, {
                 method: 'PUT',
@@ -917,7 +938,6 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
-                        reconcileWithServer();
                     } else {
                         rollbackPresent(presentId, prev);
                         alert('Błąd: ' + (data.error || 'Nie udało się cofnąć oznaczenia'));
@@ -926,7 +946,8 @@
                 .catch(error => {
                     console.error('Error unmarking as bought:', error);
                     rollbackPresent(presentId, prev);
-                });
+                })
+                .finally(endOp);
         }
 
         function logout() {

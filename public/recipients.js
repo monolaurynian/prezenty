@@ -1925,11 +1925,6 @@ function generatePresentsList(presents) {
     const generatePresentItem = (present, index) => `
         <div class="present-item ${present.is_checked ? 'checked' : ''} ${present.reserved_by && present.reserved_by !== currentUserId ? 'reserved-by-other' : ''} ${present.reserved_by === currentUserId ? 'reserved-by-me' : ''}" data-id="${present.id}" style="transition-delay: ${index * 50}ms;">
             <div class="d-flex align-items-start flex-wrap flex-md-nowrap w-100 gap-2">
-                <div class="flex-shrink-0 d-flex align-items-center" style="min-width: 36px;">
-                    <input class="form-check-input" type="checkbox"
-                        ${present.is_checked ? 'checked' : ''}
-                        onchange="togglePresentFromRecipients(${present.id}, this.checked)">
-                </div>
                 <div class="flex-grow-1">
                     <div class="present-title-block">
                         <h6 class="present-title mb-1">${convertUrlsToLinks(escapeHtml(present.title))}</h6>
@@ -1939,7 +1934,7 @@ function generatePresentsList(presents) {
                 <div class="d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 90px;">
                     <small class="text-muted">${present.created_at ? new Date(present.created_at).toLocaleDateString('pl-PL') : ''}</small>
                 </div>
-                <div class="d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 120px;">
+                <div class="present-actions d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 140px;">
                     ${generateReservationButton(present)}
                 </div>
             </div>
@@ -2210,37 +2205,121 @@ function calculateContainerHeight() {
     });
 }
 
+// Action buttons implementing the full flow:
+// Zarezerwuj -> [Zakupione | Anuluj] -> Anuluj zakup (back to reserved)
 function generateReservationButton(present) {
-    if (present.reserved_by) {
-        if (present.reserved_by === currentUserId) {
+    const uid = Number(window._currentUserId || currentUserId);
+    const mine = present.reserved_by != null && Number(present.reserved_by) === uid;
+
+    if (present.is_checked) {
+        if (mine) {
             return `
-                <button class="btn btn-danger btn-sm w-100 w-md-auto reserve-btn" 
-                        onclick="handleReserveClick(event, ${present.id}, 'cancel')" 
-                        title="Usuń rezerwację">
-                    <i class="fas fa-xmark"></i>
-                    <span class="d-inline d-md-none ms-1">Usuń rezerwację</span>
-                </button>
-            `;
-        } else {
-            return `
-                <button class="btn btn-secondary btn-sm w-100 w-md-auto reserve-btn" 
-                        onclick="showReservedByOtherModal('${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}')" 
-                        title="Zarezerwowane przez: ${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}">
-                    <i class="fas fa-bookmark"></i>
-                    <span class="d-inline d-md-none ms-1">Niedostępne</span>
+                <button class="btn btn-outline-secondary btn-sm w-100 w-md-auto reserve-btn"
+                        onclick="handleBoughtClick(event, ${present.id}, false)"
+                        title="Cofnij zakup - wraca do rezerwacji">
+                    <i class="fas fa-rotate-left"></i>
+                    <span class="ms-1">Anuluj zakup</span>
                 </button>
             `;
         }
-    } else {
+        return `<span class="badge bg-success align-self-center" style="font-size: 12px;"><i class="fas fa-check me-1"></i>Kupione</span>`;
+    }
+
+    if (present.reserved_by) {
+        if (mine) {
+            return `
+                <div class="d-flex gap-2 flex-wrap justify-content-end w-100">
+                    <button class="btn btn-success btn-sm reserve-btn"
+                            onclick="handleBoughtClick(event, ${present.id}, true)"
+                            title="Oznacz jako kupione">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span class="ms-1">Zakupione</span>
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm"
+                            onclick="handleReserveClick(event, ${present.id}, 'cancel')"
+                            title="Usuń rezerwację">
+                        <i class="fas fa-xmark"></i>
+                        <span class="ms-1">Anuluj</span>
+                    </button>
+                </div>
+            `;
+        }
         return `
-            <button class="btn btn-reserve btn-sm w-100 w-md-auto reserve-btn" 
-                    onclick="handleReserveClick(event, ${present.id}, 'reserve')" 
-                    title="Zarezerwuj prezent">
+            <button class="btn btn-secondary btn-sm w-100 w-md-auto reserve-btn" 
+                    onclick="showReservedByOtherModal('${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}')" 
+                    title="Zarezerwowane przez: ${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}">
                 <i class="fas fa-bookmark"></i>
-                <span class="ms-1">Zarezerwuj</span>
+                <span class="d-inline d-md-none ms-1">Niedostępne</span>
             </button>
         `;
     }
+
+    return `
+        <button class="btn btn-reserve btn-sm w-100 w-md-auto reserve-btn" 
+                onclick="handleReserveClick(event, ${present.id}, 'reserve')" 
+                title="Zarezerwuj prezent">
+            <i class="fas fa-bookmark"></i>
+            <span class="ms-1">Zarezerwuj</span>
+        </button>
+    `;
+}
+
+// Re-render one present's action buttons from the current cache state
+function refreshPresentButtons(presentId) {
+    const item = document.querySelector(`[data-id="${presentId}"]`);
+    if (!item || !window._dataCache || !window._dataCache.presents) return;
+    const present = window._dataCache.presents.find(p => p.id === presentId);
+    if (!present) return;
+    const cell = item.querySelector('.present-actions');
+    if (cell) cell.innerHTML = generateReservationButton(present);
+}
+
+// "Zakupione" / "Anuluj zakup" button flow (replaces the old checkbox).
+// Optimistic: cache + item state + buttons update instantly, server syncs
+// in the background with a full rollback on failure.
+function handleBoughtClick(event, presentId, isChecked) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const item = document.querySelector(`[data-id="${presentId}"]`);
+
+    const applyState = (checked) => {
+        if (window._dataCache && window._dataCache.presents) {
+            const p = window._dataCache.presents.find(x => x.id === presentId);
+            if (p) p.is_checked = checked;
+        }
+        if (item) item.classList.toggle('checked', checked);
+        refreshPresentButtons(presentId);
+    };
+
+    applyState(isChecked);
+    if (isChecked) {
+        showToast('Oznaczono jako kupione 🛍️', 'success', {
+            label: 'Cofnij',
+            onClick: () => undoCheck(presentId)
+        });
+    }
+
+    fetch(`/api/presents/${presentId}/check`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_checked: isChecked })
+    })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                if (item && typeof updateProgressBar === 'function') updateProgressBar(item);
+                if (typeof reorderPresentsList === 'function') reorderPresentsList();
+                if (typeof softReloadRecipients === 'function') softReloadRecipients();
+            } else {
+                applyState(!isChecked);
+                showErrorToast(d.error || 'Nie udało się zapisać zmiany');
+            }
+        })
+        .catch(() => {
+            applyState(!isChecked);
+            showErrorToast('Błąd połączenia. Zmiana została cofnięta.');
+        });
 }
 
 // Handle reserve button click with optimistic updates
@@ -2269,11 +2348,12 @@ function handleReserveClick(event, presentId, action) {
     }
 
     // Perform optimistic updates immediately
-    updateButtonOptimistically(button, action);
     if (presentItem) {
         updatePresentItemOptimistically(presentItem, action);
     }
     updateCacheOptimistically(presentId, action, window._currentUserId);
+    // Render the buttons for the new state right away
+    refreshPresentButtons(presentId);
 
     // Make API call with rollback capability
     if (action === 'reserve') {
@@ -3135,11 +3215,8 @@ function rollbackOptimisticUpdate(presentId, previousState) {
         presentItem.className = previousState.itemClasses;
     }
 
-    // Restore button - need to find it again and update its HTML
-    const button = presentItem ? presentItem.querySelector('.reserve-btn') : null;
-    if (button) {
-        button.outerHTML = previousState.buttonHTML;
-    }
+    // Re-render buttons from the restored cache state
+    refreshPresentButtons(presentId);
 }
 
 function reservePresentFromRecipients(presentId, button, previousState) {
@@ -3165,15 +3242,8 @@ function reservePresentFromRecipients(presentId, button, previousState) {
                     onClick: () => undoReservation(presentId)
                 });
 
-                // Update button to show cancel action with correct onclick handler
-                const presentItem = document.querySelector(`[data-id="${presentId}"]`);
-                const currentButton = presentItem ? presentItem.querySelector('.reserve-btn') : null;
-                if (currentButton) {
-                    currentButton.disabled = false;
-                    currentButton.classList.remove('updating');
-                    currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'cancel')`);
-                    currentButton.setAttribute('title', 'Usuń rezerwację');
-                }
+                // Render the reserved-state buttons (Zakupione | Anuluj)
+                refreshPresentButtons(presentId);
 
                 // Trigger soft reload to update cache
                 if (typeof softReloadRecipients === 'function') {
@@ -3229,15 +3299,8 @@ function cancelReservationFromRecipients(presentId, button, previousState) {
                     onClick: () => undoCancelReservation(presentId)
                 });
 
-                // Update button to show reserve action with correct onclick handler
-                const presentItem = document.querySelector(`[data-id="${presentId}"]`);
-                const currentButton = presentItem ? presentItem.querySelector('.reserve-btn') : null;
-                if (currentButton) {
-                    currentButton.disabled = false;
-                    currentButton.classList.remove('updating');
-                    currentButton.setAttribute('onclick', `handleReserveClick(event, ${presentId}, 'reserve')`);
-                    currentButton.setAttribute('title', 'Zarezerwuj prezent');
-                }
+                // Render the available-state button (Zarezerwuj)
+                refreshPresentButtons(presentId);
 
                 // Trigger soft reload to update cache
                 if (typeof softReloadRecipients === 'function') {
@@ -3694,10 +3757,11 @@ function reorderPresentsList() {
         originalPositions.set(item, index);
     });
 
-    // Sort items: unchecked first, then checked
+    // Sort items: unchecked first, then checked (state lives on the item
+    // class now - the checkbox was replaced by action buttons)
     presentItems.sort((a, b) => {
-        const aChecked = a.querySelector('.form-check-input').checked;
-        const bChecked = b.querySelector('.form-check-input').checked;
+        const aChecked = a.classList.contains('checked');
+        const bChecked = b.classList.contains('checked');
 
         if (aChecked === bChecked) return 0;
         return aChecked ? 1 : -1; // Unchecked items first
@@ -4263,38 +4327,11 @@ function addPresentToIdentifiedUserAccordion(recipientElement, present) {
     }
 }
 
-// Generate HTML for a single present
+// Generate HTML for a single present (uses the shared button-flow builder)
 function generateSinglePresentHTML(present) {
-    const currentUserId = window._currentUserId;
-    const isReservedByMe = present.reserved_by === currentUserId;
-    const isReservedByOther = present.reserved_by && present.reserved_by !== currentUserId;
-
-    let reserveButtonHTML = '';
-    if (isReservedByMe) {
-        reserveButtonHTML = `
-            <button class="btn btn-danger btn-sm w-100 w-md-auto reserve-btn" 
-                    onclick="handleReserveClick(event, ${present.id}, 'cancel')" 
-                    title="Usuń rezerwację">
-                <i class="fas fa-xmark"></i> <span class="d-none d-md-inline">Anuluj</span>
-            </button>
-        `;
-    } else if (isReservedByOther) {
-        reserveButtonHTML = `
-            <button class="btn btn-secondary btn-sm w-100 w-md-auto reserve-btn" 
-                    onclick="showReservedByOtherModal('${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}')" 
-                    title="Zarezerwowane przez: ${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}">
-                <i class="fas fa-bookmark"></i> <span class="d-none d-md-inline">Zarezerwowane</span>
-            </button>
-        `;
-    } else {
-        reserveButtonHTML = `
-            <button class="btn btn-reserve btn-sm w-100 w-md-auto reserve-btn" 
-                    onclick="handleReserveClick(event, ${present.id}, 'reserve')" 
-                    title="Zarezerwuj prezent">
-                <i class="fas fa-bookmark"></i> <span class="d-none d-md-inline">Zarezerwuj</span>
-            </button>
-        `;
-    }
+    const uid = Number(window._currentUserId || currentUserId);
+    const isReservedByMe = present.reserved_by != null && Number(present.reserved_by) === uid;
+    const isReservedByOther = present.reserved_by && !isReservedByMe;
 
     const classes = ['present-item'];
     if (present.is_checked) classes.push('checked');
@@ -4304,17 +4341,12 @@ function generateSinglePresentHTML(present) {
     return `
         <div class="${classes.join(' ')}" data-id="${present.id}">
             <div class="d-flex align-items-start flex-wrap flex-md-nowrap w-100 gap-2">
-                <div class="flex-shrink-0 d-flex align-items-center" style="min-width: 36px;">
-                    <input class="form-check-input" type="checkbox"
-                        ${present.is_checked ? 'checked' : ''}
-                        onchange="togglePresentFromRecipients(${present.id}, this.checked)">
-                </div>
                 <div class="flex-grow-1 present-details">
                     <div class="fw-semibold present-name">${escapeHtml(present.title)}</div>
                     ${present.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(present.comments)}</div>` : ''}
                 </div>
-                <div class="d-flex gap-2 flex-wrap flex-md-nowrap justify-content-center justify-content-md-end w-100 w-md-auto">
-                    ${reserveButtonHTML}
+                <div class="present-actions d-flex gap-2 flex-wrap flex-md-nowrap justify-content-center justify-content-md-end w-100 w-md-auto">
+                    ${generateReservationButton(present)}
                 </div>
             </div>
         </div>
