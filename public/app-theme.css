@@ -275,6 +275,25 @@
     }
 }
 
+/* --- Mobile: page-title headings are redundant too (the dock's active
+   tab communicates location). Home keeps its slim top bar because it
+   hosts the avatar (link to /ustawienia) - only the title is removed. --- */
+@media (max-width: 991.98px) {
+    .stats-navbar .navbar-brand {
+        display: none !important;
+    }
+
+    /* Bar is now just the avatar - tighten the gap below it */
+    .stats-navbar {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .leaderboard-navbar,
+    .activity-page nav.navbar {
+        display: none !important;
+    }
+}
+
 /* --- Reservation design language: orange --- */
 .btn.btn-reserve {
     background: #F57C00;
