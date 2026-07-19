@@ -65,6 +65,8 @@
         .toast-container { z-index: 9999; }
         #successToast, #errorToast, #successToast *, #errorToast * { text-shadow: none; }
     </style>
+    <!-- Manifest (required for PWA install prompt) -->
+    <link rel="manifest" href="manifest.json">
 </head>
 <body class="has-tab-bar">
     <div class="background-overlay"></div>
@@ -193,21 +195,18 @@
                 <div id="installInstructions" class="mt-3" style="display: none; font-size: 14px;"></div>`;
         }
 
-        function installApp() {
-            if (deferredInstallPrompt) {
-                deferredInstallPrompt.prompt();
-                deferredInstallPrompt.userChoice.then(choice => {
-                    if (choice.outcome === 'accepted') {
-                        showToast('Instalowanie aplikacji...', 'success');
-                    }
-                    deferredInstallPrompt = null;
-                    renderInstallSection();
-                });
-                return;
-            }
+        function triggerNativeInstall() {
+            deferredInstallPrompt.prompt();
+            deferredInstallPrompt.userChoice.then(choice => {
+                if (choice.outcome === 'accepted') {
+                    showToast('Instalowanie aplikacji...', 'success');
+                }
+                deferredInstallPrompt = null;
+                renderInstallSection();
+            });
+        }
 
-            // No native prompt (iOS Safari, or the browser withheld it) -
-            // show how to do it by hand
+        function showInstallInstructions() {
             const box = document.getElementById('installInstructions');
             if (!box) return;
             const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -215,6 +214,34 @@
                 ? 'Na iPhonie/iPadzie: w Safari otwórz menu udostępniania <i class="fas fa-arrow-up-from-bracket mx-1"></i> i wybierz <strong>"Dodaj do ekranu początkowego"</strong>.'
                 : 'Otwórz menu przeglądarki (⋮) i wybierz <strong>"Zainstaluj aplikację"</strong> lub <strong>"Dodaj do ekranu głównego"</strong>.';
             box.style.display = 'block';
+        }
+
+        function installApp() {
+            if (deferredInstallPrompt) {
+                triggerNativeInstall();
+                return;
+            }
+
+            // The browser fires beforeinstallprompt asynchronously, often
+            // a moment after load - wait briefly for it before falling
+            // back to the manual instructions
+            const box = document.getElementById('installInstructions');
+            if (box) {
+                box.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Przygotowywanie instalacji...';
+                box.style.display = 'block';
+            }
+            let waited = 0;
+            const waiter = setInterval(() => {
+                waited += 250;
+                if (deferredInstallPrompt) {
+                    clearInterval(waiter);
+                    if (box) box.style.display = 'none';
+                    triggerNativeInstall();
+                } else if (waited >= 2000) {
+                    clearInterval(waiter);
+                    showInstallInstructions();
+                }
+            }, 250);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
