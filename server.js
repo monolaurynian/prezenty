@@ -2438,7 +2438,7 @@ async function notifyAnonMessage(recipientUserId, label, threadId, preview) {
     }
     sendPushToUser(recipientUserId, label + ' 💬',
         preview.length > 80 ? preview.slice(0, 77) + '...' : preview,
-        { url: '/wiadomosci' }
+        { url: '/wiadomosci?rozmowa=' + threadId }
     ).catch(() => {});
 }
 

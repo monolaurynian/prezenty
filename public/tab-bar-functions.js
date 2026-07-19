@@ -189,8 +189,10 @@ function getNotificationMessage(notif) {
             return `<strong>${actor}</strong> odznaczył(a) "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
         case 'leaderboard_leader':
             return `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`;
-        case 'anon_message':
-            return `💬 <a href="/wiadomosci" style="color: #2196F3; text-decoration: underline;"><strong>${data.label || 'Nowa wiadomość'}</strong></a>${data.preview ? ': "' + escapeHtmlNotif(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`;
+        case 'anon_message': {
+            const threadHref = data.threadId ? `/wiadomosci?rozmowa=${data.threadId}` : '/wiadomosci';
+            return `💬 <a href="${threadHref}" style="color: #2196F3; text-decoration: underline;"><strong>${data.label || 'Nowa wiadomość'}</strong></a>${data.preview ? ': "' + escapeHtmlNotif(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`;
+        }
         default:
             return `<strong>${actor}</strong> wykonał(a) akcję`;
     }

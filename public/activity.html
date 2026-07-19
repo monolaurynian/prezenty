@@ -519,7 +519,7 @@
                 icon: 'fa-comment-dots',
                 color: '#7B1FA2',
                 getMessage: (data) =>
-                    `💬 <a href="/wiadomosci" style="color: #7B1FA2; text-decoration: underline;"><strong>${data.label || 'Nowa wiadomość'}</strong></a>${data.preview ? ': "' + escapeHtmlText(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`
+                    `💬 <a href="${data.threadId ? '/wiadomosci?rozmowa=' + data.threadId : '/wiadomosci'}" style="color: #7B1FA2; text-decoration: underline;"><strong>${data.label || 'Nowa wiadomość'}</strong></a>${data.preview ? ': "' + escapeHtmlText(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`
             }
         };
 
@@ -1010,7 +1010,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=8"></script>
+    <script src="tab-bar-functions.js?v=9"></script>
     <script src="desktop-nav.js?v=3"></script>
 </body>
 </html>

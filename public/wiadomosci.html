@@ -133,6 +133,8 @@
             </h5>
         </div>
 
+        <!-- ===== List view (compose + threads) ===== -->
+        <div id="listView">
         <!-- Compose -->
         <div class="glass-card p-4">
             <div class="section-title"><i class="fas fa-user-secret" style="color:#7B1FA2;"></i>Wyślij anonimową wiadomość</div>
@@ -158,22 +160,26 @@
                 <div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>
             </div>
         </div>
-    </div>
+        </div><!-- /listView -->
 
-    <!-- Thread modal (chat view) -->
-    <div class="modal fade" id="threadModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 20px;">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="threadModalTitle"><i class="fas fa-comment-dots me-2" style="color:#7B1FA2;"></i>Rozmowa</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <!-- ===== Conversation view (own "page": URL ?rozmowa=<id>,
+             system back button returns to the list) ===== -->
+        <div id="chatView" style="display: none;">
+            <div class="glass-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <button class="btn btn-light btn-sm fw-semibold" onclick="closeThread()"
+                        style="color:#212529;" title="Wróć do listy rozmów">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="section-title mb-0" id="chatTitle">
+                        <i class="fas fa-comment-dots" style="color:#7B1FA2;"></i>Rozmowa
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <div class="chat-messages" id="chatMessages"></div>
-                </div>
-                <div class="modal-footer" style="gap: 8px;">
-                    <textarea class="form-control" id="replyBody" rows="1" placeholder="Odpowiedz..." style="flex: 1;"></textarea>
-                    <button class="btn btn-anon" id="replyBtn" onclick="sendReply()">
+                <div class="chat-messages" id="chatMessages" style="max-height: 58vh; min-height: 180px;"></div>
+                <div class="d-flex gap-2 mt-3">
+                    <textarea class="form-control" id="replyBody" rows="1" placeholder="Odpowiedz..."
+                        style="flex: 1;"></textarea>
+                    <button class="btn btn-anon" id="replyBtn" onclick="sendReply()" title="Wyślij">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
@@ -199,22 +205,45 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let threadModal = null;
         let currentThreadId = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            threadModal = new bootstrap.Modal(document.getElementById('threadModal'));
             fetch('/api/auth')
                 .then(r => r.json())
                 .then(data => {
                     if (!data.authenticated) { window.location.href = '/'; return; }
                     loadUsers();
                     loadThreads();
+
+                    // Deep link: /wiadomosci?rozmowa=<id> opens the
+                    // conversation directly (used by notifications)
+                    const rozmowa = new URLSearchParams(window.location.search).get('rozmowa');
+                    if (rozmowa) openThread(parseInt(rozmowa, 10), false);
                 })
                 .catch(() => { window.location.href = '/'; });
 
-            // Refresh the thread list periodically (light query)
-            setInterval(loadThreads, 60000);
+            // Enter sends the reply (Shift+Enter for a newline)
+            document.getElementById('replyBody').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendReply();
+                }
+            });
+
+            // Periodic refresh of whichever view is open
+            setInterval(() => {
+                if (currentThreadId) loadThreadMessages();
+                else loadThreads();
+            }, 60000);
+        });
+
+        // The system back button navigates between conversation and list
+        window.addEventListener('popstate', (e) => {
+            if (e.state && e.state.rozmowa) {
+                openThread(e.state.rozmowa, false);
+            } else {
+                showListView(false);
+            }
         });
 
         function escapeHtml(text) {
@@ -322,13 +351,35 @@
                 });
         }
 
-        // ===== Chat view =====
-        function openThread(threadId) {
+        // ===== Conversation view =====
+        function openThread(threadId, pushHistory = true) {
             currentThreadId = threadId;
+            if (pushHistory) {
+                history.pushState({ rozmowa: threadId }, '', '/wiadomosci?rozmowa=' + threadId);
+            }
+            document.getElementById('listView').style.display = 'none';
+            document.getElementById('chatView').style.display = 'block';
             document.getElementById('chatMessages').innerHTML =
                 '<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>';
-            threadModal.show();
             loadThreadMessages();
+        }
+
+        function closeThread() {
+            // If we pushed a history entry, going back pops it (and the
+            // popstate handler shows the list); deep links just switch views
+            if (history.state && history.state.rozmowa) {
+                history.back();
+            } else {
+                showListView(true);
+            }
+        }
+
+        function showListView(replaceUrl) {
+            currentThreadId = null;
+            document.getElementById('chatView').style.display = 'none';
+            document.getElementById('listView').style.display = 'block';
+            if (replaceUrl) history.replaceState(null, '', '/wiadomosci');
+            loadThreads();
         }
 
         function loadThreadMessages() {
@@ -336,8 +387,9 @@
             fetch(`/api/wiadomosci/threads/${currentThreadId}`)
                 .then(r => r.json())
                 .then(d => {
-                    document.getElementById('threadModalTitle').innerHTML =
-                        `<i class="fas fa-comment-dots me-2" style="color:#7B1FA2;"></i>${escapeHtml(d.otherLabel || 'Rozmowa')}`;
+                    if (!currentThreadId) return; // view was closed meanwhile
+                    document.getElementById('chatTitle').innerHTML =
+                        `<i class="fas fa-comment-dots" style="color:#7B1FA2;"></i>${escapeHtml(d.otherLabel || 'Rozmowa')}`;
                     const box = document.getElementById('chatMessages');
                     box.innerHTML = (d.messages || []).map(m => `
                         <div class="chat-bubble ${m.fromMe ? 'from-me' : 'from-them'}">
@@ -346,7 +398,6 @@
                         </div>
                     `).join('');
                     box.scrollTop = box.scrollHeight;
-                    loadThreads(); // refresh unread badges
                 })
                 .catch(() => showToast('Nie udało się załadować rozmowy', 'error'));
         }
@@ -477,7 +528,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=8"></script>
+    <script src="tab-bar-functions.js?v=9"></script>
     <script src="desktop-nav.js?v=3"></script>
 </body>
 </html>

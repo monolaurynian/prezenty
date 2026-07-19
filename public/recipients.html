@@ -1796,7 +1796,7 @@
                 anon_message: {
                     icon: 'fa-comment-dots',
                     color: '#7B1FA2',
-                    getMessage: (data) => `💬 <strong>${data.label || 'Nowa wiadomość'}</strong> - <a href="/wiadomosci" style="color: #7B1FA2;">otwórz</a>`
+                    getMessage: (data) => `💬 <strong>${data.label || 'Nowa wiadomość'}</strong> - <a href="${data.threadId ? '/wiadomosci?rozmowa=' + data.threadId : '/wiadomosci'}" style="color: #7B1FA2;">otwórz</a>`
                 }
             };
             return configs[type] || configs.present_added;
@@ -2356,7 +2356,7 @@
     <script src="realtime-updates.js" defer></script>
     
     <!-- Tab bar functions (shared across pages) -->
-    <script src="tab-bar-functions.js?v=8"></script>
+    <script src="tab-bar-functions.js?v=9"></script>
 
     <!-- Bottom Tab Bar -->
     <div class="bottom-tab-bar">
