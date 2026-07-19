@@ -68,7 +68,8 @@
     position: relative;
     flex: 0 1 auto;
     min-width: 76px;
-    max-width: 116px;
+    /* No max-width cap: each tab sizes to its label so text is never
+       truncated - the pill keeps its padding as breathing room */
 }
 
 /* Selection pill behind the active tab (iOS 26 style) - a soft
@@ -723,13 +724,15 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
     .tab-bar-container {
         padding: 0 4px;
         height: 60px;
+        /* Tighter gap so full-length labels fit on narrow phones */
+        gap: 8px;
     }
     
     .tab-item {
-        /* Keep breathing room around the selection pill on phones too */
-        padding: 8px 12px 7px;
-        min-width: 64px;
-        max-width: 88px;
+        /* Breathing room around the pill, but labels must fit in full -
+           tighter padding + no width cap on phones */
+        padding: 8px 10px 7px;
+        min-width: 60px;
     }
     
     .tab-item i {

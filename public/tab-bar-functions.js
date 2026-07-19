@@ -194,11 +194,12 @@ function getNotificationMessage(notif) {
     }
 }
 
-// Highlight a present item in place (no scrolling) - retries briefly in
+// Scroll the present into view and highlight it - retries briefly in
 // case the list is re-rendering when called
 function highlightPresentItem(presentId, retries = 0) {
     const element = document.querySelector(`.present-item[data-id="${presentId}"]`);
     if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         element.classList.add('highlight-flash');
         element.style.transition = 'background-color 0.3s ease';
         const originalBg = element.style.backgroundColor;
