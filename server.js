@@ -1857,6 +1857,47 @@ app.delete('/api/presents/:id', requireAuth, async (req, res) => {
     }
 });
 
+// Abandoned presents - nobody manages them anymore. Covers every orphan
+// case: creator anonymized (created_by NULL), creator row deleted outright
+// (dangling created_by from before anonymization existed), and presents
+// whose recipient row is gone (invisible in all lists but still counted
+// in stats). Presents for the caller's own recipient are masked so the
+// surprise survives, but they can still be deleted.
+app.get('/api/presents/abandoned', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.json({ presents: [] });
+    try {
+        const [rows] = await pool.execute(`
+            SELECT p.id, p.title, p.recipient_id, p.comments,
+                   r.name as recipient_name,
+                   r.identified_by as recipient_identified_by,
+                   (r.id IS NULL AND p.recipient_id IS NOT NULL) as recipient_missing
+            FROM presents p
+            LEFT JOIN recipients r ON p.recipient_id = r.id
+            LEFT JOIN users u ON p.created_by = u.id
+            WHERE (p.created_by IS NULL OR u.id IS NULL)
+               OR (p.recipient_id IS NOT NULL AND r.id IS NULL)
+            ORDER BY r.name, p.id DESC
+        `);
+        const userId = req.session.userId;
+        const presents = rows.map(p => {
+            const isMine = p.recipient_identified_by === userId;
+            return {
+                id: p.id,
+                recipient_id: p.recipient_id,
+                recipient_name: p.recipient_missing ? null : p.recipient_name,
+                recipient_missing: !!p.recipient_missing,
+                // Spoiler protection: the caller never sees their own gifts
+                masked: isMine,
+                title: isMine ? 'Prezent-niespodzianka 🎁' : p.title,
+                comments: isMine ? null : p.comments
+            };
+        });
+        res.json({ presents });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas pobierania porzuconych prezentów');
+    }
+});
+
 // Reserve present
 app.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
     clearCombinedDataCache();

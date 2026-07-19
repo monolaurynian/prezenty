@@ -107,8 +107,9 @@
         <div class="glass-card" id="abandonedCard" style="display: none;">
             <h5 class="mb-1"><i class="fas fa-ghost me-2"></i>Porzucone prezenty</h5>
             <p style="color: #6b7280; font-size: 14px;">
-                Prezenty dodane przez konta, które zostały usunięte. Nikt nimi już nie
-                zarządza - możesz je edytować lub usunąć.
+                Prezenty dodane przez usunięte konta albo przypisane do osób, których już
+                nie ma na liście. Nikt nimi nie zarządza - możesz je usunąć. Prezenty
+                przeznaczone dla Ciebie mają ukrytą nazwę.
             </p>
             <div id="abandonedContent"></div>
         </div>
@@ -134,6 +135,7 @@
     <script>
         let people = [];
         let presents = [];
+        let abandonedPresents = [];
         let allRecipients = [];
         let currentUserId = null;
 
@@ -163,13 +165,15 @@
         function loadData() {
             Promise.all([
                 fetch('/api/recipients').then(r => r.json()),
-                fetch('/api/presents/all').then(r => r.json())
+                fetch('/api/presents/all').then(r => r.json()),
+                fetch('/api/presents/abandoned').then(r => r.json()).catch(() => ({ presents: [] }))
             ])
-                .then(([recipients, allPresents]) => {
+                .then(([recipients, allPresents, abandoned]) => {
                     allRecipients = Array.isArray(recipients) ? recipients : [];
                     // Only unverified (unidentified) people can be managed here
                     people = allRecipients.filter(r => !r.identified_by);
                     presents = Array.isArray(allPresents) ? allPresents : [];
+                    abandonedPresents = (abandoned && abandoned.presents) || [];
                     render();
                 })
                 .catch(() => {
@@ -218,20 +222,17 @@
             }).join('');
         }
 
-        // Presents whose creator deleted their account (created_by is NULL).
-        // Presents of unidentified people are already manageable above, and
-        // presents for the current user stay hidden (no spoilers).
+        // Presents nobody manages anymore (creator account deleted or
+        // recipient row gone). Served by /api/presents/abandoned, which
+        // also masks the caller's own gifts (still deletable, no spoiler).
+        // Presents of unidentified people are excluded - they are already
+        // manageable in the section above.
         function renderAbandoned() {
             const card = document.getElementById('abandonedCard');
             const content = document.getElementById('abandonedContent');
             const unidentifiedIds = new Set(people.map(p => p.id));
-            const me = allRecipients.find(r => r.identified_by === currentUserId);
 
-            const abandoned = presents.filter(p =>
-                p.created_by == null &&
-                !unidentifiedIds.has(p.recipient_id) &&
-                (!me || p.recipient_id !== me.id)
-            );
+            const abandoned = abandonedPresents.filter(p => !unidentifiedIds.has(p.recipient_id));
 
             if (abandoned.length === 0) {
                 card.style.display = 'none';
@@ -242,7 +243,9 @@
             // Group by recipient for readability
             const byRecipient = new Map();
             abandoned.forEach(p => {
-                const key = p.recipient_name || 'Bez osoby';
+                const key = p.recipient_missing
+                    ? 'Osoba usunięta z listy'
+                    : (p.recipient_name || 'Bez przypisanej osoby');
                 if (!byRecipient.has(key)) byRecipient.set(key, []);
                 byRecipient.get(key).push(p);
             });
@@ -253,8 +256,45 @@
                         <i class="fas fa-user me-2" style="color:#6b7280;"></i>${escapeHtml(name)}
                         <span style="font-weight:400; color:#6b7280; font-size:13px;">(${list.length})</span>
                     </div>
-                    ${list.map(p => presentRow(p)).join('')}
+                    ${list.map(p => abandonedRow(p)).join('')}
                 </div>`).join('');
+        }
+
+        // Delete-only row: editing makes no sense here, and masked rows
+        // (the caller's own gifts) never reveal the title
+        function abandonedRow(p) {
+            return `
+                <div class="present-row" data-abandoned="${p.id}">
+                    <div class="d-flex justify-content-between gap-2 flex-wrap align-items-start">
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="fw-semibold">${escapeHtml(p.title)}</div>
+                            ${p.masked ? '<div class="muted">Prezent dla Ciebie - nazwa ukryta, żeby nie psuć niespodzianki</div>' : ''}
+                            ${!p.masked && p.comments ? `<div class="muted">${escapeHtml(p.comments)}</div>` : ''}
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteAbandoned(${p.id})" title="Usuń">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+        }
+
+        function deleteAbandoned(presentId) {
+            const p = abandonedPresents.find(x => x.id === presentId);
+            const label = p && !p.masked ? `"${p.title}"` : 'ten prezent';
+            if (!confirm(`Usunąć ${label}? Tej operacji nie można cofnąć.`)) return;
+            fetch(`/api/presents/${presentId}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        abandonedPresents = abandonedPresents.filter(x => x.id !== presentId);
+                        presents = presents.filter(x => x.id !== presentId);
+                        render();
+                        showToast('Prezent usunięty', 'success');
+                    } else {
+                        showToast(d.error || 'Nie udało się usunąć prezentu', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
         }
 
         function presentRow(p) {
@@ -327,6 +367,7 @@
                 .then(d => {
                     if (d.success) {
                         presents = presents.filter(p => p.id !== presentId);
+                        abandonedPresents = abandonedPresents.filter(p => p.id !== presentId);
                         render();
                         showToast('Prezent usunięty', 'success');
                     } else {
@@ -369,6 +410,7 @@
                     if (d.success) {
                         people = people.filter(p => p.id !== personId);
                         presents = presents.filter(p => p.recipient_id !== personId);
+                        abandonedPresents = abandonedPresents.filter(p => p.recipient_id !== personId);
                         render();
                         showToast(`Usunięto: ${name}`, 'success');
                     } else {
