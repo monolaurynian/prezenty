@@ -519,7 +519,7 @@
                 icon: 'fa-trophy',
                 color: '#FFC107',
                 getMessage: (data) =>
-                    `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w rankingu z <strong>${data.presentCount || '?'}</strong> ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
+                    `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" style="color: #2196F3; text-decoration: underline;">rankingu</a> z <strong>${data.presentCount || '?'}</strong> ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
             },
             anon_message: {
                 icon: 'fa-comment-dots',
@@ -1022,7 +1022,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=12"></script>
+    <script src="tab-bar-functions.js?v=13"></script>
     <script src="desktop-nav.js?v=4"></script>
 </body>
 </html>
