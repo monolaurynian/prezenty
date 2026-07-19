@@ -641,7 +641,7 @@ function displayMyPresents(presents) {
     
     presents.forEach(present => {
         html += `
-            <div class="list-group-item">
+            <div class="list-group-item" data-present-id="${present.id}">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1" style="min-width: 0; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
                         <h6 class="mb-1" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">${makeLinksClickable(escapeHtml(present.title))}</h6>
@@ -775,22 +775,84 @@ function deletePresent(id) {
     if (!confirm('Czy na pewno chcesz usunąć ten prezent?')) {
         return;
     }
-    
+
+    // Smart update: collapse the row immediately instead of reloading the
+    // whole list (no spinner, no scroll jump); restore it if the server
+    // declines
+    const item = document.querySelector(`#myPresentsList .list-group-item[data-present-id="${id}"]`);
+    let restore = null;
+    if (item) {
+        restore = {
+            parent: item.parentElement,
+            nextSibling: item.nextElementSibling,
+            node: item
+        };
+        item.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(12px)';
+        setTimeout(() => {
+            item.remove();
+            // Last present gone - swap in the empty state in place
+            const list = document.querySelector('#myPresentsList .list-group');
+            if (list && list.children.length === 0) {
+                renderMyPresentsEmptyState();
+            }
+        }, 250);
+    }
+
     fetch(`/api/presents/${id}`, {
         method: 'DELETE'
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            loadMyPresents();
+            // Confirmed - if the row was somehow not found in the DOM,
+            // fall back to a full refresh so the view stays truthful
+            if (!item) loadMyPresents();
         } else {
+            undoRemoveMyPresent(restore);
             alert(data.error || 'Błąd podczas usuwania prezentu');
         }
     })
     .catch(error => {
         console.error('Error deleting present:', error);
+        undoRemoveMyPresent(restore);
         alert('Błąd połączenia z serwerem');
     });
+}
+
+// Put a removed row back (delete failed)
+function undoRemoveMyPresent(restore) {
+    if (!restore || !restore.parent) {
+        loadMyPresents();
+        return;
+    }
+    const { parent, nextSibling, node } = restore;
+    node.style.opacity = '1';
+    node.style.transform = 'none';
+    // The empty state may have replaced the list - rebuild via reload then
+    if (!document.body.contains(parent)) {
+        loadMyPresents();
+        return;
+    }
+    if (nextSibling && parent.contains(nextSibling)) {
+        parent.insertBefore(node, nextSibling);
+    } else {
+        parent.appendChild(node);
+    }
+}
+
+// Empty state shown in place when the last present is removed
+function renderMyPresentsEmptyState() {
+    const myPresentsList = document.getElementById('myPresentsList');
+    if (!myPresentsList) return;
+    myPresentsList.innerHTML = `
+        <div class="text-center py-5">
+            <i class="fas fa-gift fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nie masz jeszcze żadnych prezentów</h5>
+            <p class="text-muted">Dodaj swój pierwszy prezent używając formularza powyżej</p>
+        </div>
+    `;
 }
 
 function escapeHtml(text) {
