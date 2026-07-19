@@ -176,6 +176,40 @@
                 || window.navigator.standalone === true;
         }
 
+        function isIosDevice() {
+            // iPadOS 13+ reports itself as MacIntel with touch support
+            return /iphone|ipad|ipod/i.test(navigator.userAgent)
+                || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        }
+
+        function isIosSafari() {
+            // Chrome/Firefox/Edge on iOS and in-app webviews can't reliably
+            // add to home screen - it has to be real Safari
+            const ua = navigator.userAgent;
+            return isIosDevice() && !/CriOS|FxiOS|EdgiOS|OPiOS|mercury|FBAN|FBAV|Instagram/i.test(ua);
+        }
+
+        function iosInstructionsHTML() {
+            const notSafariHint = !isIosSafari()
+                ? `<div class="alert alert-warning py-2 px-3 mb-2" style="font-size:13px;">
+                       <i class="fas fa-triangle-exclamation me-1"></i>
+                       Najpierw otwórz tę stronę w <strong>Safari</strong> - tylko Safari
+                       pozwala dodać aplikację do ekranu początkowego.
+                   </div>` : '';
+            return `
+                ${notSafariHint}
+                <p class="mb-2" style="font-size:14px;">Na iPhonie instaluje się tak:</p>
+                <ol class="mb-0 ps-3" style="font-size:14px;">
+                    <li class="mb-2">Stuknij przycisk <strong>Udostępnij</strong>
+                        <i class="fas fa-arrow-up-from-bracket mx-1" style="color:#1E88E5;"></i>
+                        na dolnym pasku Safari</li>
+                    <li class="mb-2">Przewiń w dół i wybierz
+                        <strong>"Dodaj do ekranu początkowego"</strong>
+                        <i class="fas fa-plus-square ms-1" style="color:#43A047;"></i></li>
+                    <li>Potwierdź - ikona Prezentów pojawi się na ekranie 🎁</li>
+                </ol>`;
+        }
+
         function renderInstallSection() {
             const content = document.getElementById('installContent');
             if (!content) return;
@@ -185,9 +219,16 @@
                 return;
             }
 
-            // Button-first: the install shortcut is always visible. With the
-            // native prompt captured it installs in one tap; without it the
-            // click reveals the platform instructions.
+            // iOS has NO install prompt API - a button pretending to install
+            // would always dead-end. Show the honest step-by-step guide
+            // right away instead.
+            if (isIosDevice()) {
+                content.innerHTML = iosInstructionsHTML();
+                return;
+            }
+
+            // Android/desktop: button-first. With the native prompt captured
+            // it installs in one tap; otherwise the click reveals instructions.
             content.innerHTML = `
                 <button class="btn btn-success fw-semibold" onclick="installApp()">
                     <i class="fas fa-download me-1"></i>Zainstaluj na tym urządzeniu
@@ -209,9 +250,8 @@
         function showInstallInstructions() {
             const box = document.getElementById('installInstructions');
             if (!box) return;
-            const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-            box.innerHTML = isIos
-                ? 'Na iPhonie/iPadzie: w Safari otwórz menu udostępniania <i class="fas fa-arrow-up-from-bracket mx-1"></i> i wybierz <strong>"Dodaj do ekranu początkowego"</strong>.'
+            box.innerHTML = isIosDevice()
+                ? iosInstructionsHTML()
                 : 'Otwórz menu przeglądarki (⋮) i wybierz <strong>"Zainstaluj aplikację"</strong> lub <strong>"Dodaj do ekranu głównego"</strong>.';
             box.style.display = 'block';
         }
