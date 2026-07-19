@@ -543,16 +543,9 @@
             }
         }
 
-        /* Fixed header bar for hamburger and bell */
+        /* Fixed header bar retired (dark gradient overlay over content) */
         .fixed-header-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 70px;
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0));
-            z-index: 1030;
-            pointer-events: none;
+            display: none !important;
         }
         
         /* Hamburger Menu Button - fixed positioning for floating */
@@ -769,8 +762,8 @@
 <body class="recipients-page has-tab-bar">
     <div class="background-overlay"></div>
 
-    <!-- Fixed Header Bar -->
-    <div class="fixed-header-bar"></div>
+    <!-- Fixed header bar removed - it painted a dark gradient over the
+         top of the content (leftover from the old hamburger/bell header) -->
 
     <!-- Sidebar Menu -->
     <div class="sidebar-menu" id="sidebarMenu">
