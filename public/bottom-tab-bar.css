@@ -43,8 +43,8 @@
     margin: 0 auto;
     position: relative;
     padding: 0 16px;
-    /* Tall enough for the selection pill's inner padding */
-    height: 64px;
+    /* Tall enough for the flattened selection pill */
+    height: 58px;
 }
 
 /* No width caps: the dock always spans the full width minus the same
@@ -60,10 +60,10 @@
     text-decoration: none;
     color: #8e8e93;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    /* Generous inner padding so the selection pill has breathing room
-       around the icon + label instead of hugging them */
-    padding: 8px 20px 7px;
-    border-radius: 18px;
+    /* Wide, flat pill: generous side padding, tight vertical padding -
+       the selection reads as wider than tall (landscape) with the label */
+    padding: 6px 22px 6px;
+    border-radius: 16px;
     cursor: pointer;
     position: relative;
     flex: 0 1 auto;
@@ -117,8 +117,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 2px;
-    height: 32px;
+    margin-bottom: 1px;
+    height: 28px;
 }
 
 /* Remove double margin for icons inside wrapper */
@@ -128,10 +128,10 @@
 
 /* Apple-style: bare icons, no chips or shadows behind them */
 .tab-item i {
-    font-size: 25px;
+    font-size: 24px;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     width: 40px;
-    height: 32px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -186,7 +186,7 @@
     font-weight: 500 !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     letter-spacing: 0.3px;
-    margin-top: 4px;
+    margin-top: 2px;
     text-align: center;
     line-height: 1.2;
     max-width: 100%;
@@ -723,22 +723,21 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
 @media (max-width: 480px) {
     .tab-bar-container {
         padding: 0 4px;
-        height: 60px;
+        height: 54px;
         /* Tighter gap so full-length labels fit on narrow phones */
         gap: 8px;
     }
     
     .tab-item {
-        /* Breathing room around the pill, but labels must fit in full -
-           tighter padding + no width cap on phones */
-        padding: 8px 10px 7px;
+        /* Wide flat pill on phones too - labels must fit in full */
+        padding: 6px 14px 6px;
         min-width: 60px;
     }
     
     .tab-item i {
-        font-size: 22px;
+        font-size: 21px;
         width: 36px;
-        height: 36px;
+        height: 26px;
     }
     
     .tab-item span {
