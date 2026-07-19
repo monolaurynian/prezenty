@@ -43,8 +43,11 @@
     margin: 0 auto;
     position: relative;
     padding: 0 16px;
-    /* Tall enough for the flattened selection pill */
-    height: 58px;
+    /* min-height instead of a fixed height: the items (icon + label +
+       pill padding) define the row, so labels can never be clipped by
+       the bar - it grows to fit them */
+    min-height: 58px;
+    height: auto;
 }
 
 /* No width caps: the dock always spans the full width minus the same
@@ -189,9 +192,10 @@
     margin-top: 2px;
     text-align: center;
     line-height: 1.2;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* The label must always be fully visible - the tab sizes to fit it,
+       never the other way around */
+    display: block;
+    overflow: visible;
     white-space: nowrap;
     color: #8e8e93;
     font-variant-numeric: tabular-nums;
@@ -723,7 +727,8 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
 @media (max-width: 480px) {
     .tab-bar-container {
         padding: 0 4px;
-        height: 54px;
+        min-height: 54px;
+        height: auto;
         /* Tighter gap so full-length labels fit on narrow phones */
         gap: 8px;
     }
