@@ -8,7 +8,8 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="theme-color" content="#F44336">    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=1">
+    <meta name="theme-color" content="#F44336">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=1">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=1">
     <link rel="apple-touch-icon" href="icon-180.png?v=4">
 
@@ -101,6 +102,16 @@
                 <div class="text-center py-4"><div class="spinner-border text-secondary"></div></div>
             </div>
         </div>
+
+        <!-- Abandoned presents - added by accounts that no longer exist -->
+        <div class="glass-card" id="abandonedCard" style="display: none;">
+            <h5 class="mb-1"><i class="fas fa-ghost me-2"></i>Porzucone prezenty</h5>
+            <p style="color: #6b7280; font-size: 14px;">
+                Prezenty dodane przez konta, które zostały usunięte. Nikt nimi już nie
+                zarządza - możesz je edytować lub usunąć.
+            </p>
+            <div id="abandonedContent"></div>
+        </div>
     </div>
 
     <!-- Toasts -->
@@ -123,12 +134,15 @@
     <script>
         let people = [];
         let presents = [];
+        let allRecipients = [];
+        let currentUserId = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             fetch('/api/auth')
                 .then(r => r.json())
                 .then(d => {
                     if (!d.authenticated) { window.location.href = '/'; return; }
+                    currentUserId = d.user && d.user.id;
                     loadData();
                 })
                 .catch(() => { window.location.href = '/'; });
@@ -152,8 +166,9 @@
                 fetch('/api/presents/all').then(r => r.json())
             ])
                 .then(([recipients, allPresents]) => {
+                    allRecipients = Array.isArray(recipients) ? recipients : [];
                     // Only unverified (unidentified) people can be managed here
-                    people = (Array.isArray(recipients) ? recipients : []).filter(r => !r.identified_by);
+                    people = allRecipients.filter(r => !r.identified_by);
                     presents = Array.isArray(allPresents) ? allPresents : [];
                     render();
                 })
@@ -169,6 +184,11 @@
         }
 
         function render() {
+            renderPeople();
+            renderAbandoned();
+        }
+
+        function renderPeople() {
             const content = document.getElementById('peopleContent');
 
             if (people.length === 0) {
@@ -196,6 +216,45 @@
                         ${theirPresents.length === 0 ? '<div class="present-row muted">Brak prezentów</div>' : ''}
                     </div>`;
             }).join('');
+        }
+
+        // Presents whose creator deleted their account (created_by is NULL).
+        // Presents of unidentified people are already manageable above, and
+        // presents for the current user stay hidden (no spoilers).
+        function renderAbandoned() {
+            const card = document.getElementById('abandonedCard');
+            const content = document.getElementById('abandonedContent');
+            const unidentifiedIds = new Set(people.map(p => p.id));
+            const me = allRecipients.find(r => r.identified_by === currentUserId);
+
+            const abandoned = presents.filter(p =>
+                p.created_by == null &&
+                !unidentifiedIds.has(p.recipient_id) &&
+                (!me || p.recipient_id !== me.id)
+            );
+
+            if (abandoned.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+            card.style.display = '';
+
+            // Group by recipient for readability
+            const byRecipient = new Map();
+            abandoned.forEach(p => {
+                const key = p.recipient_name || 'Bez osoby';
+                if (!byRecipient.has(key)) byRecipient.set(key, []);
+                byRecipient.get(key).push(p);
+            });
+
+            content.innerHTML = [...byRecipient.entries()].map(([name, list]) => `
+                <div class="mt-3">
+                    <div class="person-name" style="font-size: 15px;">
+                        <i class="fas fa-user me-2" style="color:#6b7280;"></i>${escapeHtml(name)}
+                        <span style="font-weight:400; color:#6b7280; font-size:13px;">(${list.length})</span>
+                    </div>
+                    ${list.map(p => presentRow(p)).join('')}
+                </div>`).join('');
         }
 
         function presentRow(p) {
