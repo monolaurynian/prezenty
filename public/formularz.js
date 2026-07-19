@@ -175,6 +175,9 @@ function checkAuth() {
             if (data.authenticated) {
                 currentUser = data.user;
                 console.log('User authenticated:', currentUser);
+                // Reveal the quiet "edit my presents" path under the form
+                const editLink = document.getElementById('editMyPresentsLink');
+                if (editLink) editLink.style.display = 'block';
             } else {
                 currentUser = null;
                 console.log('User not authenticated');
@@ -365,7 +368,9 @@ function submitPresent() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showFormMessage('Prezent został dodany pomyślnie! 🎁', 'success');
+            // Right after adding is when people want to review their list -
+            // offer the edit view inline in the success message
+            showFormMessage('Prezent został dodany pomyślnie! 🎁', 'success', true);
             // Clear form
             document.getElementById('presentForm').reset();
             document.getElementById('newNameInput').style.display = 'none';
@@ -445,17 +450,34 @@ function showQuickAddMessage(message, type) {
     }
 }
 
-function showFormMessage(message, type) {
+function showFormMessage(message, type, withEditLink = false) {
     const formMessage = document.getElementById('formMessage');
     formMessage.textContent = message;
+
+    // Optional inline jump to the edit view (only for logged-in users)
+    if (withEditLink && currentUser) {
+        const link = document.createElement('a');
+        link.href = '#';
+        link.className = 'fw-semibold ms-2 text-decoration-none';
+        link.style.whiteSpace = 'nowrap';
+        link.innerHTML = '<i class="fas fa-edit me-1"></i>Edytuj moje prezenty';
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            formMessage.style.display = 'none';
+            switchTab('edit');
+        });
+        formMessage.appendChild(link);
+    }
+
     formMessage.className = `alert alert-${type} mt-3`;
     formMessage.style.display = 'block';
     
-    // Auto-hide success messages after 5 seconds
+    // Auto-hide success messages after 5 seconds (longer when there's an
+    // action link so it can actually be used)
     if (type === 'success') {
         setTimeout(() => {
             formMessage.style.display = 'none';
-        }, 5000);
+        }, withEditLink ? 8000 : 5000);
     }
 }
 
