@@ -5,6 +5,21 @@ let authModal = null;
 let loginModal = null;
 let editPresentModal = null;
 
+// Auto-select state: selection happens as soon as BOTH the identified
+// name and the recipient options are available (no fixed timeouts).
+let identifiedName = null;
+let recipientsLoaded = false;
+let identificationFetched = false;
+let autoSelectedFromCache = false;
+
+// Fast path: remember the identified name from the last visit so the
+// dropdown can be pre-selected the moment recipients load, without
+// waiting for /api/auth + /api/user/identification round trips.
+try {
+    identifiedName = localStorage.getItem('formularzIdentifiedName') || null;
+    autoSelectedFromCache = !!identifiedName;
+} catch (e) {}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Bootstrap modals
     authModal = new bootstrap.Modal(document.getElementById('authModal'));
@@ -13,6 +28,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Check if user is authenticated
     checkAuth();
+    
+    // Fetch identification in parallel with the auth check (not after it)
+    fetchIdentification();
     
     // Setup form handlers
     setupFormHandlers();
@@ -157,8 +175,6 @@ function checkAuth() {
             if (data.authenticated) {
                 currentUser = data.user;
                 console.log('User authenticated:', currentUser);
-                // Get user's identification to auto-select their name
-                getUserIdentification();
             } else {
                 currentUser = null;
                 console.log('User not authenticated');
@@ -170,38 +186,49 @@ function checkAuth() {
         });
 }
 
-function getUserIdentification() {
+function fetchIdentification() {
+    if (identificationFetched) return;
+    identificationFetched = true;
     fetch('/api/user/identification')
         .then(response => response.json())
         .then(data => {
             if (data.isIdentified && data.name) {
                 console.log('User identified as:', data.name);
-                // Auto-select the user's name in dropdown after recipients are loaded
-                autoSelectUserName(data.name);
+                identifiedName = data.name;
+                try { localStorage.setItem('formularzIdentifiedName', data.name); } catch (e) {}
+            } else {
+                identifiedName = null;
+                try { localStorage.removeItem('formularzIdentifiedName'); } catch (e) {}
+                // Cached name was stale - undo a cache-based pre-selection
+                if (autoSelectedFromCache && !window._osobaPreselected) {
+                    const sel = document.getElementById('recipientSelect');
+                    if (sel) sel.value = '';
+                }
             }
+            autoSelectedFromCache = false;
+            tryAutoSelect();
         })
         .catch(error => {
             console.error('Error getting user identification:', error);
         });
 }
 
-function autoSelectUserName(userName) {
-    // Wait a bit for recipients to load, then select the user's name
-    setTimeout(() => {
-        // Don't override an explicit ?osoba= link selection
-        if (window._osobaPreselected) return;
-        const recipientSelect = document.getElementById('recipientSelect');
-        if (recipientSelect) {
-            // Try to find and select the user's name
-            for (let i = 0; i < recipientSelect.options.length; i++) {
-                if (recipientSelect.options[i].dataset.name === userName || recipientSelect.options[i].textContent === userName) {
-                    recipientSelect.value = recipientSelect.options[i].value;
-                    console.log('Auto-selected user name:', userName, 'with ID:', recipientSelect.options[i].value);
-                    break;
-                }
-            }
+// Runs whenever either recipients finish loading or the identification
+// arrives - selects as soon as both pieces are ready.
+function tryAutoSelect() {
+    if (!identifiedName || !recipientsLoaded) return;
+    // Don't override an explicit ?osoba= link selection
+    if (window._osobaPreselected) return;
+    const recipientSelect = document.getElementById('recipientSelect');
+    if (!recipientSelect) return;
+    for (let i = 0; i < recipientSelect.options.length; i++) {
+        if (recipientSelect.options[i].dataset.name === identifiedName ||
+            recipientSelect.options[i].textContent === identifiedName) {
+            recipientSelect.value = recipientSelect.options[i].value;
+            console.log('Auto-selected user name:', identifiedName, 'with ID:', recipientSelect.options[i].value);
+            break;
         }
-    }, 500); // Wait 500ms for recipients to load
+    }
 }
 
 function switchTab(tab) {
@@ -274,10 +301,10 @@ function loadRecipients() {
                     }
                 }
 
-                // If user is authenticated, try to auto-select their name
-                if (currentUser) {
-                    getUserIdentification();
-                }
+                // Recipients ready - select the identified user's name
+                // immediately (cached name makes this instant on repeat visits)
+                recipientsLoaded = true;
+                tryAutoSelect();
             }
         })
         .catch(error => {
