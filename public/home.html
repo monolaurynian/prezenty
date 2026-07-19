@@ -124,6 +124,12 @@
             text-align: center !important;
         }
 
+        /* White accordion chevrons - the section headers are colored
+           (red/orange/green), the default dark arrow gets lost on them */
+        .stats-container .accordion-button::after {
+            filter: brightness(0) invert(1);
+        }
+
         @media (max-width: 768px) {
             .stats-container {
                 padding: 20px;
@@ -314,7 +320,7 @@
     </script>
 
     <!-- Load recipients.js for shared functions (but don't auto-init) -->
-    <script src="recipients.js?v=7&t=1111111111"></script>
+    <script src="recipients.js?v=8&t=1111111111"></script>
 
     <!-- Non-critical scripts (defer to load after page is interactive) -->
     <script src="update-checker.js" defer></script>

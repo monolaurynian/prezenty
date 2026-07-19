@@ -653,7 +653,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                                 <!-- Buttons in profile section -->
                                                 <div class="profile-buttons"></div>
                                             </div>
-                                            <div class="col-lg-6 col-md-6">
+                                            <div class="col-lg-10 col-md-6">
                                                 <div class="mb-2 d-lg-none">
                                                     <center><h5 class="recipient-name mb-0">${escapeHtml(identifiedRecipient.name)}</h5></center>
                                                     <div class="mt-2">
@@ -678,11 +678,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                                             </h2>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-4 col-md-12 text-end">
-                                                <div class="btn-group-vertical w-100">
-                                                    <!-- Other action buttons can be added here if needed -->
                                                 </div>
                                             </div>
                                         </div>
@@ -1300,7 +1295,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-6 col-md-6">
+                    <div class="col-lg-10 col-md-6">
                         <div class="mb-2 d-lg-none">
                           <center>  <h5 class="recipient-name mb-0">
                                
@@ -1346,11 +1341,6 @@ function displayRecipientsWithPresents(recipients, presents) {
                         ` : ''}
                         <div class="presents-preview">
                             ${presentsHTML}
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-12 text-end">
-                        <div class="btn-group-vertical w-100">
-                            <!-- Other action buttons can be added here if needed -->
                         </div>
                     </div>
                 </div>
