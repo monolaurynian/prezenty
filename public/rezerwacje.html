@@ -148,12 +148,15 @@
             new bootstrap.Toast(el, { autohide: true, delay: type === 'error' ? 5000 : 3000 }).show();
         }
 
+        // Kept in memory so actions can update the list optimistically
+        let myPresents = [];
+
         function loadReserved() {
             fetch('/api/presents/all')
                 .then(r => r.json())
                 .then(presents => {
-                    const mine = presents.filter(p => p.reserved_by === currentUserId);
-                    render(mine);
+                    myPresents = presents.filter(p => p.reserved_by === currentUserId);
+                    render(myPresents);
                 })
                 .catch(() => {
                     document.getElementById('reservedContent').innerHTML = `
@@ -210,6 +213,15 @@
         }
 
         function setBought(id, isChecked) {
+            // Optimistic: move between "Do kupienia" / "Kupione" instantly,
+            // then sync with the server (rollback on failure)
+            const present = myPresents.find(p => p.id === id);
+            if (!present) return;
+            const prevChecked = present.is_checked;
+            present.is_checked = isChecked;
+            render(myPresents);
+            showToast(isChecked ? 'Oznaczono jako kupione 🛍️' : 'Cofnięto oznaczenie', 'success');
+
             fetch(`/api/presents/${id}/check`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -217,28 +229,41 @@
             })
                 .then(r => r.json())
                 .then(d => {
-                    if (d.success) {
-                        showToast(isChecked ? 'Oznaczono jako kupione 🛍️' : 'Cofnięto oznaczenie', 'success');
-                        loadReserved();
-                    } else {
+                    if (!d.success) {
+                        present.is_checked = prevChecked;
+                        render(myPresents);
                         showToast(d.error || 'Nie udało się zapisać zmiany', 'error');
                     }
                 })
-                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+                .catch(() => {
+                    present.is_checked = prevChecked;
+                    render(myPresents);
+                    showToast('Błąd połączenia. Zmiana została cofnięta.', 'error');
+                });
         }
 
         function cancelReservation(id) {
+            // Optimistic: remove from the list instantly, restore on failure
+            const index = myPresents.findIndex(p => p.id === id);
+            if (index === -1) return;
+            const removed = myPresents.splice(index, 1)[0];
+            render(myPresents);
+            showToast('Rezerwacja anulowana', 'success');
+
             fetch(`/api/presents/${id}/reserve`, { method: 'DELETE' })
                 .then(r => r.json())
                 .then(d => {
-                    if (d.success) {
-                        showToast('Rezerwacja anulowana', 'success');
-                        loadReserved();
-                    } else {
+                    if (!d.success) {
+                        myPresents.splice(index, 0, removed);
+                        render(myPresents);
                         showToast(d.error || 'Nie udało się anulować rezerwacji', 'error');
                     }
                 })
-                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+                .catch(() => {
+                    myPresents.splice(index, 0, removed);
+                    render(myPresents);
+                    showToast('Błąd połączenia. Rezerwacja została przywrócona.', 'error');
+                });
         }
     </script>
     <script src="desktop-nav.js?v=1"></script>

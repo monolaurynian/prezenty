@@ -935,6 +935,10 @@ function checkAuth() {
                 throw new Error('Not authenticated');
             } else {
                 currentUserId = data.user.id;
+                // Rendering/compare helpers use window._currentUserId - it was
+                // never set on this page, so freshly reserved presents weren't
+                // recognized as the user's own after optimistic re-renders
+                window._currentUserId = data.user.id;
                 console.log('Auth successful, currentUserId set to:', currentUserId);
             }
         })

@@ -368,6 +368,10 @@
                     // Cache for edit modal
                     window._cachedRecipients = recipients;
 
+                    // Shared dataset for optimistic updates: actions mutate
+                    // this and re-render sections instantly
+                    window._homeData = { presents, recipients, identificationStatus };
+
                     // Update stats
                     if (leaderboardData.cumulativeStats) {
                         updateCumulativeProgress(leaderboardData.cumulativeStats);
@@ -495,6 +499,7 @@
                 fetch('/api/user/identification').then(r => r.json())
             ])
                 .then(([data, identificationStatus]) => {
+                    window._homeData = { presents: data.presents, recipients: data.recipients, identificationStatus };
                     loadAvailablePresentsWithData(data.presents, data.recipients, identificationStatus);
                 })
                 .catch(error => console.error('Error loading presents:', error));
@@ -639,6 +644,7 @@
                 fetch('/api/user/identification').then(r => r.json())
             ])
                 .then(([data, identificationStatus]) => {
+                    window._homeData = { presents: data.presents, recipients: data.recipients, identificationStatus };
                     loadMyReservationsWithData(data.presents, data.recipients, identificationStatus);
                 })
                 .catch(error => console.error('Error loading reservations:', error));
@@ -656,6 +662,7 @@
                 fetch('/api/user/identification').then(r => r.json())
             ])
                 .then(([data, identificationStatus]) => {
+                    window._homeData = { presents: data.presents, recipients: data.recipients, identificationStatus };
                     loadBoughtPresentsWithData(data.presents, data.recipients, identificationStatus);
                 })
                 .catch(error => console.error('Error loading bought presents:', error));
@@ -752,14 +759,49 @@
             container.innerHTML = html;
         }
 
-        // Wrapper functions for statystyki page that call API and reload sections
+        // ===== Optimistic updates =====
+        // Mutate the shared dataset, re-render sections instantly (present
+        // moves to the right category), then sync with the server and roll
+        // back if it fails.
+        function rerenderHomeSections() {
+            const d = window._homeData;
+            if (!d) return;
+            loadAvailablePresentsWithData(d.presents, d.recipients, d.identificationStatus);
+            loadMyReservationsWithData(d.presents, d.recipients, d.identificationStatus);
+            loadBoughtPresentsWithData(d.presents, d.recipients, d.identificationStatus);
+        }
+
+        function optimisticUpdatePresent(presentId, changes) {
+            const d = window._homeData;
+            if (!d) return null;
+            const p = d.presents.find(x => x.id === presentId);
+            if (!p) return null;
+            const prev = { reserved_by: p.reserved_by, is_checked: p.is_checked };
+            Object.assign(p, changes);
+            rerenderHomeSections();
+            return prev;
+        }
+
+        function rollbackPresent(presentId, prev) {
+            const d = window._homeData;
+            if (!d || !prev) return;
+            const p = d.presents.find(x => x.id === presentId);
+            if (p) Object.assign(p, prev);
+            rerenderHomeSections();
+        }
+
+        // Refresh only the progress counters (no section re-fetch/jank)
+        function refreshStatsCounters() {
+            fetch('/api/leaderboard')
+                .then(r => r.json())
+                .then(d => { if (d.cumulativeStats) updateCumulativeProgress(d.cumulativeStats); })
+                .catch(() => { /* non-critical */ });
+        }
+
         function reservePresent(event, presentId) {
-            // Find and disable the button
-            const button = event.target.closest('button');
-            if (button) {
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Rezerwuję...';
-            }
+            const d = window._homeData;
+            const userId = (d && d.identificationStatus && d.identificationStatus.userId) || window._currentUserId;
+            const prev = optimisticUpdatePresent(presentId, { reserved_by: userId, is_checked: false });
 
             fetch(`/api/presents/${presentId}/reserve`, {
                 method: 'POST',
@@ -768,41 +810,21 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Change button to "Anuluj" so user can cancel reservation
-                        if (button) {
-                            button.disabled = false;
-                            button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj';
-                            button.className = 'btn btn-sm';
-                            button.style.cssText = 'white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; color: #dc3545; border-color: #dc3545; border: 2px solid #dc3545;';
-                            button.onclick = function (e) { unreservePresent(e, presentId); };
-                        }
-                        // Update stats without reloading the whole page
-                        loadStats();
+                        refreshStatsCounters();
                     } else {
+                        rollbackPresent(presentId, prev);
                         alert('Błąd: ' + (data.error || 'Nie udało się zarezerwować prezentu'));
-                        if (button) {
-                            button.disabled = false;
-                            button.innerHTML = '<i class="fas fa-bookmark me-1"></i>Zarezerwuj';
-                        }
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    rollbackPresent(presentId, prev);
                     alert('Wystąpił błąd podczas rezerwowania prezentu');
-                    if (button) {
-                        button.disabled = false;
-                        button.innerHTML = '<i class="fas fa-bookmark me-1"></i>Zarezerwuj';
-                    }
                 });
         }
 
         function unreservePresent(event, presentId) {
-            // Find and disable the button
-            const button = event.target.closest('button');
-            if (button) {
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Anulowanie...';
-            }
+            const prev = optimisticUpdatePresent(presentId, { reserved_by: null });
 
             fetch(`/api/presents/${presentId}/reserve`, {
                 method: 'DELETE',
@@ -811,31 +833,16 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Change button back to "Zarezerwuj"
-                        if (button) {
-                            button.disabled = false;
-                            button.innerHTML = '<i class="fas fa-bookmark me-1"></i>Zarezerwuj';
-                            button.className = 'btn btn-sm';
-                            button.style.cssText = 'white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; color: #ffcc00; border-color: #ffc107; border: 2px solid #ffcc00;';
-                            button.onclick = function (e) { reservePresent(e, presentId); };
-                        }
-                        // Update stats without reloading the whole page
-                        loadStats();
+                        refreshStatsCounters();
                     } else {
+                        rollbackPresent(presentId, prev);
                         alert('Błąd: ' + (data.error || 'Nie udało się anulować rezerwacji'));
-                        if (button) {
-                            button.disabled = false;
-                            button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj';
-                        }
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    rollbackPresent(presentId, prev);
                     alert('Wystąpił błąd podczas anulowania rezerwacji');
-                    if (button) {
-                        button.disabled = false;
-                        button.innerHTML = '<i class="fas fa-times me-1"></i>Anuluj';
-                    }
                 });
         }
 
@@ -854,12 +861,8 @@
         }
 
         function markAsBought(presentId) {
-            // Find the button and show spinner
-            const button = event.target.closest('button');
-            if (button) {
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Zapisywanie...';
-            }
+            // Optimistic: moves instantly from "Moje Rezerwacje" to "Kupione"
+            const prev = optimisticUpdatePresent(presentId, { is_checked: true });
 
             fetch(`/api/presents/${presentId}/check`, {
                 method: 'PUT',
@@ -869,29 +872,23 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Reload sections to move present to "Bought" bucket
-                        loadMyReservations();
-                        loadBoughtPresents();
-                        loadStats();
+                        refreshStatsCounters();
                     } else {
+                        rollbackPresent(presentId, prev);
                         alert('Błąd: ' + (data.error || 'Nie udało się oznaczyć prezentu'));
-                        if (button) {
-                            button.disabled = false;
-                            button.innerHTML = '<i class="fas fa-check me-1"></i>Kupione';
-                        }
                     }
                 })
                 .catch(error => {
                     console.error('Error marking as bought:', error);
+                    rollbackPresent(presentId, prev);
                     alert('Wystąpił błąd podczas oznaczania prezentu');
-                    if (button) {
-                        button.disabled = false;
-                        button.innerHTML = '<i class="fas fa-check me-1"></i>Kupione';
-                    }
                 });
         }
 
         function markAsUnbought(presentId) {
+            // Optimistic: moves instantly from "Kupione" back to "Moje Rezerwacje"
+            const prev = optimisticUpdatePresent(presentId, { is_checked: false });
+
             fetch(`/api/presents/${presentId}/check`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -900,13 +897,16 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Reload sections to move present back to "Reserved" bucket
-                        loadMyReservations();
-                        loadBoughtPresents();
-                        loadStats();
+                        refreshStatsCounters();
+                    } else {
+                        rollbackPresent(presentId, prev);
+                        alert('Błąd: ' + (data.error || 'Nie udało się cofnąć oznaczenia'));
                     }
                 })
-                .catch(error => console.error('Error unmarking as bought:', error));
+                .catch(error => {
+                    console.error('Error unmarking as bought:', error);
+                    rollbackPresent(presentId, prev);
+                });
         }
 
         function logout() {
