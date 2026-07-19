@@ -303,3 +303,27 @@
 .present-item.reserved-by-me .present-title {
     color: #e65100 !important;
 }
+
+/* --- Identity confirmation modal: roomier on desktop --- */
+@media (min-width: 992px) {
+    #selfIdentificationModal .modal-dialog {
+        max-width: 640px;
+    }
+
+    #selfIdentificationModal .modal-body {
+        padding: 2.5rem 3rem;
+        font-size: 1.1rem;
+    }
+
+    #selfIdentificationModal .modal-title {
+        font-size: 1.35rem;
+    }
+
+    #selfIdentificationModal .fa-user-circle {
+        font-size: 4.5rem !important;
+    }
+
+    #selfIdentificationModal .modal-footer {
+        padding: 1rem 2rem 2rem;
+    }
+}

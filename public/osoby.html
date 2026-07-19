@@ -17,7 +17,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="styles.deduped.min.css" rel="stylesheet">
-    <link href="app-theme.css?v=9" rel="stylesheet">
+    <link href="app-theme.css?v=10" rel="stylesheet">
     <style>
         html, body { overflow-x: hidden; max-width: 100vw; }
         body {
@@ -63,6 +63,21 @@
             <a href="/ustawienia" class="btn btn-outline-light btn-sm">
                 <i class="fas fa-arrow-left me-1"></i>Ustawienia
             </a>
+        </div>
+
+        <!-- Add person -->
+        <div class="glass-card">
+            <h5 class="mb-1"><i class="fas fa-user-plus me-2"></i>Dodaj osobę</h5>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 12px;">
+                Dodaj kogoś do listy obdarowywanych (np. kogoś bez konta).
+            </p>
+            <div class="d-flex gap-2 flex-wrap">
+                <input type="text" id="newPersonName" class="form-control" placeholder="Imię i nazwisko"
+                    style="max-width: 320px;" onkeydown="if(event.key==='Enter')addPerson()">
+                <button class="btn btn-success fw-semibold" onclick="addPerson()">
+                    <i class="fas fa-plus me-1"></i>Dodaj
+                </button>
+            </div>
         </div>
 
         <div class="glass-card">
@@ -246,6 +261,30 @@
                         showToast('Prezent usunięty', 'success');
                     } else {
                         showToast(d.error || 'Nie udało się usunąć prezentu', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+        }
+
+        function addPerson() {
+            const input = document.getElementById('newPersonName');
+            const name = input.value.trim();
+            if (!name) { showToast('Wpisz imię i nazwisko', 'error'); return; }
+
+            fetch('/api/recipients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            })
+                .then(r => r.json().then(data => ({ ok: r.ok, data })))
+                .then(({ ok, data }) => {
+                    if (ok && data.success) {
+                        showToast(`Dodano: ${name} 🎉`, 'success');
+                        input.value = '';
+                        try { localStorage.removeItem('recipientsCache'); } catch (e) { /* ignore */ }
+                        loadData(); // the new person appears in the list below
+                    } else {
+                        showToast(data.error || 'Nie udało się dodać osoby', 'error');
                     }
                 })
                 .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));

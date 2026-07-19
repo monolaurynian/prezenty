@@ -17,7 +17,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="styles.deduped.min.css" rel="stylesheet">
-    <link href="app-theme.css?v=9" rel="stylesheet">
+    <link href="app-theme.css?v=10" rel="stylesheet">
     <style>
         html, body { overflow-x: hidden; max-width: 100vw; }
         body {
@@ -85,23 +85,10 @@
             </div>
         </div>
 
-        <!-- Add person -->
+        <!-- Manage people (includes adding new people) -->
         <div class="glass-card p-4" id="dodaj-osobe">
-            <div class="section-title"><i class="fas fa-user-plus"></i>Dodaj osobę</div>
-            <div class="section-desc">Dodaj kogoś do listy obdarowywanych (np. kogoś bez konta).</div>
-            <div class="d-flex gap-2 flex-wrap">
-                <input type="text" id="newPersonName" class="form-control" placeholder="Imię i nazwisko" style="max-width: 320px;">
-                <button class="btn btn-light fw-semibold" style="color:#212529;" onclick="addPerson()">
-                    <i class="fas fa-plus me-1"></i>Dodaj
-                </button>
-            </div>
-            <div id="addPersonMessage" class="alert mt-3 mb-0" style="display:none;"></div>
-        </div>
-
-        <!-- Manage people -->
-        <div class="glass-card p-4">
             <div class="section-title"><i class="fas fa-users-gear"></i>Zarządzanie osobami</div>
-            <div class="section-desc">Edytuj lub usuwaj prezenty niezidentyfikowanych osób, albo usuń całe osoby z listy.</div>
+            <div class="section-desc">Dodawaj nowe osoby, edytuj lub usuwaj prezenty niezidentyfikowanych osób, albo usuń całe osoby z listy.</div>
             <a href="/osoby" class="btn btn-light fw-semibold" style="color:#212529;">
                 <i class="fas fa-arrow-right me-1"></i>Otwórz zarządzanie
             </a>
@@ -237,7 +224,7 @@
                         <i class="fas fa-user-check me-1"></i>To jestem ja
                     </button>
                 </div>
-                ${free.length === 0 ? '<p class="mt-2 mb-0" style="font-size:13px; opacity:0.85;">Brak wolnych osób - dodaj siebie w sekcji poniżej.</p>' : ''}`;
+                ${free.length === 0 ? '<p class="mt-2 mb-0" style="font-size:13px; opacity:0.85;">Brak wolnych osób - dodaj siebie na stronie <a href="/osoby">Zarządzanie osobami</a>.</p>' : ''}`;
         }
 
         function identifySelf() {
@@ -297,35 +284,6 @@
                     .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
             };
             reader.readAsDataURL(file);
-        }
-
-        // ===== Add person =====
-        function addPerson() {
-            const input = document.getElementById('newPersonName');
-            const msg = document.getElementById('addPersonMessage');
-            const name = input.value.trim();
-            msg.style.display = 'none';
-            if (!name) { showToast('Wpisz imię i nazwisko', 'error'); return; }
-
-            fetch('/api/recipients', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            })
-                .then(r => r.json().then(data => ({ ok: r.ok, data })))
-                .then(({ ok, data }) => {
-                    if (ok && (data.success || data.id)) {
-                        showToast(`Dodano: ${name} 🎉`, 'success');
-                        input.value = '';
-                        try { localStorage.removeItem('recipientsCache'); } catch (e) {}
-                        loadProfile(); // refresh the identify dropdown
-                    } else {
-                        msg.className = 'alert alert-danger mt-3 mb-0';
-                        msg.textContent = data.error || 'Nie udało się dodać osoby';
-                        msg.style.display = 'block';
-                    }
-                })
-                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
         }
 
         // ===== Notifications =====
