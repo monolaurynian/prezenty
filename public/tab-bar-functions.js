@@ -204,9 +204,11 @@ function getNotificationMessage(notif) {
     }
     
     const actor = notif.actor_username || 'Ktoś';
+    // Person name -> link to their prefiltered presents page
+    const personLink = (name) => `<a href="/recipients.html?osoba=${encodeURIComponent(name)}" onclick="event.stopPropagation();" style="color: #2196F3; text-decoration: underline;"><strong>${name}</strong></a>`;
     // " dla X" suffix - skipped when X is the actor themselves
     const forWhom = (d, a) => (d.recipientName && String(d.recipientName).trim().toLowerCase() !== String(a).trim().toLowerCase())
-        ? ' dla ' + d.recipientName : '';
+        ? ' dla ' + personLink(d.recipientName) : '';
     const presentTitle = data.presentTitle || 'prezent';
     const presentId = data.presentId;
     const recipientEnc = encodeURIComponent(data.recipientName || '');
@@ -214,7 +216,7 @@ function getNotificationMessage(notif) {
     
     switch(notif.type) {
         case 'recipient_added':
-            return `<strong>${actor}</strong> dodał(a) osobę <strong>${data.recipientName || 'nową osobę'}</strong>`;
+            return `<strong>${actor}</strong> dodał(a) osobę ${data.recipientName ? personLink(data.recipientName) : '<strong>nową osobę</strong>'}`;
         case 'present_added':
             return `<strong>${actor}</strong> dodał(a) prezent "${presentLink}"${forWhom(data, actor)}`;
         case 'present_reserved':
@@ -226,7 +228,7 @@ function getNotificationMessage(notif) {
         case 'present_unchecked':
             return `<strong>${actor}</strong> odznaczył(a) "${presentLink}"${forWhom(data, actor)}`;
         case 'leaderboard_leader':
-            return `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" style="color: #2196F3; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`;
+            return `🏆 ${data.leaderName ? personLink(data.leaderName) : '<strong>Ktoś</strong>'}${data.previousLeaderName ? ` wyprzedza ${personLink(data.previousLeaderName)} i` : ''} prowadzi w <a href="/leaderboard.html" style="color: #2196F3; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`;
         case 'anon_message': {
             const threadHref = data.threadId ? `/wiadomosci?rozmowa=${data.threadId}` : '/wiadomosci';
             return `💬 <a href="${threadHref}" style="color: #2196F3; text-decoration: underline;"><strong>${data.label || 'Nowa wiadomość'}</strong></a>${data.preview ? ': "' + escapeHtmlNotif(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`;

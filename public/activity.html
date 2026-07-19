@@ -485,7 +485,7 @@
             recipient_added: {
                 icon: 'fa-user-plus',
                 color: '#4CAF50',
-                getMessage: (data, actor) => `<strong>${actor}</strong> dodał(a) osobę <strong>${data.recipientName}</strong>`
+                getMessage: (data, actor) => `<strong>${actor}</strong> dodał(a) osobę ${data.recipientName ? personLinkHtml(data.recipientName) : '<strong>nową osobę</strong>'}`
             },
             present_added: {
                 icon: 'fa-gift',
@@ -521,7 +521,7 @@
                 icon: 'fa-trophy',
                 color: '#FFC107',
                 getMessage: (data) =>
-                    `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z <strong>${data.presentCount || '?'}</strong> ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
+                    `🏆 ${data.leaderName ? personLinkHtml(data.leaderName) : '<strong>Ktoś</strong>'}${data.previousLeaderName ? ` wyprzedza ${personLinkHtml(data.previousLeaderName)} i` : ''} prowadzi w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z <strong>${data.presentCount || '?'}</strong> ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
             },
             anon_message: {
                 icon: 'fa-comment-dots',
@@ -532,11 +532,17 @@
         };
 
         // Shared helper: " dla <recipient>" suffix so it's always visible who the present is for
+        // Person name -> link to their prefiltered presents page
+        function personLinkHtml(name) {
+            const safe = escapeHtmlText(name);
+            return `<a href="/recipients.html?osoba=${encodeURIComponent(name)}" onclick="event.stopPropagation();" style="color: #2196F3; text-decoration: underline;"><strong>${safe}</strong></a>`;
+        }
+
         function forRecipient(data, actor) {
             // Skipped when the recipient IS the actor ("Mati ... dla Mati")
             if (!data.recipientName) return '';
             if (actor && String(data.recipientName).trim().toLowerCase() === String(actor).trim().toLowerCase()) return '';
-            return ` dla <strong>${data.recipientName}</strong>`;
+            return ` dla ${personLinkHtml(data.recipientName)}`;
         }
 
         // Load notifications
@@ -713,7 +719,7 @@
                             </div>
                             <div class="notification-content">
                                 <div class="notification-message">
-                                    <strong>${b.actor}</strong> dodał(a) ${countHtml}${b.recipientName ? ' dla <strong>' + b.recipientName + '</strong>' : ''}
+                                    <strong>${b.actor}</strong> dodał(a) ${countHtml}${b.recipientName ? ' dla ' + personLinkHtml(b.recipientName) : ''}
                                 </div>
                                 <div class="notification-time">
                                     <i class="fas fa-clock me-1"></i>${getTimeAgo(b.items[0].created_at)}
@@ -1029,7 +1035,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=13"></script>
+    <script src="tab-bar-functions.js?v=14"></script>
     <script src="desktop-nav.js?v=4"></script>
 </body>
 </html>

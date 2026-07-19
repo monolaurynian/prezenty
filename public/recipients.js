@@ -1169,13 +1169,14 @@ function displayRecipientsWithPresents(recipients, presents) {
             <div class="recipient-item" data-id="${recipient.id}" id="recipient-${recipient.id}">
                 <div class="row">
                     <div class="col-lg-2 col-md-6 text-center">
-                        <div class="recipient-avatar">
+                        <div class="recipient-avatar" style="position: relative; display: inline-block;">
                             ${recipient.profile_picture && recipient.profile_picture.trim() !== '' ?
                 `<img src="${getFullProfilePictureUrl(escapeHtml(recipient.profile_picture))}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
                 `<div class="profile-picture-placeholder" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer; font-size: 4rem;">
                                     ${getEmojiAvatar(recipient.name)}
                                 </div>`
             }
+                            ${recipient.identified_by ? `<span title="${recipient.online ? 'Online' : 'Offline'}" style="position: absolute; bottom: 6px; right: 6px; width: 16px; height: 16px; border-radius: 50%; background: ${recipient.online ? '#4CAF50' : '#F44336'}; border: 2.5px solid #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.25);"></span>` : ''}
                         </div>
                         
                         <!-- Name shown in profile section for wider screens -->
@@ -1215,6 +1216,12 @@ function displayRecipientsWithPresents(recipients, presents) {
                                     <i class="fas fa-share-alt me-1"></i>Udostępnij
                                 </button>
                             </div>
+                            ${recipient.identified_by && Number(recipient.identified_by) !== Number(currentUserId) ? `
+                            <div class="mt-2 d-none d-md-block">
+                                <a class="btn btn-outline-secondary btn-sm" style="max-width: 100%; white-space: normal; color: #7B1FA2; border-color: #7B1FA2;" href="/wiadomosci?do=${recipient.identified_by}" title="Wyślij anonimową wiadomość 🎅">
+                                    <i class="fas fa-envelope me-1"></i>Wiadomość
+                                </a>
+                            </div>` : ''}
                         </div>
                     </div>
                     <div class="col-lg-10 col-md-6">
@@ -1240,6 +1247,10 @@ function displayRecipientsWithPresents(recipients, presents) {
                                 <button class="btn btn-outline-secondary btn-sm" style="max-width: 100%; white-space: normal;" onclick="shareFormularzLink('${escapeHtml(recipient.name)}')" title="Wyślij tej osobie link do formularza życzeń">
                                     <i class="fas fa-share-alt me-1"></i>Udostępnij
                                 </button>
+                                ${recipient.identified_by && Number(recipient.identified_by) !== Number(currentUserId) ? `
+                                <a class="btn btn-outline-secondary btn-sm ms-1" style="white-space: normal; color: #7B1FA2; border-color: #7B1FA2;" href="/wiadomosci?do=${recipient.identified_by}" title="Wyślij anonimową wiadomość 🎅">
+                                    <i class="fas fa-envelope me-1"></i>Wiadomość
+                                </a>` : ''}
                             </div>
                         </div>
                         ${isIdentifiedByOther ? `

@@ -488,6 +488,31 @@ app.use((req, res, next) => {
 
 app.use(session(sessionConfig));
 
+// ===== Presence tracking (in-memory, resets on deploy) =====
+// Every authenticated request refreshes the user's last-seen time.
+// No DB writes - important with the hosting's connection limits.
+const userLastSeen = new Map();
+const ONLINE_WINDOW_MS = 3 * 60 * 1000; // seen within 3 min = online
+
+app.use((req, res, next) => {
+    if (req.session && req.session.userId) {
+        userLastSeen.set(req.session.userId, Date.now());
+    }
+    next();
+});
+
+function isUserOnline(userId) {
+    if (!userId) return false;
+    const seen = userLastSeen.get(userId);
+    return !!seen && (Date.now() - seen) < ONLINE_WINDOW_MS;
+}
+
+// Presence is computed at response time (never cached) so the dots
+// stay fresh even when recipient data comes from a cache
+function withPresence(recipients) {
+    return (recipients || []).map(r => ({ ...r, online: isUserOnline(r.identified_by) }));
+}
+
 // Configure multer for file uploads (store in memory for database storage)
 const storage = multer.memoryStorage();
 
@@ -879,7 +904,7 @@ app.get('/api/recipients', requireAuth, async (req, res) => {
         });
 
         console.log('Recipients loaded successfully:', recipients.length, 'recipients');
-        res.json(recipients);
+        res.json(withPresence(recipients));
     } catch (err) {
         console.error('Database error getting recipients:', err);
         return handleDbError(err, res, 'Błąd podczas pobierania osób');
@@ -1469,7 +1494,7 @@ app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
     const cached = combinedDataCache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp) < COMBINED_CACHE_TTL) {
         console.log('Returning cached combined data');
-        return res.json(cached.data);
+        return res.json({ ...cached.data, recipients: withPresence(cached.data.recipients) });
     }
 
     if (DEMO_MODE) {
@@ -1536,7 +1561,7 @@ app.get('/api/recipients-with-presents', requireAuth, async (req, res) => {
         // Cache the result
         combinedDataCache.set(cacheKey, { data: result, timestamp: Date.now() });
 
-        res.json(result);
+        res.json({ ...result, recipients: withPresence(result.recipients) });
     } catch (err) {
         console.error('Database error getting combined data:', err);
         handleDbError(err, res, 'Błąd podczas pobierania danych');
