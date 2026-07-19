@@ -2504,6 +2504,21 @@ app.get('/api/formularz/recipients', async (req, res) => {
     }
 });
 
+// One-time schema fix: presents.created_by was declared NOT NULL, which
+// breaks anonymous formularz submissions for new/unidentified recipients.
+let createdByNullableEnsured = false;
+async function ensureCreatedByNullable() {
+    if (createdByNullableEnsured) return;
+    try {
+        await pool.execute('ALTER TABLE presents MODIFY created_by INT NULL DEFAULT NULL');
+        createdByNullableEnsured = true;
+        console.log('✅ [SCHEMA] presents.created_by is now nullable');
+    } catch (err) {
+        console.error('⚠️ [SCHEMA] Could not make created_by nullable:', err.message);
+        throw err;
+    }
+}
+
 // Formularz API - Submit present without authentication
 app.post('/api/formularz/present', async (req, res) => {
     const { recipientName, presentTitle, presentComments } = req.body;
@@ -2541,29 +2556,34 @@ app.post('/api/formularz/present', async (req, res) => {
             console.log('[Formularz] Created new recipient:', recipientId);
         }
 
-        // Add present for this recipient
-        // If recipient is identified by a user, use that user as created_by
-        console.log('[Formularz] Adding present:', { title: presentTitle.trim(), recipientId, comments: presentComments, createdBy: createdByUserId });
+        // Add present for this recipient.
+        // created_by priority:
+        //  1. the user identified as the recipient (their wishlist)
+        //  2. the logged-in submitter (adding a present for someone else)
+        //  3. NULL for anonymous submissions (requires nullable column,
+        //     ensured below - the schema originally declared NOT NULL,
+        //     which made inserts for new/unidentified recipients fail)
+        const sessionUserId = (req.session && req.session.userId) ? req.session.userId : null;
+        const effectiveCreatedBy = createdByUserId || sessionUserId || null;
 
-        if (createdByUserId) {
-            // Recipient is identified - use their user ID as created_by
+        console.log('[Formularz] Adding present:', { title: presentTitle.trim(), recipientId, comments: presentComments, createdBy: effectiveCreatedBy });
+
+        let presentId;
+        if (effectiveCreatedBy) {
             const [presentResult] = await pool.execute(
                 'INSERT INTO presents (title, recipient_id, comments, created_by) VALUES (?, ?, ?, ?)',
-                [presentTitle.trim(), recipientId, presentComments || null, createdByUserId]
+                [presentTitle.trim(), recipientId, presentComments || null, effectiveCreatedBy]
             );
+            presentId = presentResult.insertId;
         } else {
-            // Recipient not identified - don't include created_by
+            // Anonymous submission - make sure created_by accepts NULL first
+            await ensureCreatedByNullable();
             const [presentResult] = await pool.execute(
-                'INSERT INTO presents (title, recipient_id, comments) VALUES (?, ?, ?)',
+                'INSERT INTO presents (title, recipient_id, comments, created_by) VALUES (?, ?, ?, NULL)',
                 [presentTitle.trim(), recipientId, presentComments || null]
             );
+            presentId = presentResult.insertId;
         }
-
-        // Get the insert ID from whichever query was executed
-        const [checkResult] = await pool.execute(
-            'SELECT LAST_INSERT_ID() as insertId'
-        );
-        const presentId = checkResult[0].insertId;
 
         console.log('[Formularz] Present added successfully:', presentId);
 
