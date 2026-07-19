@@ -2529,41 +2529,10 @@ function convertUrlsToLinks(text) {
 
 // Modal functions
 function openAddPresentModal() {
-    // Show modal immediately for better UX
-    const modal = new bootstrap.Modal(document.getElementById('addPresentModal'));
-    modal.show();
-
-    // Clear form immediately
-    document.getElementById('addPresentForm').reset();
-    document.getElementById('addPresentMessage').style.display = 'none';
-
-    // Use cached data if available, otherwise load fresh data
-    if (window._cachedRecipients && window._cachedIdentificationStatus) {
-        populateAddPresentModal(window._cachedRecipients, window._cachedIdentificationStatus);
-    } else {
-        // Show loading state in dropdown
-        const select = document.getElementById('recipientSelect');
-        select.innerHTML = '<option value="">Ładowanie...</option>';
-
-        // Load data in background
-        Promise.all([
-            fetch('/api/recipients').then(response => response.json()),
-            fetch('/api/user/identification').then(response => response.json())
-        ])
-            .then(([recipients, identificationStatus]) => {
-                // Cache the data
-                window._cachedRecipients = recipients;
-                window._cachedIdentificationStatus = identificationStatus;
-
-                populateAddPresentModal(recipients, identificationStatus);
-            })
-            .catch(error => {
-                console.error('Error loading recipients:', error);
-                const select = document.getElementById('recipientSelect');
-                select.innerHTML = '<option value="">Błąd ładowania</option>';
-                showModalMessage('addPresentMessage', 'Błąd podczas ładowania listy osób', 'danger');
-            });
-    }
+    // The add-present modal was retired - adding presents lives in the
+    // formularz (single, consistent flow on every page). Kept as the
+    // target of legacy callers (Ctrl+K shortcut etc.).
+    window.location.href = '/formularz';
 }
 
 function populateAddPresentModal(recipients, identificationStatus) {
