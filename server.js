@@ -724,6 +724,46 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Change username - password re-verification required
+app.put('/api/account/username', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.status(503).json({ error: 'Niedostępne w trybie demo' });
+    const userId = req.session.userId;
+    const { newUsername, password } = req.body || {};
+
+    const trimmed = (newUsername || '').trim();
+    if (!trimmed || !password) {
+        return badRequest(res, 'Podaj nową nazwę użytkownika i hasło');
+    }
+    if (trimmed.length < 3 || trimmed.length > 30) {
+        return badRequest(res, 'Nazwa użytkownika musi mieć od 3 do 30 znaków');
+    }
+
+    try {
+        const [rows] = await pool.execute('SELECT * FROM users WHERE id = ?', [userId]);
+        if (rows.length === 0) return notFound(res, 'Nie znaleziono konta');
+        if (!bcrypt.compareSync(password, rows[0].password)) {
+            return res.status(401).json({ error: 'Nieprawidłowe hasło' });
+        }
+
+        const [taken] = await pool.execute(
+            'SELECT id FROM users WHERE username = ? AND id != ?',
+            [trimmed, userId]
+        );
+        if (taken.length > 0) {
+            return conflict(res, 'Ta nazwa użytkownika jest już zajęta');
+        }
+
+        await pool.execute('UPDATE users SET username = ? WHERE id = ?', [trimmed, userId]);
+        req.session.username = trimmed;
+        clearCombinedDataCache();
+
+        console.log(`✏️ [ACCOUNT] User ${userId} renamed to "${trimmed}"`);
+        res.json({ success: true, username: trimmed });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas zmiany nazwy użytkownika');
+    }
+});
+
 // Delete account - permanent. Password re-verification required.
 // The person's presence in the FAMILY DATA is preserved: recipients stay
 // (identification unclaimed), presents stay (creator anonymized), but the
