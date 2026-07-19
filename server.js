@@ -103,7 +103,12 @@ if (!DEMO_MODE) {
         hasPassword: !!dbConfig.password
     });
 
-    // Create MySQL connection pool
+    // Create MySQL connection pool.
+    // Hostinger enforces max_connections_per_hour (500) - that counts NEW
+    // TCP connections, so the pool is tuned to open as few as possible:
+    // - small connectionLimit (a family app needs no more)
+    // - connections are kept warm (TCP keepalive + the periodic ping
+    //   below) instead of being closed and reopened
     pool = mysql.createPool({
         host: dbConfig.host,
         user: dbConfig.user,
@@ -112,13 +117,23 @@ if (!DEMO_MODE) {
         port: dbConfig.port,
         charset: dbConfig.charset,
         connectTimeout: dbConfig.connectTimeout,
-        acquireTimeout: dbConfig.acquireTimeout,
-        timeout: dbConfig.timeout,
         waitForConnections: true,
-        connectionLimit: 10,
+        connectionLimit: 4,
+        maxIdle: 2,               // extra idle connections close gracefully
+        idleTimeout: 240000,      // ...after 4 minutes
         queueLimit: 0,
-        maxAllowedPacket: 50 * 1024 * 1024 // 50MB for large images
+        enableKeepAlive: true,    // TCP keepalive against silent drops
+        keepAliveInitialDelay: 10000
     });
+
+    // Warm-keeper: one lightweight query every 4 minutes reuses a pooled
+    // connection so the server's wait_timeout never kills it. Without
+    // this, every activity burst after an idle period opened brand-new
+    // connections and burned through the hourly connection budget.
+    setInterval(() => {
+        if (MAINTENANCE_MODE) return; // maintenance retry probes already
+        pool.query('SELECT 1').catch(() => { /* probe only */ });
+    }, 4 * 60 * 1000);
 }
 
 // Helper functions to reduce code duplication
@@ -454,8 +469,14 @@ let sessionConfig = {
 };
 
 if (!DEMO_MODE && dbConfig) {
-    const sessionStore = new MySQLStore(dbConfig);
+    // Reuse the app's connection pool for sessions. Previously the store
+    // built its OWN pool from dbConfig - two pools of cold connections
+    // doubled the new-connection churn against Hostinger's hourly limit.
+    const sessionStore = new MySQLStore({}, pool);
     sessionConfig.store = sessionStore;
+    // The MySQL store supports touch - no need to rewrite the session on
+    // every request (resave: true is only needed for the memory store)
+    sessionConfig.resave = false;
 }
 
 // Maintenance mode: when the database is unreachable in production we block
