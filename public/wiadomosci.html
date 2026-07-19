@@ -109,6 +109,36 @@
             border-bottom-left-radius: 5px;
         }
         .chat-time { font-size: 11px; opacity: 0.65; margin-top: 2px; }
+        .chat-bubble a { text-decoration: underline; word-break: break-all; }
+        .chat-bubble.from-them a { color: #1E88E5 !important; }
+
+        /* Link preview card under a message */
+        .link-preview-card {
+            display: block;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 8px;
+            text-decoration: none !important;
+            max-width: 300px;
+        }
+        .link-preview-card img {
+            width: 100%;
+            max-height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+        .link-preview-card .lp-body { padding: 8px 10px; }
+        .link-preview-card .lp-title {
+            font-size: 13px; font-weight: 600; color: #2d3748 !important;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; text-decoration: none;
+        }
+        .link-preview-card .lp-domain {
+            font-size: 11px; color: #9ca3af !important; margin-top: 2px;
+            text-decoration: none;
+        }
 
         .btn-anon {
             background: #7B1FA2; border: none; color: #ffffff !important; font-weight: 600;
@@ -382,6 +412,68 @@
             loadThreads();
         }
 
+        // URLs in messages become clickable links
+        function renderMessageBody(text) {
+            const esc = escapeHtml(text);
+            return esc.replace(/(https?:\/\/[^\s<]+)/g,
+                (u) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`);
+        }
+
+        // ===== Link previews =====
+        const previewCache = new Map(); // url -> data|null (null = no preview)
+
+        function firstUrlIn(text) {
+            const m = String(text).match(/https?:\/\/[^\s]+/);
+            return m ? m[0].replace(/[.,;:!?)]+$/, '') : null;
+        }
+
+        function renderPreviewCard(container, data) {
+            if (!data || (!data.title && !data.image)) return;
+            const a = document.createElement('a');
+            a.className = 'link-preview-card';
+            a.href = data.url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            if (data.image) {
+                const img = document.createElement('img');
+                img.src = data.image;
+                img.alt = '';
+                img.loading = 'lazy';
+                img.onerror = () => img.remove();
+                a.appendChild(img);
+            }
+            const body = document.createElement('div');
+            body.className = 'lp-body';
+            if (data.title) {
+                const t = document.createElement('div');
+                t.className = 'lp-title';
+                t.textContent = data.title;
+                body.appendChild(t);
+            }
+            const dom = document.createElement('div');
+            dom.className = 'lp-domain';
+            dom.textContent = data.siteName || '';
+            body.appendChild(dom);
+            a.appendChild(body);
+            container.appendChild(a);
+        }
+
+        function loadLinkPreview(url, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            if (previewCache.has(url)) {
+                renderPreviewCard(container, previewCache.get(url));
+                return;
+            }
+            fetch('/api/link-preview?url=' + encodeURIComponent(url))
+                .then(r => (r.ok ? r.json() : null))
+                .then(data => {
+                    previewCache.set(url, data);
+                    renderPreviewCard(container, data);
+                })
+                .catch(() => previewCache.set(url, null));
+        }
+
         function loadThreadMessages() {
             if (!currentThreadId) return;
             fetch(`/api/wiadomosci/threads/${currentThreadId}`)
@@ -391,13 +483,22 @@
                     document.getElementById('chatTitle').innerHTML =
                         `<i class="fas fa-comment-dots" style="color:#7B1FA2;"></i>${escapeHtml(d.otherLabel || 'Rozmowa')}`;
                     const box = document.getElementById('chatMessages');
-                    box.innerHTML = (d.messages || []).map(m => `
+                    const msgs = d.messages || [];
+                    box.innerHTML = msgs.map(m => `
                         <div class="chat-bubble ${m.fromMe ? 'from-me' : 'from-them'}">
-                            ${escapeHtml(m.body)}
+                            ${renderMessageBody(m.body)}
+                            <div id="lp-${m.id}"></div>
                             <div class="chat-time">${timeAgo(m.createdAt)}</div>
                         </div>
                     `).join('');
                     box.scrollTop = box.scrollHeight;
+
+                    // Load a preview card for the first URL in each message
+                    msgs.forEach(m => {
+                        const url = firstUrlIn(m.body);
+                        if (url) loadLinkPreview(url, 'lp-' + m.id);
+                    });
+
                     // Reading the thread marked messages as read - refresh
                     // the dock badge right away
                     if (typeof updateMessagesBadge === 'function') updateMessagesBadge();

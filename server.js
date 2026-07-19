@@ -2732,6 +2732,114 @@ app.post('/api/wiadomosci/threads/:id/messages', requireAuth, async (req, res) =
     }
 });
 
+// ---- Link previews (Open Graph) for chat messages ----
+// The browser can't read foreign pages (CORS), so the server fetches the
+// URL and extracts og:title / og:image / description. Results cached.
+const linkPreviewCache = new Map(); // url -> { ts, data }
+const LINK_PREVIEW_TTL = 24 * 60 * 60 * 1000;
+
+function isSafePreviewUrl(parsed) {
+    if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+    const host = parsed.hostname.toLowerCase();
+    // SSRF guard: no localhost / private ranges / raw metadata endpoints
+    if (host === 'localhost' || host === '0.0.0.0' || host === '[::1]') return false;
+    if (/^127\.|^10\.|^192\.168\.|^169\.254\./.test(host)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(host)) return false;
+    return true;
+}
+
+function extractMeta(html, prop) {
+    const patterns = [
+        new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]*content=["']([^"']*)["']`, 'i'),
+        new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]*(?:property|name)=["']${prop}["']`, 'i')
+    ];
+    for (const re of patterns) {
+        const m = html.match(re);
+        if (m && m[1]) return m[1].trim();
+    }
+    return null;
+}
+
+app.get('/api/link-preview', requireAuth, async (req, res) => {
+    const rawUrl = req.query.url;
+    if (!rawUrl) return badRequest(res, 'Brak adresu URL');
+
+    let parsed;
+    try {
+        parsed = new URL(rawUrl);
+    } catch (e) {
+        return badRequest(res, 'Nieprawidłowy adres URL');
+    }
+    if (!isSafePreviewUrl(parsed)) {
+        return badRequest(res, 'Ten adres nie jest obsługiwany');
+    }
+
+    const cached = linkPreviewCache.get(parsed.href);
+    if (cached && (Date.now() - cached.ts) < LINK_PREVIEW_TTL) {
+        return res.json(cached.data);
+    }
+
+    try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 6000);
+        const response = await fetch(parsed.href, {
+            signal: controller.signal,
+            redirect: 'follow',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; PrezentyBot/1.0; link preview)',
+                'Accept': 'text/html,application/xhtml+xml'
+            }
+        });
+        clearTimeout(timer);
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('text/html')) {
+            const data = { url: parsed.href, title: null, image: contentType.startsWith('image/') ? parsed.href : null, siteName: parsed.hostname };
+            linkPreviewCache.set(parsed.href, { ts: Date.now(), data });
+            return res.json(data);
+        }
+
+        // Read at most ~300KB - og tags live in <head>
+        const reader = response.body.getReader();
+        let html = '';
+        const decoder = new TextDecoder();
+        while (html.length < 300000) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            html += decoder.decode(value, { stream: true });
+        }
+        reader.cancel().catch(() => {});
+
+        const finalUrl = response.url || parsed.href;
+        let image = extractMeta(html, 'og:image') || extractMeta(html, 'twitter:image');
+        if (image) {
+            try { image = new URL(image, finalUrl).href; } catch (e) { image = null; }
+        }
+        const titleTag = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+        const data = {
+            url: finalUrl,
+            title: extractMeta(html, 'og:title') || (titleTag ? titleTag[1].trim() : null),
+            description: extractMeta(html, 'og:description') || extractMeta(html, 'description'),
+            image,
+            siteName: extractMeta(html, 'og:site_name') || new URL(finalUrl).hostname
+        };
+
+        linkPreviewCache.set(parsed.href, { ts: Date.now(), data });
+        // Keep the cache bounded
+        if (linkPreviewCache.size > 500) {
+            const oldest = linkPreviewCache.keys().next().value;
+            linkPreviewCache.delete(oldest);
+        }
+        res.json(data);
+    } catch (err) {
+        // Preview failures are expected (timeouts, bot blocks) - cache the
+        // miss briefly and answer gracefully
+        const data = { url: parsed.href, title: null, image: null, siteName: parsed.hostname };
+        linkPreviewCache.set(parsed.href, { ts: Date.now(), data });
+        res.json(data);
+    }
+});
+
 // Function to send notifications to all users except the sender
 async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
     console.log('🔔 [NOTIFICATION] Starting notification send:', { excludeUserId, title, body, data });
