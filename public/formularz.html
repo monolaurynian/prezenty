@@ -16,7 +16,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.deduped.min.css">
     <link href="bottom-tab-bar.css?v=33" rel="stylesheet">
-    <link href="app-theme.css?v=10" rel="stylesheet">
+    <link href="app-theme.css?v=11" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
         .tab-bar-notifications-panel.show {
@@ -31,6 +31,13 @@
         }
     </style>
     <style>
+        /* Match homepage: no dark overlay, the photo shows through and
+           frosted cards provide the contrast */
+        .background-overlay {
+            background: transparent !important;
+            backdrop-filter: none !important;
+        }
+
         .tab-content {
             display: none;
         }
@@ -406,7 +413,7 @@
             <div class="row justify-content-center">
                 <div class="col-lg-8 col-md-10">
                     <div class="card main-card"
-                        style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+                        style="background: rgba(255, 255, 255, 0.78); backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 20px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);">
                         <div class="card-header bg-red">
                             <h5 class="card-title">
                                 <i class="fas fa-gift me-2"></i>Dodaj Swój Prezent
