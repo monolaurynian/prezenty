@@ -2361,12 +2361,14 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
         const identifiedRecipient = await getUserIdentification(userId);
         const identifiedRecipientId = identifiedRecipient ? identifiedRecipient.id : null;
 
-        // Get notifications with actor username
+        // Get notifications with actor username. Message notifications
+        // are excluded - messages live in /wiadomosci, not the feed
+        // (also hides legacy anon_message rows)
         const [notifications] = await pool.execute(`
             SELECT n.*, u.username as actor_username
             FROM notifications n
             LEFT JOIN users u ON n.actor_id = u.id
-            WHERE n.user_id = ?
+            WHERE n.user_id = ? AND n.type != 'anon_message'
             ORDER BY n.created_at DESC
             LIMIT ? OFFSET ?
         `, [userId, limit + 1, offset]); // Fetch one extra to check if there are more
@@ -2395,9 +2397,9 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
             data: JSON.parse(n.data)
         }));
 
-        // Get unread count
+        // Get unread count (messages excluded - they have their own badge)
         const [countResult] = await pool.execute(
-            'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
+            "SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE AND type != 'anon_message'",
             [userId]
         );
         const unreadCount = countResult[0].count;
@@ -2426,7 +2428,7 @@ app.get('/api/notifications/unread-count', requireAuth, async (req, res) => {
         await ensureNotificationsTable();
 
         const [result] = await pool.execute(
-            'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
+            "SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE AND type != 'anon_message'",
             [userId]
         );
 
@@ -2576,19 +2578,13 @@ async function ensureAnonMessageTables() {
 // set to the notification's owner so the API can never leak the sender's
 // username. The safe display label travels in data.label.
 async function notifyAnonMessage(recipientUserId, label, threadId, preview) {
-    try {
-        await ensureNotificationsTable();
-        await pool.execute(
-            'INSERT INTO notifications (user_id, type, actor_id, data) VALUES (?, ?, ?, ?)',
-            [recipientUserId, 'anon_message', recipientUserId,
-             JSON.stringify({ label, threadId, preview })]
-        );
-    } catch (err) {
-        console.error('❌ [WIADOMOSCI] Notification insert failed:', err.message);
-    }
+    // Messages deliberately do NOT create an activity-feed notification -
+    // the dock badge and thread unread counts already track them. Only a
+    // push goes out (with threadId so the SW can suppress it when the
+    // conversation is open, and deep-link otherwise).
     sendPushToUser(recipientUserId, label + ' 💬',
         preview.length > 80 ? preview.slice(0, 77) + '...' : preview,
-        { url: '/wiadomosci?rozmowa=' + threadId }
+        { url: '/wiadomosci?rozmowa=' + threadId, threadId }
     ).catch(() => {});
 }
 
