@@ -140,6 +140,11 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
             margin-bottom: 16px !important;
             padding: 24px !important;
+            /* aws-design.css sets will-change: transform which promotes the
+               card to its own compositing layer and BREAKS backdrop-filter
+               in Chromium - the blur samples an empty backdrop. Reset it so
+               the frosted blur actually renders (home cards don't have it). */
+            will-change: auto !important;
         }
         
         /* Gray text with white shadow in modals */
