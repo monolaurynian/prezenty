@@ -389,7 +389,9 @@ function submitPresent() {
 // identified user without leaving the edit view
 function quickAddPresent() {
     const input = document.getElementById('quickAddTitle');
+    const commentsInput = document.getElementById('quickAddComments');
     const title = input ? input.value.trim() : '';
+    const comments = commentsInput ? commentsInput.value.trim() : '';
 
     if (!title) {
         showQuickAddMessage('Wpisz nazwę prezentu', 'danger');
@@ -411,13 +413,14 @@ function quickAddPresent() {
         body: JSON.stringify({
             recipientName: identifiedName,
             presentTitle: title,
-            presentComments: ''
+            presentComments: comments
         })
     })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 input.value = '';
+                if (commentsInput) commentsInput.value = '';
                 showQuickAddMessage('Prezent dodany! 🎁', 'success');
                 loadMyPresents();
             } else {
