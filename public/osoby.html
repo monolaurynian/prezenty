@@ -139,6 +139,7 @@
         let people = [];
         let presents = [];
         let abandonedPresents = [];
+        let abandonedSummary = null;
         let allRecipients = [];
         let currentUserId = null;
 
@@ -177,6 +178,7 @@
                     people = allRecipients.filter(r => !r.identified_by);
                     presents = Array.isArray(allPresents) ? allPresents : [];
                     abandonedPresents = (abandoned && abandoned.presents) || [];
+                    abandonedSummary = (abandoned && abandoned.summary) || null;
                     render();
                 })
                 .catch(() => {
@@ -225,11 +227,12 @@
             }).join('');
         }
 
-        // Presents nobody manages anymore (creator account deleted or
-        // recipient row gone). Served by /api/presents/abandoned, which
-        // also masks the caller's own gifts (still deletable, no spoiler).
-        // Presents of unidentified people are excluded - they are already
-        // manageable in the section above.
+        // Presents nobody manages anymore (creator account deleted,
+        // recipient row gone, or no recipient assigned at all). Served by
+        // /api/presents/abandoned, which also masks the caller's own gifts
+        // (still deletable, no spoiler). Presents of unidentified people
+        // are excluded from THIS list - they show in the section above
+        // with a "porzucony" badge instead.
         function renderAbandoned() {
             const card = document.getElementById('abandonedCard');
             const content = document.getElementById('abandonedContent');
@@ -237,11 +240,22 @@
 
             const abandoned = abandonedPresents.filter(p => !unidentifiedIds.has(p.recipient_id));
 
+            // Always show the card with a diagnostic summary - a silent,
+            // hidden card made it impossible to tell "no orphans" from
+            // "something didn't load"
+            card.style.display = '';
+            const total = abandonedSummary && abandonedSummary.totalPresents != null
+                ? abandonedSummary.totalPresents : null;
+            const summaryLine = `<div class="muted mb-2" style="font-size:13px;">
+                ${total != null ? `W bazie jest łącznie <strong>${total}</strong> prezentów.` : ''}
+                Znaleziono <strong>${abandonedPresents.length}</strong> prezentów bez opiekuna${abandoned.length !== abandonedPresents.length ? ` (${abandonedPresents.length - abandoned.length} z nich należy do niezidentyfikowanych osób i jest na liście powyżej)` : ''}.
+            </div>`;
+
             if (abandoned.length === 0) {
-                card.style.display = 'none';
+                content.innerHTML = summaryLine +
+                    '<div class="present-row muted">Brak porzuconych prezentów do pokazania.</div>';
                 return;
             }
-            card.style.display = '';
 
             // Group by recipient for readability
             const byRecipient = new Map();
@@ -253,7 +267,7 @@
                 byRecipient.get(key).push(p);
             });
 
-            content.innerHTML = [...byRecipient.entries()].map(([name, list]) => `
+            content.innerHTML = summaryLine + [...byRecipient.entries()].map(([name, list]) => `
                 <div class="mt-3">
                     <div class="person-name" style="font-size: 15px;">
                         <i class="fas fa-user me-2" style="color:#6b7280;"></i>${escapeHtml(name)}
@@ -266,6 +280,10 @@
         // Delete-only row: editing makes no sense here, and masked rows
         // (the caller's own gifts) never reveal the title
         function abandonedRow(p) {
+            const flags = [];
+            if (p.reserved) flags.push('zarezerwowany');
+            if (p.bought) flags.push('kupiony');
+            if (!p.creator_gone && p.creator_username) flags.push(`dodany przez ${p.creator_username}`);
             return `
                 <div class="present-row" data-abandoned="${p.id}">
                     <div class="d-flex justify-content-between gap-2 flex-wrap align-items-start">
@@ -273,6 +291,7 @@
                             <div class="fw-semibold">${escapeHtml(p.title)}</div>
                             ${p.masked ? '<div class="muted">Prezent dla Ciebie - nazwa ukryta, żeby nie psuć niespodzianki</div>' : ''}
                             ${!p.masked && p.comments ? `<div class="muted">${escapeHtml(p.comments)}</div>` : ''}
+                            ${flags.length ? `<div class="muted">${escapeHtml(flags.join(' · '))}</div>` : ''}
                         </div>
                         <button class="btn btn-outline-danger btn-sm" onclick="deleteAbandoned(${p.id})" title="Usuń">
                             <i class="fas fa-trash"></i>
@@ -301,11 +320,14 @@
         }
 
         function presentRow(p) {
+            const isAbandoned = abandonedPresents.some(a => a.id === p.id);
             return `
                 <div class="present-row" data-present="${p.id}">
                     <div class="d-flex justify-content-between gap-2 flex-wrap align-items-start">
                         <div class="flex-grow-1" style="min-width: 0;">
-                            <div class="fw-semibold">${escapeHtml(p.title)}</div>
+                            <div class="fw-semibold">${escapeHtml(p.title)}
+                                ${isAbandoned ? '<span class="badge text-bg-secondary ms-1" style="font-weight:500;"><i class="fas fa-ghost me-1"></i>porzucony</span>' : ''}
+                            </div>
                             ${p.comments ? `<div class="muted">${escapeHtml(p.comments)}</div>` : ''}
                         </div>
                         <div class="d-flex gap-2">

@@ -1864,20 +1864,25 @@ app.delete('/api/presents/:id', requireAuth, async (req, res) => {
 // in stats). Presents for the caller's own recipient are masked so the
 // surprise survives, but they can still be deleted.
 app.get('/api/presents/abandoned', requireAuth, async (req, res) => {
-    if (DEMO_MODE) return res.json({ presents: [] });
+    if (DEMO_MODE) return res.json({ presents: [], summary: { totalPresents: 0 } });
     try {
         const [rows] = await pool.execute(`
             SELECT p.id, p.title, p.recipient_id, p.comments,
+                   p.reserved_by, p.is_checked,
                    r.name as recipient_name,
                    r.identified_by as recipient_identified_by,
-                   (r.id IS NULL AND p.recipient_id IS NOT NULL) as recipient_missing
+                   (p.recipient_id IS NOT NULL AND r.id IS NULL) as recipient_missing,
+                   (p.created_by IS NULL OR u.id IS NULL) as creator_gone,
+                   u.username as creator_username
             FROM presents p
             LEFT JOIN recipients r ON p.recipient_id = r.id
             LEFT JOIN users u ON p.created_by = u.id
             WHERE (p.created_by IS NULL OR u.id IS NULL)
+               OR p.recipient_id IS NULL
                OR (p.recipient_id IS NOT NULL AND r.id IS NULL)
             ORDER BY r.name, p.id DESC
         `);
+        const [[{ totalPresents }]] = await pool.execute('SELECT COUNT(*) as totalPresents FROM presents');
         const userId = req.session.userId;
         const presents = rows.map(p => {
             const isMine = p.recipient_identified_by === userId;
@@ -1886,13 +1891,17 @@ app.get('/api/presents/abandoned', requireAuth, async (req, res) => {
                 recipient_id: p.recipient_id,
                 recipient_name: p.recipient_missing ? null : p.recipient_name,
                 recipient_missing: !!p.recipient_missing,
+                creator_gone: !!p.creator_gone,
+                creator_username: p.creator_username || null,
+                reserved: p.reserved_by != null,
+                bought: !!p.is_checked,
                 // Spoiler protection: the caller never sees their own gifts
                 masked: isMine,
                 title: isMine ? 'Prezent-niespodzianka 🎁' : p.title,
                 comments: isMine ? null : p.comments
             };
         });
-        res.json({ presents });
+        res.json({ presents, summary: { totalPresents } });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas pobierania porzuconych prezentów');
     }
