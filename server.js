@@ -286,11 +286,24 @@ async function notifyLeaderboardChange(previousLeader, actorId) {
         if (previousLeader && previousLeader.id === newLeader.id) return;
 
         console.log(`🏆 [LEADERBOARD] New leader: ${newLeader.name} (${newLeader.total_presents} presents)`);
+        const count = Number(newLeader.total_presents);
         await createNotification('leaderboard_leader', actorId || 0, {
             leaderName: newLeader.name,
             leaderId: newLeader.id,
-            presentCount: Number(newLeader.total_presents),
+            presentCount: count,
             previousLeaderName: previousLeader ? previousLeader.name : null
+        });
+
+        // Push notification too - a lead change is a fun, rare event.
+        // data.url makes the SW open the ranking page on tap.
+        const pushBody = previousLeader
+            ? `${newLeader.name} wyprzedza ${previousLeader.name} i prowadzi z ${count} ${count === 1 ? 'prezentem' : 'prezentami'}!`
+            : `${newLeader.name} prowadzi w rankingu z ${count} ${count === 1 ? 'prezentem' : 'prezentami'}!`;
+        sendNotificationToUsers(actorId || 0, 'Zmiana w rankingu! 🏆', pushBody, {
+            leaderboard: true,
+            url: '/leaderboard.html'
+        }).catch(err => {
+            console.error('❌ [LEADERBOARD] Push send failed (non-fatal):', err);
         });
     } catch (err) {
         console.error('❌ [LEADERBOARD] Error checking leaderboard change:', err);
