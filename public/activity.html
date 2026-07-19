@@ -88,8 +88,10 @@
             text-shadow: none !important;
         }
 
-        /* Links inside notifications keep an accent color */
-        .activity-page .notification-message a {
+        /* Links inside notifications keep an accent color - including the
+           bold text inside them, which otherwise inherits the dark body color */
+        .activity-page .notification-message a,
+        .activity-page .notification-message a * {
             color: #1E88E5 !important;
         }
         
