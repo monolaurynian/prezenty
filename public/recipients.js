@@ -1915,19 +1915,20 @@ function generatePresentsList(presents) {
         return new Date(b.created_at) - new Date(a.created_at);
     });
 
+    // Homepage-style row: gift icon + title/comments on the left,
+    // action buttons stacked in a column on the right
     const generatePresentItem = (present, index) => `
         <div class="present-item ${present.is_checked ? 'checked' : ''} ${present.reserved_by && present.reserved_by !== currentUserId ? 'reserved-by-other' : ''} ${present.reserved_by === currentUserId ? 'reserved-by-me' : ''}" data-id="${present.id}" style="transition-delay: ${index * 50}ms;">
-            <div class="d-flex align-items-start flex-wrap flex-md-nowrap w-100 gap-2">
-                <div class="flex-grow-1">
-                    <div class="present-title-block">
+            <div class="d-flex align-items-start justify-content-between w-100" style="gap: 12px;">
+                <div class="d-flex present-details" style="gap: 8px; flex: 1 1 auto; min-width: 0;">
+                    <i class="fas fa-gift present-gift-icon" style="margin-top: 4px; flex-shrink: 0;"></i>
+                    <div class="present-title-block" style="flex: 1; min-width: 0;">
                         <h6 class="present-title mb-1">${convertUrlsToLinks(escapeHtml(present.title))}</h6>
                         ${present.comments ? `<div class="present-comments mb-1">${formatCommentsPreview(present.comments)}</div>` : ''}
+                        <small class="text-muted">${present.created_at ? new Date(present.created_at).toLocaleDateString('pl-PL') : ''}</small>
                     </div>
                 </div>
-                <div class="d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 90px;">
-                    <small class="text-muted">${present.created_at ? new Date(present.created_at).toLocaleDateString('pl-PL') : ''}</small>
-                </div>
-                <div class="present-actions d-flex flex-column align-items-end justify-content-between ms-2" style="min-width: 140px;">
+                <div class="present-actions d-flex flex-column" style="gap: 6px; flex-shrink: 0;">
                     ${generateReservationButton(present)}
                 </div>
             </div>
@@ -2220,21 +2221,23 @@ function generateReservationButton(present) {
 
     if (present.reserved_by) {
         if (mine) {
+            // Stacked like the homepage rows - the parent .present-actions
+            // column lays these out vertically with equal widths
             return `
-                <div class="d-flex gap-2 flex-wrap justify-content-end w-100">
-                    <button class="btn btn-success btn-sm reserve-btn"
-                            onclick="handleBoughtClick(event, ${present.id}, true)"
-                            title="Oznacz jako kupione">
-                        <i class="fas fa-shopping-bag"></i>
-                        <span class="ms-1">Zakupione</span>
-                    </button>
-                    <button class="btn btn-outline-danger btn-sm"
-                            onclick="handleReserveClick(event, ${present.id}, 'cancel')"
-                            title="Usuń rezerwację">
-                        <i class="fas fa-xmark"></i>
-                        <span class="ms-1">Anuluj</span>
-                    </button>
-                </div>
+                <button class="btn btn-success btn-sm reserve-btn"
+                        onclick="handleBoughtClick(event, ${present.id}, true)"
+                        title="Oznacz jako kupione"
+                        style="white-space: nowrap;">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="ms-1">Zakupione</span>
+                </button>
+                <button class="btn btn-outline-danger btn-sm"
+                        onclick="handleReserveClick(event, ${present.id}, 'cancel')"
+                        title="Usuń rezerwację"
+                        style="white-space: nowrap;">
+                    <i class="fas fa-xmark"></i>
+                    <span class="ms-1">Anuluj</span>
+                </button>
             `;
         }
         return `
@@ -4346,12 +4349,15 @@ function generateSinglePresentHTML(present) {
 
     return `
         <div class="${classes.join(' ')}" data-id="${present.id}">
-            <div class="d-flex align-items-start flex-wrap flex-md-nowrap w-100 gap-2">
-                <div class="flex-grow-1 present-details">
-                    <div class="fw-semibold present-name">${escapeHtml(present.title)}</div>
-                    ${present.comments ? `<div class="text-muted small mt-1"><i class="fas fa-info-circle me-1"></i>${escapeHtml(present.comments)}</div>` : ''}
+            <div class="d-flex align-items-start justify-content-between w-100" style="gap: 12px;">
+                <div class="d-flex present-details" style="gap: 8px; flex: 1 1 auto; min-width: 0;">
+                    <i class="fas fa-gift present-gift-icon" style="margin-top: 4px; flex-shrink: 0;"></i>
+                    <div style="flex: 1; min-width: 0;">
+                        <div class="fw-semibold present-name">${escapeHtml(present.title)}</div>
+                        ${present.comments ? `<div class="text-muted small mt-1">${escapeHtml(present.comments)}</div>` : ''}
+                    </div>
                 </div>
-                <div class="present-actions d-flex gap-2 flex-wrap flex-md-nowrap justify-content-center justify-content-md-end w-100 w-md-auto">
+                <div class="present-actions d-flex flex-column" style="gap: 6px; flex-shrink: 0;">
                     ${generateReservationButton(present)}
                 </div>
             </div>

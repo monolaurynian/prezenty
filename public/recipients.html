@@ -171,6 +171,20 @@
             will-change: auto !important;
         }
         
+        /* Homepage-like present rows: content left-aligned (some legacy
+           rules center things on mobile), gift icon tinted by state */
+        .recipients-page .present-item {
+            text-align: left !important;
+        }
+        .recipients-page .present-item .present-gift-icon { color: #FF9800; }
+        .recipients-page .present-item.reserved-by-me .present-gift-icon { color: #EF6C00; }
+        .recipients-page .present-item.checked .present-gift-icon { color: #43A047; }
+        .recipients-page .present-item.reserved-by-other .present-gift-icon { color: #9e9e9e; }
+        .recipients-page .present-item .present-actions .btn { white-space: nowrap; }
+        .recipients-page .present-item .present-title {
+            text-align: left !important;
+        }
+
         /* Gray text with white shadow in modals */
         .recipients-page .modal-content,
         .recipients-page .modal-content * {
@@ -2187,7 +2201,7 @@
     <script src="fast-loader.js"></script>
 
     <!-- Main app (critical - load immediately) -->
-    <script src="recipients.js?v=12&t=1111111111"></script>
+    <script src="recipients.js?v=13&t=1111111111"></script>
 
     <!-- Scroll to recipient from leaderboard -->
     <script>
