@@ -113,9 +113,18 @@
             border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 20px;
             padding: 40px;
-            margin: 20px auto;
+            /* Clear gap between stacked sections - shadows overlapped and
+               adjacent rounded surfaces looked like they were clashing */
+            margin: 28px auto;
             max-width: 1200px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        /* Inner rounded cards (accordions) must not hug the container's
+           own rounded bottom edge */
+        .stats-container > .accordion:last-child,
+        .stats-container > div:last-child {
+            margin-bottom: 2px;
         }
 
         .stats-container h3 {
@@ -133,7 +142,7 @@
         @media (max-width: 768px) {
             .stats-container {
                 padding: 20px;
-                margin: 15px auto;
+                margin: 20px auto;
             }
         }
     </style>

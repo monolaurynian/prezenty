@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v70';
+const CACHE_NAME = 'prezenty-v71';
 const urlsToCache = [
   '/manifest.json',
   '/favicon.svg',
@@ -208,16 +208,31 @@ self.addEventListener('notificationclick', function(event) {
   
   // Handle view action or default click
   if (event.action === 'view' || !event.action) {
-    const urlToOpen = event.notification.data?.url || '/recipients';
-    
+    const d = event.notification.data || {};
+
+    // Present-related push: open the recipients page prefiltered to the
+    // present's recipient with the present scrolled to and highlighted
+    // (?osoba= + ?prezent= are handled by filters.js)
+    let urlToOpen = d.url || '/recipients.html';
+    if (d.presentId) {
+      const params = new URLSearchParams();
+      if (d.recipientName) params.set('osoba', d.recipientName);
+      params.set('prezent', d.presentId);
+      urlToOpen = '/recipients.html?' + params.toString();
+    }
+
     event.waitUntil(
       clients.matchAll({ 
         type: 'window',
         includeUncontrolled: true 
       }).then(function(clientList) {
-        // If app is already open, focus it
+        // If the app is already open, navigate that window to the deep
+        // link and focus it (focus alone would miss the present context)
         for (let client of clientList) {
-          if (client.url.includes('/recipients') && 'focus' in client) {
+          if ('focus' in client) {
+            if ('navigate' in client) {
+              return client.navigate(urlToOpen).then(c => (c || client).focus());
+            }
             return client.focus();
           }
         }

@@ -368,9 +368,7 @@ function submitPresent() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Right after adding is when people want to review their list -
-            // offer the edit view inline in the success message
-            showFormMessage('Prezent został dodany pomyślnie! 🎁', 'success', true);
+            showFormMessage('Prezent został dodany pomyślnie! 🎁', 'success');
             // Clear form
             document.getElementById('presentForm').reset();
             document.getElementById('newNameInput').style.display = 'none';

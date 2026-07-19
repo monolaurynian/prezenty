@@ -85,6 +85,12 @@
             background: transparent !important;
         }
 
+        /* Breathing room at the very top - the navbar was removed, so the
+           filter panel starts the page (respects the phone's status bar) */
+        .recipients-page .container.mt-4 {
+            padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+        }
+
         /* Frosted cards - unified app look */
         .recipients-page .card,
         .recipients-page .main-card,
@@ -1779,6 +1785,11 @@
                             `<strong>"${data.presentTitle}"</strong>`;
                         return `odznaczył(a) ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
                     }
+                },
+                leaderboard_leader: {
+                    icon: 'fa-trophy',
+                    color: '#FFC107',
+                    getMessage: (data) => `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
                 }
             };
             return configs[type] || configs.present_added;
@@ -2215,6 +2226,11 @@
                 icon: 'fa-circle',
                 color: '#9E9E9E',
                 getMessage: (data, actor) => `${actor} odznaczył(a) "${data.presentTitle}"${data.recipientName ? ' dla ' + data.recipientName : ''}`
+            },
+            leaderboard_leader: {
+                icon: 'fa-trophy',
+                color: '#FFC107',
+                getMessage: (data) => `🏆 ${data.leaderName || 'Ktoś'}${data.previousLeaderName ? ` wyprzedza ${data.previousLeaderName} i` : ''} prowadzi w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
             }
         };
 
