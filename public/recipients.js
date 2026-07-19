@@ -595,6 +595,19 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
         persistentCache = loadFromPersistentCache();
         if (persistentCache) {
+            // Seed the user id from the cached identification BEFORE the
+            // first render. checkAuth() hasn't resolved yet at this point,
+            // and rendering with currentUserId=null made every present the
+            // user reserved look "taken by someone else" (greyed out) until
+            // the post-auth re-render corrected it.
+            const cachedUserId = persistentCache.data.identificationStatus &&
+                persistentCache.data.identificationStatus.userId;
+            if (cachedUserId != null && currentUserId == null) {
+                currentUserId = cachedUserId;
+                window._currentUserId = cachedUserId;
+                console.log('[FastLoad] Seeded currentUserId from cache:', cachedUserId);
+            }
+
             const isIdentified = persistentCache.data.identificationStatus &&
                 persistentCache.data.identificationStatus.isIdentified;
 
