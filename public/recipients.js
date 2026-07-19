@@ -4362,6 +4362,7 @@ function showToast(message, type = 'success', action = null) {
         const oldBtn = toastElement.querySelector('.toast-action-btn');
         if (oldBtn) oldBtn.remove();
 
+        const closeBtn = toastElement.querySelector('.btn-close');
         if (action) {
             const btn = document.createElement('button');
             btn.type = 'button';
@@ -4375,8 +4376,16 @@ function showToast(message, type = 'success', action = null) {
                 action.onClick();
             });
             // Insert inside the flex container, before the close button
-            const closeBtn = toastElement.querySelector('.btn-close');
             closeBtn.parentElement.insertBefore(btn, closeBtn);
+            // The close button's m-auto would split the free space with the
+            // action button's auto margin, leaving a gap on the right.
+            // Keep only vertical centering so the action hugs the right edge.
+            closeBtn.classList.remove('m-auto');
+            closeBtn.classList.add('my-auto');
+        } else if (closeBtn) {
+            // Restore default centering for plain toasts
+            closeBtn.classList.add('m-auto');
+            closeBtn.classList.remove('my-auto');
         }
 
         const toast = new bootstrap.Toast(toastElement, {

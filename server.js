@@ -2219,11 +2219,14 @@ app.get('/api/leaderboard', async (req, res) => {
             return res.json({ users: [], cumulativeStats: { totalPresents: 0, boughtPresents: 0, reservedPresents: 0 } });
         }
 
-        // Get users with their present count, ordered by activity
+        // Rank PEOPLE (recipients) by the presents on their wishlist -
+        // regardless of who added them and whether the person has an
+        // account / identified themselves. Activity stats (bought/reserved
+        // BY the person) come through their identifying user, if any.
         const [users] = await pool.execute(`
             SELECT 
-                u.id,
-                u.username,
+                r.id,
+                r.name as username,
                 r.id as recipient_id,
                 CASE WHEN r.profile_picture IS NOT NULL 
                     THEN CONCAT('/api/recipients/', r.id, '/profile-picture')
@@ -2233,12 +2236,11 @@ app.get('/api/leaderboard', async (req, res) => {
                 SUM(CASE WHEN p.is_checked = 1 THEN 1 ELSE 0 END) as bought_presents,
                 SUM(CASE WHEN p.reserved_by IS NOT NULL THEN 1 ELSE 0 END) as reserved_presents,
                 SUM(CASE WHEN p.is_checked = 0 AND p.reserved_by IS NULL THEN 1 ELSE 0 END) as available_presents,
-                (SELECT COUNT(*) FROM presents WHERE reserved_by = u.id AND is_checked = 1) as user_bought_count,
-                (SELECT COUNT(*) FROM presents WHERE reserved_by = u.id) as user_reserved_count
-            FROM users u
-            LEFT JOIN presents p ON p.created_by = u.id
-            LEFT JOIN recipients r ON r.name = u.username
-            GROUP BY u.id, u.username, r.id, r.profile_picture
+                (SELECT COUNT(*) FROM presents WHERE reserved_by = r.identified_by AND is_checked = 1) as user_bought_count,
+                (SELECT COUNT(*) FROM presents WHERE reserved_by = r.identified_by) as user_reserved_count
+            FROM recipients r
+            LEFT JOIN presents p ON p.recipient_id = r.id
+            GROUP BY r.id, r.name, r.profile_picture, r.identified_by
             HAVING total_presents > 0
             ORDER BY total_presents DESC
             LIMIT 10
