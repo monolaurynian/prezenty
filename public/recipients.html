@@ -86,9 +86,13 @@
         }
 
         /* Breathing room at the very top - the navbar was removed, so the
-           filter panel starts the page (respects the phone's status bar) */
-        .recipients-page .container.mt-4 {
-            padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+           filter panel starts the page (respects the phone's status bar).
+           Mobile only: on desktop the sidebar's 12px alignment applies. */
+        @media (max-width: 991.98px) {
+            .recipients-page .container.mt-4 {
+                margin-top: 0 !important;
+                padding-top: calc(env(safe-area-inset-top, 0px) + 20px) !important;
+            }
         }
 
         /* Frosted cards - unified app look */

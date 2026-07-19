@@ -184,31 +184,9 @@ const getRecipientById = async (id) => {
 };
 
 // Notification helper functions
-async function ensureNotificationsTable() {
-    if (DEMO_MODE) return;
-
-    try {
-        await pool.execute(`
-            CREATE TABLE IF NOT EXISTS notifications (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                type ENUM('recipient_added', 'present_added', 'present_reserved', 
-                          'present_unreserved', 'present_checked', 'present_unchecked') NOT NULL,
-                actor_id INT NOT NULL,
-                data JSON,
-                is_read BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_user_read (user_id, is_read),
-                INDEX idx_created (created_at DESC),
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE
-            )
-        `);
-        console.log('✅ [NOTIFICATIONS] Notifications table ready');
-    } catch (err) {
-        console.error('❌ [NOTIFICATIONS] Error creating notifications table:', err);
-    }
-}
+// (ensureNotificationsTable is defined later in this file - the previous
+// duplicate ENUM-based definition was removed; the ENUM silently
+// truncated new notification types to empty strings)
 
 async function createNotification(type, actorId, data) {
     if (DEMO_MODE) {
@@ -2453,9 +2431,12 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
                     statusCode: error.statusCode,
                     endpoint: sub.endpoint.substring(0, 50) + '...'
                 });
-                // Remove invalid subscription
-                if (error.statusCode === 410) {
-                    console.log(`🗑️ [NOTIFICATION] Removing expired subscription for user ${sub.user_id}`);
+                // Remove dead subscriptions:
+                // 410 = expired, 404 = gone, 403 = VAPID mismatch (built
+                // against an old key - it can never succeed; the device
+                // re-subscribes with the current key on its next visit)
+                if ([403, 404, 410].includes(error.statusCode)) {
+                    console.log(`🗑️ [NOTIFICATION] Removing dead subscription (${error.statusCode}) for user ${sub.user_id}`);
                     await pool.execute('DELETE FROM push_subscriptions WHERE id = ?', [sub.id]);
                 }
             }
@@ -2471,16 +2452,21 @@ async function sendNotificationToUsers(excludeUserId, title, body, data = {}) {
 // Notification Center Helper Functions
 
 // Create notifications table if it doesn't exist
+let notificationsTableEnsured = false;
 async function ensureNotificationsTable() {
     if (DEMO_MODE) return;
+    if (notificationsTableEnsured) return; // once per process - this runs
+                                           // on EVERY notification otherwise
 
     try {
+        // type is VARCHAR, not ENUM: the original ENUM silently truncated
+        // unknown values (like leaderboard_leader) to '' - clients then
+        // rendered the "wykonał(a) akcję" fallback
         await pool.execute(`
             CREATE TABLE IF NOT EXISTS notifications (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_id INT NOT NULL,
-                type ENUM('recipient_added', 'present_added', 'present_reserved', 
-                          'present_unreserved', 'present_checked', 'present_unchecked') NOT NULL,
+                type VARCHAR(50) NOT NULL,
                 actor_id INT NOT NULL,
                 data JSON,
                 is_read BOOLEAN DEFAULT FALSE,
@@ -2491,6 +2477,22 @@ async function ensureNotificationsTable() {
                 FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
+
+        // Migrate existing installs off the restrictive ENUM
+        try {
+            const [cols] = await pool.execute(`
+                SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'notifications' AND COLUMN_NAME = 'type'
+            `);
+            if (cols.length > 0 && /^enum/i.test(cols[0].COLUMN_TYPE)) {
+                console.log('🔧 [NOTIFICATIONS] Migrating type column ENUM -> VARCHAR(50)');
+                await pool.execute(`ALTER TABLE notifications MODIFY COLUMN type VARCHAR(50) NOT NULL`);
+            }
+        } catch (migErr) {
+            console.error('⚠️ [NOTIFICATIONS] Type column migration failed (non-fatal):', migErr.message);
+        }
+
+        notificationsTableEnsured = true;
         console.log('✅ [NOTIFICATIONS] Notifications table ready');
     } catch (err) {
         console.error('❌ [NOTIFICATIONS] Error creating notifications table:', err);
@@ -3272,7 +3274,8 @@ async function sendPushToUser(userId, title, body, data = {}) {
                     keys: { p256dh: sub.p256dh, auth: sub.auth }
                 }, payload);
             } catch (error) {
-                if (error.statusCode === 410) {
+                // 403 = old-VAPID-key subscription, can never succeed
+                if ([403, 404, 410].includes(error.statusCode)) {
                     await pool.execute('DELETE FROM push_subscriptions WHERE id = ?', [sub.id]);
                 }
             }
