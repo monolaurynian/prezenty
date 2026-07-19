@@ -38,7 +38,7 @@
     <link href="aws-design.css?v=3" rel="stylesheet">
     <link href="bottom-tab-bar.css?v=33" rel="stylesheet">
     <link href="app-theme.css?v=11" rel="stylesheet">
-    <link href="filters.css?v=6" rel="stylesheet">
+    <link href="filters.css?v=7" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
         .tab-bar-notifications-panel.show {
@@ -64,8 +64,13 @@
             max-width: 100vw;
         }
 
-        /* Fix background jumping on scroll */
+        /* Fix background jumping on scroll.
+           The photo MUST be declared here: styles.deduped.min.css sets the
+           photo on body but then a later rule resets body to transparent,
+           leaving a plain background with nothing for the frosted blur
+           to show. (home/activity declare it inline for the same reason) */
         body {
+            background-image: url('seba.jpg') !important;
             background-attachment: fixed !important;
             background-position: center center !important;
             background-repeat: no-repeat !important;

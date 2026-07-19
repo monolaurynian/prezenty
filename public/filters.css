@@ -484,12 +484,19 @@
     transition: all 0.3s ease;
 }
 
+/* Filtered-out recipient cards must actually leave the layout so the
+   remaining cards flow up. High specificity + !important beats both the
+   `.recipient-item { display: block !important }` rule below and the
+   page's own padding/margin !important rules. */
+.recipients-page .recipient-item[style*="display: none"],
 .recipient-item[style*="display: none"] {
-    height: 0;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    opacity: 0;
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
 }
 
 /* Ensure present containers collapse properly */

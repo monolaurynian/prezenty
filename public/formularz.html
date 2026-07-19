@@ -32,7 +32,16 @@
     </style>
     <style>
         /* Match homepage: no dark overlay, the photo shows through and
-           frosted cards provide the contrast */
+           frosted cards provide the contrast. The photo must be declared
+           here - styles.deduped.min.css resets body to transparent. */
+        body {
+            background-image: url('seba.jpg') !important;
+            background-attachment: fixed !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+        }
+
         .background-overlay {
             background: transparent !important;
             backdrop-filter: none !important;
