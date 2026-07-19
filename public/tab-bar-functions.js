@@ -116,22 +116,53 @@ function displayNotifications(notifications) {
         present_reserved: { icon: 'ri-bookmark-line', color: '#FF9800' },
         present_unreserved: { icon: 'ri-bookmark-line', color: '#9E9E9E' },
         present_checked: { icon: 'ri-checkbox-circle-line', color: '#4CAF50' },
-        present_unchecked: { icon: 'ri-checkbox-blank-circle-line', color: '#9E9E9E' }
+        present_unchecked: { icon: 'ri-checkbox-blank-circle-line', color: '#9E9E9E' },
+        leaderboard_leader: { icon: 'ri-trophy-line', color: '#FFC107' },
+        anon_message: { icon: 'ri-chat-private-line', color: '#7B1FA2' }
     };
 
-    const html = notifications.map(notif => {
+    // Group message notifications by thread - one row per conversation,
+    // newest notification as the representative (list is newest-first)
+    const grouped = [];
+    const threadGroups = new Map();
+    notifications.forEach(notif => {
+        if (notif.type === 'anon_message') {
+            let data = notif.data;
+            if (typeof data === 'string') {
+                try { data = JSON.parse(data); } catch (e) { data = {}; }
+            }
+            const key = data && data.threadId ? 'thread-' + data.threadId : 'notif-' + notif.id;
+            if (threadGroups.has(key)) {
+                const g = threadGroups.get(key);
+                g.ids.push(notif.id);
+                g.count++;
+                if (!notif.is_read) g.hasUnread = true;
+                return;
+            }
+            const g = { notif, ids: [notif.id], count: 1, hasUnread: !notif.is_read };
+            threadGroups.set(key, g);
+            grouped.push(g);
+        } else {
+            grouped.push({ notif, ids: [notif.id], count: 1, hasUnread: !notif.is_read });
+        }
+    });
+
+    const html = grouped.map(group => {
+        const notif = group.notif;
         const config = notificationConfig[notif.type] || { icon: 'ri-notification-line', color: '#666' };
-        const isUnread = !notif.is_read;
+        const isUnread = group.hasUnread;
         const timeAgo = getTimeAgo(notif.created_at);
+        const countSuffix = group.count > 1
+            ? ` <span style="color: #718096; font-size: 13px;">(${group.count} wiadomości)</span>` : '';
         
         return `
-            <div class="tab-bar-notification-item ${isUnread ? 'unread' : ''}" data-notification-id="${notif.id}" style="display: flex; align-items: flex-start; gap: 12px; padding: 15px 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); background: ${isUnread ? 'rgba(33, 150, 243, 0.05)' : '#ffffff'};">
+            <div class="tab-bar-notification-item ${isUnread ? 'unread' : ''}" data-notification-id="${notif.id}" data-notification-ids="${group.ids.join(',')}" style="display: flex; align-items: flex-start; gap: 12px; padding: 15px 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); background: ${isUnread ? 'rgba(33, 150, 243, 0.05)' : '#ffffff'};">
                 <div class="tab-bar-notification-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: ${config.color}20; color: ${config.color}; cursor: pointer; flex-shrink: 0;">
                     <i class="${config.icon}" style="font-size: 20px;"></i>
                 </div>
                 <div class="tab-bar-notification-content" style="flex: 1; min-width: 0;">
                     <div class="tab-bar-notification-message" style="font-size: 14px; color: #2d3748; margin-bottom: 4px; line-height: 1.4;">
-                        ${getNotificationMessage(notif)}
+                        ${getNotificationMessage(notif)}${countSuffix}
                     </div>
                     <div class="tab-bar-notification-time" style="font-size: 12px; color: #718096;">
                         <i class="ri-time-line"></i> ${timeAgo}
@@ -148,10 +179,14 @@ function displayNotifications(notifications) {
     content.addEventListener('click', (e) => {
         const notificationItem = e.target.closest('.tab-bar-notification-item');
         if (notificationItem) {
-            const notificationId = notificationItem.getAttribute('data-notification-id');
+            // Grouped rows carry every notification id in the group
+            const idsAttr = notificationItem.getAttribute('data-notification-ids');
+            const ids = idsAttr
+                ? idsAttr.split(',')
+                : [notificationItem.getAttribute('data-notification-id')];
             // Only mark as read if not clicking on a link
             if (!e.target.closest('a')) {
-                markNotificationAsRead(notificationId);
+                markNotificationsAsRead(ids);
             }
         }
     });
@@ -286,7 +321,14 @@ function getTimeAgo(timestamp) {
 
 // Mark notification as read
 function markNotificationAsRead(notificationId) {
-    fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' })
+    markNotificationsAsRead([notificationId]);
+}
+
+// Mark several notifications as read (grouped rows), refreshing UI once
+function markNotificationsAsRead(notificationIds) {
+    Promise.all(notificationIds.map(id =>
+        fetch(`/api/notifications/${id}/read`, { method: 'POST' })
+    ))
         .then(() => {
             updateNotificationBadge();
             loadRecentNotifications();

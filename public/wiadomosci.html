@@ -201,9 +201,13 @@
                         style="color:#212529;" title="Wróć do listy rozmów">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <div class="section-title mb-0" id="chatTitle">
+                    <div class="section-title mb-0 flex-grow-1" id="chatTitle">
                         <i class="fas fa-comment-dots" style="color:#7B1FA2;"></i>Rozmowa
                     </div>
+                    <button class="btn btn-outline-danger btn-sm" id="deleteThreadBtn"
+                        onclick="deleteThread()" title="Usuń rozmowę" style="display: none;">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
                 <div class="chat-messages" id="chatMessages" style="max-height: 58vh; min-height: 180px;"></div>
                 <div class="d-flex gap-2 mt-3">
@@ -425,6 +429,7 @@
             newChatTargetId = targetUserId;
             document.getElementById('listView').style.display = 'none';
             document.getElementById('chatView').style.display = 'block';
+            document.getElementById('deleteThreadBtn').style.display = 'none';
             document.getElementById('chatTitle').innerHTML =
                 `<i class="fas fa-comment-dots" style="color:#7B1FA2;"></i>${escapeHtml(username)}`;
             document.getElementById('chatMessages').innerHTML = `
@@ -449,6 +454,7 @@
         function showListView(replaceUrl) {
             currentThreadId = null;
             newChatTargetId = null;
+            document.getElementById('deleteThreadBtn').style.display = 'none';
             document.getElementById('chatView').style.display = 'none';
             document.getElementById('listView').style.display = 'block';
             if (replaceUrl) history.replaceState(null, '', '/wiadomosci');
@@ -536,6 +542,9 @@
                     `).join('');
                     box.scrollTop = box.scrollHeight;
 
+                    // Thread exists and loaded - deletion is possible
+                    document.getElementById('deleteThreadBtn').style.display = '';
+
                     // Load a preview card for the first URL in each message
                     msgs.forEach(m => {
                         const url = firstUrlIn(m.body);
@@ -583,6 +592,30 @@
                         loadThreadMessages();
                     } else {
                         showToast(d.error || 'Nie udało się wysłać', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia', 'error'))
+                .finally(() => { btn.disabled = false; });
+        }
+
+        // Hard-deletes the thread for BOTH participants - the other
+        // side loses the conversation too, so the confirm says so
+        function deleteThread() {
+            if (!currentThreadId) return;
+            if (!confirm('Usunąć tę rozmowę? Zniknie ona również u drugiej osoby. Tej operacji nie można cofnąć.')) {
+                return;
+            }
+            const btn = document.getElementById('deleteThreadBtn');
+            btn.disabled = true;
+            fetch(`/api/wiadomosci/threads/${currentThreadId}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        showToast('Rozmowa została usunięta', 'success');
+                        showListView(true);
+                        if (typeof updateMessagesBadge === 'function') updateMessagesBadge();
+                    } else {
+                        showToast(d.error || 'Nie udało się usunąć rozmowy', 'error');
                     }
                 })
                 .catch(() => showToast('Błąd połączenia', 'error'))
@@ -692,7 +725,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=11"></script>
+    <script src="tab-bar-functions.js?v=12"></script>
     <script src="desktop-nav.js?v=4"></script>
 </body>
 </html>

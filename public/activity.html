@@ -104,6 +104,12 @@
             text-shadow: none !important;
         }
 
+        /* Active page ("Strona X") sits on a blue background - text must be white */
+        .activity-page .page-item.active .page-link,
+        .activity-page .page-item.active .page-link * {
+            color: #ffffff !important;
+        }
+
         /* Fixed header bar for hamburger */
         .fixed-header-bar {
             position: fixed;
@@ -296,11 +302,11 @@
         }
         
         .activity-page .notification-item.unread {
-            background: rgba(244, 67, 54, 0.07) !important;
+            background: #FDF0EF !important;
         }
         
         .activity-page .notification-item.unread:hover {
-            background: rgba(244, 67, 54, 0.12) !important;
+            background: #FAE3E1 !important;
         }
     </style>
 </head>
@@ -1016,7 +1022,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=11"></script>
+    <script src="tab-bar-functions.js?v=12"></script>
     <script src="desktop-nav.js?v=4"></script>
 </body>
 </html>

@@ -2490,33 +2490,9 @@ async function ensureAnonMessageTables() {
             FOREIGN KEY (thread_id) REFERENCES anon_threads(id) ON DELETE CASCADE
         )
     `);
-    // Merge duplicate threads (same initiator -> same target) left over
-    // from before thread reuse existed: all messages move into the oldest
-    // thread so each conversation pair has exactly one thread
-    try {
-        const [dupes] = await pool.execute(`
-            SELECT initiator_id, target_id, MIN(id) AS keep_id, COUNT(*) AS cnt
-            FROM anon_threads
-            GROUP BY initiator_id, target_id
-            HAVING cnt > 1
-        `);
-        for (const d of dupes) {
-            await pool.execute(`
-                UPDATE anon_messages m
-                JOIN anon_threads t ON t.id = m.thread_id
-                SET m.thread_id = ?
-                WHERE t.initiator_id = ? AND t.target_id = ? AND t.id != ?
-            `, [d.keep_id, d.initiator_id, d.target_id, d.keep_id]);
-            await pool.execute(
-                'DELETE FROM anon_threads WHERE initiator_id = ? AND target_id = ? AND id != ?',
-                [d.initiator_id, d.target_id, d.keep_id]
-            );
-            console.log(`🔧 [WIADOMOSCI] Merged ${d.cnt} threads for pair ${d.initiator_id}->${d.target_id} into #${d.keep_id}`);
-        }
-    } catch (mergeErr) {
-        console.error('⚠️ [WIADOMOSCI] Thread merge migration failed (non-fatal):', mergeErr.message);
-    }
-
+    // NOTE: multiple threads per sender->recipient pair are allowed by
+    // design (each compose starts a fresh thread) - separate threads help
+    // tell genuine conversations apart from test ones
     anonTablesEnsured = true;
     console.log('✅ [WIADOMOSCI] Anonymous message tables ready');
 }
@@ -2628,22 +2604,13 @@ app.post('/api/wiadomosci/threads', requireAuth, async (req, res) => {
         const [target] = await pool.execute('SELECT id FROM users WHERE id = ?', [targetUserId]);
         if (target.length === 0) return notFound(res, 'Nie znaleziono użytkownika');
 
-        // Messages to the same person continue the existing thread
-        // instead of starting a new one each time
-        let threadId;
-        const [existing] = await pool.execute(
-            'SELECT id FROM anon_threads WHERE initiator_id = ? AND target_id = ? ORDER BY id ASC LIMIT 1',
+        // Every compose starts a NEW thread - multiple parallel threads
+        // to the same person are intentional (distinguishable conversations)
+        const [tRes] = await pool.execute(
+            'INSERT INTO anon_threads (initiator_id, target_id) VALUES (?, ?)',
             [userId, targetUserId]
         );
-        if (existing.length > 0) {
-            threadId = existing[0].id;
-        } else {
-            const [tRes] = await pool.execute(
-                'INSERT INTO anon_threads (initiator_id, target_id) VALUES (?, ?)',
-                [userId, targetUserId]
-            );
-            threadId = tRes.insertId;
-        }
+        const threadId = tRes.insertId;
 
         await pool.execute(
             'INSERT INTO anon_messages (thread_id, sender_id, body) VALUES (?, ?, ?)',
@@ -2697,6 +2664,29 @@ app.get('/api/wiadomosci/threads/:id', requireAuth, async (req, res) => {
         });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas pobierania rozmowy');
+    }
+});
+
+// Delete a thread - removes the conversation FOR BOTH SIDES (messages
+// cascade). Deliberate: hiding it one-sidedly would leave ghost threads
+// that can still receive replies into the void.
+app.delete('/api/wiadomosci/threads/:id', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.status(503).json({ error: 'Niedostępne w trybie demo' });
+    const userId = req.session.userId;
+    try {
+        await ensureAnonMessageTables();
+        const [tRows] = await pool.execute('SELECT * FROM anon_threads WHERE id = ?', [req.params.id]);
+        if (tRows.length === 0) return notFound(res, 'Nie znaleziono rozmowy');
+        const thread = tRows[0];
+        if (thread.initiator_id !== userId && thread.target_id !== userId) {
+            return forbidden(res, 'To nie Twoja rozmowa');
+        }
+
+        await pool.execute('DELETE FROM anon_threads WHERE id = ?', [thread.id]);
+        console.log(`🗑️ [WIADOMOSCI] Thread ${thread.id} deleted by user ${userId}`);
+        res.json({ success: true });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas usuwania rozmowy');
     }
 });
 
