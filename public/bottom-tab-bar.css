@@ -34,7 +34,8 @@
     margin: 0 auto;
     position: relative;
     padding: 0 16px;
-    height: 60px;
+    /* Tall enough for the selection pill's inner padding */
+    height: 64px;
 }
 
 /* No width caps: the dock always spans the full width minus the same
@@ -50,7 +51,9 @@
     text-decoration: none;
     color: #8e8e93;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 6px 12px 5px;
+    /* Generous inner padding so the selection pill has breathing room
+       around the icon + label instead of hugging them */
+    padding: 8px 16px 7px;
     border-radius: 18px;
     cursor: pointer;
     position: relative;
@@ -705,13 +708,14 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
 @media (max-width: 480px) {
     .tab-bar-container {
         padding: 0 4px;
-        height: 56px;
+        height: 60px;
     }
     
     .tab-item {
-        padding: 6px 2px;
-        min-width: 56px;
-        max-width: 76px;
+        /* Keep breathing room around the selection pill on phones too */
+        padding: 8px 8px 7px;
+        min-width: 60px;
+        max-width: 80px;
     }
     
     .tab-item i {
