@@ -489,6 +489,23 @@
                     </h5>
                 </div>
                 <div class="card-body">
+                    <!-- Quick add: create a new present for yourself without
+                         leaving the edit view -->
+                    <form id="quickAddForm" class="mb-4" onsubmit="return false;">
+                        <label class="form-label fw-semibold" for="quickAddTitle">
+                            <i class="fas fa-plus me-1" style="color: #43A047;"></i>Szybko dodaj nowy prezent
+                        </label>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <input type="text" class="form-control" id="quickAddTitle"
+                                placeholder="Nazwa prezentu..." style="flex: 1 1 200px; min-width: 0;">
+                            <button type="submit" class="btn btn-success fw-semibold" id="quickAddBtn"
+                                onclick="quickAddPresent()" style="white-space: nowrap;">
+                                <i class="fas fa-plus me-1"></i>Dodaj
+                            </button>
+                        </div>
+                        <div id="quickAddMessage" class="alert mt-2" style="display: none;"></div>
+                    </form>
+                    <hr class="mb-4" style="opacity: 0.15;">
                     <div id="myPresentsList">
                         <div class="text-center">
                             <div class="spinner-border" role="status">
@@ -662,7 +679,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="formularz.js?v=9"></script>
+    <script src="formularz.js?v=10"></script>
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebarMenu');

@@ -46,17 +46,14 @@ function populatePersonFilter() {
                 select.value = match.id;
                 activePersonFilter = String(match.id);
                 console.log('[Filter] Pre-filtered from URL:', match.name);
-                applyAllFilters();
             }
         }
-    } else if (activePersonFilter !== 'all' || activeStatusFilter !== 'all') {
-        // The list re-renders when fresh DB data replaces the cached
-        // FastLoad view - that new DOM has no display:none styles, so the
-        // active filters must be re-applied or the page "snaps back" to
-        // showing everyone.
-        console.log('[Filter] Re-applying filters after list re-render');
-        applyAllFilters();
     }
+
+    // Always re-apply after (re)population: re-renders drop display:none
+    // styles, and the identified user's own card must be (re)hidden even
+    // when no filter is active.
+    applyAllFilters();
 }
 
 // Keep the URL in sync so the current filter is shareable / survives reload
@@ -94,14 +91,41 @@ function applyStatusFilter(filterType) {
     applyAllFilters();
 }
 
+// The identified user's own card is hidden by default - own presents are
+// managed in "Edytuj Moje Prezenty". It only shows when the person filter
+// explicitly selects it (still anonymized server-side, so no spoilers).
+function getOwnRecipientId() {
+    try {
+        const cache = window._dataCache;
+        if (!cache || !cache.identificationStatus || !cache.identificationStatus.isIdentified) return null;
+        const ident = cache.identificationStatus;
+        if (ident.identifiedRecipient && ident.identifiedRecipient.id != null) {
+            return String(ident.identifiedRecipient.id);
+        }
+        const uid = ident.userId != null ? ident.userId : window._currentUserId;
+        const rec = (cache.recipients || []).find(r => r.identified_by === uid);
+        return rec ? String(rec.id) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
 function applyAllFilters() {
     const recipientItems = document.querySelectorAll('.recipient-item');
+    const ownRecipientId = getOwnRecipientId();
     
     console.log('[Filter] Applying filters - Person:', activePersonFilter, 'Status:', activeStatusFilter);
     console.log('[Filter] Found recipient items:', recipientItems.length);
     
     recipientItems.forEach(item => {
         const recipientId = item.getAttribute('data-id');
+        
+        // Own card: hidden unless explicitly selected in the person filter
+        if (ownRecipientId && recipientId === ownRecipientId &&
+            String(activePersonFilter) !== ownRecipientId) {
+            item.style.display = 'none';
+            return;
+        }
         
         // Check person filter
         const personMatches = activePersonFilter === 'all' || activePersonFilter === recipientId;
@@ -404,9 +428,13 @@ function performSearchWithAutocomplete(query) {
 // Apply search filter to main list
 function applySearchFilter(query, results) {
     if (!query || query.length === 0) {
-        // Clear filter - show everything
+        // Clear filter - show everything (except the own card, which stays
+        // hidden unless the person filter explicitly selects it)
+        const ownId = getOwnRecipientId();
         document.querySelectorAll('.recipient-item').forEach(item => {
-            item.style.display = '';
+            const rid = item.getAttribute('data-id');
+            item.style.display = (ownId && rid === ownId && String(activePersonFilter) !== ownId)
+                ? 'none' : '';
         });
         document.querySelectorAll('.list-group-item').forEach(item => {
             item.style.display = '';

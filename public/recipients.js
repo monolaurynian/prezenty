@@ -620,73 +620,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Show filtered data immediately (fast!)
                     displayRecipientsData(filteredRecipients, filteredPresents, persistentCache.data.identificationStatus);
 
-                    // Add placeholder for the identified user's card
-                    const identifiedRecipient = persistentCache.data.recipients.find(r => r.id === identifiedRecipientId);
-                    if (identifiedRecipient) {
-                        setTimeout(() => {
-                            const recipientsList = document.getElementById('recipientsList');
-                            if (recipientsList && !recipientsList.querySelector('.loading-placeholder')) {
-                                const placeholder = document.createElement('div');
-                                placeholder.className = 'col-12 loading-placeholder';
-                                placeholder.style.transition = 'opacity 0.3s ease-out';
-                                placeholder.style.opacity = '1';
-                                placeholder.innerHTML = `
-                                    <div class="recipient-item" data-id="${identifiedRecipient.id}" id="recipient-${identifiedRecipient.id}" style="transition: opacity 0.3s ease-out;">
-                                        <div class="row">
-                                            <div class="col-lg-2 col-md-6 text-center">
-                                                <div class="recipient-avatar">
-                                                    <div class="profile-picture-placeholder" style="cursor: default; font-size: 4rem;">
-                                                        ${getEmojiAvatar(identifiedRecipient.name)}
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Name shown in profile section for wider screens -->
-                                                <div class="recipient-name-in-profile d-none d-lg-block">
-                                                    <div class="profile-name-with-check d-flex align-items-center justify-content-center">
-                                                        <h6 class="mt-2 mb-1 me-2">${escapeHtml(identifiedRecipient.name)}</h6>
-                                                        <button class="btn profile-check-btn identified d-none d-lg-block" title="To jest Twój profil">
-                                                            <i class="fas fa-check-circle"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Buttons in profile section -->
-                                                <div class="profile-buttons"></div>
-                                            </div>
-                                            <div class="col-lg-10 col-md-6">
-                                                <div class="mb-2 d-lg-none">
-                                                    <center><h5 class="recipient-name mb-0">${escapeHtml(identifiedRecipient.name)}</h5></center>
-                                                    <div class="mt-2">
-                                                        <button class="btn btn-outline-success btn-sm identify-btn">
-                                                            <i class="fas fa-check-circle me-1"></i>To jest Twój profil
-                                                        </button>
-                                                    </div>
-                                                    <div class="mt-2 d-md-none">
-                                                        <button class="btn btn-outline-primary btn-sm change-picture-btn-mobile" disabled>
-                                                            <i class="fas fa-camera me-1"></i>Zmień zdjęcie
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="presents-preview">
-                                                    <div class="accordion" data-recipient-id="${identifiedRecipient.id}">
-                                                        <div class="accordion-item">
-                                                            <h2 class="accordion-header">
-                                                                <button class="accordion-button collapsed accordion-button-identified" type="button" disabled style="background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%); border-left: 4px solid #0d6efd; color: #084298; font-weight: 600; cursor: default;">
-                                                                    <i class="fas fa-spinner fa-spin me-2"></i>
-                                                                    <i class="fas fa-gift me-2"></i>Ładowanie prezentów...
-                                                                </button>
-                                                            </h2>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                                recipientsList.insertBefore(placeholder, recipientsList.firstChild);
-                            }
-                        }, 50);
-                    }
+                    // No loading placeholder for the identified user's own
+                    // card anymore: the own card is hidden by default (own
+                    // presents are managed in "Edytuj Moje Prezenty") and
+                    // only appears when explicitly selected in the person
+                    // filter - see applyAllFilters in filters.js.
 
                     // Store in memory cache
                     window._dataCache = {

@@ -385,6 +385,63 @@ function submitPresent() {
     });
 }
 
+// Quick add on the "Edytuj Moje Prezenty" tab - adds a present for the
+// identified user without leaving the edit view
+function quickAddPresent() {
+    const input = document.getElementById('quickAddTitle');
+    const title = input ? input.value.trim() : '';
+
+    if (!title) {
+        showQuickAddMessage('Wpisz nazwę prezentu', 'danger');
+        return;
+    }
+    if (!identifiedName) {
+        showQuickAddMessage('Najpierw zidentyfikuj się w Ustawieniach, żeby dodawać prezenty do swojej listy', 'danger');
+        return;
+    }
+
+    const btn = document.getElementById('quickAddBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Dodawanie...';
+    btn.disabled = true;
+
+    fetch('/api/formularz/present', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            recipientName: identifiedName,
+            presentTitle: title,
+            presentComments: ''
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                input.value = '';
+                showQuickAddMessage('Prezent dodany! 🎁', 'success');
+                loadMyPresents();
+            } else {
+                showQuickAddMessage(data.error || 'Błąd podczas dodawania prezentu', 'danger');
+            }
+        })
+        .catch(() => showQuickAddMessage('Błąd połączenia z serwerem', 'danger'))
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+}
+
+function showQuickAddMessage(message, type) {
+    const el = document.getElementById('quickAddMessage');
+    if (!el) return;
+    el.textContent = message;
+    el.className = `alert alert-${type} mt-2`;
+    el.style.display = 'block';
+    if (type === 'success') {
+        setTimeout(() => { el.style.display = 'none'; }, 4000);
+    }
+}
+
 function showFormMessage(message, type) {
     const formMessage = document.getElementById('formMessage');
     formMessage.textContent = message;
