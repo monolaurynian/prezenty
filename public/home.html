@@ -651,8 +651,10 @@
         }
 
         function loadMyReservationsWithData(presents, recipients, identificationStatus) {
-            const userId = identificationStatus.userId;
-            const myReservations = presents.filter(p => p.reserved_by === userId && !p.is_checked);
+            // Normalized comparison: the id can come from two different API
+            // calls, so guard against type/source mismatches
+            const userId = Number(identificationStatus.userId || window._currentUserId);
+            const myReservations = presents.filter(p => Number(p.reserved_by) === userId && !p.is_checked);
             renderPresentsList(myReservations, recipients, 'myReservationsList', 'Brak zarezerwowanych prezentów');
         }
 
@@ -669,8 +671,8 @@
         }
 
         function loadBoughtPresentsWithData(presents, recipients, identificationStatus) {
-            const userId = identificationStatus.userId;
-            const boughtPresents = presents.filter(p => p.reserved_by === userId && p.is_checked);
+            const userId = Number(identificationStatus.userId || window._currentUserId);
+            const boughtPresents = presents.filter(p => Number(p.reserved_by) === userId && p.is_checked);
             renderPresentsList(boughtPresents, recipients, 'boughtPresentsList', 'Brak kupionych prezentów');
         }
 
@@ -798,9 +800,23 @@
                 .catch(() => { /* non-critical */ });
         }
 
+        // After a successful action, quietly re-fetch and re-render from the
+        // server so the UI always converges to the truth (no manual refresh)
+        function reconcileWithServer() {
+            Promise.all([
+                fetch('/api/recipients-with-presents').then(r => r.json()),
+                fetch('/api/user/identification').then(r => r.json())
+            ])
+                .then(([data, identificationStatus]) => {
+                    window._homeData = { presents: data.presents, recipients: data.recipients, identificationStatus };
+                    rerenderHomeSections();
+                })
+                .catch(() => { /* optimistic state stays; next poll fixes it */ });
+        }
+
         function reservePresent(event, presentId) {
             const d = window._homeData;
-            const userId = (d && d.identificationStatus && d.identificationStatus.userId) || window._currentUserId;
+            const userId = Number((d && d.identificationStatus && d.identificationStatus.userId) || window._currentUserId);
             const prev = optimisticUpdatePresent(presentId, { reserved_by: userId, is_checked: false });
 
             fetch(`/api/presents/${presentId}/reserve`, {
@@ -811,6 +827,7 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
+                        reconcileWithServer();
                     } else {
                         rollbackPresent(presentId, prev);
                         alert('Błąd: ' + (data.error || 'Nie udało się zarezerwować prezentu'));
@@ -834,6 +851,7 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
+                        reconcileWithServer();
                     } else {
                         rollbackPresent(presentId, prev);
                         alert('Błąd: ' + (data.error || 'Nie udało się anulować rezerwacji'));
@@ -873,6 +891,7 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
+                        reconcileWithServer();
                     } else {
                         rollbackPresent(presentId, prev);
                         alert('Błąd: ' + (data.error || 'Nie udało się oznaczyć prezentu'));
@@ -898,6 +917,7 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
+                        reconcileWithServer();
                     } else {
                         rollbackPresent(presentId, prev);
                         alert('Błąd: ' + (data.error || 'Nie udało się cofnąć oznaczenia'));
