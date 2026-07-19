@@ -218,6 +218,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // The install shortcut has no dependency on auth - render it
+            // right away instead of leaving "Sprawdzanie..." on screen
+            // while the (possibly cold-starting) server answers /api/auth
+            renderInstallSection();
+
             fetch('/api/auth')
                 .then(r => r.json())
                 .then(data => {
@@ -225,7 +230,6 @@
                     document.getElementById('accountUsername').textContent = data.user.username;
                     loadProfile();
                     updateNotifSection();
-                    renderInstallSection();
                 })
                 .catch(() => { window.location.href = '/'; });
         });
