@@ -186,6 +186,8 @@ function getNotificationMessage(notif) {
             return `<strong>${actor}</strong> oznaczył(a) jako kupione "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
         case 'present_unchecked':
             return `<strong>${actor}</strong> odznaczył(a) "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+        case 'leaderboard_leader':
+            return `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`;
         default:
             return `<strong>${actor}</strong> wykonał(a) akcję`;
     }

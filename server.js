@@ -225,6 +225,42 @@ async function createNotification(type, actorId, data) {
     }
 }
 
+// ---- Leaderboard change detection ----
+// The leaderboard ranks recipients by presents on their wishlist. When
+// the top spot changes hands after a present is added/removed, everyone
+// gets an in-app notification about it.
+async function getLeaderboardLeader() {
+    const [rows] = await pool.execute(`
+        SELECT r.id, r.name, COUNT(p.id) as total_presents
+        FROM recipients r
+        LEFT JOIN presents p ON p.recipient_id = r.id
+        GROUP BY r.id, r.name
+        HAVING total_presents > 0
+        ORDER BY total_presents DESC, r.name ASC
+        LIMIT 1
+    `);
+    return rows.length ? rows[0] : null;
+}
+
+async function notifyLeaderboardChange(previousLeader, actorId) {
+    try {
+        if (DEMO_MODE) return;
+        const newLeader = await getLeaderboardLeader();
+        if (!newLeader) return;
+        if (previousLeader && previousLeader.id === newLeader.id) return;
+
+        console.log(`🏆 [LEADERBOARD] New leader: ${newLeader.name} (${newLeader.total_presents} presents)`);
+        await createNotification('leaderboard_leader', actorId || 0, {
+            leaderName: newLeader.name,
+            leaderId: newLeader.id,
+            presentCount: Number(newLeader.total_presents),
+            previousLeaderName: previousLeader ? previousLeader.name : null
+        });
+    } catch (err) {
+        console.error('❌ [LEADERBOARD] Error checking leaderboard change:', err);
+    }
+}
+
 // Simple in-memory cache for database queries
 const cache = {
     data: new Map(),
@@ -1441,6 +1477,10 @@ app.post('/api/presents', requireAuth, async (req, res) => {
     }
 
     try {
+        // Snapshot the leaderboard leader before the change (for the
+        // "new leader" notification after the insert)
+        const prevLeader = await getLeaderboardLeader().catch(() => null);
+
         const [result] = await pool.execute(
             'INSERT INTO presents (title, recipient_id, comments, created_by) VALUES (?, ?, ?, ?)',
             [title.trim(), recipient_id || null, comments || null, userId]
@@ -1448,6 +1488,9 @@ app.post('/api/presents', requireAuth, async (req, res) => {
 
         // Invalidate cache when data changes
         cache.invalidatePresents();
+
+        // Leaderboard leader may have changed - notify (non-blocking)
+        notifyLeaderboardChange(prevLeader, userId);
 
         // Get recipient name for notification
         let recipientName = 'kogoś';
@@ -1655,11 +1698,17 @@ app.delete('/api/presents/:id', requireAuth, async (req, res) => {
     }
 
     try {
+        // Snapshot the leaderboard leader before the change
+        const prevLeader = await getLeaderboardLeader().catch(() => null);
+
         const [result] = await pool.execute('DELETE FROM presents WHERE id = ?', [id]);
 
         if (result.affectedRows === 0) {
             return notFound(res, 'Prezent nie został znaleziony');
         }
+
+        // Leaderboard leader may have changed - notify (non-blocking)
+        notifyLeaderboardChange(prevLeader, req.session.userId);
 
         res.json({ success: true });
     } catch (err) {
@@ -2579,6 +2628,9 @@ app.post('/api/formularz/present', async (req, res) => {
 
         console.log('[Formularz] Adding present:', { title: presentTitle.trim(), recipientId, comments: presentComments, createdBy: effectiveCreatedBy });
 
+        // Snapshot the leaderboard leader before the change
+        const prevLeader = await getLeaderboardLeader().catch(() => null);
+
         let presentId;
         if (effectiveCreatedBy) {
             const [presentResult] = await pool.execute(
@@ -2607,6 +2659,9 @@ app.post('/api/formularz/present', async (req, res) => {
             console.error('[Formularz] Cache clear error (non-fatal):', cacheErr);
             // Continue anyway - cache errors shouldn't fail the request
         }
+
+        // Leaderboard leader may have changed - notify (non-blocking)
+        notifyLeaderboardChange(prevLeader, effectiveCreatedBy || 0);
 
         // Create in-app notification for other users
         try {

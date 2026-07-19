@@ -16,7 +16,9 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="styles.deduped.min.css" rel="stylesheet">
+    <link href="bottom-tab-bar.css?v=33" rel="stylesheet">
     <link href="app-theme.css?v=12" rel="stylesheet">
     <style>
         html, body { overflow-x: hidden; max-width: 100vw; }
@@ -64,7 +66,7 @@
         #successToast, #errorToast, #successToast *, #errorToast * { text-shadow: none; }
     </style>
 </head>
-<body>
+<body class="has-tab-bar">
     <div class="background-overlay"></div>
 
     <div class="container mt-4 mb-5" style="max-width: 640px;">
@@ -420,6 +422,98 @@
                 .finally(() => { window.location.href = '/'; });
         }
     </script>
+
+    <!-- Bottom Tab Bar -->
+    <div class="bottom-tab-bar">
+        <div class="tab-bar-container">
+            <a href="/" class="tab-item home-tab">
+                <i class="ri-home-line"></i>
+                <span>Główna</span>
+            </a>
+            <a href="#" class="tab-item activity-tab" onclick="toggleNotificationsPanel(); return false;">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-notification-3-line"></i>
+                    <span class="notification-badge" id="activityBadge" style="display: none;"></span>
+                </div>
+                <span>Aktywność</span>
+            </a>
+            <div class="tab-spacer"></div>
+            <a href="leaderboard.html" class="tab-item leaderboard-tab">
+                <i class="ri-trophy-line"></i>
+                <span>Ranking</span>
+            </a>
+            <a href="formularz.html" class="tab-item form-tab">
+                <i class="ri-gift-line"></i>
+                <span>Dodaj</span>
+            </a>
+        </div>
+        <div class="tab-fab" onclick="toggleTabBarMenu()">
+            <i class="ri-menu-line"></i>
+        </div>
+    </div>
+
+    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;"></div>
+
+    <div class="tab-bar-menu-panel" id="tabBarMenuPanel">
+        <div class="tab-bar-menu-header">
+            <h5><i class="ri-menu-line me-2"></i>Menu</h5>
+            <button class="tab-bar-menu-close" onclick="toggleTabBarMenu()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-menu-content">
+            <!-- Primary actions - kept in easy thumb reach -->
+            <a href="recipients.html" class="tab-bar-menu-item">
+                <i class="ri-gift-2-line"></i>
+                <span>Wszystkie prezenty</span>
+            </a>
+            <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
+                <i class="ri-bookmark-line"></i>
+                <span>Zarezerwowane Prezenty</span>
+            </a>
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
+                <i class="ri-edit-line"></i>
+                <span>Edytuj Moje Prezenty</span>
+            </a>
+            <div class="tab-bar-menu-divider"></div>
+            <!-- Secondary quick actions: compact tiles, share-sheet style -->
+            <div class="tab-bar-menu-secondary">
+                <a href="ustawienia.html" class="tab-bar-menu-tile">
+                    <i class="ri-settings-3-line"></i>
+                    <span>Ustawienia</span>
+                </a>
+                <a href="archiwum.html" class="tab-bar-menu-tile">
+                    <i class="ri-archive-line"></i>
+                    <span>Archiwum</span>
+                </a>
+                <a href="#" class="tab-bar-menu-tile tile-logout" onclick="logout(); return false;">
+                    <i class="ri-logout-box-r-line"></i>
+                    <span>Wyloguj</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-bar-notifications-panel" id="notificationsPanel" style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="tab-bar-notifications-header" style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
+            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
+            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()" style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-notifications-content" id="notificationsContent" style="flex: 1; overflow-y: auto; background: #ffffff;">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Ładowanie...</span>
+                </div>
+            </div>
+        </div>
+        <div class="tab-bar-notifications-view-all" style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
+            <a href="activity.html" style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie powiadomienia</a>
+        </div>
+    </div>
+
+    <script src="tab-bar-functions.js?v=4"></script>
     <script src="desktop-nav.js?v=2"></script>
 </body>
 </html>
