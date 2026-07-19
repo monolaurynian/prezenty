@@ -2356,7 +2356,7 @@
     <script src="realtime-updates.js" defer></script>
     
     <!-- Tab bar functions (shared across pages) -->
-    <script src="tab-bar-functions.js?v=9"></script>
+    <script src="tab-bar-functions.js?v=10"></script>
 
     <!-- Bottom Tab Bar -->
     <div class="bottom-tab-bar">
@@ -2382,7 +2382,10 @@
             
             <!-- Leaderboard Tab -->
             <a href="wiadomosci.html" class="tab-item messages-tab">
-                <i class="ri-chat-private-line"></i>
+                <div class="tab-icon-wrapper">
+                    <i class="ri-chat-private-line"></i>
+                    <span class="notification-badge" id="messagesBadge" style="display: none;"></span>
+                </div>
                 <span>Wiadomości</span>
             </a>
             
@@ -2469,7 +2472,7 @@
     </div>
 
     <!-- Notification functions now loaded from tab-bar-functions.js -->
-    <script src="desktop-nav.js?v=3"></script>
+    <script src="desktop-nav.js?v=4"></script>
 </body>
 
 </html>

@@ -398,6 +398,9 @@
                         </div>
                     `).join('');
                     box.scrollTop = box.scrollHeight;
+                    // Reading the thread marked messages as read - refresh
+                    // the dock badge right away
+                    if (typeof updateMessagesBadge === 'function') updateMessagesBadge();
                 })
                 .catch(() => showToast('Nie udało się załadować rozmowy', 'error'));
         }
@@ -450,7 +453,10 @@
             </a>
             <div class="tab-spacer"></div>
             <a href="wiadomosci.html" class="tab-item messages-tab active">
-                <i class="ri-chat-private-fill"></i>
+                <div class="tab-icon-wrapper">
+                    <i class="ri-chat-private-fill"></i>
+                    <span class="notification-badge" id="messagesBadge" style="display: none;"></span>
+                </div>
                 <span>Wiadomości</span>
             </a>
             <a href="formularz.html" class="tab-item form-tab">
@@ -528,7 +534,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=9"></script>
-    <script src="desktop-nav.js?v=3"></script>
+    <script src="tab-bar-functions.js?v=10"></script>
+    <script src="desktop-nav.js?v=4"></script>
 </body>
 </html>

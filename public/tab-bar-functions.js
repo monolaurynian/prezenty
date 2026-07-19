@@ -429,3 +429,27 @@ function updateNotificationsForDeletedPresent(presentId) {
 
     window.addEventListener('scroll', onScroll, { passive: true });
 })();
+
+// ---- Unread anonymous-messages badge on the Wiadomości dock tab ----
+function updateMessagesBadge() {
+    const badge = document.getElementById('messagesBadge');
+    if (!badge) return;
+    fetch('/api/wiadomosci/unread-count')
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => {
+            if (!d) return;
+            if (d.count > 0) {
+                badge.textContent = d.count > 99 ? '99+' : d.count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        })
+        .catch(() => { /* logged out or offline - keep as is */ });
+}
+
+(function initMessagesBadge() {
+    if (!document.getElementById('messagesBadge')) return;
+    updateMessagesBadge();
+    setInterval(updateMessagesBadge, 30000);
+})();

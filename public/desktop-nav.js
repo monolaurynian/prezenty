@@ -22,7 +22,7 @@
         { href: '/leaderboard.html', icon: 'ri-trophy-line', activeIcon: 'ri-trophy-fill', label: 'Ranking', match: ['/leaderboard.html', '/leaderboard'] },
         { href: '/formularz.html', icon: 'ri-gift-line', activeIcon: 'ri-gift-fill', label: 'Dodaj Prezent', match: ['/formularz', '/formularz.html'] },
         { href: '/rezerwacje.html', icon: 'ri-bookmark-line', activeIcon: 'ri-bookmark-fill', label: 'Zarezerwowane', match: ['/rezerwacje', '/rezerwacje.html'] },
-        { href: '/wiadomosci.html', icon: 'ri-chat-private-line', activeIcon: 'ri-chat-private-fill', label: 'Anonimowe Wiadomości', match: ['/wiadomosci', '/wiadomosci.html'] },
+        { href: '/wiadomosci.html', icon: 'ri-chat-private-line', activeIcon: 'ri-chat-private-fill', label: 'Anonimowe Wiadomości', match: ['/wiadomosci', '/wiadomosci.html'], msgBadge: true },
         { divider: true },
         { href: '/formularz.html', icon: 'ri-edit-line', label: 'Edytuj Moje Prezenty', editTab: true },
         { href: '/archiwum.html', icon: 'ri-archive-line', label: 'Archiwum', match: ['/archiwum', '/archiwum.html'] },
@@ -53,6 +53,7 @@
                         <i class="${icon}"></i>
                         <span>${item.label}</span>
                         ${item.badge ? '<span class="dnav-badge" id="desktopNavBadge"></span>' : ''}
+                        ${item.msgBadge ? '<span class="dnav-badge" id="desktopNavMsgBadge"></span>' : ''}
                     </a>`;
         }
         nav.innerHTML = html;
@@ -103,6 +104,18 @@
             .then(d => {
                 if (!d) return;
                 const b = document.getElementById('desktopNavBadge');
+                if (b) {
+                    b.textContent = d.count > 99 ? '99+' : d.count;
+                    b.style.display = d.count > 0 ? 'inline-flex' : 'none';
+                }
+            })
+            .catch(() => { /* not logged in or offline - no badge */ });
+
+        fetch('/api/wiadomosci/unread-count')
+            .then(r => (r.ok ? r.json() : null))
+            .then(d => {
+                if (!d) return;
+                const b = document.getElementById('desktopNavMsgBadge');
                 if (b) {
                     b.textContent = d.count > 99 ? '99+' : d.count;
                     b.style.display = d.count > 0 ? 'inline-flex' : 'none';
