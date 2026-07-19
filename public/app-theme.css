@@ -294,6 +294,54 @@
     }
 }
 
+/* --- Toasts: rounded, soft shadow, compact ghost action button --- */
+.toast {
+    border-radius: 14px !important;
+    border: none !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28) !important;
+    overflow: hidden;
+}
+
+.toast .toast-body {
+    padding: 12px 14px;
+    font-weight: 500;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+/* Action (e.g. Cofnij): translucent ghost pill that sits INSIDE the
+   toast instead of a huge solid-white button overflowing its edges */
+.toast .toast-action-btn {
+    background: rgba(255, 255, 255, 0.22) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.2px;
+    line-height: 1 !important;
+    padding: 8px 14px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    box-shadow: none !important;
+    flex-shrink: 0;
+}
+
+.toast .toast-action-btn:hover,
+.toast .toast-action-btn:active {
+    background: rgba(255, 255, 255, 0.34) !important;
+    color: #ffffff !important;
+}
+
+.toast .btn-close {
+    font-size: 11px;
+    opacity: 0.75;
+    margin-right: 12px !important;
+    flex-shrink: 0;
+}
+
 /* --- Reservation design language: orange --- */
 .btn.btn-reserve {
     background: #F57C00;

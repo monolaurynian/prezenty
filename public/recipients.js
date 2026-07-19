@@ -4310,9 +4310,10 @@ function showToast(message, type = 'success', action = null) {
         if (action) {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'btn btn-sm btn-light toast-action-btn ms-2';
+            // Ghost pill look comes from .toast-action-btn in app-theme.css
+            btn.className = 'toast-action-btn ms-2';
             // margin-left auto pushes the action to the right edge of the toast
-            btn.style.cssText = 'font-weight: 600; padding: 2px 12px; align-self: center; white-space: nowrap; margin-left: auto !important;';
+            btn.style.cssText = 'align-self: center; white-space: nowrap; margin-left: auto !important; cursor: pointer;';
             btn.textContent = action.label;
             btn.addEventListener('click', () => {
                 const instance = bootstrap.Toast.getInstance(toastElement);
