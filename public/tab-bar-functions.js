@@ -359,3 +359,42 @@ function updateNotificationsForDeletedPresent(presentId) {
         });
     });
 }
+
+// ---- Auto-hide dock on scroll (iOS 26 tab bar minimize behavior) ----
+// Scrolling down slides the dock away to give content the full screen;
+// scrolling up (or being near the top) brings it back. Mobile only -
+// on desktop the sidebar replaces the dock anyway.
+(function initTabBarAutoHide() {
+    const bar = document.querySelector('.bottom-tab-bar');
+    if (!bar) return;
+
+    let lastY = window.scrollY;
+    let ticking = false;
+    const DELTA = 8; // ignore sub-threshold jitters (e.g. rubber-banding)
+
+    function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            const y = window.scrollY;
+            const diff = y - lastY;
+
+            const panelOpen = document.querySelector(
+                '.tab-bar-menu-panel.show, .tab-bar-notifications-panel.show');
+
+            if (window.innerWidth >= 992 || panelOpen || y < 40) {
+                // Desktop, open panel, or near the top: always visible
+                bar.classList.remove('tab-bar-hidden');
+            } else if (diff > DELTA) {
+                bar.classList.add('tab-bar-hidden');
+            } else if (diff < -DELTA) {
+                bar.classList.remove('tab-bar-hidden');
+            }
+
+            if (Math.abs(diff) > DELTA) lastY = y;
+            ticking = false;
+        });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+})();
