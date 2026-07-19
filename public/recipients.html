@@ -1714,6 +1714,13 @@
                 });
         }
 
+        // " dla X" suffix - skipped when X is the actor themselves
+        function forWhom(d, a) {
+            if (!d.recipientName) return '';
+            if (a && String(d.recipientName).trim().toLowerCase() === String(a).trim().toLowerCase()) return '';
+            return ' dla ' + d.recipientName;
+        }
+
         function renderNotification(notification) {
             const config = getNotificationConfig(notification.type);
             const isUnread = !notification.is_read;
@@ -1726,7 +1733,7 @@
                     </div>
                     <div class="notification-content">
                         <div class="notification-text">
-                            <strong>${notification.actor_username || 'Ktoś'}</strong> ${config.getMessage(notification.data)}
+                            <strong>${notification.actor_username || 'Ktoś'}</strong> ${config.getMessage(notification.data, notification.actor_username || 'Ktoś')}
                         </div>
                         <div class="notification-time">${timeAgo}</div>
                     </div>
@@ -1740,67 +1747,67 @@
                 recipient_added: {
                     icon: 'fa-user-plus',
                     color: '#4CAF50',
-                    getMessage: (data) => `dodał(a) osobę ${data.recipientName}`
+                    getMessage: (data, actor) => `dodał(a) osobę ${data.recipientName}`
                 },
                 present_added: {
                     icon: 'fa-gift',
                     color: '#2196F3',
-                    getMessage: (data) => {
+                    getMessage: (data, actor) => {
                         const presentLink = data.presentId ? 
                             `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #2196F3; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
-                        return `dodał(a) prezent ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+                        return `dodał(a) prezent ${presentLink}${forWhom(data, actor)}`;
                     }
                 },
                 present_reserved: {
                     icon: 'fa-bookmark',
                     color: '#FF9800',
-                    getMessage: (data) => {
+                    getMessage: (data, actor) => {
                         const presentLink = data.presentId ? 
                             `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #FF9800; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
-                        return `zarezerwował(a) prezent ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+                        return `zarezerwował(a) prezent ${presentLink}${forWhom(data, actor)}`;
                     }
                 },
                 present_unreserved: {
                     icon: 'fa-bookmark-slash',
                     color: '#9E9E9E',
-                    getMessage: (data) => {
+                    getMessage: (data, actor) => {
                         const presentLink = data.presentId ? 
                             `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
-                        return `anulował(a) rezerwację ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+                        return `anulował(a) rezerwację ${presentLink}${forWhom(data, actor)}`;
                     }
                 },
                 present_checked: {
                     icon: 'fa-check-circle',
                     color: '#4CAF50',
-                    getMessage: (data) => {
+                    getMessage: (data, actor) => {
                         const presentLink = data.presentId ? 
                             `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #4CAF50; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
-                        return `oznaczył(a) jako kupione ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+                        return `oznaczył(a) jako kupione ${presentLink}${forWhom(data, actor)}`;
                     }
                 },
                 present_unchecked: {
                     icon: 'fa-circle',
                     color: '#9E9E9E',
-                    getMessage: (data) => {
+                    getMessage: (data, actor) => {
                         const presentLink = data.presentId ? 
                             `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
                             `<strong>"${data.presentTitle}"</strong>`;
-                        return `odznaczył(a) ${presentLink}${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+                        return `odznaczył(a) ${presentLink}${forWhom(data, actor)}`;
                     }
                 },
                 leaderboard_leader: {
                     icon: 'fa-trophy',
                     color: '#FFC107',
-                    getMessage: (data) => `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
+                    getMessage: (data, actor) => `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
                 },
                 anon_message: {
                     icon: 'fa-comment-dots',
                     color: '#7B1FA2',
-                    getMessage: (data) => `💬 <strong>${data.label || 'Nowa wiadomość'}</strong> - <a href="${data.threadId ? '/wiadomosci?rozmowa=' + data.threadId : '/wiadomosci'}" style="color: #7B1FA2;">otwórz</a>`
+                    getMessage: (data, actor) => `💬 <strong>${data.label || 'Nowa wiadomość'}</strong> - <a href="${data.threadId ? '/wiadomosci?rozmowa=' + data.threadId : '/wiadomosci'}" style="color: #7B1FA2;">otwórz</a>`
                 }
             };
             return configs[type] || configs.present_added;
@@ -2216,37 +2223,37 @@
             present_added: {
                 icon: 'fa-gift',
                 color: '#2196F3',
-                getMessage: (data, actor) => `${actor} dodał(a) prezent "${data.presentTitle}"${data.recipientName ? ' dla ' + data.recipientName : ''}`
+                getMessage: (data, actor) => `${actor} dodał(a) prezent "${data.presentTitle}"${forWhom(data, actor)}`
             },
             present_reserved: {
                 icon: 'fa-bookmark',
                 color: '#FF9800',
-                getMessage: (data, actor) => `${actor} zarezerwował(a) "${data.presentTitle}"${data.recipientName ? ' dla ' + data.recipientName : ''}`
+                getMessage: (data, actor) => `${actor} zarezerwował(a) "${data.presentTitle}"${forWhom(data, actor)}`
             },
             present_unreserved: {
                 icon: 'fa-bookmark-slash',
                 color: '#9E9E9E',
-                getMessage: (data, actor) => `${actor} anulował(a) rezerwację "${data.presentTitle}"${data.recipientName ? ' dla ' + data.recipientName : ''}`
+                getMessage: (data, actor) => `${actor} anulował(a) rezerwację "${data.presentTitle}"${forWhom(data, actor)}`
             },
             present_checked: {
                 icon: 'fa-check-circle',
                 color: '#4CAF50',
-                getMessage: (data, actor) => `${actor} oznaczył(a) jako kupione "${data.presentTitle}"${data.recipientName ? ' dla ' + data.recipientName : ''}`
+                getMessage: (data, actor) => `${actor} oznaczył(a) jako kupione "${data.presentTitle}"${forWhom(data, actor)}`
             },
             present_unchecked: {
                 icon: 'fa-circle',
                 color: '#9E9E9E',
-                getMessage: (data, actor) => `${actor} odznaczył(a) "${data.presentTitle}"${data.recipientName ? ' dla ' + data.recipientName : ''}`
+                getMessage: (data, actor) => `${actor} odznaczył(a) "${data.presentTitle}"${forWhom(data, actor)}`
             },
             leaderboard_leader: {
                 icon: 'fa-trophy',
                 color: '#FFC107',
-                getMessage: (data) => `🏆 ${data.leaderName || 'Ktoś'}${data.previousLeaderName ? ` wyprzedza ${data.previousLeaderName} i` : ''} prowadzi w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
+                getMessage: (data, actor) => `🏆 ${data.leaderName || 'Ktoś'}${data.previousLeaderName ? ` wyprzedza ${data.previousLeaderName} i` : ''} prowadzi w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
             },
             anon_message: {
                 icon: 'fa-comment-dots',
                 color: '#7B1FA2',
-                getMessage: (data) => `💬 ${data.label || 'Nowa wiadomość'}`
+                getMessage: (data, actor) => `💬 ${data.label || 'Nowa wiadomość'}`
             }
         };
 
@@ -2360,7 +2367,7 @@
     <script src="realtime-updates.js" defer></script>
     
     <!-- Tab bar functions (shared across pages) -->
-    <script src="tab-bar-functions.js?v=10"></script>
+    <script src="tab-bar-functions.js?v=11"></script>
 
     <!-- Bottom Tab Bar -->
     <div class="bottom-tab-bar">

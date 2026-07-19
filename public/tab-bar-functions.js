@@ -169,6 +169,9 @@ function getNotificationMessage(notif) {
     }
     
     const actor = notif.actor_username || 'Ktoś';
+    // " dla X" suffix - skipped when X is the actor themselves
+    const forWhom = (d, a) => (d.recipientName && String(d.recipientName).trim().toLowerCase() !== String(a).trim().toLowerCase())
+        ? ' dla ' + d.recipientName : '';
     const presentTitle = data.presentTitle || 'prezent';
     const presentId = data.presentId;
     const recipientEnc = encodeURIComponent(data.recipientName || '');
@@ -178,15 +181,15 @@ function getNotificationMessage(notif) {
         case 'recipient_added':
             return `<strong>${actor}</strong> dodał(a) osobę <strong>${data.recipientName || 'nową osobę'}</strong>`;
         case 'present_added':
-            return `<strong>${actor}</strong> dodał(a) prezent "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}${data.viaFormularz ? ' (przez formularz)' : ''}`;
+            return `<strong>${actor}</strong> dodał(a) prezent "${presentLink}"${forWhom(data, actor)}`;
         case 'present_reserved':
-            return `<strong>${actor}</strong> zarezerwował(a) "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+            return `<strong>${actor}</strong> zarezerwował(a) "${presentLink}"${forWhom(data, actor)}`;
         case 'present_unreserved':
-            return `<strong>${actor}</strong> anulował(a) rezerwację "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+            return `<strong>${actor}</strong> anulował(a) rezerwację "${presentLink}"${forWhom(data, actor)}`;
         case 'present_checked':
-            return `<strong>${actor}</strong> oznaczył(a) jako kupione "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+            return `<strong>${actor}</strong> oznaczył(a) jako kupione "${presentLink}"${forWhom(data, actor)}`;
         case 'present_unchecked':
-            return `<strong>${actor}</strong> odznaczył(a) "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
+            return `<strong>${actor}</strong> odznaczył(a) "${presentLink}"${forWhom(data, actor)}`;
         case 'leaderboard_leader':
             return `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`;
         case 'anon_message': {

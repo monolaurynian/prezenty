@@ -483,31 +483,31 @@
                 icon: 'fa-gift',
                 color: '#2196F3',
                 getMessage: (data, actor) =>
-                    `<strong>${actor}</strong> dodał(a) prezent ${presentLinkHtml(data, '#2196F3')}${forRecipient(data)}${data.viaFormularz ? ' (przez formularz)' : ''}`
+                    `<strong>${actor}</strong> dodał(a) prezent ${presentLinkHtml(data, '#2196F3')}${forRecipient(data, actor)}`
             },
             present_reserved: {
                 icon: 'fa-bookmark',
                 color: '#FF9800',
                 getMessage: (data, actor) =>
-                    `<strong>${actor}</strong> zarezerwował(a) prezent ${presentLinkHtml(data, '#FF9800')}${forRecipient(data)}`
+                    `<strong>${actor}</strong> zarezerwował(a) prezent ${presentLinkHtml(data, '#FF9800')}${forRecipient(data, actor)}`
             },
             present_unreserved: {
                 icon: 'fa-bookmark-slash',
                 color: '#9E9E9E',
                 getMessage: (data, actor) =>
-                    `<strong>${actor}</strong> anulował(a) rezerwację ${presentLinkHtml(data, '#9E9E9E')}${forRecipient(data)}`
+                    `<strong>${actor}</strong> anulował(a) rezerwację ${presentLinkHtml(data, '#9E9E9E')}${forRecipient(data, actor)}`
             },
             present_checked: {
                 icon: 'fa-check-circle',
                 color: '#4CAF50',
                 getMessage: (data, actor) =>
-                    `<strong>${actor}</strong> oznaczył(a) jako kupione ${presentLinkHtml(data, '#4CAF50')}${forRecipient(data)}`
+                    `<strong>${actor}</strong> oznaczył(a) jako kupione ${presentLinkHtml(data, '#4CAF50')}${forRecipient(data, actor)}`
             },
             present_unchecked: {
                 icon: 'fa-circle',
                 color: '#9E9E9E',
                 getMessage: (data, actor) =>
-                    `<strong>${actor}</strong> odznaczył(a) ${presentLinkHtml(data, '#9E9E9E')}${forRecipient(data)}`
+                    `<strong>${actor}</strong> odznaczył(a) ${presentLinkHtml(data, '#9E9E9E')}${forRecipient(data, actor)}`
             },
             leaderboard_leader: {
                 icon: 'fa-trophy',
@@ -524,8 +524,11 @@
         };
 
         // Shared helper: " dla <recipient>" suffix so it's always visible who the present is for
-        function forRecipient(data) {
-            return data.recipientName ? ` dla <strong>${data.recipientName}</strong>` : '';
+        function forRecipient(data, actor) {
+            // Skipped when the recipient IS the actor ("Mati ... dla Mati")
+            if (!data.recipientName) return '';
+            if (actor && String(data.recipientName).trim().toLowerCase() === String(actor).trim().toLowerCase()) return '';
+            return ` dla <strong>${data.recipientName}</strong>`;
         }
 
         // Load notifications
@@ -1013,7 +1016,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=10"></script>
+    <script src="tab-bar-functions.js?v=11"></script>
     <script src="desktop-nav.js?v=4"></script>
 </body>
 </html>
