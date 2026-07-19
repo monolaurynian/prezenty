@@ -2285,6 +2285,7 @@ function handleBoughtClick(event, presentId, isChecked) {
         refreshPresentButtons(presentId);
     };
 
+    beginPresentOp();
     applyState(isChecked);
     if (isChecked) {
         showToast('Oznaczono jako kupione 🛍️', 'success', {
@@ -2312,7 +2313,8 @@ function handleBoughtClick(event, presentId, isChecked) {
         .catch(() => {
             applyState(!isChecked);
             showErrorToast('Błąd połączenia. Zmiana została cofnięta.');
-        });
+        })
+        .finally(() => endPresentOp());
 }
 
 // Handle reserve button click with optimistic updates
@@ -2340,6 +2342,10 @@ function handleReserveClick(event, presentId, action) {
         }
     }
 
+    // Count as a pending op BEFORE the optimistic update so any in-flight
+    // reload snapshot is invalidated and can't revert what we render now
+    beginPresentOp();
+
     // Perform optimistic updates immediately
     if (presentItem) {
         updatePresentItemOptimistically(presentItem, action);
@@ -2348,7 +2354,8 @@ function handleReserveClick(event, presentId, action) {
     // Render the buttons for the new state right away
     refreshPresentButtons(presentId);
 
-    // Make API call with rollback capability
+    // Make API call with rollback capability (each ends its op when the
+    // request settles - see .finally in those functions)
     if (action === 'reserve') {
         reservePresentFromRecipients(presentId, button, previousState);
     } else if (action === 'cancel') {
@@ -3116,6 +3123,30 @@ function showModalMessage(elementId, message, type) {
     element.style.display = 'block';
 }
 
+// ---- Race guards for fast consecutive actions ----
+// softReloadRecipients() snapshots the server state at REQUEST time. If
+// the user acts again while that snapshot is in flight, applying it would
+// revert the newer optimistic state (buttons "snapping back", lost
+// clicks). Every action counts as a pending op and bumps a token; a
+// snapshot only applies when nothing changed since it was requested.
+// Otherwise it's discarded and ONE fresh reload runs once all ops settle.
+let _pendingPresentOps = 0;
+let _presentOpToken = 0;
+let _softReloadQueued = false;
+
+function beginPresentOp() {
+    _pendingPresentOps++;
+    _presentOpToken++;
+}
+
+function endPresentOp() {
+    _pendingPresentOps = Math.max(0, _pendingPresentOps - 1);
+    if (_pendingPresentOps === 0 && _softReloadQueued) {
+        _softReloadQueued = false;
+        softReloadRecipients();
+    }
+}
+
 // Optimistic update helper functions
 function fetchWithTimeout(url, options, timeout = 10000) {
     return Promise.race([
@@ -3235,7 +3266,8 @@ function reservePresentFromRecipients(presentId, button, previousState) {
 
             showErrorToast(errorMsg);
             rollbackOptimisticUpdate(presentId, previousState);
-        });
+        })
+        .finally(() => endPresentOp());
 }
 
 function cancelReservationFromRecipients(presentId, button, previousState) {
@@ -3292,7 +3324,8 @@ function cancelReservationFromRecipients(presentId, button, previousState) {
 
             showErrorToast(errorMsg);
             rollbackOptimisticUpdate(presentId, previousState);
-        });
+        })
+        .finally(() => endPresentOp());
 }
 
 function showReservedByOtherModal(username) {
@@ -3946,6 +3979,8 @@ function softReloadRecipients() {
     console.log('Soft reloading recipients data...');
 
     const startTime = performance.now();
+    // Remember the world state at request time - see race guards above
+    const tokenAtRequest = _presentOpToken;
 
     Promise.all([
         fetch('/api/recipients-with-presents').then(response => {
@@ -3958,6 +3993,15 @@ function softReloadRecipients() {
         })
     ])
         .then(([combinedData, identificationStatus]) => {
+            // A newer user action happened (or is still in flight) - this
+            // snapshot is stale and applying it would revert the user's
+            // latest clicks. Discard it and reload once things settle.
+            if (_pendingPresentOps > 0 || _presentOpToken !== tokenAtRequest) {
+                _softReloadQueued = true;
+                console.log('[SoftReload] Stale snapshot discarded (newer action in flight)');
+                return;
+            }
+
             const endTime = performance.now();
             console.log(`Soft reload completed in ${(endTime - startTime).toFixed(2)}ms`);
 
@@ -4389,51 +4433,78 @@ function shareFormularzLink(recipientName) {
     }
 }
 
-// Undo helpers - reverse the last action and refresh the list silently
-function undoReservation(presentId) {
-    fetch(`/api/presents/${presentId}/reserve`, { method: 'DELETE' })
+// Undo helpers - reverse the last action. Optimistic (instant UI) and
+// counted as pending ops so they can't be reverted by stale reloads.
+
+// Apply a partial present state to cache + item classes + buttons,
+// returning the previous values for rollback
+function applyPresentState(presentId, changes) {
+    const previous = {};
+    if (window._dataCache && window._dataCache.presents) {
+        const p = window._dataCache.presents.find(x => x.id === presentId);
+        if (p) {
+            Object.keys(changes).forEach(k => { previous[k] = p[k]; });
+            Object.assign(p, changes);
+        }
+    }
+    const item = document.querySelector(`[data-id="${presentId}"]`);
+    if (item) {
+        if ('is_checked' in changes) item.classList.toggle('checked', !!changes.is_checked);
+        if ('reserved_by' in changes) {
+            item.classList.toggle('reserved-by-me',
+                changes.reserved_by != null && changes.reserved_by === window._currentUserId);
+            if (changes.reserved_by == null) item.classList.remove('reserved-by-other');
+        }
+    }
+    refreshPresentButtons(presentId);
+    return previous;
+}
+
+function undoPresentAction(presentId, changes, request, successMsg, errorMsg) {
+    beginPresentOp();
+    const previous = applyPresentState(presentId, changes);
+
+    request()
         .then(r => r.json())
         .then(d => {
             if (d.success) {
-                showSuccessToast('Cofnięto rezerwację');
+                showSuccessToast(successMsg);
                 softReloadRecipients();
             } else {
-                showErrorToast(d.error || 'Nie udało się cofnąć rezerwacji');
+                applyPresentState(presentId, previous);
+                showErrorToast(d.error || errorMsg);
             }
         })
-        .catch(() => showErrorToast('Nie udało się cofnąć rezerwacji'));
+        .catch(() => {
+            applyPresentState(presentId, previous);
+            showErrorToast(errorMsg);
+        })
+        .finally(() => endPresentOp());
+}
+
+function undoReservation(presentId) {
+    undoPresentAction(presentId,
+        { reserved_by: null, reserved_by_username: null },
+        () => fetch(`/api/presents/${presentId}/reserve`, { method: 'DELETE' }),
+        'Cofnięto rezerwację', 'Nie udało się cofnąć rezerwacji');
 }
 
 function undoCancelReservation(presentId) {
-    fetch(`/api/presents/${presentId}/reserve`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
-        .then(r => r.json())
-        .then(d => {
-            if (d.success) {
-                showSuccessToast('Przywrócono rezerwację');
-                softReloadRecipients();
-            } else {
-                showErrorToast(d.error || 'Nie udało się przywrócić rezerwacji');
-            }
-        })
-        .catch(() => showErrorToast('Nie udało się przywrócić rezerwacji'));
+    undoPresentAction(presentId,
+        { reserved_by: window._currentUserId, reserved_by_username: 'Ty' },
+        () => fetch(`/api/presents/${presentId}/reserve`, { method: 'POST', headers: { 'Content-Type': 'application/json' } }),
+        'Przywrócono rezerwację', 'Nie udało się przywrócić rezerwacji');
 }
 
 function undoCheck(presentId) {
-    fetch(`/api/presents/${presentId}/check`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_checked: false })
-    })
-        .then(r => r.json())
-        .then(d => {
-            if (d.success) {
-                showSuccessToast('Cofnięto oznaczenie');
-                softReloadRecipients();
-            } else {
-                showErrorToast(d.error || 'Nie udało się cofnąć');
-            }
-        })
-        .catch(() => showErrorToast('Nie udało się cofnąć'));
+    undoPresentAction(presentId,
+        { is_checked: false },
+        () => fetch(`/api/presents/${presentId}/check`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_checked: false })
+        }),
+        'Cofnięto oznaczenie', 'Nie udało się cofnąć');
 }
 
 function showSuccessToast(message) {
