@@ -8,7 +8,8 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="theme-color" content="#F44336">    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png?v=1">
+    <meta name="theme-color" content="#F44336">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png?v=1">
     <link rel="icon" type="image/png" sizes="96x96" href="favicon-96.png?v=1">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
@@ -243,6 +244,9 @@
         // "New chat" mode: conversation view open toward a user with no
         // thread yet - the first message creates it
         let newChatTargetId = null;
+        // Signature of the last rendered message list - re-render (and
+        // scroll to bottom) only when something actually changed
+        let lastChatSignature = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             fetch('/api/auth')
@@ -284,11 +288,32 @@
                 }
             });
 
-            // Periodic refresh of whichever view is open
-            setInterval(() => {
+            // Periodic refresh: an open conversation polls fast so replies
+            // show up quickly, the thread list refreshes lazily
+            setInterval(() => { if (currentThreadId) loadThreadMessages(); }, 8000);
+            setInterval(() => { if (!currentThreadId) loadThreads(); }, 60000);
+
+            // Instant refresh: the service worker relays every push to open
+            // pages, so new messages appear without waiting for the poll
+            if (navigator.serviceWorker) {
+                navigator.serviceWorker.addEventListener('message', (e) => {
+                    const d = e.data && e.data.type === 'push' ? e.data.data : null;
+                    if (!d || !d.threadId) return;
+                    if (currentThreadId && Number(d.threadId) === Number(currentThreadId)) {
+                        loadThreadMessages();
+                    } else if (!currentThreadId) {
+                        loadThreads();
+                    }
+                    if (typeof updateMessagesBadge === 'function') updateMessagesBadge();
+                });
+            }
+
+            // Coming back to the app refreshes the open view immediately
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState !== 'visible') return;
                 if (currentThreadId) loadThreadMessages();
                 else loadThreads();
-            }, 60000);
+            });
         });
 
         // The system back button navigates between conversation and list
@@ -412,6 +437,7 @@
         function openThread(threadId, pushHistory = true) {
             currentThreadId = threadId;
             newChatTargetId = null;
+            lastChatSignature = null;
             if (pushHistory) {
                 history.pushState({ rozmowa: threadId }, '', '/wiadomosci?rozmowa=' + threadId);
             }
@@ -427,6 +453,7 @@
         function openNewChat(targetUserId, username) {
             currentThreadId = null;
             newChatTargetId = targetUserId;
+            lastChatSignature = null;
             document.getElementById('listView').style.display = 'none';
             document.getElementById('chatView').style.display = 'block';
             document.getElementById('deleteThreadBtn').style.display = 'none';
@@ -533,6 +560,12 @@
                         `<i class="fas fa-comment-dots" style="color:#7B1FA2;"></i>${escapeHtml(d.otherLabel || 'Rozmowa')}`;
                     const box = document.getElementById('chatMessages');
                     const msgs = d.messages || [];
+
+                    // Nothing new - keep the DOM (and scroll position) as is
+                    const sig = currentThreadId + ':' + msgs.length + ':' + (msgs.length ? msgs[msgs.length - 1].id : 0);
+                    if (sig === lastChatSignature) return;
+                    lastChatSignature = sig;
+
                     box.innerHTML = msgs.map(m => `
                         <div class="chat-bubble ${m.fromMe ? 'from-me' : 'from-them'}">
                             ${renderMessageBody(m.body)}

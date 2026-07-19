@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v109';
+const CACHE_NAME = 'prezenty-v110';
 const urlsToCache = [
   '/manifest.json',
   '/favicon.svg',
@@ -185,17 +185,38 @@ self.addEventListener('push', function(event) {
     }
   }
 
-  console.log('📢 [SW] Displaying notification:', notificationData.title);
-  
-  event.waitUntil(
-    self.registration.showNotification(notificationData.title, notificationData)
-      .then(() => {
-        console.log('✅ [SW] Notification displayed successfully');
-      })
-      .catch((error) => {
-        console.error('❌ [SW] Error displaying notification:', error);
-      })
-  );
+  event.waitUntil((async () => {
+    const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+
+    // Tell open pages about the push right away so the chat view,
+    // thread list and badges refresh without waiting for the next poll
+    for (const client of clientList) {
+      try { client.postMessage({ type: 'push', data: notificationData.data }); } catch (e) { /* ignore */ }
+    }
+
+    // Message push while the user is looking at that very conversation:
+    // skip the OS notification - the page shows the message instantly
+    const threadId = notificationData.data && notificationData.data.threadId;
+    if (threadId) {
+      const viewingThread = clientList.some(c =>
+        c.visibilityState === 'visible' &&
+        c.url.indexOf('/wiadomosci') !== -1 &&
+        c.url.indexOf('rozmowa=' + threadId) !== -1
+      );
+      if (viewingThread) {
+        console.log('🔕 [SW] Suppressing notification - conversation', threadId, 'is open and visible');
+        return;
+      }
+    }
+
+    console.log('📢 [SW] Displaying notification:', notificationData.title);
+    try {
+      await self.registration.showNotification(notificationData.title, notificationData);
+      console.log('✅ [SW] Notification displayed successfully');
+    } catch (error) {
+      console.error('❌ [SW] Error displaying notification:', error);
+    }
+  })());
 });
 
 // Notification click event listener
