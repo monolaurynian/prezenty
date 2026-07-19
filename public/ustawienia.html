@@ -105,6 +105,15 @@
             </div>
         </div>
 
+        <!-- Install PWA -->
+        <div class="glass-card p-4" id="installSection">
+            <div class="section-title"><i class="fas fa-download"></i>Zainstaluj aplikację</div>
+            <div class="section-desc">Dodaj Prezenty do ekranu głównego, żeby korzystać z nich jak z natywnej aplikacji - szybciej i bez paska przeglądarki.</div>
+            <div id="installContent">
+                <p class="mb-0" style="font-size:14px; opacity:0.85;">Sprawdzanie możliwości instalacji...</p>
+            </div>
+        </div>
+
         <!-- Account -->
         <div class="glass-card p-4">
             <div class="section-title"><i class="fas fa-id-badge"></i>Konto</div>
@@ -140,6 +149,66 @@
             navigator.serviceWorker.register('/sw.js').catch(() => {});
         }
 
+        // ===== PWA install =====
+        // Capture the install prompt early - the browser fires it once,
+        // often before DOMContentLoaded.
+        let deferredInstallPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            renderInstallSection();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            renderInstallSection();
+            showToast('Aplikacja zainstalowana!', 'success');
+        });
+
+        function isStandalone() {
+            return window.matchMedia('(display-mode: standalone)').matches
+                || window.navigator.standalone === true;
+        }
+
+        function renderInstallSection() {
+            const content = document.getElementById('installContent');
+            if (!content) return;
+
+            if (isStandalone()) {
+                content.innerHTML = '<p class="mb-0" style="font-size:14px;"><i class="fas fa-check-circle me-1" style="color:#43A047;"></i>Aplikacja jest już zainstalowana na tym urządzeniu.</p>';
+                return;
+            }
+
+            if (deferredInstallPrompt) {
+                content.innerHTML = `
+                    <button class="btn btn-light fw-semibold" style="color:#212529;" onclick="installApp()">
+                        <i class="fas fa-download me-1"></i>Zainstaluj na tym urządzeniu
+                    </button>`;
+                return;
+            }
+
+            // No native prompt available - show manual instructions
+            const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            if (isIos) {
+                content.innerHTML = '<p class="mb-0" style="font-size:14px;">Na iPhonie/iPadzie: w Safari otwórz menu udostępniania <i class="fas fa-arrow-up-from-bracket mx-1"></i> i wybierz <strong>"Dodaj do ekranu początkowego"</strong>.</p>';
+            } else {
+                content.innerHTML = '<p class="mb-0" style="font-size:14px;">Otwórz menu przeglądarki (⋮) i wybierz <strong>"Zainstaluj aplikację"</strong> lub <strong>"Dodaj do ekranu głównego"</strong>.</p>';
+            }
+        }
+
+        function installApp() {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            deferredInstallPrompt.userChoice.then(choice => {
+                if (choice.outcome === 'accepted') {
+                    showToast('Instalowanie aplikacji...', 'success');
+                }
+                deferredInstallPrompt = null;
+                renderInstallSection();
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             fetch('/api/auth')
                 .then(r => r.json())
@@ -148,6 +217,7 @@
                     document.getElementById('accountUsername').textContent = data.user.username;
                     loadProfile();
                     updateNotifSection();
+                    renderInstallSection();
                 })
                 .catch(() => { window.location.href = '/'; });
         });

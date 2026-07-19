@@ -60,11 +60,33 @@
 }
 
 /* Selection pill behind the active tab (iOS 26 style) - a soft
-   capsule tinted in the tab's accent color wraps icon + label */
-.tab-item.active.home-tab { background: rgba(244, 67, 54, 0.12); }
-.tab-item.active.activity-tab { background: rgba(255, 152, 0, 0.14); }
-.tab-item.active.leaderboard-tab { background: rgba(33, 150, 243, 0.13); }
-.tab-item.active.form-tab { background: rgba(76, 175, 80, 0.13); }
+   capsule tinted in the tab's accent color wraps icon + label.
+   Depth: a faint tinted ring outline, a pressed-in inner shadow at the
+   top and a hairline highlight at the bottom edge. */
+.tab-item.active.home-tab {
+    background: rgba(244, 67, 54, 0.12);
+    box-shadow: 0 0 0 1px rgba(229, 57, 53, 0.18),
+                inset 0 1.5px 3px rgba(183, 28, 28, 0.14),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+}
+.tab-item.active.activity-tab {
+    background: rgba(255, 152, 0, 0.14);
+    box-shadow: 0 0 0 1px rgba(239, 108, 0, 0.20),
+                inset 0 1.5px 3px rgba(230, 81, 0, 0.14),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+}
+.tab-item.active.leaderboard-tab {
+    background: rgba(33, 150, 243, 0.13);
+    box-shadow: 0 0 0 1px rgba(30, 136, 229, 0.20),
+                inset 0 1.5px 3px rgba(21, 101, 192, 0.14),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+}
+.tab-item.active.form-tab {
+    background: rgba(76, 175, 80, 0.13);
+    box-shadow: 0 0 0 1px rgba(67, 160, 71, 0.20),
+                inset 0 1.5px 3px rgba(46, 125, 50, 0.14),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+}
 
 .tab-item:hover {
     color: #636366;

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v38';
+const CACHE_NAME = 'prezenty-v39';
 const urlsToCache = [
   '/manifest.json',
   '/favicon.svg',
