@@ -2166,8 +2166,8 @@ function generateReservationButton(present) {
                         onclick="handleBoughtClick(event, ${present.id}, true)"
                         title="Oznacz jako kupione"
                         style="white-space: nowrap;">
-                    <i class="fas fa-shopping-bag"></i>
-                    <span class="ms-1">Zakupione</span>
+                    <i class="fas fa-check"></i>
+                    <span class="ms-1">Kupione</span>
                 </button>
                 <button class="btn btn-outline-danger btn-sm"
                         onclick="handleReserveClick(event, ${present.id}, 'cancel')"
