@@ -862,15 +862,19 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
+                        showToast('Prezent zarezerwowany! 🎁', 'success', {
+                            label: 'Cofnij',
+                            onClick: () => unreservePresent(null, presentId)
+                        });
                     } else {
                         rollbackPresent(presentId, prev);
-                        alert('Błąd: ' + (data.error || 'Nie udało się zarezerwować prezentu'));
+                        showToast(data.error || 'Nie udało się zarezerwować prezentu', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     rollbackPresent(presentId, prev);
-                    alert('Wystąpił błąd podczas rezerwowania prezentu');
+                    showToast('Błąd połączenia. Zmiana została cofnięta.', 'error');
                 })
                 .finally(endOp);
         }
@@ -887,15 +891,45 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
+                        showToast('Rezerwacja anulowana', 'success', {
+                            label: 'Cofnij',
+                            onClick: () => reReservePresent(presentId)
+                        });
                     } else {
                         rollbackPresent(presentId, prev);
-                        alert('Błąd: ' + (data.error || 'Nie udało się anulować rezerwacji'));
+                        showToast(data.error || 'Nie udało się anulować rezerwacji', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     rollbackPresent(presentId, prev);
-                    alert('Wystąpił błąd podczas anulowania rezerwacji');
+                    showToast('Błąd połączenia. Zmiana została cofnięta.', 'error');
+                })
+                .finally(endOp);
+        }
+
+        // Undo for "Rezerwacja anulowana" - re-reserves the present
+        function reReservePresent(presentId) {
+            const prev = optimisticUpdatePresent(presentId, { reserved_by: window._currentUserId || null });
+            beginOp();
+
+            fetch(`/api/presents/${presentId}/reserve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        refreshStatsCounters();
+                        showToast('Przywrócono rezerwację', 'success');
+                    } else {
+                        rollbackPresent(presentId, prev);
+                        showToast(data.error || 'Nie udało się przywrócić rezerwacji', 'error');
+                    }
+                })
+                .catch(() => {
+                    rollbackPresent(presentId, prev);
+                    showToast('Nie udało się przywrócić rezerwacji', 'error');
                 })
                 .finally(endOp);
         }
@@ -928,15 +962,19 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
+                        showToast('Oznaczono jako kupione 🛍️', 'success', {
+                            label: 'Cofnij',
+                            onClick: () => markAsUnbought(presentId)
+                        });
                     } else {
                         rollbackPresent(presentId, prev);
-                        alert('Błąd: ' + (data.error || 'Nie udało się oznaczyć prezentu'));
+                        showToast(data.error || 'Nie udało się oznaczyć prezentu', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error marking as bought:', error);
                     rollbackPresent(presentId, prev);
-                    alert('Wystąpił błąd podczas oznaczania prezentu');
+                    showToast('Błąd połączenia. Zmiana została cofnięta.', 'error');
                 })
                 .finally(endOp);
         }
@@ -955,14 +993,16 @@
                 .then(data => {
                     if (data.success) {
                         refreshStatsCounters();
+                        showToast('Cofnięto oznaczenie', 'success');
                     } else {
                         rollbackPresent(presentId, prev);
-                        alert('Błąd: ' + (data.error || 'Nie udało się cofnąć oznaczenia'));
+                        showToast(data.error || 'Nie udało się cofnąć oznaczenia', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error unmarking as bought:', error);
                     rollbackPresent(presentId, prev);
+                    showToast('Błąd połączenia. Zmiana została cofnięta.', 'error');
                 })
                 .finally(endOp);
         }
@@ -985,6 +1025,37 @@
 
         loadStats();
     </script>
+
+    <!-- Toast container (showToast from recipients.js targets these) -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span id="successToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="errorToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="infoToast" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span id="infoToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
 
     <!-- Bottom Tab Bar -->
     <div class="bottom-tab-bar">

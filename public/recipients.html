@@ -87,11 +87,16 @@
 
         /* Breathing room at the very top - the navbar was removed, so the
            filter panel starts the page (respects the phone's status bar).
-           Mobile only: on desktop the sidebar's 12px alignment applies. */
+           Applied on BODY: padding there cannot be affected by margin
+           collapse or any container rule. Mobile only - on desktop the
+           sidebar's 12px alignment applies. */
         @media (max-width: 991.98px) {
+            body.recipients-page {
+                padding-top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
+            }
             .recipients-page .container.mt-4 {
                 margin-top: 0 !important;
-                padding-top: calc(env(safe-area-inset-top, 0px) + 20px) !important;
+                padding-top: 8px !important;
             }
         }
 

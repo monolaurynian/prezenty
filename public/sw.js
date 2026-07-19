@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v73';
+const CACHE_NAME = 'prezenty-v74';
 const urlsToCache = [
   '/manifest.json',
   '/favicon.svg',
@@ -170,7 +170,10 @@ self.addEventListener('push', function(event) {
         ...notificationData,
         title: data.title || notificationData.title,
         body: data.body || notificationData.body,
-        data: { ...notificationData.data, ...data }
+        // The server nests the useful fields (presentId, recipientName,
+        // url) under payload.data - flatten them onto notification.data
+        // so the click handler can build the deep link
+        data: { ...notificationData.data, ...data, ...(data.data || {}) }
       };
       console.log('✅ [SW] Notification data prepared:', { title: notificationData.title, body: notificationData.body });
     } catch (e) {
