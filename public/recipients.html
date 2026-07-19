@@ -1807,7 +1807,7 @@
                 leaderboard_leader: {
                     icon: 'fa-trophy',
                     color: '#FFC107',
-                    getMessage: (data, actor) => `🏆 ${data.leaderName ? personLinkHtml(data.leaderName) : '<strong>Ktoś</strong>'}${data.previousLeaderName ? ` wyprzedza ${personLinkHtml(data.previousLeaderName)} i` : ''} prowadzi w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
+                    getMessage: (data, actor) => `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
                 },
                 anon_message: {
                     icon: 'fa-comment-dots',
@@ -2372,7 +2372,7 @@
     <script src="realtime-updates.js" defer></script>
     
     <!-- Tab bar functions (shared across pages) -->
-    <script src="tab-bar-functions.js?v=14"></script>
+    <script src="tab-bar-functions.js?v=15"></script>
 
     <!-- Bottom Tab Bar -->
     <div class="bottom-tab-bar">
