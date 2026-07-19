@@ -332,7 +332,7 @@
     </script>
 
     <!-- Load recipients.js for shared functions (but don't auto-init) -->
-    <script src="recipients.js?v=18&t=1111111111"></script>
+    <script src="recipients.js?v=19&t=1111111111"></script>
 
     <!-- Non-critical scripts (defer to load after page is interactive) -->
     <script src="update-checker.js" defer></script>
@@ -944,6 +944,23 @@
                 previewImage.src = profilePictureUrl;
                 previewName.textContent = recipientName;
 
+                // "Send anonymous message" - only for people with an
+                // account (identified) and not for yourself
+                const msgLink = document.getElementById('profilePreviewMessageLink');
+                if (msgLink) {
+                    const d = window._homeData;
+                    const rec = d && d.recipients
+                        ? d.recipients.find(r => Number(r.id) === Number(recipientId))
+                        : null;
+                    const uid = Number(window._currentUserId);
+                    if (rec && rec.identified_by && Number(rec.identified_by) !== uid) {
+                        msgLink.href = '/wiadomosci?do=' + rec.identified_by;
+                        msgLink.style.display = 'inline-block';
+                    } else {
+                        msgLink.style.display = 'none';
+                    }
+                }
+
                 const bootstrapModal = new bootstrap.Modal(modal);
                 bootstrapModal.show();
             }
@@ -1317,6 +1334,10 @@
                 <div class="modal-body text-center">
                     <img id="profilePreviewImage" class="profile-preview-image" alt="Zdjęcie profilowe">
                     <div id="profilePreviewName" class="profile-preview-name mt-3"></div>
+                    <a id="profilePreviewMessageLink" href="#" class="btn btn-sm fw-semibold mt-3"
+                       style="display: none; background: #7B1FA2; color: #ffffff !important; border-radius: 10px;">
+                        <i class="fas fa-user-secret me-1"></i>Wyślij anonimową wiadomość 🎅
+                    </a>
                 </div>
             </div>
         </div>

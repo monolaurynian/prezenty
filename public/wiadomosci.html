@@ -299,7 +299,7 @@
 
         // ===== Compose =====
         function loadUsers() {
-            fetch('/api/wiadomosci/users')
+            return fetch('/api/wiadomosci/users')
                 .then(r => r.json())
                 .then(d => {
                     const sel = document.getElementById('targetSelect');
@@ -309,6 +309,15 @@
                         opt.textContent = u.username;
                         sel.appendChild(opt);
                     });
+
+                    // Deep link: ?do=<userId> preselects the recipient
+                    // (e.g. from a profile picture modal) and focuses the
+                    // message box, ready to type
+                    const doParam = new URLSearchParams(window.location.search).get('do');
+                    if (doParam && sel.querySelector(`option[value="${doParam}"]`)) {
+                        sel.value = doParam;
+                        document.getElementById('composeBody').focus();
+                    }
                 })
                 .catch(() => {});
         }

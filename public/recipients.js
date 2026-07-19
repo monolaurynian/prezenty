@@ -3505,6 +3505,19 @@ function openProfilePicturePreview(recipientId) {
         previewImage.src = getFullProfilePictureUrl(recipient.profile_picture);
         previewName.textContent = recipient.name;
 
+        // "Send anonymous message" - only for people with an account
+        // (identified) and not for yourself
+        const msgLink = document.getElementById('profilePreviewMessageLink');
+        if (msgLink) {
+            const uid = Number(window._currentUserId || currentUserId);
+            if (recipient.identified_by && Number(recipient.identified_by) !== uid) {
+                msgLink.href = '/wiadomosci?do=' + recipient.identified_by;
+                msgLink.style.display = 'inline-block';
+            } else {
+                msgLink.style.display = 'none';
+            }
+        }
+
         const bootstrapModal = new bootstrap.Modal(modal);
         bootstrapModal.show();
     }
