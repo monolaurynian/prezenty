@@ -1351,9 +1351,12 @@ function displayRecipientsWithPresents(recipients, presents) {
     // Add event delegation for edit and delete buttons
     setupPresentButtonListeners();
 
-    // Update search autocomplete data
+    // Update search autocomplete data + re-apply active filters.
+    // Synchronous on purpose: it runs in the same task as the innerHTML
+    // update above, so the browser never paints an unfiltered frame
+    // (the old 100ms delay caused a visible flicker on ?osoba= links).
     if (typeof updateSearchData === 'function') {
-        setTimeout(() => updateSearchData(), 100);
+        updateSearchData();
     }
 }
 
