@@ -1997,20 +1997,41 @@
                         throw new Error('Web-push module not available on server');
                     }
 
+                    const keyBytes = urlBase64ToUint8Array(data.publicKey);
+                    // Subscriptions created against an older VAPID key look
+                    // valid locally but every send fails - detect and replace
+                    const keyMatches = function (sub) {
+                        try {
+                            const current = new Uint8Array(sub.options.applicationServerKey);
+                            if (current.length !== keyBytes.length) return false;
+                            for (let i = 0; i < keyBytes.length; i++) {
+                                if (current[i] !== keyBytes[i]) return false;
+                            }
+                            return true;
+                        } catch (e) { return true; }
+                    };
+
                     return navigator.serviceWorker.ready.then(function (registration) {
                         // Check if already subscribed
                         return registration.pushManager.getSubscription().then(function (existingSubscription) {
-                            if (existingSubscription) {
+                            if (existingSubscription && keyMatches(existingSubscription)) {
                                 console.log('Already subscribed:', existingSubscription);
                                 sendSubscriptionToServer(existingSubscription);
                                 return existingSubscription;
                             }
 
-                            // Subscribe to push notifications
-                            return registration.pushManager.subscribe({
-                                userVisibleOnly: true,
-                                applicationServerKey: urlBase64ToUint8Array(data.publicKey)
-                            });
+                            const doSubscribe = function () {
+                                return registration.pushManager.subscribe({
+                                    userVisibleOnly: true,
+                                    applicationServerKey: keyBytes
+                                });
+                            };
+
+                            if (existingSubscription) {
+                                console.log('[Push] Re-subscribing (VAPID key changed)');
+                                return existingSubscription.unsubscribe().then(doSubscribe);
+                            }
+                            return doSubscribe();
                         });
                     });
                 })

@@ -372,8 +372,15 @@
                 return;
             }
             if (Notification.permission === 'granted') {
-                subscribeToPush(); // make sure subscription is registered
-                content.innerHTML = '<p class="mb-0" style="font-size:14px;"><i class="fas fa-check-circle me-1" style="color:#7CFC90;"></i>Powiadomienia są włączone na tym urządzeniu.</p>';
+                // Don't just trust the browser permission - confirm the
+                // subscription is actually registered with the server
+                content.innerHTML = '<p class="mb-0" style="font-size:14px;"><i class="fas fa-spinner fa-spin me-1"></i>Sprawdzanie subskrypcji...</p>';
+                subscribeToPush().then(ok => {
+                    content.innerHTML = ok
+                        ? '<p class="mb-0" style="font-size:14px;"><i class="fas fa-check-circle me-1" style="color:#43A047;"></i>Powiadomienia są włączone i zarejestrowane na tym urządzeniu.</p>'
+                        : '<p class="mb-2" style="font-size:14px;"><i class="fas fa-triangle-exclamation me-1" style="color:#EF6C00;"></i>Zgoda jest udzielona, ale rejestracja powiadomień nie powiodła się.</p>' +
+                          '<button class="btn btn-light btn-sm fw-semibold" style="color:#212529;" onclick="updateNotifSection()"><i class="fas fa-rotate-right me-1"></i>Spróbuj ponownie</button>';
+                });
             } else if (Notification.permission === 'denied') {
                 content.innerHTML = '<p class="mb-0" style="font-size:14px;"><i class="fas fa-bell-slash me-1"></i>Powiadomienia są zablokowane. Zmień to w ustawieniach przeglądarki.</p>';
             }
@@ -390,26 +397,60 @@
             });
         }
 
+        // True when the existing subscription was created with the same
+        // VAPID key the server currently uses. Subscriptions made against
+        // an older/broken key LOOK fine locally but every send fails.
+        function subscriptionKeyMatches(sub, keyBytes) {
+            try {
+                const current = new Uint8Array(sub.options.applicationServerKey);
+                if (current.length !== keyBytes.length) return false;
+                for (let i = 0; i < keyBytes.length; i++) {
+                    if (current[i] !== keyBytes[i]) return false;
+                }
+                return true;
+            } catch (e) {
+                return true; // can't inspect - assume it's fine
+            }
+        }
+
         function subscribeToPush() {
-            fetch('/api/vapid-public-key')
+            return fetch('/api/vapid-public-key')
                 .then(r => r.json())
                 .then(data => {
                     if (!data.webPushAvailable) throw new Error('push unavailable');
+                    const keyBytes = urlBase64ToUint8Array(data.publicKey);
                     return navigator.serviceWorker.ready.then(reg =>
-                        reg.pushManager.getSubscription().then(existing =>
-                            existing || reg.pushManager.subscribe({
+                        reg.pushManager.getSubscription().then(existing => {
+                            if (existing && !subscriptionKeyMatches(existing, keyBytes)) {
+                                // Stale subscription from an old VAPID key -
+                                // replace it or pushes never arrive
+                                console.log('[Push] Re-subscribing (VAPID key changed)');
+                                return existing.unsubscribe().then(() =>
+                                    reg.pushManager.subscribe({
+                                        userVisibleOnly: true,
+                                        applicationServerKey: keyBytes
+                                    }));
+                            }
+                            return existing || reg.pushManager.subscribe({
                                 userVisibleOnly: true,
-                                applicationServerKey: urlBase64ToUint8Array(data.publicKey)
-                            })
-                        )
+                                applicationServerKey: keyBytes
+                            });
+                        })
                     );
                 })
                 .then(subscription => fetch('/api/notifications/subscribe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(subscription)
-                }))
-                .catch(err => console.warn('Push subscription failed:', err.message));
+                }).then(r => r.json()))
+                .then(d => {
+                    if (!d || !d.success) throw new Error('server did not save subscription');
+                    return true;
+                })
+                .catch(err => {
+                    console.warn('Push subscription failed:', err.message);
+                    return false;
+                });
         }
 
         function urlBase64ToUint8Array(base64String) {
