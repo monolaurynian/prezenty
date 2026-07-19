@@ -103,6 +103,12 @@
                 inset 0 1.5px 3px rgba(46, 125, 50, 0.14),
                 inset 0 -1px 0 rgba(255, 255, 255, 0.6);
 }
+.tab-item.active.messages-tab {
+    background: rgba(123, 31, 162, 0.12);
+    box-shadow: 0 0 0 1px rgba(123, 31, 162, 0.20),
+                inset 0 1.5px 3px rgba(74, 20, 140, 0.14),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+}
 
 .tab-item:hover {
     color: #636366;
@@ -221,6 +227,9 @@
 
 .tab-item.active.leaderboard-tab i,
 .tab-item.active.leaderboard-tab span { color: #1E88E5; }
+
+.tab-item.active.messages-tab i,
+.tab-item.active.messages-tab span { color: #7B1FA2; }
 
 .tab-item.active.form-tab i,
 .tab-item.active.form-tab span { color: #43A047; }
