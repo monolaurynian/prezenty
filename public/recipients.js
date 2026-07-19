@@ -717,51 +717,22 @@ document.addEventListener('DOMContentLoaded', function () {
                         ...identifiedPresents // Add fresh identified user's presents
                     ];
 
-                    // Fade out only the accordion content, not the entire card
-                    const placeholder = document.querySelector('.loading-placeholder');
-                    if (placeholder) {
-                        const accordionContent = placeholder.querySelector('.accordion');
-                        if (accordionContent) {
-                            accordionContent.style.transition = 'opacity 0.3s ease-out';
-                            accordionContent.style.opacity = '0';
-
-                            setTimeout(() => {
-                                // Remove the placeholder class to convert it to a real card
-                                placeholder.classList.remove('loading-placeholder');
-
-                                // Display complete data - this will replace the placeholder content
-                                console.log('[FastLoad] Merging cached data with identified user data');
-                                displayRecipientsWithPresents(allRecipients, allPresents);
-
-                                // Remove the old placeholder after new content is rendered
-                                setTimeout(() => {
-                                    if (placeholder.parentElement) {
-                                        placeholder.remove();
-                                    }
-                                }, 50);
-                            }, 300);
-                        } else {
-                            // No accordion found, remove entire placeholder
-                            placeholder.remove();
-                            console.log('[FastLoad] Merging cached data with identified user data');
-                            displayRecipientsWithPresents(allRecipients, allPresents);
-                        }
-                    } else {
-                        // No placeholder, just display
-                        console.log('[FastLoad] Merging cached data with identified user data');
-                        displayRecipientsWithPresents(allRecipients, allPresents);
-                    }
-
-                    // Mark that identified user data is loaded
+                    // Update caches BEFORE rendering: the render pipeline
+                    // re-applies filters synchronously (incl. hiding the
+                    // identified user's own card) and reads identification
+                    // from these caches - rendering first would let the own
+                    // card slip through with stale/old-format cache data.
                     window._identifiedUserDataLoaded = true;
-
-                    // Update cache
                     window._dataCache = {
                         recipients: allRecipients,
                         presents: allPresents,
                         identificationStatus
                     };
+                    window._cachedIdentificationStatus = identificationStatus;
                     saveToPersistentCache(window._dataCache);
+
+                    console.log('[FastLoad] Merging cached data with identified user data');
+                    displayRecipientsWithPresents(allRecipients, allPresents);
                 }
             }).catch(error => {
                 console.error('[FastLoad] Error loading identified user:', error);

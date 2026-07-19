@@ -96,14 +96,19 @@ function applyStatusFilter(filterType) {
 // explicitly selects it (still anonymized server-side, so no spoilers).
 function getOwnRecipientId() {
     try {
-        const cache = window._dataCache;
-        if (!cache || !cache.identificationStatus || !cache.identificationStatus.isIdentified) return null;
-        const ident = cache.identificationStatus;
+        // Two possible sources - _dataCache may briefly hold an older
+        // FastLoad snapshot while _cachedIdentificationStatus is fresher
+        const ident = (window._dataCache && window._dataCache.identificationStatus)
+            || window._cachedIdentificationStatus;
+        if (!ident || !ident.isIdentified) return null;
         if (ident.identifiedRecipient && ident.identifiedRecipient.id != null) {
             return String(ident.identifiedRecipient.id);
         }
         const uid = ident.userId != null ? ident.userId : window._currentUserId;
-        const rec = (cache.recipients || []).find(r => r.identified_by === uid);
+        if (uid == null) return null;
+        const recs = (window._dataCache && window._dataCache.recipients)
+            || window._cachedRecipients || [];
+        const rec = recs.find(r => r.identified_by === uid);
         return rec ? String(rec.id) : null;
     } catch (e) {
         return null;
