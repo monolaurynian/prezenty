@@ -189,9 +189,18 @@ function getNotificationMessage(notif) {
             return `<strong>${actor}</strong> odznaczył(a) "${presentLink}"${data.recipientName ? ' dla ' + data.recipientName : ''}`;
         case 'leaderboard_leader':
             return `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`;
+        case 'anon_message':
+            return `💬 <a href="/wiadomosci" style="color: #2196F3; text-decoration: underline;"><strong>${data.label || 'Nowa wiadomość'}</strong></a>${data.preview ? ': "' + escapeHtmlNotif(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`;
         default:
             return `<strong>${actor}</strong> wykonał(a) akcję`;
     }
+}
+
+// Minimal HTML escape for user-typed message previews
+function escapeHtmlNotif(text) {
+    const div = document.createElement('div');
+    div.textContent = text == null ? '' : String(text);
+    return div.innerHTML;
 }
 
 // Scroll the present into view and highlight it - retries briefly in

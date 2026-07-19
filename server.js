@@ -648,6 +648,15 @@ app.get('/archiwum', (req, res) => {
     }
 });
 
+app.get('/wiadomosci', (req, res) => {
+    // If user is not authenticated, redirect to login page
+    if (!req.session.userId) {
+        res.redirect('/');
+    } else {
+        res.sendFile(path.join(__dirname, 'public', 'wiadomosci.html'));
+    }
+});
+
 // API Routes
 
 // Login
@@ -2347,6 +2356,240 @@ app.get('/api/leaderboard', async (req, res) => {
     } catch (err) {
         console.error('❌ [LEADERBOARD] Error fetching leaderboard:', err);
         res.status(500).json({ error: 'Failed to fetch leaderboard' });
+    }
+});
+
+// ==================== Anonymous messages (wiadomości) ====================
+// Users can send anonymous messages to each other (e.g. "what shoe size
+// do you wear?"). The recipient never learns who asked; the initiator
+// knows who they asked. Replies flow both ways within a thread.
+
+let anonTablesEnsured = false;
+async function ensureAnonMessageTables() {
+    if (DEMO_MODE || anonTablesEnsured) return;
+    await pool.execute(`
+        CREATE TABLE IF NOT EXISTS anon_threads (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            initiator_id INT NOT NULL,
+            target_id INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_initiator (initiator_id),
+            INDEX idx_target (target_id),
+            FOREIGN KEY (initiator_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (target_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    `);
+    await pool.execute(`
+        CREATE TABLE IF NOT EXISTS anon_messages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            thread_id INT NOT NULL,
+            sender_id INT NOT NULL,
+            body TEXT NOT NULL,
+            is_read BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_thread (thread_id),
+            FOREIGN KEY (thread_id) REFERENCES anon_threads(id) ON DELETE CASCADE
+        )
+    `);
+    anonTablesEnsured = true;
+    console.log('✅ [WIADOMOSCI] Anonymous message tables ready');
+}
+
+// Targeted notification for ONE user with the actor masked: actor_id is
+// set to the notification's owner so the API can never leak the sender's
+// username. The safe display label travels in data.label.
+async function notifyAnonMessage(recipientUserId, label, threadId, preview) {
+    try {
+        await ensureNotificationsTable();
+        await pool.execute(
+            'INSERT INTO notifications (user_id, type, actor_id, data) VALUES (?, ?, ?, ?)',
+            [recipientUserId, 'anon_message', recipientUserId,
+             JSON.stringify({ label, threadId, preview })]
+        );
+    } catch (err) {
+        console.error('❌ [WIADOMOSCI] Notification insert failed:', err.message);
+    }
+    sendPushToUser(recipientUserId, label + ' 💬',
+        preview.length > 80 ? preview.slice(0, 77) + '...' : preview,
+        { url: '/wiadomosci' }
+    ).catch(() => {});
+}
+
+// Users the current user can message (everyone but themselves)
+app.get('/api/wiadomosci/users', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.json({ users: [] });
+    try {
+        const [users] = await pool.execute(
+            'SELECT id, username FROM users WHERE id != ? ORDER BY username',
+            [req.session.userId]
+        );
+        res.json({ users });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas pobierania użytkowników');
+    }
+});
+
+// Thread list for the current user (both roles), newest activity first
+app.get('/api/wiadomosci/threads', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.json({ threads: [] });
+    const userId = req.session.userId;
+    try {
+        await ensureAnonMessageTables();
+        const [threads] = await pool.execute(`
+            SELECT t.id, t.initiator_id, t.target_id, t.created_at,
+                   u.username AS target_username,
+                   (SELECT body FROM anon_messages m WHERE m.thread_id = t.id ORDER BY m.id DESC LIMIT 1) AS last_body,
+                   (SELECT created_at FROM anon_messages m WHERE m.thread_id = t.id ORDER BY m.id DESC LIMIT 1) AS last_at,
+                   (SELECT COUNT(*) FROM anon_messages m WHERE m.thread_id = t.id AND m.is_read = 0 AND m.sender_id != ?) AS unread_count
+            FROM anon_threads t
+            JOIN users u ON u.id = t.target_id
+            WHERE t.initiator_id = ? OR t.target_id = ?
+            ORDER BY last_at DESC
+        `, [userId, userId, userId]);
+
+        res.json({
+            threads: threads.map(t => ({
+                id: t.id,
+                role: t.initiator_id === userId ? 'initiator' : 'target',
+                // Target sees "Anonim"; initiator sees who they wrote to
+                otherLabel: t.initiator_id === userId ? t.target_username : 'Anonim 🎭',
+                lastBody: t.last_body,
+                lastAt: t.last_at,
+                unreadCount: Number(t.unread_count)
+            }))
+        });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas pobierania wiadomości');
+    }
+});
+
+// Unread messages badge
+app.get('/api/wiadomosci/unread-count', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.json({ count: 0 });
+    const userId = req.session.userId;
+    try {
+        await ensureAnonMessageTables();
+        const [rows] = await pool.execute(`
+            SELECT COUNT(*) AS count FROM anon_messages m
+            JOIN anon_threads t ON t.id = m.thread_id
+            WHERE (t.initiator_id = ? OR t.target_id = ?)
+              AND m.sender_id != ? AND m.is_read = 0
+        `, [userId, userId, userId]);
+        res.json({ count: Number(rows[0].count) });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd');
+    }
+});
+
+// Start a new anonymous thread
+app.post('/api/wiadomosci/threads', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.status(503).json({ error: 'Niedostępne w trybie demo' });
+    const userId = req.session.userId;
+    const { targetUserId, body } = req.body;
+
+    if (!targetUserId || !body || !String(body).trim()) {
+        return badRequest(res, 'Wybierz odbiorcę i wpisz wiadomość');
+    }
+    if (Number(targetUserId) === Number(userId)) {
+        return badRequest(res, 'Nie możesz wysłać wiadomości do siebie');
+    }
+
+    try {
+        await ensureAnonMessageTables();
+        const [target] = await pool.execute('SELECT id FROM users WHERE id = ?', [targetUserId]);
+        if (target.length === 0) return notFound(res, 'Nie znaleziono użytkownika');
+
+        const [tRes] = await pool.execute(
+            'INSERT INTO anon_threads (initiator_id, target_id) VALUES (?, ?)',
+            [userId, targetUserId]
+        );
+        await pool.execute(
+            'INSERT INTO anon_messages (thread_id, sender_id, body) VALUES (?, ?, ?)',
+            [tRes.insertId, userId, String(body).trim()]
+        );
+
+        notifyAnonMessage(Number(targetUserId), 'Nowa anonimowa wiadomość', tRes.insertId, String(body).trim());
+        res.json({ success: true, threadId: tRes.insertId });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas wysyłania wiadomości');
+    }
+});
+
+// Read a thread (marks incoming messages as read)
+app.get('/api/wiadomosci/threads/:id', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.json({ messages: [] });
+    const userId = req.session.userId;
+    try {
+        await ensureAnonMessageTables();
+        const [tRows] = await pool.execute('SELECT * FROM anon_threads WHERE id = ?', [req.params.id]);
+        if (tRows.length === 0) return notFound(res, 'Nie znaleziono rozmowy');
+        const thread = tRows[0];
+        if (thread.initiator_id !== userId && thread.target_id !== userId) {
+            return forbidden(res, 'To nie Twoja rozmowa');
+        }
+
+        const [msgs] = await pool.execute(
+            'SELECT id, sender_id, body, created_at FROM anon_messages WHERE thread_id = ? ORDER BY id ASC',
+            [thread.id]
+        );
+        await pool.execute(
+            'UPDATE anon_messages SET is_read = 1 WHERE thread_id = ? AND sender_id != ?',
+            [thread.id, userId]
+        );
+
+        const isInitiator = thread.initiator_id === userId;
+        const [uRows] = await pool.execute('SELECT username FROM users WHERE id = ?', [thread.target_id]);
+        const targetName = uRows.length ? uRows[0].username : '?';
+
+        res.json({
+            threadId: thread.id,
+            role: isInitiator ? 'initiator' : 'target',
+            otherLabel: isInitiator ? targetName : 'Anonim 🎭',
+            // sender_id is NEVER exposed - only fromMe
+            messages: msgs.map(m => ({
+                id: m.id,
+                fromMe: m.sender_id === userId,
+                body: m.body,
+                createdAt: m.created_at
+            }))
+        });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas pobierania rozmowy');
+    }
+});
+
+// Reply within a thread
+app.post('/api/wiadomosci/threads/:id/messages', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.status(503).json({ error: 'Niedostępne w trybie demo' });
+    const userId = req.session.userId;
+    const { body } = req.body;
+    if (!body || !String(body).trim()) return badRequest(res, 'Wpisz wiadomość');
+
+    try {
+        await ensureAnonMessageTables();
+        const [tRows] = await pool.execute('SELECT * FROM anon_threads WHERE id = ?', [req.params.id]);
+        if (tRows.length === 0) return notFound(res, 'Nie znaleziono rozmowy');
+        const thread = tRows[0];
+        if (thread.initiator_id !== userId && thread.target_id !== userId) {
+            return forbidden(res, 'To nie Twoja rozmowa');
+        }
+
+        await pool.execute(
+            'INSERT INTO anon_messages (thread_id, sender_id, body) VALUES (?, ?, ?)',
+            [thread.id, userId, String(body).trim()]
+        );
+
+        const otherUserId = thread.initiator_id === userId ? thread.target_id : thread.initiator_id;
+        // The initiator stays anonymous in the target's notification;
+        // the target's reply is labeled as a reply to your message
+        const label = thread.initiator_id === userId
+            ? 'Nowa anonimowa wiadomość'
+            : 'Odpowiedź na Twoją anonimową wiadomość';
+        notifyAnonMessage(otherUserId, label, thread.id, String(body).trim());
+
+        res.json({ success: true });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas wysyłania odpowiedzi');
     }
 });
 

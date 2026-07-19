@@ -514,6 +514,12 @@
                 color: '#FFC107',
                 getMessage: (data) =>
                     `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w rankingu z <strong>${data.presentCount || '?'}</strong> ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
+            },
+            anon_message: {
+                icon: 'fa-comment-dots',
+                color: '#7B1FA2',
+                getMessage: (data) =>
+                    `💬 <a href="/wiadomosci" style="color: #7B1FA2; text-decoration: underline;"><strong>${data.label || 'Nowa wiadomość'}</strong></a>${data.preview ? ': "' + escapeHtmlText(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`
             }
         };
 
@@ -958,6 +964,10 @@
                 <i class="ri-bookmark-line"></i>
                 <span>Zarezerwowane Prezenty</span>
             </a>
+            <a href="wiadomosci.html" class="tab-bar-menu-item">
+                <i class="ri-chat-private-line"></i>
+                <span>Anonimowe Wiadomości</span>
+            </a>
             <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
                 <i class="ri-edit-line"></i>
                 <span>Edytuj Moje Prezenty</span>
@@ -1000,7 +1010,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=7"></script>
-    <script src="desktop-nav.js?v=2"></script>
+    <script src="tab-bar-functions.js?v=8"></script>
+    <script src="desktop-nav.js?v=3"></script>
 </body>
 </html>
