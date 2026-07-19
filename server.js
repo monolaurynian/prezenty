@@ -2451,8 +2451,8 @@ app.get('/api/wiadomosci/threads', requireAuth, async (req, res) => {
             threads: threads.map(t => ({
                 id: t.id,
                 role: t.initiator_id === userId ? 'initiator' : 'target',
-                // Target sees "Anonim"; initiator sees who they wrote to
-                otherLabel: t.initiator_id === userId ? t.target_username : 'Anonim 🎭',
+                // Target sees "Święty Mikołaj"; initiator sees who they wrote to
+                otherLabel: t.initiator_id === userId ? t.target_username : 'Święty Mikołaj 🎅',
                 lastBody: t.last_body,
                 lastAt: t.last_at,
                 unreadCount: Number(t.unread_count)
@@ -2499,17 +2499,30 @@ app.post('/api/wiadomosci/threads', requireAuth, async (req, res) => {
         const [target] = await pool.execute('SELECT id FROM users WHERE id = ?', [targetUserId]);
         if (target.length === 0) return notFound(res, 'Nie znaleziono użytkownika');
 
-        const [tRes] = await pool.execute(
-            'INSERT INTO anon_threads (initiator_id, target_id) VALUES (?, ?)',
+        // Messages to the same person continue the existing thread
+        // instead of starting a new one each time
+        let threadId;
+        const [existing] = await pool.execute(
+            'SELECT id FROM anon_threads WHERE initiator_id = ? AND target_id = ? ORDER BY id DESC LIMIT 1',
             [userId, targetUserId]
         );
+        if (existing.length > 0) {
+            threadId = existing[0].id;
+        } else {
+            const [tRes] = await pool.execute(
+                'INSERT INTO anon_threads (initiator_id, target_id) VALUES (?, ?)',
+                [userId, targetUserId]
+            );
+            threadId = tRes.insertId;
+        }
+
         await pool.execute(
             'INSERT INTO anon_messages (thread_id, sender_id, body) VALUES (?, ?, ?)',
-            [tRes.insertId, userId, String(body).trim()]
+            [threadId, userId, String(body).trim()]
         );
 
-        notifyAnonMessage(Number(targetUserId), 'Nowa anonimowa wiadomość', tRes.insertId, String(body).trim());
-        res.json({ success: true, threadId: tRes.insertId });
+        notifyAnonMessage(Number(targetUserId), 'Wiadomość od Świętego Mikołaja', threadId, String(body).trim());
+        res.json({ success: true, threadId });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas wysyłania wiadomości');
     }
@@ -2544,7 +2557,7 @@ app.get('/api/wiadomosci/threads/:id', requireAuth, async (req, res) => {
         res.json({
             threadId: thread.id,
             role: isInitiator ? 'initiator' : 'target',
-            otherLabel: isInitiator ? targetName : 'Anonim 🎭',
+            otherLabel: isInitiator ? targetName : 'Święty Mikołaj 🎅',
             // sender_id is NEVER exposed - only fromMe
             messages: msgs.map(m => ({
                 id: m.id,
@@ -2583,7 +2596,7 @@ app.post('/api/wiadomosci/threads/:id/messages', requireAuth, async (req, res) =
         // The initiator stays anonymous in the target's notification;
         // the target's reply is labeled as a reply to your message
         const label = thread.initiator_id === userId
-            ? 'Nowa anonimowa wiadomość'
+            ? 'Wiadomość od Świętego Mikołaja'
             : 'Odpowiedź na Twoją anonimową wiadomość';
         notifyAnonMessage(otherUserId, label, thread.id, String(body).trim());
 
