@@ -236,19 +236,39 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let currentThreadId = null;
+        // "New chat" mode: conversation view open toward a user with no
+        // thread yet - the first message creates it
+        let newChatTargetId = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             fetch('/api/auth')
                 .then(r => r.json())
                 .then(data => {
                     if (!data.authenticated) { window.location.href = '/'; return; }
-                    loadUsers();
-                    loadThreads();
 
-                    // Deep link: /wiadomosci?rozmowa=<id> opens the
-                    // conversation directly (used by notifications)
-                    const rozmowa = new URLSearchParams(window.location.search).get('rozmowa');
-                    if (rozmowa) openThread(parseInt(rozmowa, 10), false);
+                    Promise.all([loadUsers(), loadThreads()]).then(([users, threads]) => {
+                        const params = new URLSearchParams(window.location.search);
+
+                        // Deep link: ?rozmowa=<id> opens the conversation
+                        const rozmowa = params.get('rozmowa');
+                        if (rozmowa) { openThread(parseInt(rozmowa, 10), false); return; }
+
+                        // Deep link: ?do=<userId> (profile modals) - open
+                        // the existing thread with that person, or a fresh
+                        // conversation view when there is none yet
+                        const doParam = params.get('do');
+                        if (doParam) {
+                            const targetId = parseInt(doParam, 10);
+                            const existing = (threads || []).find(t =>
+                                t.role === 'initiator' && Number(t.targetUserId) === targetId);
+                            if (existing) {
+                                openThread(existing.id, false);
+                            } else {
+                                const user = (users || []).find(u => Number(u.id) === targetId);
+                                if (user) openNewChat(targetId, user.username);
+                            }
+                        }
+                    });
                 })
                 .catch(() => { window.location.href = '/'; });
 
@@ -309,17 +329,9 @@
                         opt.textContent = u.username;
                         sel.appendChild(opt);
                     });
-
-                    // Deep link: ?do=<userId> preselects the recipient
-                    // (e.g. from a profile picture modal) and focuses the
-                    // message box, ready to type
-                    const doParam = new URLSearchParams(window.location.search).get('do');
-                    if (doParam && sel.querySelector(`option[value="${doParam}"]`)) {
-                        sel.value = doParam;
-                        document.getElementById('composeBody').focus();
-                    }
+                    return d.users || [];
                 })
-                .catch(() => {});
+                .catch(() => []);
         }
 
         function sendNewMessage() {
@@ -358,7 +370,7 @@
 
         // ===== Threads =====
         function loadThreads() {
-            fetch('/api/wiadomosci/threads')
+            return fetch('/api/wiadomosci/threads')
                 .then(r => r.json())
                 .then(d => {
                     const list = document.getElementById('threadsList');
@@ -369,7 +381,7 @@
                                 <div style="font-size: 40px;">🎅</div>
                                 <p class="mb-0" style="opacity: 0.85;">Brak rozmów. Wyślij pierwszą anonimową wiadomość!</p>
                             </div>`;
-                        return;
+                        return threads;
                     }
                     list.innerHTML = threads.map(t => `
                         <div class="thread-row" onclick="openThread(${t.id})">
@@ -383,16 +395,19 @@
                             <div class="thread-last">${escapeHtml(t.lastBody || '')}</div>
                         </div>
                     `).join('');
+                    return threads;
                 })
                 .catch(() => {
                     document.getElementById('threadsList').innerHTML =
                         '<p class="mb-0">Nie udało się załadować rozmów. <a href="#" onclick="loadThreads(); return false;">Spróbuj ponownie</a></p>';
+                    return [];
                 });
         }
 
         // ===== Conversation view =====
         function openThread(threadId, pushHistory = true) {
             currentThreadId = threadId;
+            newChatTargetId = null;
             if (pushHistory) {
                 history.pushState({ rozmowa: threadId }, '', '/wiadomosci?rozmowa=' + threadId);
             }
@@ -401,6 +416,24 @@
             document.getElementById('chatMessages').innerHTML =
                 '<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>';
             loadThreadMessages();
+        }
+
+        // Conversation view toward a person with no thread yet - the
+        // first message sent creates the thread
+        function openNewChat(targetUserId, username) {
+            currentThreadId = null;
+            newChatTargetId = targetUserId;
+            document.getElementById('listView').style.display = 'none';
+            document.getElementById('chatView').style.display = 'block';
+            document.getElementById('chatTitle').innerHTML =
+                `<i class="fas fa-comment-dots" style="color:#7B1FA2;"></i>${escapeHtml(username)}`;
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="text-center py-4" style="opacity: 0.8;">
+                    <div style="font-size: 36px;">🎅</div>
+                    <p class="mb-0" style="font-size: 14px;">Napisz pierwszą anonimową wiadomość do
+                        <strong>${escapeHtml(username)}</strong> - zobaczy tylko Świętego Mikołaja.</p>
+                </div>`;
+            document.getElementById('replyBody').focus();
         }
 
         function closeThread() {
@@ -415,6 +448,7 @@
 
         function showListView(replaceUrl) {
             currentThreadId = null;
+            newChatTargetId = null;
             document.getElementById('chatView').style.display = 'none';
             document.getElementById('listView').style.display = 'block';
             if (replaceUrl) history.replaceState(null, '', '/wiadomosci');
@@ -518,20 +552,34 @@
         function sendReply() {
             const input = document.getElementById('replyBody');
             const body = input.value.trim();
-            if (!body || !currentThreadId) return;
+            if (!body || (!currentThreadId && !newChatTargetId)) return;
 
             const btn = document.getElementById('replyBtn');
             btn.disabled = true;
 
-            fetch(`/api/wiadomosci/threads/${currentThreadId}/messages`, {
+            // New-chat mode: the first message creates the thread
+            const isNew = !currentThreadId && newChatTargetId;
+            const url = isNew
+                ? '/api/wiadomosci/threads'
+                : `/api/wiadomosci/threads/${currentThreadId}/messages`;
+            const payload = isNew
+                ? { targetUserId: newChatTargetId, body }
+                : { body };
+
+            fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ body })
+                body: JSON.stringify(payload)
             })
                 .then(r => r.json())
                 .then(d => {
                     if (d.success) {
                         input.value = '';
+                        if (isNew && d.threadId) {
+                            currentThreadId = d.threadId;
+                            newChatTargetId = null;
+                            history.replaceState({ rozmowa: d.threadId }, '', '/wiadomosci?rozmowa=' + d.threadId);
+                        }
                         loadThreadMessages();
                     } else {
                         showToast(d.error || 'Nie udało się wysłać', 'error');

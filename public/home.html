@@ -332,7 +332,7 @@
     </script>
 
     <!-- Load recipients.js for shared functions (but don't auto-init) -->
-    <script src="recipients.js?v=19&t=1111111111"></script>
+    <script src="recipients.js?v=20&t=1111111111"></script>
 
     <!-- Non-critical scripts (defer to load after page is interactive) -->
     <script src="update-checker.js" defer></script>
@@ -568,7 +568,7 @@
                        <div style="display: none; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
                            ${getEmojiAvatar(recipient.name)}
                        </div>`
-                    : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
+                    : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0; cursor: pointer;" onclick="openProfilePicturePreview(${recipient.id}, '${escapeHtml(recipient.name).replace(/'/g, "\\'")}', null)">
                            ${getEmojiAvatar(recipient.name)}
                        </div>`;
 
@@ -726,7 +726,7 @@
                        <div style="display: none; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
                            ${getEmojiAvatar(recipient.name)}
                        </div>`
-                    : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
+                    : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0; cursor: pointer;" onclick="openProfilePicturePreview(${recipient.id}, '${escapeHtml(recipient.name).replace(/'/g, "\\'")}', null)">
                            ${getEmojiAvatar(recipient.name)}
                        </div>`;
 
@@ -941,7 +941,19 @@
             const previewName = document.getElementById('profilePreviewName');
 
             if (modal && previewImage && previewName) {
-                previewImage.src = profilePictureUrl;
+                const previewEmoji = document.getElementById('profilePreviewEmoji');
+                if (profilePictureUrl) {
+                    previewImage.src = profilePictureUrl;
+                    previewImage.style.display = '';
+                    if (previewEmoji) previewEmoji.style.display = 'none';
+                } else {
+                    // Emoji avatar - show it big instead of a photo
+                    previewImage.style.display = 'none';
+                    if (previewEmoji) {
+                        previewEmoji.textContent = getEmojiAvatar(recipientName);
+                        previewEmoji.style.display = 'block';
+                    }
+                }
                 previewName.textContent = recipientName;
 
                 // "Send anonymous message" - only for people with an
@@ -1333,6 +1345,8 @@
                 </div>
                 <div class="modal-body text-center">
                     <img id="profilePreviewImage" class="profile-preview-image" alt="Zdjęcie profilowe">
+                    <div id="profilePreviewEmoji"
+                         style="display: none; width: 160px; height: 160px; margin: 0 auto; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-size: 76px; line-height: 160px; text-align: center;"></div>
                     <div id="profilePreviewName" class="profile-preview-name mt-3"></div>
                     <a id="profilePreviewMessageLink" href="#" class="btn btn-sm fw-semibold mt-3"
                        style="display: none; background: #7B1FA2; color: #ffffff !important; border-radius: 10px;">

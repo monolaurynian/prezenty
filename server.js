@@ -2579,6 +2579,9 @@ app.get('/api/wiadomosci/threads', requireAuth, async (req, res) => {
                 role: t.initiator_id === userId ? 'initiator' : 'target',
                 // Target sees "Święty Mikołaj"; initiator sees who they wrote to
                 otherLabel: t.initiator_id === userId ? t.target_username : 'Święty Mikołaj 🎅',
+                // The target's id is never a secret (they're the known
+                // party) - lets ?do= deep links find an existing thread
+                targetUserId: t.target_id,
                 lastBody: t.last_body,
                 lastAt: t.last_at,
                 unreadCount: Number(t.unread_count)

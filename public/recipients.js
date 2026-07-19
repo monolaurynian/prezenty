@@ -1172,7 +1172,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                         <div class="recipient-avatar">
                             ${recipient.profile_picture && recipient.profile_picture.trim() !== '' ?
                 `<img src="${getFullProfilePictureUrl(escapeHtml(recipient.profile_picture))}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
-                `<div class="profile-picture-placeholder" onclick="openProfileModal(${recipient.id})" style="cursor: pointer; font-size: 4rem;">
+                `<div class="profile-picture-placeholder" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer; font-size: 4rem;">
                                     ${getEmojiAvatar(recipient.name)}
                                 </div>`
             }
@@ -3493,16 +3493,27 @@ function saveNewProfilePicture() {
 
 function openProfilePicturePreview(recipientId) {
     const recipient = window._allRecipients.find(r => r.id === recipientId);
-    if (!recipient || !recipient.profile_picture || recipient.profile_picture.trim() === '') {
-        return; // Don't open modal for placeholders
-    }
+    if (!recipient) return;
 
     const modal = document.getElementById('profilePreviewModal');
     const previewImage = document.getElementById('profilePreviewImage');
     const previewName = document.getElementById('profilePreviewName');
+    const previewEmoji = document.getElementById('profilePreviewEmoji');
 
     if (modal && previewImage && previewName) {
-        previewImage.src = getFullProfilePictureUrl(recipient.profile_picture);
+        const hasPicture = recipient.profile_picture && recipient.profile_picture.trim() !== '';
+        if (hasPicture) {
+            previewImage.src = getFullProfilePictureUrl(recipient.profile_picture);
+            previewImage.style.display = '';
+            if (previewEmoji) previewEmoji.style.display = 'none';
+        } else {
+            // Emoji avatar - show it big instead of a photo
+            previewImage.style.display = 'none';
+            if (previewEmoji) {
+                previewEmoji.textContent = getEmojiAvatar(recipient.name);
+                previewEmoji.style.display = 'block';
+            }
+        }
         previewName.textContent = recipient.name;
 
         // "Send anonymous message" - only for people with an account
