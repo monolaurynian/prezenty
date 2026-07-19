@@ -612,8 +612,13 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
     z-index: 9999 !important;
     transform: translateY(100%) !important;
     transition: transform 0.3s ease !important;
-    max-height: 60vh !important;
+    /* Tall enough for all items on small phones (60vh clipped the
+       tiles once the menu grew); dvh accounts for mobile browser UI.
+       Scrolls only as a last resort on very small screens. */
+    max-height: 85vh !important;
+    max-height: 85dvh !important;
     overflow-y: auto !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .tab-bar-menu-panel.show {
