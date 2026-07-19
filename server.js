@@ -724,6 +724,65 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Delete account - permanent. Password re-verification required.
+// The person's presence in the FAMILY DATA is preserved: recipients stay
+// (identification unclaimed), presents stay (creator anonymized), but the
+// user's reservations are released and their private data removed.
+app.delete('/api/account', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.status(503).json({ error: 'Niedostępne w trybie demo' });
+    const userId = req.session.userId;
+    const { password } = req.body || {};
+
+    if (!password) {
+        return badRequest(res, 'Podaj hasło, aby potwierdzić usunięcie konta');
+    }
+
+    try {
+        const [rows] = await pool.execute('SELECT * FROM users WHERE id = ?', [userId]);
+        if (rows.length === 0) return notFound(res, 'Nie znaleziono konta');
+        if (!bcrypt.compareSync(password, rows[0].password)) {
+            return res.status(401).json({ error: 'Nieprawidłowe hasło' });
+        }
+
+        console.log(`🗑️ [ACCOUNT] Deleting account ${userId} (${rows[0].username})`);
+
+        // Detach family data instead of destroying it
+        await pool.execute('UPDATE recipients SET identified_by = NULL WHERE identified_by = ?', [userId]);
+        await pool.execute('UPDATE presents SET reserved_by = NULL WHERE reserved_by = ?', [userId]);
+        try {
+            await pool.execute('UPDATE presents SET created_by = NULL WHERE created_by = ?', [userId]);
+        } catch (e) {
+            // created_by may still be NOT NULL on old installs - make it nullable and retry
+            try {
+                await pool.execute('ALTER TABLE presents MODIFY COLUMN created_by INT NULL');
+                await pool.execute('UPDATE presents SET created_by = NULL WHERE created_by = ?', [userId]);
+            } catch (e2) {
+                console.error('⚠️ [ACCOUNT] Could not anonymize created_by:', e2.message);
+            }
+        }
+
+        // Remove private data (tables without FK cascades)
+        try { await pool.execute('DELETE FROM push_subscriptions WHERE user_id = ?', [userId]); } catch (e) {}
+        try { await pool.execute('DELETE FROM notifications WHERE user_id = ? OR actor_id = ?', [userId, userId]); } catch (e) {}
+        try {
+            // Anonymous threads the user participated in (messages cascade)
+            await pool.execute('DELETE FROM anon_threads WHERE initiator_id = ? OR target_id = ?', [userId, userId]);
+        } catch (e) {}
+
+        // Finally the account itself (FK cascades clean the rest)
+        await pool.execute('DELETE FROM users WHERE id = ?', [userId]);
+
+        clearCombinedDataCache();
+        cache.invalidatePresents();
+
+        req.session.destroy(() => {});
+        console.log(`✅ [ACCOUNT] Account ${userId} deleted`);
+        res.json({ success: true });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas usuwania konta');
+    }
+});
+
 // Logout
 app.post('/api/logout', (req, res) => {
     req.session.destroy();

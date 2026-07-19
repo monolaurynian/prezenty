@@ -126,6 +126,34 @@
             <button class="btn btn-outline-secondary" onclick="logout()">
                 <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
             </button>
+
+            <hr style="opacity: 0.15; margin: 18px 0 14px;">
+            <div id="deleteAccountSection">
+                <button class="btn btn-outline-danger btn-sm" onclick="showDeleteAccount()">
+                    <i class="fas fa-user-xmark me-1"></i>Usuń konto
+                </button>
+                <div id="deleteAccountConfirm" class="mt-3" style="display: none;">
+                    <div class="alert alert-danger py-2 px-3" style="font-size: 13px;">
+                        <i class="fas fa-triangle-exclamation me-1"></i>
+                        <strong>To jest nieodwracalne.</strong> Twoje konto, powiadomienia
+                        i anonimowe rozmowy zostaną usunięte, a Twoje rezerwacje zwolnione.
+                        Lista osób i prezenty rodziny pozostaną bez zmian.
+                    </div>
+                    <label class="form-label" for="deletePassword" style="font-size: 14px;">
+                        Potwierdź hasłem:
+                    </label>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <input type="password" class="form-control" id="deletePassword"
+                            autocomplete="current-password" style="max-width: 240px;">
+                        <button class="btn btn-danger fw-semibold" id="deleteAccountBtn" onclick="deleteAccount()">
+                            <i class="fas fa-trash me-1"></i>Usuń na zawsze
+                        </button>
+                        <button class="btn btn-light fw-semibold" style="color:#212529;" onclick="hideDeleteAccount()">
+                            Anuluj
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -537,6 +565,51 @@
         function logout() {
             fetch('/api/logout', { method: 'POST' })
                 .finally(() => { window.location.href = '/'; });
+        }
+
+        function showDeleteAccount() {
+            document.getElementById('deleteAccountConfirm').style.display = 'block';
+        }
+
+        function hideDeleteAccount() {
+            document.getElementById('deleteAccountConfirm').style.display = 'none';
+            document.getElementById('deletePassword').value = '';
+        }
+
+        function deleteAccount() {
+            const password = document.getElementById('deletePassword').value;
+            if (!password) {
+                showToast('Podaj hasło, aby potwierdzić', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('deleteAccountBtn');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Usuwanie...';
+            btn.disabled = true;
+
+            fetch('/api/account', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+                        alert('Twoje konto zostało usunięte. Do zobaczenia! 👋');
+                        window.location.href = '/';
+                    } else {
+                        showToast(d.error || 'Nie udało się usunąć konta', 'error');
+                        btn.innerHTML = original;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(() => {
+                    showToast('Błąd połączenia', 'error');
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                });
         }
     </script>
 
