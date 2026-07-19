@@ -117,7 +117,7 @@
     }
 
     body.has-desktop-nav {
-        padding-left: 268px;
+        padding-left: 292px;
         padding-bottom: 24px !important;
     }
 
@@ -128,7 +128,7 @@
         top: 12px;
         left: 12px;
         bottom: 12px;
-        width: 240px;
+        width: 264px;
         /* Frosted surface - consistent with all app cards */
         background: rgba(255, 255, 255, 0.78);
         backdrop-filter: blur(16px) saturate(160%);
@@ -145,7 +145,48 @@
         font-weight: 700;
         font-size: 18px;
         color: #2d3748;
-        padding: 6px 12px 16px;
+        padding: 6px 12px 12px;
+    }
+
+    /* Profile block: avatar + name, links to settings */
+    .desktop-nav .dnav-profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.04);
+        text-decoration: none;
+        color: #2d3748;
+        transition: background 0.15s ease;
+    }
+
+    .desktop-nav .dnav-profile:hover {
+        background: rgba(0, 0, 0, 0.08);
+        color: #2d3748;
+    }
+
+    .desktop-nav .dnav-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        font-size: 19px;
+    }
+
+    .desktop-nav .dnav-profile-name {
+        font-weight: 600;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .desktop-nav .dnav-item {
@@ -211,23 +252,25 @@
     }
 }
 
-/* --- Desktop with sidebar: remove the mobile-era dark top strips.
-   They span the full viewport and clash with the floating sidebar;
-   the sidebar already provides app identity and current location.
-   Page titles keep their text shadows and stay readable on the photo. --- */
+/* --- Desktop with sidebar: page-title navbars are redundant (the sidebar
+   shows the app name and current page), so they are hidden entirely and
+   content starts at the top, aligned with the sidebar's 12px inset. --- */
 @media (min-width: 992px) {
-    body.has-desktop-nav .fixed-header-bar {
-        display: none !important;
-    }
-
+    body.has-desktop-nav .fixed-header-bar,
     body.has-desktop-nav .app-topbar,
     body.has-desktop-nav .stats-navbar,
     body.has-desktop-nav .leaderboard-navbar,
     body.has-desktop-nav .top-menu-container,
     body.has-desktop-nav nav.navbar {
-        background: none !important;
-        box-shadow: none !important;
-        border: none !important;
-        backdrop-filter: none !important;
+        display: none !important;
+    }
+
+    /* Content top edge aligns with the sidebar top (12px) */
+    body.has-desktop-nav .container.mt-4 {
+        margin-top: 12px !important;
+    }
+
+    body.has-desktop-nav .container > .stats-container:first-child {
+        margin-top: 12px;
     }
 }

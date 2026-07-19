@@ -35,6 +35,11 @@
         nav.setAttribute('aria-label', 'Nawigacja');
 
         let html = '<div class="dnav-title"><i class="ri-gift-2-fill me-2" style="color:#E53935;"></i>Prezenty</div>';
+        // Profile block - filled in by loadProfileBlock() after auth check
+        html += `<a href="/ustawienia" class="dnav-profile" id="dnavProfile" style="display:none;">
+                    <span class="dnav-avatar" id="dnavAvatar"><i class="ri-user-3-line"></i></span>
+                    <span class="dnav-profile-name" id="dnavProfileName"></span>
+                 </a>`;
         for (const item of items) {
             if (item.divider) {
                 html += '<div class="dnav-divider"></div>';
@@ -67,6 +72,28 @@
         });
     }
 
+    function loadProfileBlock() {
+        if (!window.matchMedia('(min-width: 992px)').matches) return;
+        fetch('/api/user/identification')
+            .then(r => (r.ok ? r.json() : null))
+            .then(d => {
+                if (!d) return;
+                const block = document.getElementById('dnavProfile');
+                const avatar = document.getElementById('dnavAvatar');
+                const name = document.getElementById('dnavProfileName');
+                if (!block || !avatar || !name) return;
+
+                name.textContent = d.name || d.username || '';
+                if (d.identifiedRecipient && d.identifiedRecipient.id) {
+                    avatar.innerHTML = `<img src="/api/recipients/${d.identifiedRecipient.id}/profile-picture" alt=""
+                        style="width:100%; height:100%; object-fit:cover;"
+                        onerror="this.parentElement.innerHTML='<i class=&quot;ri-user-3-line&quot;></i>';">`;
+                }
+                block.style.display = 'flex';
+            })
+            .catch(() => { /* not logged in - keep hidden */ });
+    }
+
     function refreshBadge() {
         // Only bother when the sidebar is actually visible
         if (!window.matchMedia('(min-width: 992px)').matches) return;
@@ -85,6 +112,7 @@
 
     function init() {
         build();
+        loadProfileBlock();
         refreshBadge();
         setInterval(refreshBadge, 30000);
     }

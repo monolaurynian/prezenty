@@ -134,10 +134,9 @@
                     // Use soft reload which updates cache without re-rendering
                     softReloadRecipients();
                     
-                    // Show subtle notification
-                    if (typeof showInfoToast === 'function') {
-                        showInfoToast('✨ Dane zaktualizowane');
-                    }
+                    // Silent refresh - a visible toast here competed with the
+                    // optimistic-update toasts (e.g. reserve + undo) and
+                    // stacked two notifications for one user action
                 } else {
                     console.log('[Realtime] softReloadRecipients not available, skipping update');
                 }

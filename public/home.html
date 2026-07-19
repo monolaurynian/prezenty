@@ -50,7 +50,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styles.deduped.min.css">
     <link href="bottom-tab-bar.css?v=32" rel="stylesheet">
-    <link href="app-theme.css?v=7" rel="stylesheet">
+    <link href="app-theme.css?v=8" rel="stylesheet">
     <style>
         body {
             background: url('seba.jpg') no-repeat center center fixed;
@@ -579,8 +579,8 @@
                                             ` : ''}
                                         </div>
                                     </div>
-                                    <button class="btn btn-sm" onclick="reservePresent(event, ${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; color: #ffcc00; border-color: #ffc107; border: 2px solid #ffcc00;">
-                                        <i class="fas fa-bookmark me-1"></i>Zarezerwuj
+                                    <button class="btn btn-sm" onclick="reservePresent(event, ${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; background: #ffc107; color: #212529; border: none; font-weight: 600;">
+                                        <i class="fas fa-bookmark me-1" style="color: #212529;"></i>Zarezerwuj
                                     </button>
                                 </div>
                             `).join('')}
@@ -1253,7 +1253,7 @@
     </div>
 
     <script src="tab-bar-functions.js?v=3"></script>
-    <script src="desktop-nav.js?v=1"></script>
+    <script src="desktop-nav.js?v=2"></script>
 </body>
 
 </html>

@@ -2233,7 +2233,7 @@ function generateReservationButton(present) {
         }
     } else {
         return `
-            <button class="btn btn-outline-warning btn-sm w-100 w-md-auto reserve-btn" 
+            <button class="btn btn-warning btn-sm w-100 w-md-auto reserve-btn" 
                     onclick="handleReserveClick(event, ${present.id}, 'reserve')" 
                     title="Zarezerwuj prezent">
                 <i class="fas fa-bookmark"></i>
@@ -3089,7 +3089,7 @@ function updateButtonOptimistically(button, action) {
         button.className = 'btn btn-danger btn-sm w-100 w-md-auto reserve-btn updating';
         button.innerHTML = '<i class="fas fa-xmark"></i> <span class="d-inline d-md-none ms-1">Usuń rezerwację</span>';
     } else {
-        button.className = 'btn btn-outline-warning btn-sm w-100 w-md-auto reserve-btn updating';
+        button.className = 'btn btn-warning btn-sm w-100 w-md-auto reserve-btn updating';
         button.innerHTML = '<i class="fas fa-bookmark"></i> <span class="ms-1">Zarezerwuj</span>';
     }
     button.disabled = true;
@@ -4042,7 +4042,7 @@ function updatePresentReservationUI(present) {
         presentElement.classList.remove('reserved-by-me');
     } else {
         // Not reserved
-        reserveBtn.className = 'btn btn-outline-warning btn-sm w-100 w-md-auto reserve-btn';
+        reserveBtn.className = 'btn btn-warning btn-sm w-100 w-md-auto reserve-btn';
         reserveBtn.innerHTML = '<i class="fas fa-bookmark"></i> <span class="d-none d-md-inline">Zarezerwuj</span>';
         reserveBtn.setAttribute('onclick', `handleReserveClick(event, ${present.id}, 'reserve')`);
         reserveBtn.setAttribute('title', 'Zarezerwuj prezent');
@@ -4288,7 +4288,7 @@ function generateSinglePresentHTML(present) {
         `;
     } else {
         reserveButtonHTML = `
-            <button class="btn btn-outline-warning btn-sm w-100 w-md-auto reserve-btn" 
+            <button class="btn btn-warning btn-sm w-100 w-md-auto reserve-btn" 
                     onclick="handleReserveClick(event, ${present.id}, 'reserve')" 
                     title="Zarezerwuj prezent">
                 <i class="fas fa-bookmark"></i> <span class="d-none d-md-inline">Zarezerwuj</span>
@@ -4344,7 +4344,8 @@ function showToast(message, type = 'success', action = null) {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'btn btn-sm btn-light toast-action-btn ms-2';
-            btn.style.cssText = 'font-weight: 600; padding: 2px 12px; align-self: center; white-space: nowrap;';
+            // margin-left auto pushes the action to the right edge of the toast
+            btn.style.cssText = 'font-weight: 600; padding: 2px 12px; align-self: center; white-space: nowrap; margin-left: auto !important;';
             btn.textContent = action.label;
             btn.addEventListener('click', () => {
                 const instance = bootstrap.Toast.getInstance(toastElement);
