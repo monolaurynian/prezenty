@@ -17,7 +17,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="styles.deduped.min.css" rel="stylesheet">
-    <link href="app-theme.css?v=6" rel="stylesheet">
+    <link href="app-theme.css?v=7" rel="stylesheet">
     <style>
         html, body { overflow-x: hidden; max-width: 100vw; }
         body {
@@ -33,15 +33,15 @@
             z-index: -1;
         }
         .glass-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px) saturate(180%);
-            -webkit-backdrop-filter: blur(10px) saturate(180%);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(16px) saturate(160%);
+            -webkit-backdrop-filter: blur(16px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
             border-radius: 16px;
-            color: white;
+            color: #2d3748;
         }
-        .glass-card * { color: white; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+        .glass-card * { color: #2d3748; }
         .section-header {
             font-weight: 700;
             font-size: 17px;
@@ -51,27 +51,29 @@
             gap: 8px;
         }
         .reserved-present {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
             border-radius: 12px;
             padding: 14px;
             margin-bottom: 10px;
             transition: opacity 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         }
-        .reserved-present.bought { opacity: 0.75; }
-        .reserved-present .for-whom { font-size: 13px; opacity: 0.85; }
-        .reserved-present .btn { text-shadow: none; }
+        .reserved-present.bought { opacity: 0.7; }
+        .reserved-present .for-whom { font-size: 13px; color: #6b7280 !important; }
         .btn-buy {
-            background: #4CAF50; border: none; color: white; font-weight: 600;
+            background: #4CAF50; border: none; color: white !important; font-weight: 600;
         }
-        .btn-buy:hover { background: #45a049; color: white; }
+        .btn-buy:hover { background: #45a049; color: white !important; }
+        .btn-buy * { color: white !important; }
         .btn-unbuy {
-            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white;
+            background: #eef0f2; border: 1px solid #d1d5db; color: #374151 !important;
         }
         .btn-cancel-res {
-            background: transparent; border: 1px solid rgba(255,99,71,0.7); color: #ffb3a7;
+            background: transparent; border: 1px solid #f0b4ae; color: #c62828 !important;
         }
-        .btn-cancel-res:hover { background: rgba(255,99,71,0.25); color: white; }
+        .btn-cancel-res * { color: #c62828 !important; }
+        .btn-cancel-res:hover { background: #fdecea; }
         .toast-container { z-index: 9999; }
         #successToast, #errorToast, #successToast *, #errorToast * { text-shadow: none; }
     </style>
@@ -90,7 +92,7 @@
         </div>
 
         <div class="glass-card p-4">
-            <h4 class="mb-1"><i class="fas fa-bookmark me-2" style="color: #FFB74D;"></i>Zarezerwowane Prezenty</h4>
+            <h4 class="mb-1"><i class="fas fa-bookmark me-2" style="color: #EF6C00;"></i>Zarezerwowane Prezenty</h4>
             <p class="mb-2" style="opacity: 0.85;">Prezenty, które zarezerwowałeś(-aś) dla innych.</p>
 
             <div id="reservedContent">
@@ -157,7 +159,7 @@
                     document.getElementById('reservedContent').innerHTML = `
                         <div class="text-center py-4">
                             <p>Nie udało się załadować rezerwacji.</p>
-                            <button class="btn btn-outline-light btn-sm" onclick="loadReserved()">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="loadReserved()">
                                 <i class="fas fa-rotate-right me-1"></i>Spróbuj ponownie
                             </button>
                         </div>`;
@@ -187,7 +189,7 @@
                 <div class="reserved-present ${p.is_checked ? 'bought' : ''}" data-id="${p.id}">
                     <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
                         <div class="flex-grow-1">
-                            <div class="fw-semibold">${p.is_checked ? '<i class="fas fa-check-circle me-1" style="color:#7CFC90;"></i>' : ''}${escapeHtml(p.title)}</div>
+                            <div class="fw-semibold">${p.is_checked ? '<i class="fas fa-check-circle me-1" style="color:#2e7d32;"></i>' : ''}${escapeHtml(p.title)}</div>
                             <div class="for-whom"><i class="fas fa-user me-1"></i>dla: ${escapeHtml(p.recipient_name || 'nieznana osoba')}</div>
                             ${p.comments ? `<div style="font-size:13px; opacity:0.8;"><i class="fas fa-info-circle me-1"></i>${escapeHtml(p.comments)}</div>` : ''}
                         </div>
@@ -201,9 +203,9 @@
                 </div>`;
 
             content.innerHTML = `
-                ${toBuy.length ? `<div class="section-header"><i class="fas fa-cart-shopping" style="color:#FFB74D;"></i>Do kupienia (${toBuy.length})</div>` : ''}
+                ${toBuy.length ? `<div class="section-header"><i class="fas fa-cart-shopping" style="color:#EF6C00;"></i>Do kupienia (${toBuy.length})</div>` : ''}
                 ${toBuy.map(presentHTML).join('')}
-                ${bought.length ? `<div class="section-header"><i class="fas fa-check-circle" style="color:#7CFC90;"></i>Kupione (${bought.length})</div>` : ''}
+                ${bought.length ? `<div class="section-header"><i class="fas fa-check-circle" style="color:#2e7d32;"></i>Kupione (${bought.length})</div>` : ''}
                 ${bought.map(presentHTML).join('')}`;
         }
 

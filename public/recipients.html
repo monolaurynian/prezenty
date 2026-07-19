@@ -37,7 +37,7 @@
     <link href="styles.deduped.min.css" rel="stylesheet">
     <link href="aws-design.css?v=3" rel="stylesheet">
     <link href="bottom-tab-bar.css?v=32" rel="stylesheet">
-    <link href="app-theme.css?v=6" rel="stylesheet">
+    <link href="app-theme.css?v=7" rel="stylesheet">
     <link href="filters.css?v=6" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
@@ -78,29 +78,30 @@
             background: rgba(0, 0, 0, 0.3) !important;
         }
 
-        /* Add transparency and blur to all cards - 0.5 transparency */
+        /* Frosted cards - unified app look */
         .recipients-page .card,
         .recipients-page .main-card,
         .recipients-page .compact-card,
         .recipients-page .aws-action-card,
         .recipients-page .aws-main-content {
-            background: rgba(255, 255, 255, 0.5) !important;
-            backdrop-filter: blur(10px) !important;
+            background: rgba(255, 255, 255, 0.78) !important;
+            backdrop-filter: blur(16px) saturate(160%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
         }
 
-        /* Add transparency and blur to recipient cards with glass effect */
+        /* Recipient cards - same frosted surface */
         .recipients-page .recipient-card {
-            background: rgba(255, 255, 255, 0.15) !important;
-            backdrop-filter: blur(10px) saturate(180%) !important;
-            -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
-            border: 2px solid rgba(255, 255, 255, 0.3) !important;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+            background: rgba(255, 255, 255, 0.78) !important;
+            backdrop-filter: blur(16px) saturate(160%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
         }
 
-        /* Add transparency and blur to modals - 0.5 transparency */
+        /* Frosted modals */
         .recipients-page .modal-content {
-            background: rgba(255, 255, 255, 0.5) !important;
-            backdrop-filter: blur(10px) !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(16px) !important;
         }
         
         /* Gray text with white shadow in modals */

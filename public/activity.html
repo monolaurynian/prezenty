@@ -31,7 +31,7 @@
     <link href="styles.deduped.min.css" rel="stylesheet">
     <link href="aws-design.css" rel="stylesheet">
     <link href="bottom-tab-bar.css?v=32" rel="stylesheet">
-    <link href="app-theme.css?v=6" rel="stylesheet">
+    <link href="app-theme.css?v=7" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
         .tab-bar-notifications-panel.show {
@@ -66,22 +66,27 @@
             background: rgba(0, 0, 0, 0.3) !important;
         }
 
-        /* Add transparency and blur to cards with glass effect */
+        /* Frosted cards - unified app look */
         .activity-page .card,
         .activity-page .main-card {
-            background: rgba(255, 255, 255, 0.15) !important;
-            backdrop-filter: blur(10px) saturate(180%) !important;
-            -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
-            border: 2px solid rgba(255, 255, 255, 0.3) !important;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
-            color: white !important;
+            background: rgba(255, 255, 255, 0.78) !important;
+            backdrop-filter: blur(16px) saturate(160%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+            color: #2d3748 !important;
         }
         
-        /* White text with shadow for all elements in cards */
+        /* Dark text for all elements in frosted cards */
         .activity-page .card *,
         .activity-page .main-card * {
-            color: white !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+            color: #2d3748 !important;
+            text-shadow: none !important;
+        }
+
+        /* Links inside notifications keep an accent color */
+        .activity-page .notification-message a {
+            color: #1E88E5 !important;
         }
         
         /* White text for primary buttons */
@@ -275,26 +280,24 @@
             }
         }
         
-        /* Activity page notification styles - Glass morphism */
+        /* Activity page notification styles - frosted list rows */
         .activity-page .notification-item {
-            background: rgba(255, 255, 255, 0.15) !important;
-            backdrop-filter: blur(10px) saturate(180%) !important;
-            -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
-            border: 2px solid rgba(255, 255, 255, 0.3) !important;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+            background: rgba(255, 255, 255, 0.75) !important;
+            border: 1px solid rgba(0, 0, 0, 0.06) !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
         }
         
         .activity-page .notification-item:hover {
-            background: rgba(255, 255, 255, 0.25) !important;
-            border-color: rgba(255, 255, 255, 0.5) !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-color: rgba(0, 0, 0, 0.1) !important;
         }
         
         .activity-page .notification-item.unread {
-            background: rgba(255, 255, 255, 0.2) !important;
+            background: rgba(244, 67, 54, 0.07) !important;
         }
         
         .activity-page .notification-item.unread:hover {
-            background: rgba(255, 255, 255, 0.3) !important;
+            background: rgba(244, 67, 54, 0.12) !important;
         }
     </style>
 </head>
