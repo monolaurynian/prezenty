@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zarządzanie osobami - Życzenia Prezentowe</title>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="theme-color" content="#F44336">
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="seba_logo.png">
+    <link rel="apple-touch-icon" href="seba_logo.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.deduped.min.css" rel="stylesheet">
+    <link href="app-theme.css?v=9" rel="stylesheet">
+    <style>
+        html, body { overflow-x: hidden; max-width: 100vw; }
+        body {
+            background-image: url('seba.jpg') !important;
+            background-attachment: fixed !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+        }
+        .background-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
+        .glass-card { margin-bottom: 20px; padding: 24px; }
+        .person-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .person-name { font-weight: 700; font-size: 17px; }
+        .present-row {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-top: 10px;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .present-row .muted { font-size: 13px; color: #6b7280; }
+        .toast-container { z-index: 9999; }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+
+    <div class="container mt-4 mb-5" style="max-width: 720px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="/ustawienia" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Ustawienia
+            </a>
+        </div>
+
+        <div class="glass-card">
+            <h4 class="mb-1"><i class="fas fa-users-gear me-2"></i>Zarządzanie osobami</h4>
+            <p style="color: #6b7280; font-size: 14px;">
+                Osoby, których nikt nie zidentyfikował jako siebie. Możesz edytować i usuwać
+                ich prezenty albo usunąć całą osobę.
+            </p>
+            <div id="peopleContent">
+                <div class="text-center py-4"><div class="spinner-border text-secondary"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body"><i class="fas fa-check-circle me-2"></i><span id="successToastMessage"></span></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body"><i class="fas fa-exclamation-circle me-2"></i><span id="errorToastMessage"></span></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let people = [];
+        let presents = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/auth')
+                .then(r => r.json())
+                .then(d => {
+                    if (!d.authenticated) { window.location.href = '/'; return; }
+                    loadData();
+                })
+                .catch(() => { window.location.href = '/'; });
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : String(text);
+            return div.innerHTML;
+        }
+
+        function showToast(message, type) {
+            const el = document.getElementById(`${type}Toast`);
+            document.getElementById(`${type}ToastMessage`).textContent = message;
+            new bootstrap.Toast(el, { autohide: true, delay: type === 'error' ? 5000 : 3000 }).show();
+        }
+
+        function loadData() {
+            Promise.all([
+                fetch('/api/recipients').then(r => r.json()),
+                fetch('/api/presents/all').then(r => r.json())
+            ])
+                .then(([recipients, allPresents]) => {
+                    // Only unverified (unidentified) people can be managed here
+                    people = (Array.isArray(recipients) ? recipients : []).filter(r => !r.identified_by);
+                    presents = Array.isArray(allPresents) ? allPresents : [];
+                    render();
+                })
+                .catch(() => {
+                    document.getElementById('peopleContent').innerHTML = `
+                        <div class="text-center py-4">
+                            <p>Nie udało się załadować danych.</p>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="loadData()">
+                                <i class="fas fa-rotate-right me-1"></i>Spróbuj ponownie
+                            </button>
+                        </div>`;
+                });
+        }
+
+        function render() {
+            const content = document.getElementById('peopleContent');
+
+            if (people.length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-4">
+                        <div style="font-size: 42px;">👥</div>
+                        <p class="mt-2 mb-0" style="color:#6b7280;">Wszystkie osoby są zidentyfikowane - nie ma tu nic do zarządzania.</p>
+                    </div>`;
+                return;
+            }
+
+            content.innerHTML = people.map(person => {
+                const theirPresents = presents.filter(p => p.recipient_id === person.id);
+                return `
+                    <div class="mt-4" data-person="${person.id}">
+                        <div class="person-header">
+                            <span class="person-name"><i class="fas fa-user me-2" style="color:#6b7280;"></i>${escapeHtml(person.name)}
+                                <span style="font-weight:400; color:#6b7280; font-size:13px;">(${theirPresents.length} prezentów)</span>
+                            </span>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deletePerson(${person.id}, '${escapeHtml(person.name).replace(/'/g, "\\'")}')">
+                                <i class="fas fa-user-xmark me-1"></i>Usuń osobę
+                            </button>
+                        </div>
+                        ${theirPresents.map(p => presentRow(p)).join('')}
+                        ${theirPresents.length === 0 ? '<div class="present-row muted">Brak prezentów</div>' : ''}
+                    </div>`;
+            }).join('');
+        }
+
+        function presentRow(p) {
+            return `
+                <div class="present-row" data-present="${p.id}">
+                    <div class="d-flex justify-content-between gap-2 flex-wrap align-items-start">
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="fw-semibold">${escapeHtml(p.title)}</div>
+                            ${p.comments ? `<div class="muted">${escapeHtml(p.comments)}</div>` : ''}
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="startEdit(${p.id})" title="Edytuj">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deletePresent(${p.id}, '${escapeHtml(p.title).replace(/'/g, "\\'")}')" title="Usuń">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function startEdit(presentId) {
+            const p = presents.find(x => x.id === presentId);
+            const row = document.querySelector(`[data-present="${presentId}"]`);
+            if (!p || !row) return;
+
+            row.innerHTML = `
+                <div class="d-flex flex-column gap-2">
+                    <input type="text" class="form-control form-control-sm" id="editTitle-${presentId}" value="${escapeHtml(p.title)}" placeholder="Nazwa prezentu">
+                    <textarea class="form-control form-control-sm" id="editComments-${presentId}" rows="2" placeholder="Komentarz (opcjonalnie)">${escapeHtml(p.comments || '')}</textarea>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-sm" onclick="saveEdit(${presentId})">
+                            <i class="fas fa-check me-1"></i>Zapisz
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="render()">Anuluj</button>
+                    </div>
+                </div>`;
+        }
+
+        function saveEdit(presentId) {
+            const p = presents.find(x => x.id === presentId);
+            const title = document.getElementById(`editTitle-${presentId}`).value.trim();
+            const comments = document.getElementById(`editComments-${presentId}`).value.trim();
+            if (!title) { showToast('Nazwa prezentu jest wymagana', 'error'); return; }
+
+            fetch(`/api/presents/${presentId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, recipient_id: p.recipient_id, comments })
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        p.title = title;
+                        p.comments = comments;
+                        render();
+                        showToast('Prezent zaktualizowany', 'success');
+                    } else {
+                        showToast(d.error || 'Nie udało się zapisać zmian', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+        }
+
+        function deletePresent(presentId, title) {
+            if (!confirm(`Usunąć prezent "${title}"?`)) return;
+            fetch(`/api/presents/${presentId}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        presents = presents.filter(p => p.id !== presentId);
+                        render();
+                        showToast('Prezent usunięty', 'success');
+                    } else {
+                        showToast(d.error || 'Nie udało się usunąć prezentu', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+        }
+
+        function deletePerson(personId, name) {
+            const count = presents.filter(p => p.recipient_id === personId).length;
+            if (!confirm(`Usunąć osobę "${name}"?${count ? ` Usunięte zostaną też ${count} prezenty tej osoby.` : ''}`)) return;
+            fetch(`/api/recipients/${personId}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        people = people.filter(p => p.id !== personId);
+                        presents = presents.filter(p => p.recipient_id !== personId);
+                        render();
+                        showToast(`Usunięto: ${name}`, 'success');
+                    } else {
+                        showToast(d.error || 'Nie udało się usunąć osoby', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+        }
+    </script>
+    <script src="desktop-nav.js?v=2"></script>
+</body>
+</html>

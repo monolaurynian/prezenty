@@ -274,3 +274,32 @@
         margin-top: 12px;
     }
 }
+
+/* --- Reservation design language: orange --- */
+.btn.btn-reserve {
+    background: #F57C00;
+    border: none;
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+.btn.btn-reserve:hover,
+.btn.btn-reserve:focus {
+    background: #EF6C00;
+    color: #ffffff !important;
+}
+
+.btn.btn-reserve.btn-reserve * {
+    color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+/* Presents reserved by me: orange highlight instead of yellow */
+.present-item.reserved-by-me {
+    background-color: #fff3e0 !important;
+    border-left: 4px solid #F57C00 !important;
+}
+
+.present-item.reserved-by-me .present-title {
+    color: #e65100 !important;
+}
