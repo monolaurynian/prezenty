@@ -2391,6 +2391,33 @@ async function ensureAnonMessageTables() {
             FOREIGN KEY (thread_id) REFERENCES anon_threads(id) ON DELETE CASCADE
         )
     `);
+    // Merge duplicate threads (same initiator -> same target) left over
+    // from before thread reuse existed: all messages move into the oldest
+    // thread so each conversation pair has exactly one thread
+    try {
+        const [dupes] = await pool.execute(`
+            SELECT initiator_id, target_id, MIN(id) AS keep_id, COUNT(*) AS cnt
+            FROM anon_threads
+            GROUP BY initiator_id, target_id
+            HAVING cnt > 1
+        `);
+        for (const d of dupes) {
+            await pool.execute(`
+                UPDATE anon_messages m
+                JOIN anon_threads t ON t.id = m.thread_id
+                SET m.thread_id = ?
+                WHERE t.initiator_id = ? AND t.target_id = ? AND t.id != ?
+            `, [d.keep_id, d.initiator_id, d.target_id, d.keep_id]);
+            await pool.execute(
+                'DELETE FROM anon_threads WHERE initiator_id = ? AND target_id = ? AND id != ?',
+                [d.initiator_id, d.target_id, d.keep_id]
+            );
+            console.log(`🔧 [WIADOMOSCI] Merged ${d.cnt} threads for pair ${d.initiator_id}->${d.target_id} into #${d.keep_id}`);
+        }
+    } catch (mergeErr) {
+        console.error('⚠️ [WIADOMOSCI] Thread merge migration failed (non-fatal):', mergeErr.message);
+    }
+
     anonTablesEnsured = true;
     console.log('✅ [WIADOMOSCI] Anonymous message tables ready');
 }
@@ -2503,7 +2530,7 @@ app.post('/api/wiadomosci/threads', requireAuth, async (req, res) => {
         // instead of starting a new one each time
         let threadId;
         const [existing] = await pool.execute(
-            'SELECT id FROM anon_threads WHERE initiator_id = ? AND target_id = ? ORDER BY id DESC LIMIT 1',
+            'SELECT id FROM anon_threads WHERE initiator_id = ? AND target_id = ? ORDER BY id ASC LIMIT 1',
             [userId, targetUserId]
         );
         if (existing.length > 0) {
