@@ -8,6 +8,10 @@ let allPresents = [];
 let activeStatusFilter = 'all';
 let activePersonFilter = 'all';
 
+// Deep link support: ?osoba=<name> pre-selects the person filter
+// (applied once, after the dropdown is first populated)
+let urlPersonFilterApplied = false;
+
 function populatePersonFilter() {
     const select = document.getElementById('personFilter');
     if (!select) return;
@@ -23,11 +27,47 @@ function populatePersonFilter() {
         select.appendChild(option);
     });
     
+    // Re-select the active filter (repopulating resets the dropdown)
+    if (activePersonFilter !== 'all') {
+        select.value = activePersonFilter;
+    }
+    
     console.log('[Filter] Populated person filter with', allRecipients.length, 'recipients');
+
+    // Apply ?osoba=<name> from the URL on first load
+    if (!urlPersonFilterApplied) {
+        urlPersonFilterApplied = true;
+        const osobaParam = new URLSearchParams(window.location.search).get('osoba');
+        if (osobaParam) {
+            const match = allRecipients.find(r =>
+                r.name.toLowerCase() === osobaParam.toLowerCase());
+            if (match) {
+                select.value = match.id;
+                activePersonFilter = String(match.id);
+                console.log('[Filter] Pre-filtered from URL:', match.name);
+                applyAllFilters();
+            }
+        }
+    }
+}
+
+// Keep the URL in sync so the current filter is shareable / survives reload
+function syncPersonFilterToUrl() {
+    try {
+        const url = new URL(window.location.href);
+        const recipient = allRecipients.find(r => String(r.id) === String(activePersonFilter));
+        if (activePersonFilter === 'all' || !recipient) {
+            url.searchParams.delete('osoba');
+        } else {
+            url.searchParams.set('osoba', recipient.name);
+        }
+        history.replaceState(null, '', url);
+    } catch (e) { /* URL API unavailable - skip silently */ }
 }
 
 function applyPersonFilter(personId) {
     activePersonFilter = personId;
+    syncPersonFilterToUrl();
     applyAllFilters();
 }
 

@@ -1173,10 +1173,9 @@
         }
 
         function navigateToUserInRecipients(username) {
-            // Store the username to scroll to in sessionStorage
-            sessionStorage.setItem('scrollToRecipient', username);
-            // Navigate to recipients page with a hash to trigger scroll
-            window.location.href = '/recipients.html?scrollTo=' + encodeURIComponent(username);
+            // Open the recipients page pre-filtered to this person
+            // (filters.js picks up ?osoba= and applies the person filter)
+            window.location.href = '/recipients.html?osoba=' + encodeURIComponent(username);
         }
 
         // Calculate days to Christmas
