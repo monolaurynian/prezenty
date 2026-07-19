@@ -38,7 +38,8 @@ function populatePersonFilter() {
     // param once the list actually has people to match against)
     if (!urlPersonFilterApplied && allRecipients.length > 0) {
         urlPersonFilterApplied = true;
-        const osobaParam = new URLSearchParams(window.location.search).get('osoba');
+        const search = new URLSearchParams(window.location.search);
+        const osobaParam = search.get('osoba');
         if (osobaParam) {
             const match = allRecipients.find(r =>
                 r.name.toLowerCase() === osobaParam.toLowerCase());
@@ -47,6 +48,13 @@ function populatePersonFilter() {
                 activePersonFilter = String(match.id);
                 console.log('[Filter] Pre-filtered from URL:', match.name);
             }
+        }
+
+        // ?prezent=<id> (notification links): highlight the present once
+        // the filtered view is in place - no scrolling through the list
+        const prezentParam = search.get('prezent');
+        if (prezentParam && typeof window.highlightPresentItem === 'function') {
+            setTimeout(() => window.highlightPresentItem(parseInt(prezentParam, 10)), 100);
         }
     }
 

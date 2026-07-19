@@ -171,7 +171,8 @@ function getNotificationMessage(notif) {
     const actor = notif.actor_username || 'Ktoś';
     const presentTitle = data.presentTitle || 'prezent';
     const presentId = data.presentId;
-    const presentLink = presentId ? `<a href="#" onclick="scrollToPresentFromNotification(${presentId}); return false;" style="color: #2196F3; text-decoration: underline; cursor: pointer;"><strong>${presentTitle}</strong></a>` : `<strong>${presentTitle}</strong>`;
+    const recipientEnc = encodeURIComponent(data.recipientName || '');
+    const presentLink = presentId ? `<a href="#" onclick="scrollToPresentFromNotification(${presentId}, '${recipientEnc}'); return false;" style="color: #2196F3; text-decoration: underline; cursor: pointer;"><strong>${presentTitle}</strong></a>` : `<strong>${presentTitle}</strong>`;
     
     switch(notif.type) {
         case 'recipient_added':
@@ -193,47 +194,65 @@ function getNotificationMessage(notif) {
     }
 }
 
-// Scroll to present from notification
-function scrollToPresentFromNotification(presentId) {
+// Highlight a present item in place (no scrolling) - retries briefly in
+// case the list is re-rendering when called
+function highlightPresentItem(presentId, retries = 0) {
+    const element = document.querySelector(`.present-item[data-id="${presentId}"]`);
+    if (element) {
+        element.classList.add('highlight-flash');
+        element.style.transition = 'background-color 0.3s ease';
+        const originalBg = element.style.backgroundColor;
+        element.style.backgroundColor = 'rgba(33, 150, 243, 0.18)';
+        setTimeout(() => {
+            element.style.backgroundColor = originalBg;
+            element.classList.remove('highlight-flash');
+        }, 2500);
+        console.log('[Notification] Highlighted present:', presentId);
+    } else if (retries < 10) {
+        setTimeout(() => highlightPresentItem(presentId, retries + 1), 200);
+    }
+}
+
+// Open a present from a notification: instead of scrolling through the
+// full list, the recipients page is filtered to the present's recipient
+// and the present is highlighted in place.
+// recipientNameEnc is encodeURIComponent()-encoded (safe for inline
+// onclick attributes regardless of quotes in names).
+function scrollToPresentFromNotification(presentId, recipientNameEnc) {
+    const recipientName = recipientNameEnc ? decodeURIComponent(recipientNameEnc) : null;
+
     // Close the notifications panel
     const panel = document.getElementById('notificationsPanel') || document.getElementById('tabBarNotificationsPanel');
     if (panel && (panel.classList.contains('show') || panel.style.transform === 'translateY(0)')) {
         toggleNotificationsPanel();
     }
-    
-    // Find the present element by data-id attribute
-    const presentElement = document.querySelector(`.present-item[data-id="${presentId}"]`);
-    if (presentElement) {
-        // Scroll to the element with retry to handle privacy screen loading
-        const scrollToPresentWithRetry = (retries = 0) => {
-            const element = document.querySelector(`.present-item[data-id="${presentId}"]`);
-            if (element) {
-                // Scroll to the element
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-                // Highlight the element briefly
-                element.style.transition = 'background-color 0.3s ease';
-                const originalBg = element.style.backgroundColor;
-                element.style.backgroundColor = 'rgba(33, 150, 243, 0.2)';
-                setTimeout(() => {
-                    element.style.backgroundColor = originalBg;
-                }, 2000);
-                
-                console.log('[Notification] Scrolled to present:', presentId);
-            } else if (retries < 3) {
-                // Retry after a short delay to account for privacy screen loading
-                setTimeout(() => scrollToPresentWithRetry(retries + 1), 200);
+
+    // Already on the recipients page with filters available: apply the
+    // person filter in place, then highlight
+    const onRecipientsPage = !!document.getElementById('recipientsList');
+    if (onRecipientsPage && typeof window.applyPersonFilter === 'function') {
+        if (recipientName) {
+            const select = document.getElementById('personFilter');
+            if (select) {
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].textContent === recipientName) {
+                        select.value = select.options[i].value;
+                        window.applyPersonFilter(select.options[i].value);
+                        break;
+                    }
+                }
             }
-        };
-        
-        scrollToPresentWithRetry();
-    } else {
-        // If present element not found, navigate to recipients page
-        console.warn('[Notification] Present element not found on current page, navigating to recipients...');
-        // Store the present ID to scroll to after page load
-        sessionStorage.setItem('scrollToPresentId', presentId);
-        window.location.href = '/recipients.html';
+        }
+        highlightPresentItem(presentId);
+        return;
     }
+
+    // Elsewhere: open the recipients page prefiltered; ?prezent= makes
+    // filters.js highlight the present after the filter is applied
+    const params = new URLSearchParams();
+    if (recipientName) params.set('osoba', recipientName);
+    params.set('prezent', presentId);
+    window.location.href = '/recipients.html?' + params.toString();
 }
 
 // Get time ago string

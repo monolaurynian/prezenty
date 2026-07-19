@@ -463,8 +463,11 @@
             if (linkified !== safeTitle) {
                 return `<strong>"${linkified}"</strong>`;
             }
+            // Opens the recipients page filtered to the present's recipient
+            // with the present highlighted (see tab-bar-functions.js)
+            const recipientEnc = encodeURIComponent(data.recipientName || '');
             return data.presentId ?
-                `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}); return false;" style="color: ${color}; text-decoration: underline;"><strong>"${safeTitle}"</strong></a>` :
+                `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}, '${recipientEnc}'); return false;" style="color: ${color}; text-decoration: underline;"><strong>"${safeTitle}"</strong></a>` :
                 `<strong>"${safeTitle}"</strong>`;
         }
 
@@ -996,7 +999,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=5"></script>
+    <script src="tab-bar-functions.js?v=6"></script>
     <script src="desktop-nav.js?v=2"></script>
 </body>
 </html>
