@@ -71,9 +71,18 @@
         }
 
         .stats-navbar {
-            /* Unified black-fade top bar (see app-theme.css) */
-            padding: 1rem 0;
+            /* Unified black-fade top bar (see app-theme.css).
+               Safe-area padding keeps content (incl. the avatar) clear
+               of the phone's status bar */
+            padding: calc(1rem + env(safe-area-inset-top, 0px)) 0 1rem;
             margin-bottom: 2rem;
+        }
+
+        /* Make sure the avatar is never clipped by the navbar edges */
+        .stats-navbar,
+        .stats-navbar .container-fluid {
+            overflow: visible;
+            min-height: 56px;
         }
 
         .stats-navbar .container-fluid {
@@ -924,7 +933,7 @@
         <div class="tab-bar-container">
             <a href="/" class="tab-item home-tab active">
                 <i class="ri-home-fill"></i>
-                <span>Strona Główna</span>
+                <span>Główna</span>
             </a>
             <a href="#" class="tab-item activity-tab" onclick="toggleNotificationsPanel(); return false;">
                 <div class="tab-icon-wrapper">
@@ -940,7 +949,7 @@
             </a>
             <a href="formularz.html" class="tab-item form-tab">
                 <i class="ri-file-list-3-line"></i>
-                <span>Dodaj Prezent</span>
+                <span>Dodaj</span>
             </a>
         </div>
         <div class="tab-fab" onclick="toggleTabBarMenu()">
