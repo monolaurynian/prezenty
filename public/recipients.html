@@ -2302,7 +2302,7 @@
     </script>
 
     <!-- Filters -->
-    <script src="filters.js?v=3"></script>
+    <script src="filters.js?v=4"></script>
 
     <!-- Debug script (temporary - remove after fixing) -->
     <script src="profile-picture-debug.js"></script>
@@ -2367,7 +2367,12 @@
             </button>
         </div>
         <div class="tab-bar-menu-content">
-            <!-- Primary actions - kept in easy thumb reach -->
+            <!-- Primary actions - kept in easy thumb reach.
+                 Same items on every page so the menu is predictable -->
+            <a href="recipients.html" class="tab-bar-menu-item">
+                <i class="ri-gift-2-line"></i>
+                <span>Wszystkie prezenty</span>
+            </a>
             <a href="#" class="tab-bar-menu-item add-present-item" onclick="openAddPresentModal(); toggleTabBarMenu(); return false;">
                 <i class="ri-gift-line"></i>
                 <span>Dodaj Prezent</span>

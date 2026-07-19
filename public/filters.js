@@ -34,8 +34,9 @@ function populatePersonFilter() {
     
     console.log('[Filter] Populated person filter with', allRecipients.length, 'recipients');
 
-    // Apply ?osoba=<name> from the URL on first load
-    if (!urlPersonFilterApplied) {
+    // Apply ?osoba=<name> from the URL on first load (only consume the
+    // param once the list actually has people to match against)
+    if (!urlPersonFilterApplied && allRecipients.length > 0) {
         urlPersonFilterApplied = true;
         const osobaParam = new URLSearchParams(window.location.search).get('osoba');
         if (osobaParam) {
@@ -48,6 +49,13 @@ function populatePersonFilter() {
                 applyAllFilters();
             }
         }
+    } else if (activePersonFilter !== 'all' || activeStatusFilter !== 'all') {
+        // The list re-renders when fresh DB data replaces the cached
+        // FastLoad view - that new DOM has no display:none styles, so the
+        // active filters must be re-applied or the page "snaps back" to
+        // showing everyone.
+        console.log('[Filter] Re-applying filters after list re-render');
+        applyAllFilters();
     }
 }
 
