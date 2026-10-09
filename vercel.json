@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 30
+      }
     }
   ],
   "routes": [
@@ -15,10 +18,5 @@
   "env": {
     "NODE_ENV": "production",
     "DATABASE_URL": "<your_postgres_connection_string>"
-  },
-  "functions": {
-    "server.js": {
-      "maxDuration": 30
-    }
   }
-} 
+}
