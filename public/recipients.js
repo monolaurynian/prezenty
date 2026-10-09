@@ -2452,7 +2452,7 @@ function convertUrlsToLinks(text) {
                 displayText = cleanUrl.substring(0, 47) + '...';
             }
 
-            return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2196F3; text-decoration: underline; word-break: break-all; display: inline-block;">${displayText}</a>`;
+            return `<a href="${cleanUrl}" class="present-link" title="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #1565C0; text-decoration: underline; display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${displayText}</a>`;
         }).join('<br>');
 
         // Replace all URLs with placeholder

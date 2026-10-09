@@ -635,20 +635,20 @@ function displayMyPresents(presents) {
     
     presents.forEach(present => {
         html += `
-            <div class="list-group-item" data-present-id="${present.id}" style="background: rgba(255,255,255,0.18); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.35); border-radius: 14px; margin-bottom: 10px;">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1" style="min-width: 0; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
-                        <h6 class="mb-1" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">${makeLinksClickable(escapeHtml(present.title))}</h6>
-                        ${present.comments ? `<p class="mb-1 text-muted small" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">${makeLinksClickable(escapeHtml(present.comments))}</p>` : ''}
-                        <small class="text-muted">
+            <div class="list-group-item my-present-item" data-present-id="${present.id}">
+                <div class="d-flex justify-content-between align-items-start my-present-row">
+                    <div class="flex-grow-1 my-present-body">
+                        <h6 class="mb-1 my-present-title">${makeLinksClickable(escapeHtml(present.title))}</h6>
+                        ${present.comments ? `<p class="mb-1 my-present-comments">${makeLinksClickable(escapeHtml(present.comments))}</p>` : ''}
+                        <small class="my-present-date">
                             <i class="fas fa-calendar me-1"></i>${formatDate(present.created_at)}
                         </small>
                     </div>
-                    <div class="btn-group-vertical ms-3">
-                        <button class="btn btn-sm btn-outline-primary" onclick="openEditPresentModal(${present.id}, '${escapeHtml(present.title)}', '${escapeHtml(present.comments || '')}', ${present.recipient_id})">
+                    <div class="btn-group-vertical ms-2 my-present-actions">
+                        <button class="btn btn-sm btn-outline-primary" aria-label="Edytuj prezent" onclick="openEditPresentModal(${present.id}, '${escapeHtml(present.title)}', '${escapeHtml(present.comments || '')}', ${present.recipient_id})">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deletePresent(${present.id})">
+                        <button class="btn btn-sm btn-outline-danger" aria-label="Usuń prezent" onclick="deletePresent(${present.id})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -686,7 +686,7 @@ function makeLinksClickable(text) {
             if (cleanUrl.length > 60) {
                 displayText = cleanUrl.substring(0, 57) + '...';
             }
-            return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: flex-start;"><span style="margin-right: 4px; flex-shrink: 0;">🔗</span><a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2196F3; text-decoration: underline; word-break: break-all;">${escapeHtml(displayText)}</a></li>`;
+            return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: center; min-width: 0;"><span style="margin-right: 4px; flex-shrink: 0;">🔗</span><a href="${cleanUrl}" class="my-present-link" title="${escapeHtml(cleanUrl)}" target="_blank" rel="noopener noreferrer" style="color: #0D47A1; text-decoration: underline; display: block; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(displayText)}</a></li>`;
         }).join('');
 
         const urlList = `<ul style="margin: 8px 0 8px 0; padding-left: 0; list-style: none;">${linksList}</ul>`;

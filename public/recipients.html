@@ -244,6 +244,75 @@
             }
         }
 
+        /* Present rows: readable titles, no mid-word breaks. The legacy
+           word-break: break-word / break-all rules let the title collapse
+           to single letters next to the nowrap action buttons. */
+        .recipients-page .present-item .present-title,
+        .recipients-page .present-item .present-comments {
+            word-break: normal !important;
+            overflow-wrap: break-word !important;
+            hyphens: manual;
+        }
+        .recipients-page .present-item .present-title {
+            line-height: 1.4 !important;
+        }
+        .recipients-page .present-item:not(.checked):not(.reserved-by-other):not(.reserved-by-me) .present-title {
+            color: #1a1a1a !important;
+        }
+        .recipients-page .present-item .present-link {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        @media (max-width: 767.98px) {
+            .recipients-page .present-item .present-title { font-size: 16px !important; }
+            .recipients-page .present-item .present-comments {
+                font-size: 15px !important;
+                line-height: 1.45;
+            }
+            .recipients-page .present-item:not(.checked):not(.reserved-by-other) .present-comments {
+                color: #2b2b2b !important;
+            }
+        }
+        /* Narrow phones: actions drop below the title instead of squeezing it */
+        @media (max-width: 480px) {
+            .recipients-page .present-item > .d-flex {
+                flex-wrap: wrap !important;
+                row-gap: 10px !important;
+            }
+            .recipients-page .present-item > .d-flex > .present-details {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+            }
+            .recipients-page .present-item > .d-flex > .present-actions.d-flex {
+                flex: 1 1 100% !important;
+                flex-direction: row !important;
+                justify-content: flex-end !important;
+                align-items: center !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+                width: 100% !important;
+            }
+            .recipients-page .present-item .present-actions .btn,
+            .recipients-page .present-item .present-actions .btn.w-100 {
+                width: auto !important;
+                min-width: 0 !important;
+                white-space: nowrap !important;
+                min-height: 40px;
+                padding: 0.5rem 0.9rem !important;
+                font-size: 0.875rem !important;
+            }
+        }
+        /* Keep the last card clear of the floating tab bar + FAB */
+        @media (max-width: 991.98px) {
+            body.recipients-page.has-tab-bar {
+                padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+        }
+
         /* Gray text with white shadow in modals */
         .recipients-page .modal-content,
         .recipients-page .modal-content * {
@@ -2312,7 +2381,7 @@
     <script src="fast-loader.js"></script>
 
     <!-- Main app (critical - load immediately) -->
-    <script src="recipients.js?v=21&t=1111111111"></script>
+    <script src="recipients.js?v=22&t=1111111111"></script>
 
     <!-- Scroll to recipient from leaderboard -->
     <script>
