@@ -1,109 +1,39 @@
-# UI Cleanup: Frosted Glass, Heading Hierarchy, Button Visibility, and Spacing
+# Readable present rows on phones and "Dodaj dla kogoś innego" moved below the list
 
-The change set normalizes the visual language across Prezentownik's five main pages. The core intervention is replacing solid/opaque card backgrounds with a consistent frosted glass surface (`rgba(255,255,255,0.78)` + `backdrop-filter: blur(16px) saturate(160%)`), which was already present on the homepage but absent or inconsistent on the remaining pages. Supporting changes reduce alert visual weight, tighten button styles for small screens, and suppress a `dark overlay` that was obscuring the background photo. The JS layer is untouched.
+The change fixes two mobile UI complaints. On recipients.html, present titles were collapsing into narrow columns and breaking mid-word next to the nowrap action buttons. A scoped inline `<style>` block now resets `word-break` to `normal`, keeps `overflow-wrap: break-word` only as a fallback, and below 480px moves the action buttons onto their own right-aligned row so the title gets the full card width. Title and comment text are larger and darker on mobile. Long URLs collapse to a single line with an ellipsis, and the full URL is kept in `title`. On formularz.html, the "Dodaj dla kogoś innego" button now sits after `#myPresentsList`. The edit-list items use a near-opaque white surface with a yellow left accent and darker typography. Both pages get 128px of bottom padding (plus the safe-area inset) to clear the floating tab bar and FAB. The previous pass's contrast finding on the secondary button is addressed with a `#718096` border and a stronger fill, and the class is renamed to `.btn-secondary-light`.
 
-**Watch for:** (1) **confirmed** — home.html JS-generated present cards use slightly weaker glass values (`0.72` alpha, `blur(14px)`) than the CSS class standard, creating a visible inconsistency between the static container and the dynamically injected rows. (2) **confirmed** — `btn-transparent-blur` ("Dodaj dla kogoś innego") renders dark text on a near-white surface inside a white frosted card — the button blends into its own container and is not self-evidently interactive. (3) **likely** — `app-theme.css` defines `.glass-card` as a reusable utility class but the HTML files that could use it (formularz, recipients, activity) don't reference it, reproducing the same values inline; future edits must be kept in sync in multiple places.
+**Watch for:** (1) **confirmed**: the recipients overrides are an inline `<style>` in recipients.html rather than one of the shared stylesheets. They load after the linked sheets and use `!important`, so they win the cascade, but the rules aren't reusable on other pages. (2) **confirmed**: at 320px the "Kupione" and "Anuluj" pair wraps to two lines. That's acceptable but slightly tall.
 
-**Verdict**: NEEDS_CHANGES
+**Verdict**: APPROVED
 
 ---
 
 ## High-level view
 
-The frosted glass token is now applied consistently across `recipients.html`, `activity.html`, and `formularz.html` via per-page scoped rules, matching what `home.html` already had. `app-theme.css` adds a `.glass-card` class and a `desktop-nav` sidebar that encode the canonical values, which is good, but those values are replicated as inline styles in the dynamically generated home.html HTML strings rather than consumed via the class.
+The recipients fix targets the real `generatePresentItem` structure (`.present-item > .d-flex > .present-details` and `.present-actions.d-flex`). Under 480px it switches that row to wrap, giving the details block 100% width and the actions a full-width, right-aligned row. Above 480px, including the 768px desktop shot, the original side-by-side layout is unchanged. The URL change is in the second `convertUrlsToLinks` definition (around line 2432), which is the one that takes effect. Its input is already HTML-escaped by the caller, so the new `title="${cleanUrl}"` attribute adds no injection surface.
 
-The `background-overlay` dark blur has been correctly disabled on all non-login pages; each page instead declares its own body background so the photo renders reliably under the frosted cards. The comments in the code correctly explain *why* (the deduped min.css resets body to transparent), which is useful institutional knowledge.
+On formularz, `displayMyPresents` drops its inline translucent styles in favour of classes (`my-present-*`) styled in the page's `<style>` block. The text is now 16px / 600 `#1a1a1a` for titles and 15px `#333` for comments, on a 0.92-white surface, which is readable over the photo background. The edit and delete buttons stay a compact 40px column and gain `aria-label`s. The moved button keeps `onclick="switchTab('add', true)"` unchanged.
 
-Button visibility on small screens received a targeted fix in recipients.html via an `@media (max-width: 480px)` rule that drops font-size and allows wrapping for action buttons. The `btn-transparent-blur` button in formularz.html sits inside a light frosted card, where its near-white background makes it appear disabled or part of the surrounding container — the fix addresses one surface while introducing the problem on another.
-
-Alert boxes in formularz.html have been de-weighted with a muted `rgba(0,0,0,0.04)` background, which is the right direction. The change is scoped to that page; activity.html's card text uses an aggressive `* { color: #2d3748 !important }` override that cascades to link text (caught with a carve-out rule), but the `text-shadow: none !important` cascade on the same selector flattens all text treatments — including the accordion headers that rely on white text on colored backgrounds.
-
----
+The screenshots support the claims. At 320px the titles wrap only at spaces ("Nebulizator do / olejków eterycznych"), the URL is truncated cleanly, and the orange buttons and orange/yellow accents remain. In formularz-375-bottom the secondary button sits below both items, clearly bordered, with about 80px of clearance above the FAB. `vercel.json` is untouched and nothing is committed. The cache-busting bumps (`formularz.js?v=16`, `recipients.js?v=22`, `prezenty-v112`) ensure returning PWA users receive the new JS.
 
 <details>
-<summary>Issues (4)</summary>
+<summary>Issues (2)</summary>
 
-1. **Home.html JS card token drift** — Present cards injected by JS use `rgba(255,255,255,0.72)` / `blur(14px) saturate(150%)` / `rgba(255,255,255,0.55)` border / `rgba(0,0,0,0.13)` shadow. The CSS standard (`app-theme.css` `.glass-card`) is `0.78` / `blur(16px) saturate(160%)` / `rgba(255,255,255,0.6)` / `rgba(0,0,0,0.18)`. Update the inline template strings in the `renderAvailablePresents` and `renderMyReservations` functions to use the canonical values, or apply the `.glass-card` class.
-2. **btn-transparent-blur contrast** — "Dodaj dla kogoś innego" has `background: rgba(0,0,0,0.06)` on a `rgba(255,255,255,0.78)` card body. The combined visual result is near-white on white with a hairline border; on any screen with slight glare the button is invisible. Use a more distinct fill (e.g. `rgba(0,0,0,0.09)` minimum, or convert to `btn-outline-secondary` / an explicit border color that meets 3:1 contrast).
-3. **Activity page cascade clobbers accordion header text** — `activity-page .card *, .activity-page .main-card *` sets `color: #2d3748 !important; text-shadow: none !important` on all descendants. If an accordion-style card with a colored header is ever added to the activity page, the rule will render the header text dark-on-dark. The existing carve-out for `btn-primary` etc. covers buttons but not `card-header h5`. Add `.activity-page .card-header` to the carve-out list proactively.
-4. **app-theme.css glass-card utility underused** — `.glass-card` encodes the canonical frosted token but formularz.html, recipients.html, and activity.html reproduce the same rgba/blur values inline rather than using the class. This isn't a visual bug today, but a single future edit to the token will require touching five files. Adopt the utility class as part of any follow-on cleanup.
+1. **Recipients overrides live in an inline page style**: this is non-blocking. The rules win the cascade today. If other pages render `.present-item`, consider moving them into `app-theme.css` in a follow-up.
+2. **320px reserved-state buttons wrap to two lines**: this is non-blocking. "Kupione" and "Anuluj" stack at 320px because the row is about 177px wide. Optionally use icon-only or smaller padding below 360px if the extra height bothers anyone.
 
 </details>
 
 <details>
 <summary>Details</summary>
 
-## Frosted glass token: canonical values vs. actual usage
+## Cascade placement on recipients.html
 
-The agreed surface is `rgba(255,255,255,0.78)` + `backdrop-filter: blur(16px) saturate(160%)` + `1px solid rgba(255,255,255,0.6)` + `box-shadow: 0 8px 24px rgba(0,0,0,0.18)`. This exact set appears in:
+The new block sits in the existing inline `<style>` in `<head>`, after the linked `styles.deduped.min.css`, `aws-design.css`, `app-theme.css`, `bottom-tab-bar.css` and `filters.css`. The selectors are prefixed with `.recipients-page`, which `<body>` carries, and the declarations are `!important`. That beats the legacy `word-break: break-word/break-all` rules in the minified sheet on both specificity and order. The title colour override excludes `.checked`, `.reserved-by-other` and `.reserved-by-me`, so the struck-through grey and the orange reserved-by-me title treatments are preserved, as the 320px shot shows.
 
-- `app-theme.css` `.glass-card` (the canonical source)
-- `recipients.html` `.recipients-page .recipient-item` and the filter panel inline style
-- `formularz.html` card inline styles on both tabs (`0.78`, `blur(16px)`)
-- `activity.html` `.activity-page .card` via `!important` rules
+## Bottom clearance
 
-The home.html JS-generated cards break from this in both places they appear (available presents and reservations template strings):
-
-```js
-// home.html ~line 588 and ~line 746
-background: rgba(255,255,255,0.72);     // should be 0.78
-backdrop-filter: blur(14px) saturate(150%);  // should be blur(16px) saturate(160%)
-border: 1px solid rgba(255,255,255,0.55);    // should be 0.6
-box-shadow: 0 6px 20px rgba(0,0,0,0.13);    // should be 0 8px 24px rgba(0,0,0,0.18)
-```
-
-The static `.stats-container` on the same page uses the correct values. At typical viewing distances on mobile the difference between `0.72` and `0.78` alpha is subtle but measurable — the dynamically loaded rows will appear marginally more transparent than the surrounding containers.
-
-## btn-transparent-blur visibility
-
-The button is styled in formularz.html:
-
-```css
-.btn-transparent-blur {
-    background: rgba(0, 0, 0, 0.06) !important;
-    border: 2px solid rgba(0, 0, 0, 0.12) !important;
-    color: #2d3748 !important;
-}
-```
-
-It sits inside a card whose body has `background: rgba(255,255,255,0.78)`. The rendered button background is effectively `#f0f0f0` on a `#f9f9f9` card — a contrast ratio well below the 3:1 WCAG non-text minimum for interactive elements. The earlier reported problem ("button is not visible") was on the dark-overlay version; the fix correctly moved it to a dark-on-light style, but the specific values leave it under-differentiated from the card surface.
-
-## Small-screen button safety on recipients.html
-
-The `@media (max-width: 480px)` rule in recipients.html adds `white-space: normal; font-size: 0.8rem; padding: 0.5rem 0.75rem; min-height: 36px` to `.present-item .present-actions .btn`. This correctly prevents overflow on narrow viewports. The `min-height: 36px` keeps touch targets accessible. The change is well-scoped and doesn't affect desktop.
-
-## Activity page text cascade
-
-`activity.html` contains:
-
-```css
-.activity-page .card *,
-.activity-page .main-card * {
-    color: #2d3748 !important;
-    text-shadow: none !important;
-}
-```
-
-Carve-outs exist for `btn-primary`, `btn-danger`, and `btn-success` to restore white text on those buttons. The page currently has no accordion with a colored header, so this causes no visible bug today. The risk is that adding a red/orange/green card header to the activity page in the future produces dark text on a dark background. The fix is one additional carve-out line: `.activity-page .card-header { color: white !important; }` (with specificity matching the existing pattern).
-
-The link carve-out (`.activity-page .notification-message a`) correctly preserves blue link color in notification rows — that is a new addition and works.
-
-## Alert de-weighting on formularz.html
-
-The seasonal info alert now renders at:
-```css
-.alert-info {
-    background-color: rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    color: #4a5568;
-}
-```
-
-The text is still fully legible and the alert's informational content is preserved; it no longer competes visually with the primary submit button.
-
-## Sidebar dead-code retention
-
-`activity.html` and `formularz.html` both carry full sidebar component definitions (`.sidebar-header`, `.sidebar-close`, `.sidebar-item`, hundreds of lines) with `display: none !important` on the activating elements. These are the old hamburger-menu sidebars superseded by the bottom tab bar. The CSS definitions remain in the files unused. This is not a visual regression but represents meaningful dead weight that should be cleaned up in a follow-on pass.
+Both pages use `@media (max-width: 991.98px)` with `padding-bottom: calc(128px + env(safe-area-inset-bottom))`. On recipients the selector is `body.recipients-page.has-tab-bar`, and on formularz it is `body.has-tab-bar`, which is scoped by the page's own style block. The verification note measures the formularz button ending at 618px against a FAB at 700px, and the screenshot matches.
 
 </details>
 
@@ -112,15 +42,12 @@ The text is still fully legible and the alert's informational content is preserv
 <details>
 <summary>File map</summary>
 
-| File | What changed |
-|------|-------------|
-| `public/styles.css` | CSS custom properties (`--ios-*`) normalized; base `.btn`, `.form-control`, `.present-item`, `.recipient-item`, `.main-card` refactored for consistency |
-| `public/app-theme.css` | Added `.glass-card` utility class, `desktop-nav` sidebar component, toast styles, `btn-reserve` color, identity modal sizing, and unified top-bar rules |
-| `public/home.html` | Background overlay switched to transparent; `stats-container` adopts frosted surface; page-title navbar hidden on mobile; user avatar added to navbar |
-| `public/recipients.html` | Frosted glass applied to all card types via scoped `.recipients-page` rules; outer wrapper made transparent to fix `backdrop-filter` stacking; small-screen button safety rule added; notification-item rows set to solid white for readability |
-| `public/formularz.html` | Frosted glass applied to both tab cards via inline styles; dark overlay removed; `alert-info` de-weighted; `btn-transparent-blur` introduced for the "Dodaj dla kogoś innego" secondary action |
-| `public/activity.html` | Frosted glass applied to `.card`/`.main-card`; dark overlay removed; `*` color cascade added with carve-outs for buttons and links; notification rows set to solid white |
+- `public/recipients.html`: scoped mobile typography, no-mid-word wrapping, actions-below-title layout under 480px, URL ellipsis, bottom padding; JS version bump.
+- `public/recipients.js`: `convertUrlsToLinks` emits a `.present-link` with ellipsis truncation, a darker blue, and a `title` attribute.
+- `public/formularz.html`: button moved below `#myPresentsList` and renamed `.btn-secondary-light` with a higher-contrast border; `#myPresentsList` item styles; bottom padding; JS version bump.
+- `public/formularz.js`: `displayMyPresents` uses classes instead of inline translucent styles and adds aria-labels; `makeLinksClickable` truncates with an ellipsis.
+- `public/sw.js`: cache name bump.
 
-Full diff: `git diff main -- public/styles.css public/app-theme.css public/home.html public/recipients.html public/formularz.html public/activity.html`
+Full diff: `git -P diff -- public/`
 
 </details>

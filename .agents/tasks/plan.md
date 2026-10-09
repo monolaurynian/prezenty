@@ -1,664 +1,233 @@
-# Implementation Plan — UI Cleanup & Polish
-
-> **Scope:** Visual/CSS only. No functional JS changes, no tab-bar layout changes,
-> no frosted-glass removal from recipients.html, no formularz.html tab structure changes.
->
-> **Priority order:** Changes are listed highest-impact first within each file group.
-> Items are independent unless noted. Each item leaves the build in a working state.
-
----
-
-## A · home.html — present-row sub-cards
-
-The three accordion sections (Dostępne, Moje Rezerwacje, Kupione) render
-recipient sub-groups as plain-white `div` cards built with inline styles directly
-in `renderAvailablePresents` / `renderPresentsList` in `home.html`.
-These are the only containers in the app that are NOT frosted glass —
-every other card on the page uses `rgba(255,255,255,0.78) + backdrop-filter`.
-
-- [ ] **A1. Make recipient sub-group cards frosted glass to match the rest of the page.**
-
-  In `home.html`, find the two `renderAvailablePresents` / `renderPresentsList`
-  JS template literals that produce the per-recipient wrapper `div`:
-
-  ```js
-  // Current (both functions, ~line 410 and ~line 680):
-  style="margin-bottom: 25px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
-  ```
-
-  Replace with:
-
-  ```js
-  style="margin-bottom: 20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); border: 1px solid rgba(255,255,255,0.55); border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.13);"
-  ```
-
-  Files: `public/home.html` (two occurrences of the recipient-group wrapper style —
-  one in `renderAvailablePresents`, one in `renderPresentsList`).
-
-  Verify: open the home page; the recipient sub-cards inside each accordion
-  section should now show a frosted translucent surface instead of solid white.
-
----
-
-- [ ] **A2. Standardise accordion header colors — remove gradient-override inline styles.**
-
-  Each accordion button has a full inline `style=` block setting a
-  `linear-gradient`. This duplicates a pattern that could live in the page's
-  `<style>` block and is the source of the three slightly-different red/orange/green
-  shades. Keeping inline styles is fine, but the padding is inconsistent
-  (the button itself inherits Bootstrap's 1rem padding; the nested `<h5>` inside
-  `#cumulativeProgressSection` uses `margin-bottom: 20px` with no matching style
-  on the accordion buttons). No change needed here — covered by A3 below.
-
----
-
-- [ ] **A3. Fix vertical spacing between accordion sections on home page.**
-
-  The three `.stats-container` cards use `margin: 28px auto` (desktop). On mobile
-  the inner `@media` override sets `margin: 20px auto`. The cumulative-progress
-  section (`#cumulativeProgressSection`) has no accordion wrapper and uses
-  `margin-bottom: 25px` on its internal progress rows, but the outer container
-  already has `padding: 40px` (desktop) / `padding: 20px` (mobile). This creates
-  inconsistent perceived spacing between the progress section and the accordions.
-
-  In `home.html` `<style>` block, change the `.stats-container` rule:
-
-  ```css
-  /* Before */
-  margin: 28px auto;
-
-  /* After */
-  margin: 20px auto;
-  ```
-
-  And in the `@media (max-width: 768px)` block:
-
-  ```css
-  /* Before */
-  margin: 20px auto;
-
-  /* After */
-  margin: 14px auto;
-  ```
-
-  Files: `public/home.html` (inline `<style>` block, `.stats-container` rule).
-
-  Verify: on a narrow viewport the sections should have a consistent, tighter gap;
-  on desktop the gap shrinks from 28 px to 20 px, matching the section-gap used on
-  recipients.html (16 px margin-bottom on `.recipient-item`).
-
----
-
-## B · home.html — present-count badge
-
-Inside the recipient sub-group header (in both `renderAvailablePresents` and
-`renderPresentsList`), each recipient name row has:
-
-```js
-<span style="background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500;">
-    N prezentów
-</span>
-```
-
-This is a stray blue (`#1976d2 / #e3f2fd`) badge that does not match the app
-palette (red #F44336, orange #F57C00, green #43A047). It reads as noise.
-
-- [ ] **B1. Neutralise the present-count badge color to a muted gray.**
-
-  In `home.html`, both occurrences of the badge inline style:
-
-  ```js
-  // Before (both functions):
-  style="background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500;"
-  ```
-
-  Replace with:
-
-  ```js
-  style="background: rgba(0,0,0,0.07); color: #4a5568; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 500;"
-  ```
-
-  Files: `public/home.html` (two occurrences — one in `renderAvailablePresents`,
-  one in `renderPresentsList`).
-
-  Verify: recipient name rows show a quiet gray count pill instead of the bright
-  blue badge.
-
----
-
-## C · home.html — "Zarezerwuj" button style
-
-The reserve button in `renderAvailablePresents` is fully inline-styled with raw hex:
-
-```js
-style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; background: #F57C00; color: #ffffff; border: none; font-weight: 600;"
-```
-
-`app-theme.css` already defines `.btn.btn-reserve` with the same orange color and
-font-weight. Using the class removes the inline duplicate and ensures hover states
-(defined in `app-theme.css`) work.
-
-- [ ] **C1. Replace inline reserve button style with `.btn-reserve` class.**
-
-  In `home.html` `renderAvailablePresents`, change:
-
-  ```js
-  // Before:
-  <button class="btn btn-sm" onclick="reservePresent(event, ${present.id})"
-    style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; background: #F57C00; color: #ffffff; border: none; font-weight: 600;">
-    <i class="fas fa-bookmark me-1" style="color: #ffffff;"></i>Zarezerwuj
-  </button>
-  ```
-
-  ```js
-  // After:
-  <button class="btn btn-sm btn-reserve" onclick="reservePresent(event, ${present.id})"
-    style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0;">
-    <i class="fas fa-bookmark me-1"></i>Zarezerwuj
-  </button>
-  ```
-
-  Files: `public/home.html`.
-
-  Verify: reserve button still appears orange; hover state (darker orange from
-  `app-theme.css .btn.btn-reserve:hover`) now works.
-
----
-
-## D · formularz.html — Christmas alert banner
-
-The alert in `#addTab` reads:
-```html
-<div class="alert alert-info mb-4">
-    <i class="fas fa-info-circle me-2"></i>
-    🎄 Nadchodzą święta! 🎁 Dodaj swoje pomysły na prezenty...
-</div>
-```
-
-It appears inside the Add-present card and competes visually with the form.
-The overall alert styling in `styles.css` (`.alert-info`) is already a light
-`rgba(13,202,240,0.1)` tint, which is fine, but it's the only info-alert on
-the page and its blue `#055160` text (from `formularz.html` inline `<style>`)
-is off-palette.
-
-- [ ] **D1. Reduce the Christmas alert to a quieter notice.**
-
-  In `formularz.html` `<style>` block, update the `.alert-info` rule:
-
-  ```css
-  /* Before */
-  .alert-info {
-      background-color: rgba(13, 202, 240, 0.1);
-      border: 1px solid rgba(13, 202, 240, 0.3);
-      color: #055160;
-      border-radius: 12px;
-  }
-  ```
-
-  ```css
-  /* After */
-  .alert-info {
-      background-color: rgba(0, 0, 0, 0.04);
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      color: #4a5568;
-      border-radius: 12px;
-      font-size: 0.875rem;
-  }
-  ```
-
-  Files: `public/formularz.html` (inline `<style>` block).
-
-  Verify: the Christmas alert still appears in the form but is visually quieter —
-  no bright cyan tint, muted gray text, slightly smaller font.
-
----
-
-## E · formularz.html — editTab card body background
-
-The `#editTab` card uses:
-```html
-style="background: transparent; border: none; box-shadow: none; backdrop-filter: none;"
-```
-
-This means the card-body content (quick-add form, "Dodaj dla kogoś innego" button,
-and the presents list) floats on the raw background photo with no surface behind
-them. On lighter parts of the photo the text becomes unreadable.
-
-- [ ] **E1. Give the editTab card a frosted surface matching the addTab card.**
-
-  In `formularz.html`, change the `#editTab` outer card inline style:
-
-  ```html
-  <!-- Before -->
-  <div class="card main-card" style="background: transparent; border: none; box-shadow: none; backdrop-filter: none;">
-
-  <!-- After -->
-  <div class="card main-card" style="background: rgba(255,255,255,0.78); backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); border: 1px solid rgba(255,255,255,0.6); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.18);">
-  ```
-
-  And give the `.card-header.bg-red` inside it a matching `border-radius` at the top:
-
-  ```html
-  <!-- Before -->
-  <div class="card-header bg-red" style="text-align: center; border-radius: 14px;">
-
-  <!-- After -->
-  <div class="card-header bg-red" style="text-align: center; border-radius: 14px 14px 0 0;">
-  ```
-
-  Files: `public/formularz.html`.
-
-  Verify: switching to the edit tab shows a frosted card with the same visual weight
-  as the add-present tab; no raw photo bleeding through the form area.
-
----
-
-## F · formularz.html — `<hr>` divider between quick-add and "Dodaj dla kogoś innego"
-
-The edit tab has `<hr class="mb-4" style="opacity: 0.15;">`. This thin line
-separates the quick-add form from the "Dodaj dla kogoś innego" button but adds
-visual noise with no functional purpose — the vertical spacing alone creates
-enough separation.
-
-- [ ] **F1. Remove the decorative `<hr>` in the editTab card body.**
-
-  In `formularz.html`, inside `#editTab` > `.card-body`, remove the `<hr>`:
-
-  ```html
-  <!-- Remove this line entirely -->
-  <hr class="mb-4" style="opacity: 0.15;">
-  ```
-
-  And remove the `mb-4` class from the `#quickAddForm` to maintain spacing:
-  change `<form id="quickAddForm" class="mb-4" …>` → `<form id="quickAddForm" class="mb-3" …>`.
-
-  Files: `public/formularz.html`.
-
-  Verify: the edit tab no longer shows a hairline rule; spacing between the
-  quick-add form and the "Dodaj dla kogoś innego" button is preserved via margin.
-
----
-
-## G · activity.html — card header missing
-
-The activity feed card (`<div class="card main-card">`) has no `.card-header`;
-it starts straight with `.card-body`. Every other card in the app has a colored
-`bg-red` header. The page currently shows a plain frosted card with no title,
-which is fine since the tab bar communicates location — but the card has no top
-visual anchor, making it feel unfinished.
-
-On closer inspection, the heading is replaced by the `d-flex justify-content-end`
-button row ("Oznacz wszystkie jako przeczytane") which floats above the card with
-no surface behind it. On smaller viewports this button is `d-none d-md-inline` text
-inside the button — a separate label issue (see item I below).
-
-No structural change needed here — the button row above the card is the implicit
-header. The only fix needed is whitespace (see G1) and button text (see I1).
-
-- [ ] **G1. Remove excess top margin on the activity container.**
-
-  In `activity.html` `<style>` block, the existing rule is:
-
-  ```css
-  .activity-page .container.mt-4 {
-      margin-top: 1rem !important;
-  }
-  ```
-
-  On mobile, `app-theme.css` hides the navbar completely
-  (`.activity-page nav.navbar { display: none !important }`), so the container
-  starts near the top of the screen with a 1rem gap. This is acceptable.
-
-  No change needed for the margin, but the fixed-header-bar div
-  (`<div class="fixed-header-bar"></div>`) is still present in the HTML even though
-  it has `display: none !important` in the CSS. It adds nothing and could confuse
-  future readers.
-
-  Remove the element from HTML:
-
-  ```html
-  <!-- Remove: -->
-  <div class="fixed-header-bar"></div>
-  ```
-
-  Files: `public/activity.html`.
-
-  Verify: page renders identically; no layout change.
-
----
-
-## H · activity.html — notification-item unread background
-
-The unread notification background is `#FDF0EF` (a very pale red), and hover is
-`#FAE3E1`. These are custom hex values. The `.notification-item` has
-`background: #ffffff` (solid white). This creates a minor inconsistency:
-`.notification-item.unread` uses a custom pinkish tint while the rest of the
-app uses `rgba` tints.
-
-This is low-priority and intentional (solid white improves readability over the
-photo). No change needed.
-
----
-
-## I · activity.html & recipients.html — button label visibility on small screens
-
-The "Oznacz wszystkie jako przeczytane" button in `activity.html`:
-
-```html
-<button class="btn btn-outline-light btn-sm" onclick="markAllAsRead()" id="markAllReadBtn">
-    <i class="fas fa-check-double me-1"></i>
-    <span class="d-none d-md-inline">Oznacz wszystkie jako przeczytane</span>
-    <span class="d-inline d-md-none">Oznacz wszystkie</span>
-</button>
-```
-
-On mobile this renders correctly as the short label — no fix needed here.
-
-The problem reported ("buttons sometimes not showing properly on smaller screens")
-most likely refers to the action buttons inside each present row on `recipients.html`.
-The `recipients.html` present-item buttons use `.btn` from `styles.css` which sets
-`min-height: 48px`, `padding: 0.875rem 1.5rem`, and critically `white-space: nowrap`.
-On a 320px viewport these buttons can overflow their container.
-
-- [ ] **I1. Cap button width and allow text wrapping inside present-row action buttons on recipients.html.**
-
-  In `recipients.html` `<style>` block, after the existing
-  `.recipients-page .present-item .present-actions .btn { white-space: nowrap; }` rule, add:
-
-  ```css
-  /* Small-screen button safety */
-  @media (max-width: 480px) {
-      .recipients-page .present-item .present-actions .btn {
-          white-space: normal;
-          font-size: 0.8rem;
-          padding: 0.5rem 0.75rem;
-          min-height: 36px;
+# Implementation Plan: mobile present-item readability + "Dodaj dla kogoś innego" placement
+
+Repo root: `c:\Users\matmamon\OneDrive - amazon.com\Documents\Prezenty\prezenty` (branch `main`, edit in place).
+Constraints: do NOT touch `vercel.json`. Do NOT commit or push. OneDrive may throw "cloud operation was not completed" / UNKNOWN on read/write: wait a few seconds and retry.
+No build or test tooling exists (`npm test` is an echo, `npm run build` is an echo). Verification = `node --check` on changed JS + the headless-browser screenshot harness in the Verification section.
+
+## Priority (user clarification)
+
+The "better text visibility" request is mainly about the Dodaj / Edytuj prezenty page (`formularz.html`, `#editTab`, list rendered by `displayMyPresents()` in `formularz.js`): title, link, comments and date metadata must be clearly readable against the semi-transparent blurred card. This is the top priority for coder and reviewer. On the recipient cards (`recipients.html`), the must-have is the mid-word wrapping / squeezed title fix around the "Zarezerwuj" button. Contrast changes there are optional (a light touch is fine).
+
+## Findings that drive the design
+
+- There are two pages, not one:
+  - The recipient cards with "Zarezerwuj" are `public/recipients.html` + `public/recipients.js` (`generatePresentsList()` ~L1854, `generateReservationButton()` ~L2137, `convertUrlsToLinks()` ~L2432; the second definition overrides the dead one at ~L2352).
+  - The "add/edit my presents" view (long URL, edit/delete icon buttons, "Dodaj dla kogoś innego") is `public/formularz.html` `#editTab` + `public/formularz.js` (`displayMyPresents()` ~L632, `makeLinksClickable()` ~L664).
+- Stylesheets:
+  - `recipients.html` links `styles.deduped.min.css`, `aws-design.css?v=3`, `bottom-tab-bar.css?v=41`, `app-theme.css?v=13`, `filters.css?v=7`. Its inline `<style>` blocks in `<head>` (L39 onward) come AFTER the links, and they already own the "Homepage-style present rows" overrides (L186–245), including `.recipients-page .present-item .d-flex { flex-wrap: nowrap !important; ... }`.
+  - `formularz.html` links only `styles.deduped.min.css`, `bottom-tab-bar.css?v=41` and `app-theme.css?v=13` (no aws-design or filters), then has its own inline `<style>` blocks.
+- Root causes of the mid-word breaks:
+  - `styles.deduped.min.css` `.present-title{word-break:break-word}`, `aws-design.css` `.recipients-page .present-title{word-break:break-word}` and `.recipients-page .present-comments{word-break:break-all}`. The legacy `word-break: break-word` lets the min-content width collapse to single letters, so a `flex-shrink:0` nowrap button column squeezes the title into a sliver.
+  - `.present-actions` is `flex-shrink:0` with `white-space:nowrap` buttons, plus bootstrap `.w-100{width:100%!important}`, plus min.css `@media(max-width:575.98px){.recipients-page .present-item .w-100.w-md-auto{width:100%!important}}`.
+  - Links: `recipients.js convertUrlsToLinks` uses inline `word-break: break-all; display: inline-block`. `formularz.js` `displayMyPresents` uses inline `word-break: break-word` on the wrapper, h6 and p, and `makeLinksClickable` uses inline `word-break: break-all` on `<a>`.
+- Formularz items: inline `background: rgba(255,255,255,0.18)` on top of a 0.78 white card, text in bootstrap `.text-muted` (#6c757d) and `small`. That reads as low contrast against the reddish blurred photo.
+- Bottom nav: `bottom-tab-bar.css` sets `body.has-tab-bar { padding-bottom: 104px }`. The bar sits at `bottom: max(12px, env(safe-area-inset-bottom))` and is about 70px tall, and the FAB sticks out 24px above it. On iPhones with a safe-area inset the last content is covered. On desktop (>=992px), `app-theme.css` sets `body.has-desktop-nav { padding-bottom: 24px !important }`, which must keep winning.
+- Caching: `sw.js` is cache-first for non-HTML assets (`CACHE_NAME = 'prezenty-v111'`). HTML is network-first, so inline `<style>` edits ship immediately, but changed JS needs `?v=` bumps plus a `CACHE_NAME` bump.
+
+## Decisions
+
+- **D1. Put CSS in the pages' inline `<style>` blocks, not in `styles.deduped.min.css`.** Edit `recipients.html` for the recipient cards and `formularz.html` for the edit view. Those blocks load last and already hold the present-row overrides, so new rules win the cascade without editing minified output that has no regeneration step for this file. The minified file stays untouched, so there is nothing to keep in sync.
+- **D2. Breakpoints:**
+  - `@media (max-width: 480px)` stacks the recipient-card actions under the title. This covers 320, 360, 375 and 414px.
+  - `@media (max-width: 767.98px)` holds the mobile typography and wrapping rules.
+  - `@media (max-width: 991.98px)` holds the bottom padding (desktop >=992 uses the sidebar and has its own 24px padding).
+  - At 768px the layout stays side-by-side, as it is today.
+- **D3. Wrapping policy:**
+  - Text gets `word-break: normal !important; overflow-wrap: break-word !important;`. Normal words never break. Only unbreakable runs that would overflow get broken.
+  - URLs render on one line with `white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; max-width: 100%`. Display text is already truncated to 47/57 chars in JS, and the ellipsis covers narrow widths.
+- **D4. Edit the link markup in JS.** Fix the inline styles at the source and add a class, rather than fighting inline styles with `!important`. In `formularz.js`, replace the inline styles in `displayMyPresents` with semantic classes so formularz.html CSS controls readability.
+- **D5. Move the button in HTML.** Move the "Dodaj dla kogoś innego" block in `formularz.html` from before `#myPresentsList` to after it. Its handler is an inline `onclick="switchTab('add', true)"`, so moving the markup keeps it working. No JS references that block.
+
+## Steps
+
+- [ ] 1. **Fix link markup in recipients.js and bump cache versions.**
+      - In `public/recipients.js`, second `convertUrlsToLinks()` (~L2432): change the generated `<a>` to `class="present-link"` with inline `style="color: #1565C0; text-decoration: underline; display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"`. Remove `word-break: break-all` and `display: inline-block`. Add `title="${cleanUrl}"` so the full URL is still visible on hover/long-press. Leave the dead first definition (~L2352) alone.
+      - Do not change `generatePresentItem` or `generateReservationButton` markup. Layout is solved in CSS (step 2), so `refreshPresentButtons()`, `updateButtonOptimistically()` and the reserve-button updates (~L3098, ~L4059) keep working unchanged.
+      - In `public/recipients.html` L2315, bump `recipients.js?v=21&t=1111111111` to `recipients.js?v=22&t=1111111111`.
+      Files: `public/recipients.js`, `public/recipients.html`
+      Verify: `node --check public/recipients.js` exits 0.
+
+- [ ] 2. **Recipient-card CSS (Issue 1, must-have: wrapping and layout).** Add a new block to the `recipients.html` inline `<style>`, directly after the `I1` `@media (max-width: 480px)` block (~L238–245) and before "Gray text with white shadow in modals":
+      ```css
+      /* Present rows: readable titles, no mid-word breaks */
+      .recipients-page .present-item .present-title,
+      .recipients-page .present-item .present-comments {
+          word-break: normal !important;
+          overflow-wrap: break-word !important;
+          hyphens: manual;
       }
-  }
-  ```
-
-  Files: `public/recipients.html` (inline `<style>` block).
-
-  Verify: on a 375px viewport (iPhone SE size) the Reserve / Cancel / Bought
-  buttons inside present rows are fully visible and do not overflow; text wraps
-  to a second line if needed.
-
----
-
-## J · recipients.html — filter panel header background
-
-The filter panel header (`<div style="background: rgba(108, 117, 125, 0.12); …">`)
-uses an inline style producing a muted gray tint. This clashes slightly with the
-rest of the card headers in the app which are solid `#F44336` red (set by the
-`.recipients-page .card-header, .recipients-page .aws-content-header { background: #F44336 }` rule).
-The filter panel is intentionally not red (it's a utility control, not a section
-title), so the gray is correct — no change needed.
-
----
-
-## K · recipients.html — remove redundant `aws-main-content` wrapper card
-
-The entire recipient list is wrapped in:
-```html
-<div class="card main-card aws-main-content">
-```
-
-This outer card has `.recipients-page .aws-main-content` rules that apply the
-frosted surface — and then `.recipients-page .aws-content-body { padding: 0 }` 
-strips the card-body padding to zero. The individual `.recipient-item` divs are
-themselves frosted cards with their own `border-radius: 20px` and `box-shadow`.
-
-The result is two layers of frosted glass stacked: outer wrapper + inner items.
-On Chrome/Safari the outer wrapper's `backdrop-filter` breaks the inner items'
-own backdrop-filter (stacking context issue), which is why the code has a long
-block of `transform: none; filter: none; backdrop-filter: none` overrides on
-`#recipientsList` — a workaround for the self-created problem.
-
-The correct fix is to make the outer wrapper transparent (no surface), letting
-the individual recipient cards float directly on the background photo.
-
-- [ ] **K1. Make the outer aws-main-content wrapper invisible — cards float directly on the photo.**
-
-  In `recipients.html` `<style>` block, update the `.recipients-page .aws-main-content` rule:
-
-  ```css
-  /* Before */
-  .recipients-page .aws-main-content {
-      background: rgba(255, 255, 255, 0.78) !important;
-      backdrop-filter: blur(16px) saturate(160%) !important;
-      -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
-      border: 1px solid rgba(255, 255, 255, 0.6) !important;
-      border-radius: 20px !important;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
-  }
-  ```
-
-  ```css
-  /* After */
-  .recipients-page .aws-main-content {
-      background: transparent !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      border: none !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-  }
-  ```
-
-  Also remove the now-redundant neutralization block for `.aws-main-content:hover`
-  transforms (since the container has no hover effect when it's transparent), but
-  keep the `#recipientsList` neutralizations as they protect the inner frosted
-  items. Specifically, keep:
-
-  ```css
-  .recipients-page #recipientsList,
-  .recipients-page #recipientsList .loading-placeholder {
-      transform: none !important;
-      filter: none !important;
-      backdrop-filter: none !important;
-      …
-  }
-  ```
-
-  and remove only the `.aws-main-content` and `.aws-main-content:hover` lines from
-  that block.
-
-  Files: `public/recipients.html` (inline `<style>` block).
-
-  Verify: the page shows individual frosted person-cards floating directly on the
-  background photo, identical to how the home page accordion content floats. The
-  filter panel (which has its own inline frosted style) continues to show correctly.
-
----
-
-## L · recipients.html — filter panel top margin
-
-With item K1 applied, the outer card no longer provides its own padding above the
-filter panel. The `filterAccordion` div has `margin-top: 20px; margin-bottom: 20px`
-via inline style. On mobile `body.recipients-page` already has
-`padding-top: calc(env(safe-area-inset-top, 0px) + 16px)` and
-`.recipients-page .container.mt-4 { margin-top: 0 !important; padding-top: 8px }`.
-
-- [ ] **L1. Adjust top margin on the filter accordion after K1.**
-
-  In `recipients.html` HTML, change the `filterAccordion` inline style:
-
-  ```html
-  <!-- Before -->
-  <div id="filterAccordion" style="margin-top: 20px; margin-bottom: 20px;">
-
-  <!-- After -->
-  <div id="filterAccordion" style="margin-top: 0; margin-bottom: 16px;">
-  ```
-
-  Files: `public/recipients.html`.
-
-  Verify: there is no large blank gap above the filter panel on mobile; the 16px
-  bottom margin provides breathing room before the first recipient card.
-
----
-
-## M · Global CSS — `.btn` base padding in `styles.css`
-
-`styles.css` sets:
-```css
-.btn {
-    padding: 0.875rem 1.5rem;
-    min-height: 48px;
-}
-```
-
-This is very generous padding that makes buttons oversized in tight contexts
-(present-row actions, quick-add form). Bootstrap's default (`0.375rem 0.75rem`
-for regular and `0.25rem 0.5rem` for `.btn-sm`) is preferable for small action
-buttons. However, `.btn-sm` is used for the action buttons in recipients.html and
-home.html, and `.btn-sm` in Bootstrap already overrides padding to
-`0.25rem 0.5rem`, so the `.btn` base rule only affects large buttons.
-
-No global change needed — the existing `.btn-sm` usage already escapes the
-over-padded base rule.
-
----
-
-## N · Global CSS — duplicate `share-buttons` and `share-btn` rules in `styles.css`
-
-`styles.css` defines `.share-buttons` and `.share-btn` twice (once around line 310
-and again around line 600). The second definition resets the styles to solid
-colored backgrounds. This is dead weight from legacy reorganization.
-
-- [ ] **N1. Remove the first (older) `.share-buttons` / `.share-btn` block from `styles.css`.**
-
-  In `public/styles.css`, remove the first block (around lines 305–335):
-
-  ```css
-  /* Remove this first occurrence: */
-  .share-buttons {
-      margin-top: 0.5rem;
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      align-items: center;
-  }
-  .share-btn {
-      padding: 0.375rem 0.75rem;
-      font-size: 0.85rem;
-      border-radius: 8px;
-      …
-  }
-  /* (all .share-btn variants in the first block) */
-  ```
-
-  Keep the second block (around lines 595–625) which has the solid-colored
-  backgrounds and correct hover transitions.
-
-  Files: `public/styles.css`.
-
-  Verify: share buttons on any page continue to render correctly with solid
-  colored backgrounds; no visual difference because the second block's rules were
-  already winning the cascade.
-
----
-
-## O · Typography — heading hierarchy audit
-
-Across the app the heading levels used in dynamically-rendered content are:
-
-| Location | Element | Size |
-|---|---|---|
-| Home accordion buttons | `<button>` with inline style | ~1rem bold |
-| Home section titles (`h3`) | `<h3>` inline style | `font-size` not set → Bootstrap ~1.75rem |
-| Recipients — recipient name | JS-rendered (in `recipients.js`) | `font-size: 1.1rem` (from `.recipient-name` in styles.css) |
-| Home sub-group headers | JS `<h5>` inline `font-weight: 600` | ~1rem (h5 default) |
-| Formularz add tab header | `.card-header .card-title` | 1.5rem (from `.card-header.bg-transparent-blur .card-title`) |
-| Formularz edit tab header | `.card-header .card-title` | not set → `.card-header.bg-red .card-title` = 1.1rem |
-
-The `h3` in home.html (`Ogólny Postęp`) is 1.75rem while the accordion-button
-headings are ~1rem — a large jump within the same card.
-
-- [ ] **O1. Reduce the `Ogólny Postęp` h3 to match the accordion button scale.**
-
-  In `home.html`, the progress-section heading:
-
-  ```html
-  <!-- Before -->
-  <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
-      <i class="fas fa-chart-line me-2"></i>Ogólny Postęp
-  </h3>
-  ```
-
-  ```html
-  <!-- After -->
-  <h5 style="color: #2d3748; font-weight: 700; margin-bottom: 16px; text-align: center; font-size: 1rem;">
-      <i class="fas fa-chart-line me-2"></i>Ogólny Postęp
-  </h5>
-  ```
-
-  Files: `public/home.html`.
-
-  Verify: the progress section title is the same visual size as the accordion
-  section titles; the page has consistent heading scale throughout.
-
----
-
-## P · Formularz card-header border-radius fix (related to E1)
-
-After E1 sets the outer card border-radius, the red `card-header` in both tabs
-needs consistent rounding so it doesn't cut sharply into the frosted card corners.
-
-- [ ] **P1. Standardise card-header border-radius on both formularz tabs.**
-
-  The `addTab` card already has `border-radius: 20px` on the outer card (from its
-  inline style). Its `.card-header.bg-transparent-blur` has no explicit
-  border-radius, so Bootstrap's `overflow: hidden` on the card clips it correctly.
-
-  The `editTab` card after E1 also has `border-radius: 20px`.
-  Its `.card-header.bg-red` has `style="text-align: center; border-radius: 14px;"` —
-  a rounded header inside a rounded card. This mismatch (14px header inside 20px card)
-  creates a visible gap at the top corners where the frosted card surface shows
-  through.
-
-  Change the editTab header radius to match the card:
-
-  ```html
-  <!-- Before (as updated in E1) -->
-  <div class="card-header bg-red" style="text-align: center; border-radius: 14px 14px 0 0;">
-
-  <!-- After -->
-  <div class="card-header bg-red" style="text-align: center; border-radius: 20px 20px 0 0;">
-  ```
-
-  Also check the `addTab` card-header: `.card-header.bg-red` in `formularz.html`
-  has no border-radius in its `<style>` block. Bootstrap's `.card` `overflow: hidden`
-  handles clipping there — leave it as-is.
-
-  Files: `public/formularz.html`.
-
-  Verify: the editTab card shows a clean red header flush with the card's rounded
-  top corners; no frosted surface visible in the header corners.
-
----
-
-## Q · Dependency order note for implementer
-
-Implement in this order to avoid re-work:
-
-1. **K1** (recipients.html wrapper → transparent) + **L1** (margin fix) — do together
-2. **E1** + **P1** (formularz editTab frosted card + header radius) — do together
-3. **F1** (remove `<hr>`) — follow-up to E1
-4. **A1** + **B1** + **C1** (home sub-cards: frosted, badge, button) — do together (all in same JS templates)
-5. **A3** (home spacing)
-6. **O1** (h3 → h5 heading fix)
-7. **D1** (alert quiet)
-8. **I1** (small-screen button wrapping)
-9. **G1** (remove dead `fixed-header-bar` element)
-10. **N1** (remove duplicate CSS block) — last, lowest risk
-
----
-
-## R · Out of scope (do not touch)
-
-- Bottom tab bar layout and styling (`bottom-tab-bar.css`) — recently stabilised
-- Frosted glass on `recipients.html` recipient items — recently added, working
-- `formularz.html` tab switching logic and `switchTab()` JS function
-- Any server-side files
-- `styles.deduped.min.css` — generated file, do not edit directly
+      .recipients-page .present-item .present-title {
+          color: #1a1a1a !important;
+          line-height: 1.4 !important;
+      }
+      .recipients-page .present-item .present-link {
+          display: block; max-width: 100%;
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+          font-weight: 500;
+      }
+      @media (max-width: 767.98px) {
+          .recipients-page .present-item .present-title { font-size: 16px !important; }
+          .recipients-page .present-item .present-comments { font-size: 15px !important; line-height: 1.45; color: #2b2b2b !important; }
+      }
+      /* Narrow phones: actions drop below the title instead of squeezing it */
+      @media (max-width: 480px) {
+          .recipients-page .present-item > .d-flex {
+              flex-wrap: wrap !important;
+              row-gap: 10px !important;
+          }
+          .recipients-page .present-item .present-details {
+              flex: 1 1 100% !important;
+              width: 100% !important;
+          }
+          .recipients-page .present-item .present-actions.d-flex {
+              flex: 1 1 100% !important;
+              flex-direction: row !important;
+              justify-content: flex-end !important;
+              align-items: center !important;
+              flex-wrap: wrap !important;
+              gap: 8px !important;
+              width: 100% !important;
+          }
+          .recipients-page .present-item .present-actions .btn,
+          .recipients-page .present-item .present-actions .btn.w-100 {
+              width: auto !important;
+              min-width: 0 !important;
+              white-space: nowrap !important;
+              min-height: 40px;
+              padding: 0.5rem 0.9rem !important;
+              font-size: 0.875rem !important;
+          }
+      }
+      ```
+      - Cascade notes:
+        - `.recipients-page .present-item > .d-flex` has the same specificity as the existing nowrap rule (0,3,0) and comes later, so it wins.
+        - `.recipients-page .present-item .present-actions .btn.w-100` (0,5,0) beats both the min.css `.w-100.w-md-auto` (0,4,0) and bootstrap `.w-100`.
+        - The `.present-actions.d-flex` rule also beats the earlier `.present-actions.d-flex { flex-direction: column }` (same specificity, later).
+      - Keep `.reserved-by-me` (orange left border from app-theme.css), `.checked` and `.reserved-by-other` looks untouched. Do not override `color` on `.reserved-by-me .present-title` (app-theme sets `#e65100 !important` with higher specificity). Do not add `!important` color to `.checked` / `.reserved-by-other` titles. If the generic `#1a1a1a !important` would beat their grey/line-through look, scope it with `:not(.checked):not(.reserved-by-other):not(.reserved-by-me)`.
+      Files: `public/recipients.html`
+      Verify: harness screenshots (see Verification) at 320 and 375px.
+      - Title "Róisín Murphy Overpowered - vinyl" wraps only at spaces and spans the full card width.
+      - The orange "Zarezerwuj" button sits right-aligned below the title.
+      - The Kupione/Anuluj pair sits side-by-side below the title.
+      - A long URL shows on one line with an ellipsis.
+      At 768px the row stays side-by-side with the title wrapping at spaces only.
+
+- [ ] 3. **Formularz edit-view readability (top priority) and link fix.** In `public/formularz.js`:
+      - `displayMyPresents()` (~L632): keep the outer element as `class="list-group-item my-present-item" data-present-id="${present.id}"`. `deletePresent` looks items up with `#myPresentsList .list-group-item[data-present-id=...]`, so both must stay. Remove its inline `background/backdrop-filter/border/border-radius/margin-bottom` style; CSS takes over.
+      - Inner layout: `<div class="d-flex justify-content-between align-items-start my-present-row">`.
+      - Text column: `<div class="flex-grow-1 my-present-body">` with no inline styles.
+      - Title: `<h6 class="mb-1 my-present-title">`.
+      - Comments: `<p class="mb-1 my-present-comments">` (drop `text-muted small`).
+      - Date: `<small class="my-present-date">` (drop `text-muted`).
+      - Buttons: `<div class="btn-group-vertical ms-2 my-present-actions">`. Add `aria-label="Edytuj prezent"` / `aria-label="Usuń prezent"` to the two icon-only buttons. Leave their `onclick` exactly as is.
+      - `makeLinksClickable()` (~L664): in the `<li>`, keep `display:flex; align-items:center; min-width:0`. On the `<a>`, use `class="my-present-link"`, `title="${escapeHtml(cleanUrl)}"`, and inline `style="color: #0D47A1; text-decoration: underline; display: block; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"`. Remove `word-break: break-all`.
+      - In `public/formularz.html` L716, bump `formularz.js?v=15` to `formularz.js?v=16`.
+      Files: `public/formularz.js`, `public/formularz.html`
+      Verify: `node --check public/formularz.js` exits 0. Then load the harness: edit and delete buttons render, and the markup still matches `#myPresentsList .list-group-item[data-present-id]`.
+
+- [ ] 4. **Formularz CSS: contrast, sizes, and bottom padding.** Append to the second inline `<style>` block in `public/formularz.html`, after the `.btn-green:hover` rule and before `/* Hide default navbar */`:
+      ```css
+      /* My presents list: high-contrast items on the frosted card */
+      #myPresentsList .my-present-item {
+          background: rgba(255, 255, 255, 0.92) !important;
+          border: 1px solid rgba(0, 0, 0, 0.08) !important;
+          border-left: 4px solid #FFC107 !important;   /* yellow accent */
+          border-radius: 14px !important;
+          margin-bottom: 10px;
+          padding: 12px 12px 12px 14px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+      #myPresentsList .my-present-body { min-width: 0; }
+      #myPresentsList .my-present-title,
+      #myPresentsList .my-present-comments {
+          word-break: normal; overflow-wrap: break-word; hyphens: manual;
+      }
+      #myPresentsList .my-present-title {
+          color: #1a1a1a; font-size: 16px; font-weight: 600; line-height: 1.4;
+      }
+      #myPresentsList .my-present-comments {
+          color: #333333; font-size: 15px; line-height: 1.45;
+      }
+      #myPresentsList .my-present-date { color: #555555; font-size: 13px; }
+      #myPresentsList .my-present-link { color: #0D47A1 !important; font-weight: 500; }
+      #myPresentsList .my-present-actions { flex-shrink: 0; }
+      #myPresentsList .my-present-actions .btn { min-width: 40px; min-height: 40px; }
+      /* Keep the last item and the button clear of the floating tab bar + FAB */
+      @media (max-width: 991.98px) {
+          body.has-tab-bar { padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px)) !important; }
+      }
+      ```
+      - The `@media` scope keeps the desktop `body.has-desktop-nav { padding-bottom: 24px !important }` from app-theme.css in effect.
+      - Contrast: #1a1a1a, #333 and #555 on about 92% white, and #0D47A1 on white, are each at or above 7:1 / 4.5:1.
+      - Check that the global `.list-group-item{padding:1rem 1.5rem}` from min.css does not squeeze the content. The `#myPresentsList` padding (higher specificity) overrides it.
+      Files: `public/formularz.html`
+      Verify: harness formularz screenshots at 320, 375 and 768px.
+      - "Nebulizator do olejkow eterycznych Tokio" wraps only between words in dark text.
+      - The URL is a single line ending in an ellipsis.
+      - The date is dark grey.
+      - The edit/delete buttons stay a compact column on the right.
+
+- [ ] 5. **Move "Dodaj dla kogoś innego" below the list (Issue 2).** In `public/formularz.html` `#editTab .card-body` (~L590–603), cut the block:
+      ```html
+      <div class="d-grid mb-4">
+          <button type="button" class="btn btn-transparent-blur btn-lg" onclick="switchTab('add', true)" style="border-radius: 14px;">
+              <i class="fas fa-user-friends me-2"></i>Dodaj dla kogoś innego
+          </button>
+      </div>
+      ```
+      - Paste it immediately after the closing `</div>` of `<div id="myPresentsList">…</div>`, still inside `.card-body`.
+      - Change the wrapper class to `d-grid mt-3 mb-1`.
+      - Order becomes: quick-add form, `#myPresentsList`, button.
+      Files: `public/formularz.html`
+      Verify: the harness formularz screenshot shows the button under the last present item. In a full-page screenshot at 375px it is fully visible above the floating tab bar when scrolled to the bottom (body bottom padding >= 128px).
+
+- [ ] 6. **Same bottom-padding guard on recipients.html.** Add to the same block from step 2:
+      ```css
+      @media (max-width: 991.98px) { body.recipients-page.has-tab-bar { padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px)) !important; } }
+      ```
+      Then bump `const CACHE_NAME = 'prezenty-v111'` to `'prezenty-v112'` in `public/sw.js` so cache-first clients drop the old JS.
+      Files: `public/recipients.html`, `public/sw.js`
+      Verify: `node --check public/sw.js` exits 0. In the harness, the last recipient card is fully visible above the bar at 375px.
+
+- [ ] 7. **Final check.**
+      - `git -P diff --stat` lists only `public/recipients.html`, `public/recipients.js`, `public/formularz.html`, `public/formularz.js` and `public/sw.js`. `vercel.json` must not appear in this task's changes; it already has a separate unrelated modification, so leave it alone.
+      - Run `node --check` on the three JS files.
+      - Clean up the temp harness directory.
+
+## Verification: headless screenshot harness (outside the repo)
+
+1. Create `$env:TEMP\prezenty-harness\` and do not put any harness file in the repo.
+2. Write `$env:TEMP\prezenty-harness\build.js`, a Node script with no dependencies that:
+   - Reads `public/recipients.html` and `public/formularz.html` from the repo and extracts everything between `<head>` and `</head>` (all `<link rel="stylesheet">` and inline `<style>` blocks, i.e. the REAL served CSS).
+   - Rewrites relative stylesheet hrefs (`styles.deduped.min.css`, `aws-design.css?v=3`, etc.) to absolute `file:///` URLs pointing into the repo's `public/`. Keep the CDN bootstrap, font-awesome and remixicon links.
+   - Copies the body background: `background-image: url('seba.jpg')` resolves relative to the harness, so also rewrite `url('seba.jpg')` to the absolute file URL of `public/seba.jpg`.
+   - Emits `recipients-harness.html` with `<body class="recipients-page has-tab-bar">`, containing a `.recipient-item` card wrapping `<div class="presents-list presents-list-container">`. Present markup is copied verbatim from the post-change `generatePresentItem` template in recipients.js (`.present-item > .d-flex.align-items-start.justify-content-between.w-100` > `.d-flex.present-details` + `.present-actions.d-flex.flex-column`). Include three items:
+     - "Róisín Murphy Overpowered - vinyl" with the Zarezerwuj button (exact `generateReservationButton` unreserved markup).
+     - A `reserved-by-me` item with the Kupione + Anuluj pair.
+     - A title containing `https://www.example-shop.pl/produkty/nebulizator-do-olejkow-eterycznych-tokio-123456789` processed into the post-change `convertUrlsToLinks` output.
+     - Copy the real `.bottom-tab-bar` markup from formularz.html too.
+   - Emits `formularz-harness.html` with `<body class="has-tab-bar">`. It contains the real `#editTab` card markup from formularz.html (after step 5): quick-add form, then `#myPresentsList` holding two items in the exact post-change `displayMyPresents()` + `makeLinksClickable()` output, then the "Dodaj dla kogoś innego" button. Items:
+     - "Nebulizator do olejkow eterycznych Tokio" with the long URL in comments.
+     - "Róisín Murphy Overpowered - vinyl".
+     - Also include the `.bottom-tab-bar` markup.
+   - Run it with `node build.js`.
+3. Screenshot with headless Edge (`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`) or Chrome (`C:\Program Files\Google\Chrome\Application\chrome.exe`). Both exist. For each harness and each width in 320, 375 and 768:
+   ```powershell
+   & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new --disable-gpu --hide-scrollbars --allow-file-access-from-files --window-size=375,1600 --screenshot="$env:TEMP\prezenty-harness\formularz-375.png" "file:///$($env:TEMP -replace '\\','/')/prezenty-harness/formularz-harness.html"
+   ```
+   Wait about 3s for the CDN CSS. Add `--virtual-time-budget=5000` if fonts or icons are missing.
+4. Inspect each PNG with the image reader. Pass criteria:
+   - No normal word split mid-word (e.g. no "Murph/y", "Overpo/wered").
+   - Title text uses most of the row width at 320 and 375px.
+   - URLs are on one line with an ellipsis.
+   - On formularz, title/comments/date text is dark and clearly legible on the frosted card, title >= 16px and comments >= 15px.
+   - "Dodaj dla kogoś innego" is below the list.
+   - The yellow (formularz) / orange (reserved-by-me) left accents and orange Zarezerwuj button are intact.
+   - At 768px the recipient rows stay side-by-side.
+   - Bottom check: also take a 375x700 shot of each harness after adding `<script>window.scrollTo(0, document.body.scrollHeight)</script>`. The last item and button must be fully visible above the floating tab bar.
+5. Delete `$env:TEMP\prezenty-harness\` when done.
+
+## Assumptions / gaps
+
+- The "yellow left-border accent" appears on the reserved-by-me state on recipient cards (app-theme.css currently makes it orange #F57C00). That is kept as is. On formularz items, a #FFC107 yellow left accent is added to match the user's description of the look.
+- The identified-user "Twoje dodane prezenty" list in recipients.js (~L1125, `li.present-item .present-name`) is out of scope beyond inheriting the generic wrapping rules.
