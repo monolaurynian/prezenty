@@ -161,7 +161,8 @@ function checkAuth() {
                 // Reveal the quiet "edit my presents" path under the form
                 const editLink = document.getElementById('editMyPresentsLink');
                 if (editLink) editLink.style.display = 'block';
-                // Edit tab is the default view - load presents immediately
+                // Edit tab is the default view - show it now that auth is confirmed
+                document.getElementById('editTab').style.display = 'block';
                 loadMyPresents();
             } else {
                 currentUser = null;
