@@ -151,6 +151,68 @@
             gap: 12px;
             padding: 14px;
         }
+
+        /* Present rows (Dostępne / Zarezerwowane / Kupione): titles wrap
+           at spaces only, never letter by letter next to the nowrap
+           action buttons. Long URLs stay on one line with an ellipsis. */
+        .home-present-title,
+        .home-present-comments {
+            word-break: normal !important;
+            overflow-wrap: break-word !important;
+            hyphens: manual;
+        }
+        .home-present-title {
+            line-height: 1.4;
+        }
+        .home-present-link {
+            display: block;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 480px) {
+            /* Less nested horizontal padding so the text gets the width */
+            .stats-container {
+                padding: 16px 12px;
+            }
+            #availablePresentsList {
+                padding: 10px 6px;
+            }
+            .home-recipient-card {
+                padding: 14px 12px !important;
+            }
+            .home-present-row {
+                padding: 10px !important;
+            }
+
+            /* Actions drop below the text instead of squeezing it */
+            .home-present-row {
+                flex-wrap: wrap !important;
+                row-gap: 10px !important;
+            }
+            .home-present-row > .home-present-main {
+                flex: 1 1 100% !important;
+                width: 100%;
+            }
+            .home-present-row > .home-present-actions {
+                flex: 1 1 100% !important;
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: flex-end !important;
+                align-items: center !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+                margin-left: auto;
+            }
+            .home-present-actions .btn {
+                min-height: 40px;
+                padding: 0.5rem 0.9rem !important;
+                font-size: 0.875rem !important;
+            }
+        }
     </style>
     <!-- Manifest (required for PWA install prompt) -->
     <link rel="manifest" href="manifest.json">
@@ -161,6 +223,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
 
     <link rel="apple-touch-icon" href="icon-180.png?v=4">
+    <script src="pluralize-pl.js"></script>
 </head>
 
 <body class="has-tab-bar">
@@ -344,7 +407,7 @@
     </script>
 
     <!-- Load recipients.js for shared functions (but don't auto-init) -->
-    <script src="recipients.js?v=21&t=1111111111"></script>
+    <script src="recipients.js?v=23&t=1111111111"></script>
 
     <!-- Non-critical scripts (defer to load after page is interactive) -->
     <script src="update-checker.js" defer></script>
@@ -585,33 +648,35 @@
                        </div>`;
 
                 html += `
-                    <div style="margin-bottom: 20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); border: 1px solid rgba(255,255,255,0.55); border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.13);">
+                    <div class="home-recipient-card" style="margin-bottom: 20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); border: 1px solid rgba(255,255,255,0.55); border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.13);">
                         <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             ${avatarHTML}
                             ${escapeHtml(recipient.name)}
                             <span style="background: rgba(0,0,0,0.07); color: #4a5568; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 500;">
-                                ${recipientPresents.length} ${recipientPresents.length === 1 ? 'prezent' : 'prezentów'}
+                                ${plCount(recipientPresents.length, 'prezent', 'prezenty', 'prezentów')}
                             </span>
                         </h5>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             ${recipientPresents.map(present => `
-                                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; background: rgba(248,249,250,0.7); border-radius: 10px; border-left: 4px solid #ffcc00;">
-                                    <div style="flex: 1; min-width: 0; display: flex; gap: 8px;">
+                                <div class="home-present-row" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; background: rgba(248,249,250,0.7); border-radius: 10px; border-left: 4px solid #ffcc00;">
+                                    <div class="home-present-main" style="flex: 1; min-width: 0; display: flex; gap: 8px;">
                                         <i class="fas fa-gift" style="color:  #ffcc00; margin-top: 2px; flex-shrink: 0;"></i>
                                         <div style="flex: 1; min-width: 0;">
-                                            <div style="font-weight: 500; color: #2d3748; margin-bottom: 4px; word-wrap: break-word; overflow-wrap: break-word;">
+                                            <div class="home-present-title" style="font-weight: 500; color: #2d3748; margin-bottom: 4px;">
                                                 ${makeLinksClickable(escapeHtml(present.title))}
                                             </div>
                                             ${present.comments ? `
-                                                <div style="font-size: 13px; color: #718096; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;">
+                                                <div class="home-present-comments" style="font-size: 13px; color: #718096;">
                                                     ${makeLinksClickable(escapeHtml(present.comments))}
                                                 </div>
                                             ` : ''}
                                         </div>
                                     </div>
-                                    <button class="btn btn-sm btn-reserve" onclick="reservePresent(event, ${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0;">
-                                        <i class="fas fa-bookmark me-1"></i>Zarezerwuj
-                                    </button>
+                                    <div class="home-present-actions" style="flex-shrink: 0;">
+                                        <button class="btn btn-sm btn-reserve" onclick="reservePresent(event, ${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
+                                            <i class="fas fa-bookmark me-1"></i>Zarezerwuj
+                                        </button>
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -653,7 +718,7 @@
                     if (cleanUrl.length > 60) {
                         displayText = cleanUrl.substring(0, 57) + '...';
                     }
-                    return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: flex-start;"><span style="margin-right: 4px; flex-shrink: 0;">🔗</span><a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2196F3; text-decoration: underline; word-break: break-all;">${escapeHtml(displayText)}</a></li>`;
+                    return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: flex-start; min-width: 0;"><span style="margin-right: 4px; flex-shrink: 0;">🔗</span><a href="${cleanUrl}" class="home-present-link" title="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #1565C0; text-decoration: underline;">${escapeHtml(displayText)}</a></li>`;
                 }).join('');
 
                 const urlList = `<ul style="margin: 8px 0 8px 0; padding-left: 0; list-style: none;">${linksList}</ul>`;
@@ -743,31 +808,31 @@
                        </div>`;
 
                 html += `
-                    <div style="margin-bottom: 20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); border: 1px solid rgba(255,255,255,0.55); border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.13);">
-                        <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                    <div class="home-recipient-card" style="margin-bottom: 20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); border: 1px solid rgba(255,255,255,0.55); border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.13);">
+                        <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             ${avatarHTML}
                             ${escapeHtml(recipient.name)}
                             <span style="background: rgba(0,0,0,0.07); color: #4a5568; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 500;">
-                                ${recipientPresents.length} ${recipientPresents.length === 1 ? 'prezent' : 'prezentów'}
+                                ${plCount(recipientPresents.length, 'prezent', 'prezenty', 'prezentów')}
                             </span>
                         </h5>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             ${recipientPresents.map(present => `
-                                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid ${present.is_checked ? '#4CAF50' : '#FF9800'};">
-                                    <div style="display: flex; gap: 8px; flex: 1; min-width: 0;">
+                                <div class="home-present-row" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid ${present.is_checked ? '#4CAF50' : '#FF9800'};">
+                                    <div class="home-present-main" style="display: flex; gap: 8px; flex: 1; min-width: 0;">
                                         <i class="fas fa-gift" style="color: ${present.is_checked ? '#4CAF50' : '#FF9800'}; margin-top: 2px; flex-shrink: 0;"></i>
                                         <div style="flex: 1; min-width: 0;">
-                                            <div style="font-weight: 500; color: #2d3748; margin-bottom: 4px; word-wrap: break-word; overflow-wrap: break-word;">
+                                            <div class="home-present-title" style="font-weight: 500; color: #2d3748; margin-bottom: 4px;">
                                                 ${makeLinksClickable(escapeHtml(present.title))}
                                             </div>
                                             ${present.comments ? `
-                                                <div style="font-size: 13px; color: #718096; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;">
+                                                <div class="home-present-comments" style="font-size: 13px; color: #718096;">
                                                     ${makeLinksClickable(escapeHtml(present.comments))}
                                                 </div>
                                             ` : ''}
                                         </div>
                                     </div>
-                                    <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+                                    <div class="home-present-actions" style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
                                         ${present.is_checked ? `
                                             <button class="btn btn-sm btn-outline-danger" onclick="markAsUnbought(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
                                                 <i class="fas fa-undo me-1"></i>Anuluj Zakup

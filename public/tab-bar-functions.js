@@ -316,7 +316,7 @@ function getTimeAgo(timestamp) {
     if (seconds < 60) return 'przed chwilą';
     if (seconds < 3600) return `${Math.floor(seconds / 60)} min temu`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)} godz. temu`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} dni temu`;
+    if (seconds < 604800) return `${plCount(Math.floor(seconds / 86400), 'dzień', 'dni', 'dni')} temu`;
     
     return then.toLocaleDateString('pl-PL');
 }

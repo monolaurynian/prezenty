@@ -1332,12 +1332,6 @@ body {
     margin-bottom: 1rem;
 }
 
-.recipient-item .alert-warning {
-    background: rgba(255, 149, 0, 0.1);
-    color: #ff9500;
-    border-left: 3px solid #ff9500;
-}
-
 /* Presents preview improvements */
 .presents-preview {
     margin-top: 1rem;
@@ -6980,12 +6974,6 @@ body {
     padding: 0.75rem 1rem;
     font-size: 0.85rem;
     margin-bottom: 1rem;
-}
-
-.recipient-item .alert-warning {
-    background: rgba(255, 149, 0, 0.1);
-    color: #ff9500;
-    border-left: 3px solid #ff9500;
 }
 
 /* Presents preview improvements */

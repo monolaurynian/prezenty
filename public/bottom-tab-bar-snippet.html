@@ -256,7 +256,7 @@ function formatTimeAgo(dateString) {
     if (seconds < 60) return 'Przed chwilą';
     if (seconds < 3600) return `${Math.floor(seconds / 60)} min temu`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)} godz. temu`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} dni temu`;
+    if (seconds < 604800) { const d = Math.floor(seconds / 86400); return `${d} ${d === 1 ? 'dzień' : 'dni'} temu`; }
     return date.toLocaleDateString('pl-PL');
 }
 

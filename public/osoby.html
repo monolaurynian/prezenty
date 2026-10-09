@@ -69,6 +69,7 @@
     </style>
     <!-- Manifest (required for PWA install prompt) -->
     <link rel="manifest" href="manifest.json">
+    <script src="pluralize-pl.js"></script>
 </head>
 <body>
     <div class="background-overlay"></div>
@@ -215,7 +216,7 @@
                     <div class="mt-4" data-person="${person.id}">
                         <div class="person-header">
                             <span class="person-name"><i class="fas fa-user me-2" style="color:#6b7280;"></i>${escapeHtml(person.name)}
-                                <span style="font-weight:400; color:#6b7280; font-size:13px;">(${theirPresents.length} prezentów)</span>
+                                <span style="font-weight:400; color:#6b7280; font-size:13px;">(${plCount(theirPresents.length, 'prezent', 'prezenty', 'prezentów')})</span>
                             </span>
                             <button class="btn btn-outline-danger btn-sm" onclick="deletePerson(${person.id}, '${escapeHtml(person.name).replace(/'/g, "\\'")}')">
                                 <i class="fas fa-user-xmark me-1"></i>Usuń osobę
@@ -428,7 +429,7 @@
 
         function deletePerson(personId, name) {
             const count = presents.filter(p => p.recipient_id === personId).length;
-            if (!confirm(`Usunąć osobę "${name}"?${count ? ` Usunięte zostaną też ${count} prezenty tej osoby.` : ''}`)) return;
+            if (!confirm(`Usunąć osobę "${name}"?${count ? ` ${plPlural(count, 'Usunięty zostanie', 'Usunięte zostaną', 'Usuniętych zostanie')} też ${plCount(count, 'prezent', 'prezenty', 'prezentów')} tej osoby.` : ''}`)) return;
             fetch(`/api/recipients/${personId}`, { method: 'DELETE' })
                 .then(r => r.json())
                 .then(d => {

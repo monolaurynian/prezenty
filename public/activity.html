@@ -313,6 +313,7 @@
             background: #FAE3E1 !important;
         }
     </style>
+    <script src="pluralize-pl.js"></script>
 </head>
 <body class="activity-page has-tab-bar">
     <div class="background-overlay"></div>
@@ -707,7 +708,7 @@
                     // recipient's presents when we know who they're for
                     const b = entry.burst;
                     const isUnread = b.items.some(n => !n.is_read);
-                    const countText = `${b.items.length} prezentów`;
+                    const countText = plCount(b.items.length, 'prezent', 'prezenty', 'prezentów');
                     const countHtml = b.recipientName
                         ? `<a href="/recipients.html?osoba=${encodeURIComponent(b.recipientName)}" onclick="event.stopPropagation();" style="color: #2196F3; text-decoration: underline;"><strong>${countText}</strong></a>`
                         : `<strong>${countText}</strong>`;
@@ -881,7 +882,7 @@
             if (seconds < 60) return 'przed chwilą';
             if (seconds < 3600) return `${Math.floor(seconds / 60)} min temu`;
             if (seconds < 86400) return `${Math.floor(seconds / 3600)} godz. temu`;
-            if (seconds < 604800) return `${Math.floor(seconds / 86400)} dni temu`;
+            if (seconds < 604800) return `${plCount(Math.floor(seconds / 86400), 'dzień', 'dni', 'dni')} temu`;
             
             return then.toLocaleDateString('pl-PL');
         }

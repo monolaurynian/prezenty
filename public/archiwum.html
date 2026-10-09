@@ -95,6 +95,7 @@
     </style>
     <!-- Manifest (required for PWA install prompt) -->
     <link rel="manifest" href="manifest.json">
+    <script src="pluralize-pl.js"></script>
 </head>
 <body>
     <div class="background-overlay"></div>
@@ -334,7 +335,7 @@
                 .then(({ ok, data }) => {
                     if (ok && data.success) {
                         msg.className = 'alert alert-success mt-3';
-                        msg.textContent = `Gotowe! Zarchiwizowano ${data.archivedPresents} prezentów pod rokiem ${data.year}. Lista prezentów jest teraz pusta.`;
+                        msg.textContent = `Gotowe! Zarchiwizowano ${plCount(Number(data.archivedPresents) || 0, 'prezent', 'prezenty', 'prezentów')} pod rokiem ${data.year}. Lista prezentów jest teraz pusta.`;
                         msg.style.display = 'block';
                         // Clear cached data so all pages show the clean slate
                         try {

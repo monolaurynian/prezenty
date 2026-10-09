@@ -358,6 +358,7 @@
             }
         }
     </style>
+    <script src="pluralize-pl.js"></script>
 </head>
 <body>
     <div class="intro-container">
@@ -544,7 +545,7 @@
             const percentage = Math.round((daysPassed / totalDays) * 100);
 
             document.getElementById('christmasCountdown').textContent = 
-                `Do Świąt Bożego Narodzenia zostało ${daysUntilChristmas} dni`;
+                `Do Świąt Bożego Narodzenia ${plPlural(daysUntilChristmas, 'został', 'zostały', 'zostało')} ${plCount(daysUntilChristmas, 'dzień', 'dni', 'dni')}`;
             document.getElementById('christmasProgress').style.width = percentage + '%';
             document.getElementById('progressText').textContent = percentage + '%';
         }
@@ -606,7 +607,7 @@
                          onerror="this.src='/images/default-avatar.svg'">
                     <div class="podium-name">${user.username}</div>
                     <div class="podium-score">
-                        <i class="fas fa-gift me-1"></i>${user.total_presents} prezentów
+                        <i class="fas fa-gift me-1"></i>${plCount(Number(user.total_presents) || 0, 'prezent', 'prezenty', 'prezentów')}
                     </div>
                     <div class="podium-base">
                         <div style="font-size: 24px; font-weight: 700;">#${index + 1}</div>

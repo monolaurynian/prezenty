@@ -740,6 +740,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
 
     <link rel="apple-touch-icon" href="icon-180.png?v=4">
+    <script src="pluralize-pl.js"></script>
 </head>
 
 <body class="has-tab-bar">
@@ -1026,9 +1027,9 @@
                             <div style="flex: 1;">
                                 <div style="font-weight: 600; color: #2d3748; font-size: 16px;">${user.username}</div>
                                 <div style="font-size: 13px; color: #718096;">
-                                    <i class="fas fa-check-circle" style="color: #4CAF50;"></i> ${boughtCount} kupione
+                                    <i class="fas fa-check-circle" style="color: #4CAF50;"></i> ${plCount(boughtCount, 'kupiony', 'kupione', 'kupionych')}
                                     <span style="margin: 0 8px;">•</span>
-                                    <i class="fas fa-bookmark" style="color: #FF9800;"></i> ${reservedCount} zarezerwowane
+                                    <i class="fas fa-bookmark" style="color: #FF9800;"></i> ${plCount(reservedCount, 'zarezerwowany', 'zarezerwowane', 'zarezerwowanych')}
                                 </div>
                             </div>
                         </div>
@@ -1086,7 +1087,7 @@
                         <div class="podium-stats">
                             <div class="stat-item">
                                 <i class="fas fa-fire" style="color: #FF6B6B;"></i>
-                                ${totalActivity} aktywność
+                                ${plCount(totalActivity, 'aktywność', 'aktywności', 'aktywności')}
                             </div>
                             <div class="stat-item" style="font-size: 0.85em; color: #718096;">
                                 <i class="fas fa-check-circle" style="color: #4CAF50;"></i> ${boughtCount}
@@ -1134,7 +1135,7 @@
                         <div class="podium-stats">
                             <div class="stat-item">
                                 <i class="fas fa-gift"></i>
-                                ${user.total_presents} ${user.total_presents === 1 ? 'prezent' : 'prezentów'}
+                                ${plCount(Number(user.total_presents) || 0, 'prezent', 'prezenty', 'prezentów')}
                             </div>
                         </div>
                         <div class="podium-base">
@@ -1169,7 +1170,7 @@
                             <div class="user-stats">
                                 <span>
                                     <i class="fas fa-gift"></i>
-                                    ${user.total_presents} ${user.total_presents === 1 ? 'prezent' : 'prezentów'}
+                                    ${plCount(Number(user.total_presents) || 0, 'prezent', 'prezenty', 'prezentów')}
                                 </span>
                             </div>
                         </div>
@@ -1202,7 +1203,7 @@
 
             const countdownElement = document.getElementById('daysToChristmas');
             if (countdownElement) {
-                countdownElement.innerHTML = `Do Świąt Bożego Narodzenia<br>zostało ${daysUntilChristmas} ${daysUntilChristmas === 1 ? 'dzień' : 'dni'}`;
+                countdownElement.innerHTML = `Do Świąt Bożego Narodzenia<br>${plPlural(daysUntilChristmas, 'został', 'zostały', 'zostało')} ${plCount(daysUntilChristmas, 'dzień', 'dni', 'dni')}`;
             }
         }
 

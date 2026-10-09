@@ -4590,3 +4590,90 @@ button, .btn, .card, .present-item, .recipient-item {
         right: 0;
     }
 }
+
+/* Verification badge next to an identified recipient's name
+   (replaces the old "Zidentyfikowane przez" banner). Sized in em so it
+   follows the name's font size. */
+.name-with-badge {
+    white-space: nowrap;
+}
+
+/* The tooltip is anchored to the whole name (centred under it) rather than
+   the badge, so it doesn't run off the side of the card */
+.recipients-page h5.recipient-name,
+.recipients-page .recipient-name-in-profile h6 {
+    position: relative;
+}
+
+.verified-badge {
+    display: inline-block;
+    width: 0.95em;
+    height: 0.95em;
+    margin: 0 0 0 0.25em;
+    padding: 0;
+    border: 0;
+    background: none;
+    line-height: 1;
+    vertical-align: -0.12em;
+    cursor: pointer;
+    border-radius: 50%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.verified-badge svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.verified-badge-seal {
+    fill: #1d9bf0;
+    stroke: #1d9bf0;
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+}
+
+.verified-badge-check {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.verified-badge:focus {
+    outline: none;
+}
+
+.verified-badge:focus-visible {
+    outline: 2px solid #1d9bf0;
+    outline-offset: 2px;
+}
+
+/* Tap / keyboard tooltip (mouse users also get the native title).
+   Opens below the badge: the mobile name sits at the top of a column with
+   overflow: hidden, so a tooltip above it would be clipped. */
+.verified-badge.is-open::after,
+.verified-badge:focus-visible::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #1f2937;
+    color: #fff;
+    width: max-content;
+    max-width: min(260px, 85vw);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+}

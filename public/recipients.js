@@ -1081,6 +1081,8 @@ function displayRecipientsWithPresents(recipients, presents) {
 
         const isIdentified = currentUserId && recipient.identified_by === currentUserId;
         const isIdentifiedByOther = recipient.identified_by && currentUserId && recipient.identified_by !== currentUserId;
+        // Verification badge next to the name (replaces the old "Zidentyfikowane przez" banner)
+        const verifiedByName = isIdentifiedByOther ? (recipient.identified_by_username || 'nieznany użytkownik') : null;
 
         // Show surprise note for identified user, otherwise show presents
         let presentsHTML;
@@ -1182,7 +1184,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                         <!-- Name shown in profile section for wider screens -->
                         <div class="recipient-name-in-profile d-none d-lg-block">
                             <div class="profile-name-with-check d-flex align-items-center justify-content-center">
-                                <h6 class="mt-2 mb-1 me-2">${escapeHtml(recipient.name)}</h6>
+                                <h6 class="mt-2 mb-1 me-2">${recipientNameWithBadge(recipient.name, verifiedByName)}</h6>
                                 ${!isIdentified && !hasAnyIdentification ? `
                                     <button class="btn profile-check-btn d-none d-lg-block" onclick="identifyAsRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')" title="To jestem ja">
                                         <i class="fas fa-user-check"></i>
@@ -1228,7 +1230,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                         <div class="mb-2 d-lg-none">
                           <center>  <h5 class="recipient-name mb-0">
                                
-                                ${escapeHtml(recipient.name)}
+                                ${recipientNameWithBadge(recipient.name, verifiedByName)}
                             </h5> </center>
                             ${!isIdentified && !hasAnyIdentification ? `
                                 <div class="mt-2">
@@ -1253,12 +1255,6 @@ function displayRecipientsWithPresents(recipients, presents) {
                                 </a>` : ''}
                             </div>
                         </div>
-                        ${isIdentifiedByOther ? `
-                            <div class="alert alert-warning py-2 px-3 mb-3">
-                                <i class="fas fa-user-check me-1"></i>
-                                <small>Zidentyfikowane przez: ${escapeHtml(recipient.identified_by_username || 'nieznany użytkownik')}</small>
-                            </div>
-                        ` : ''}
                         ${!isIdentified ? `
                         <div class="mb-3 d-lg-none">
                             <small class="text-muted">
@@ -2428,6 +2424,53 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// Escape for use inside quoted HTML attributes (escapeHtml leaves quotes as-is)
+function escapeAttr(text) {
+    return String(text == null ? '' : text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Scalloped seal with a white check (inline SVG, scales with font-size).
+// No <title> inside on purpose: it would end up in the name's textContent,
+// which search/scroll code compares against the recipient name.
+const VERIFIED_BADGE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+    '<polygon class="verified-badge-seal" points="12 1.8 14.17 3.89 17.1 3.17 17.94 6.06 20.83 6.9 20.11 9.83 22.2 12 20.11 14.17 20.83 17.1 17.94 17.94 17.1 20.83 14.17 20.11 12 22.2 9.83 20.11 6.9 20.83 6.06 17.94 3.17 17.1 3.89 14.17 1.8 12 3.89 9.83 3.17 6.9 6.06 6.06 6.9 3.17 9.83 3.89"/>' +
+    '<path class="verified-badge-check" d="M7.6 12.3l3 3 5.8-6.2"/>' +
+    '</svg>';
+
+// Recipient name with a verification badge glued to its last word, so the
+// badge never wraps onto a line of its own. Returns escaped HTML.
+function recipientNameWithBadge(name, identifiedByName) {
+    if (identifiedByName == null) return escapeHtml(name);
+    const label = 'Zidentyfikowane przez: ' + identifiedByName;
+    const badge = `<button type="button" class="verified-badge" aria-label="${escapeAttr(label)}" title="${escapeAttr(label)}" data-tooltip="${escapeAttr(label)}">${VERIFIED_BADGE_SVG}</button>`;
+    const trimmed = String(name == null ? '' : name).trim();
+    const cut = trimmed.lastIndexOf(' ') + 1;
+    const lastWord = trimmed.slice(cut);
+    // Very long single words must still be allowed to break, so only glue short ones
+    if (lastWord.length > 18) return escapeHtml(trimmed) + badge;
+    return `${escapeHtml(trimmed.slice(0, cut))}<span class="name-with-badge">${escapeHtml(lastWord)}${badge}</span>`;
+}
+
+// Tap/keyboard support for the badge tooltip (hover uses the title attribute)
+document.addEventListener('click', (e) => {
+    const badge = e.target.closest && e.target.closest('.verified-badge');
+    document.querySelectorAll('.verified-badge.is-open').forEach(b => { if (b !== badge) b.classList.remove('is-open'); });
+    if (badge) badge.classList.toggle('is-open');
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.verified-badge.is-open').forEach(b => b.classList.remove('is-open'));
+    }
+});
+document.addEventListener('focusout', (e) => {
+    if (e.target.classList && e.target.classList.contains('verified-badge')) e.target.classList.remove('is-open');
+});
 
 function convertUrlsToLinks(text) {
     // URL regex pattern

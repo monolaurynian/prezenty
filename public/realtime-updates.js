@@ -191,7 +191,7 @@
         
         // Show notification if updates were applied
         if (updates.length > 0 && typeof showToast === 'function') {
-            showToast(`Zaktualizowano ${updates.length} ${updates.length === 1 ? 'element' : 'elementy'}`, 'info');
+            showToast(`Zaktualizowano ${plCount(updates.length, 'element', 'elementy', 'elementów')}`, 'info');
         }
     }
 

@@ -33,7 +33,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="styles.deduped.min.css" rel="stylesheet">
-    <link href="aws-design.css?v=3" rel="stylesheet">
+    <link href="aws-design.css?v=4" rel="stylesheet">
     <link href="bottom-tab-bar.css?v=41" rel="stylesheet">
     <link href="app-theme.css?v=13" rel="stylesheet">
     <link href="filters.css?v=7" rel="stylesheet">
@@ -834,6 +834,7 @@
             }
         }
     </style>
+    <script src="pluralize-pl.js"></script>
 </head>
 
 <body class="recipients-page has-tab-bar">
@@ -1908,7 +1909,7 @@
             if (diffMins < 1) return 'Teraz';
             if (diffMins < 60) return `${diffMins} min temu`;
             if (diffHours < 24) return `${diffHours} godz. temu`;
-            if (diffDays < 7) return `${diffDays} dni temu`;
+            if (diffDays < 7) return `${plCount(diffDays, 'dzień', 'dni', 'dni')} temu`;
             return time.toLocaleDateString('pl-PL');
         }
 
@@ -1992,7 +1993,7 @@
             const bannerMessage = document.getElementById('bannerMessage');
 
             if (count > 0) {
-                bannerMessage.textContent = `Masz ${count} ${count === 1 ? 'nowe powiadomienie' : count < 5 ? 'nowe powiadomienia' : 'nowych powiadomień'}`;
+                bannerMessage.textContent = `Masz ${plCount(count, 'nowe powiadomienie', 'nowe powiadomienia', 'nowych powiadomień')}`;
                 banner.style.display = 'block';
             }
         }
@@ -2381,7 +2382,7 @@
     <script src="fast-loader.js"></script>
 
     <!-- Main app (critical - load immediately) -->
-    <script src="recipients.js?v=22&t=1111111111"></script>
+    <script src="recipients.js?v=23&t=1111111111"></script>
 
     <!-- Scroll to recipient from leaderboard -->
     <script>

@@ -1,6 +1,7 @@
-const CACHE_NAME = 'prezenty-v113';
+const CACHE_NAME = 'prezenty-v117';
 const urlsToCache = [
   '/manifest.json',
+  '/pluralize-pl.js',
   '/favicon.svg',
   '/seba_logo.png',
   '/styles.deduped.min.css',

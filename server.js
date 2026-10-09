@@ -11,6 +11,7 @@ const MySQLStore = require('express-mysql-session')(session);
 const cron = require('cron');
 const https = require('https');
 const sharp = require('sharp');
+const { plPlural, plCount } = require('./public/pluralize-pl');
 // const webpush = require('web-push'); // Now enabled below
 
 // Load .env file in development, but not in production
@@ -3865,11 +3866,10 @@ function setupChristmasNudgeCron() {
             const daysLeft = Math.max(0, Math.ceil((christmasEve - now) / 86400000));
 
             for (const row of rows) {
-                const n = row.unbought;
-                const phrase = n === 1 ? '1 zarezerwowany prezent' :
-                    (n >= 2 && n <= 4 ? `${n} zarezerwowane prezenty` : `${n} zarezerwowanych prezentów`);
+                const n = Number(row.unbought);
+                const phrase = plCount(n, 'zarezerwowany prezent', 'zarezerwowane prezenty', 'zarezerwowanych prezentów');
                 const body = `Masz ${phrase} do kupienia. ` +
-                    `Do Wigilii ${daysLeft === 1 ? 'został 1 dzień' : `zostało ${daysLeft} dni`}! 🎅`;
+                    `Do Wigilii ${plPlural(daysLeft, 'został', 'zostały', 'zostało')} ${plCount(daysLeft, 'dzień', 'dni', 'dni')}! 🎅`;
                 await sendPushToUser(row.user_id, 'Przypomnienie świąteczne 🎄', body, { nudge: true });
             }
             console.log(`🎅 [NUDGE] Sent reminders to ${rows.length} user(s)`);
