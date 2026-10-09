@@ -111,26 +111,26 @@
             font-weight: 700;
         }
 
-        /* Dodaj dla kogoś innego button */
+        /* Dodaj dla kogoś innego button — light-card variant */
         .btn-transparent-blur {
-            background: rgba(255, 255, 255, 0.2) !important;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.4) !important;
-            color: white !important;
+            background: rgba(0, 0, 0, 0.06) !important;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border: 2px solid rgba(0, 0, 0, 0.12) !important;
+            color: #2d3748 !important;
             font-weight: 700;
             font-size: 1.1rem;
             padding: 0.875rem 1.5rem;
             transition: all 0.3s ease;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            text-shadow: none;
         }
 
         .btn-transparent-blur:hover {
-            background: rgba(255, 255, 255, 0.32) !important;
-            border-color: rgba(255, 255, 255, 0.6) !important;
-            color: white !important;
+            background: rgba(0, 0, 0, 0.1) !important;
+            border-color: rgba(0, 0, 0, 0.2) !important;
+            color: #2d3748 !important;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
 
         /* Card body styling */
@@ -140,10 +140,11 @@
 
         /* Alert styling */
         .alert-info {
-            background-color: rgba(13, 202, 240, 0.1);
-            border: 1px solid rgba(13, 202, 240, 0.3);
-            color: #055160;
+            background-color: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: #4a5568;
             border-radius: 12px;
+            font-size: 0.875rem;
         }
 
         /* Top menu container - unified black-fade top bar (see app-theme.css) */
@@ -508,8 +509,8 @@
 
         <!-- Edit Presents Tab (requires authentication) -->
         <div id="editTab" class="tab-content" style="display: none;">
-            <div class="card main-card" style="background: transparent; border: none; box-shadow: none; backdrop-filter: none;">
-                <div class="card-header bg-red" style="text-align: center; border-radius: 14px;">
+            <div class="card main-card" style="background: rgba(255,255,255,0.78); backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); border: 1px solid rgba(255,255,255,0.6); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.18);">
+                <div class="card-header bg-red" style="text-align: center; border-radius: 20px 20px 0 0;">
                     <h5 class="card-title" style="color: white !important;">
                         <i class="fas fa-edit me-2" style="color: white;"></i>Dodaj i edytuj moje prezenty
                     </h5>
@@ -517,7 +518,7 @@
                 <div class="card-body">
                     <!-- Quick add: create a new present for yourself without
                          leaving the edit view -->
-                    <form id="quickAddForm" class="mb-4" onsubmit="return false;">
+                    <form id="quickAddForm" class="mb-3" onsubmit="return false;">
                         <label class="form-label fw-semibold" for="quickAddTitle">
                             <i class="fas fa-plus me-1" style="color: #43A047;"></i>Dodaj nowy prezent
                         </label>
@@ -533,7 +534,6 @@
                             placeholder="Opis, linki, gdzie kupić... (opcjonalnie)"></textarea>
                         <div id="quickAddMessage" class="alert mt-2" style="display: none;"></div>
                     </form>
-                    <hr class="mb-4" style="opacity: 0.15;">
                     <div class="d-grid mb-4">
                         <button type="button" class="btn btn-transparent-blur btn-lg"
                                 onclick="switchTab('add', true)" style="border-radius: 14px;">
@@ -713,7 +713,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="formularz.js?v=14"></script>
+    <script src="formularz.js?v=15"></script>
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebarMenu');
@@ -743,7 +743,7 @@
                     <i class="ri-chat-private-line"></i>
                     <span class="notification-badge" id="messagesBadge" style="display: none;"></span>
                 </div>
-                <span>Wiadomości</span>
+                <span>Czat</span>
             </a>
             <a href="formularz.html" class="tab-item form-tab active">
                 <i class="ri-gift-fill"></i>

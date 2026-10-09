@@ -743,18 +743,18 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
         padding: 0 4px;
         min-height: 54px;
         height: auto;
-        gap: 4px;
+        gap: 2px;
     }
     
     .tab-item {
-        padding: 5px 8px 5px;
+        padding: 5px 6px 5px;
         min-width: 0;
         flex: 1;
     }
     
     .tab-item i {
         font-size: 20px;
-        width: 32px;
+        width: 28px;
         height: 24px;
     }
     
@@ -776,7 +776,7 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
     }
     
     .tab-spacer {
-        flex: 0 0 60px;
+        flex: 0 0 54px;
     }
     
     .tab-bar-menu-btn {
@@ -792,12 +792,12 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
 
 @media (max-width: 360px) {
     .tab-bar-container {
-        gap: 2px;
+        gap: 0px;
         padding: 0 2px;
     }
 
     .tab-item {
-        padding: 5px 6px 5px;
+        padding: 5px 4px 5px;
     }
 
     .tab-item span {
@@ -806,17 +806,17 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
 
     .tab-item i {
         font-size: 18px;
-        width: 28px;
+        width: 26px;
     }
 
     .tab-spacer {
-        flex: 0 0 52px;
+        flex: 0 0 48px;
     }
 
     .tab-fab {
-        width: 46px;
-        height: 46px;
-        top: -18px;
+        width: 44px;
+        height: 44px;
+        top: -16px;
     }
 }
 

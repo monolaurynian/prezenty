@@ -47,7 +47,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styles.deduped.min.css">
     <link href="bottom-tab-bar.css?v=41" rel="stylesheet">
     <link href="app-theme.css?v=13" rel="stylesheet">
@@ -115,7 +114,7 @@
             padding: 40px;
             /* Clear gap between stacked sections - shadows overlapped and
                adjacent rounded surfaces looked like they were clashing */
-            margin: 28px auto;
+            margin: 20px auto;
             max-width: 1200px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
         }
@@ -142,8 +141,15 @@
         @media (max-width: 768px) {
             .stats-container {
                 padding: 20px;
-                margin: 20px auto;
+                margin: 14px auto;
             }
+        }
+
+        #availablePresentsList {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px;
         }
     </style>
     <!-- Manifest (required for PWA install prompt) -->
@@ -184,9 +190,9 @@
     <div class="container">
         <!-- Cumulative Progress Bars -->
         <div id="cumulativeProgressSection" class="stats-container">
-            <h3 style="color: #2d3748; font-weight: 700; margin-bottom: 20px; text-align: center;">
+            <h5 style="color: #2d3748; font-weight: 700; margin-bottom: 16px; text-align: center; font-size: 1rem;">
                 <i class="fas fa-chart-line me-2"></i>Ogólny Postęp
-            </h3>
+            </h5>
             <!-- Buying Progress -->
             <div style="margin-bottom: 25px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -579,17 +585,17 @@
                        </div>`;
 
                 html += `
-                    <div style="margin-bottom: 25px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                        <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                    <div style="margin-bottom: 20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); border: 1px solid rgba(255,255,255,0.55); border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.13);">
+                        <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             ${avatarHTML}
                             ${escapeHtml(recipient.name)}
-                            <span style="background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500;">
+                            <span style="background: rgba(0,0,0,0.07); color: #4a5568; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 500;">
                                 ${recipientPresents.length} ${recipientPresents.length === 1 ? 'prezent' : 'prezentów'}
                             </span>
                         </h5>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             ${recipientPresents.map(present => `
-                                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #ffcc00;">
+                                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; background: rgba(248,249,250,0.7); border-radius: 10px; border-left: 4px solid #ffcc00;">
                                     <div style="flex: 1; min-width: 0; display: flex; gap: 8px;">
                                         <i class="fas fa-gift" style="color:  #ffcc00; margin-top: 2px; flex-shrink: 0;"></i>
                                         <div style="flex: 1; min-width: 0;">
@@ -603,8 +609,8 @@
                                             ` : ''}
                                         </div>
                                     </div>
-                                    <button class="btn btn-sm" onclick="reservePresent(event, ${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0; background: #F57C00; color: #ffffff; border: none; font-weight: 600;">
-                                        <i class="fas fa-bookmark me-1" style="color: #ffffff;"></i>Zarezerwuj
+                                    <button class="btn btn-sm btn-reserve" onclick="reservePresent(event, ${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px; flex-shrink: 0;">
+                                        <i class="fas fa-bookmark me-1"></i>Zarezerwuj
                                     </button>
                                 </div>
                             `).join('')}
@@ -737,11 +743,11 @@
                        </div>`;
 
                 html += `
-                    <div style="margin-bottom: 25px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="margin-bottom: 20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); border: 1px solid rgba(255,255,255,0.55); border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.13);">
                         <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
                             ${avatarHTML}
                             ${escapeHtml(recipient.name)}
-                            <span style="background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 500;">
+                            <span style="background: rgba(0,0,0,0.07); color: #4a5568; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 500;">
                                 ${recipientPresents.length} ${recipientPresents.length === 1 ? 'prezent' : 'prezentów'}
                             </span>
                         </h5>
@@ -1113,7 +1119,7 @@
                     <i class="ri-chat-private-line"></i>
                     <span class="notification-badge" id="messagesBadge" style="display: none;"></span>
                 </div>
-                <span>Wiadomości</span>
+                <span>Czat</span>
             </a>
             <a href="formularz.html" class="tab-item form-tab">
                 <i class="ri-gift-line"></i>

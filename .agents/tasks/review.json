@@ -1,7 +1,30 @@
 {
-  "verdict": "APPROVED",
+  "verdict": "CHANGES_REQUESTED",
   "findings": [
-    "Unauthenticated flash of editTab — editTab is statically visible in HTML; unauthenticated users will briefly see the edit card's spinner before checkAuth() responds and hides it. Low visual impact; could be fixed by defaulting both tabs to display:none in HTML and letting JS always decide what to show."
+    {
+      "id": 1,
+      "label": "\"Dodaj dla kogoś innego\" button invisible",
+      "description": "color: white !important inside a white frosted card body (rgba(255,255,255,0.78)) with rgba(255,255,255,0.2) button background produces near-zero contrast. Change color to #2d3748 and drop text-shadow, or give the button a contrasting non-white background.",
+      "confidence": "confirmed",
+      "file": "public/formularz.html",
+      "blocking": true
+    },
+    {
+      "id": 2,
+      "label": ".btn-transparent-blur placement context mismatch",
+      "description": "The class is designed for dark/photographic backgrounds (white text, translucent white fill). It is used inside a light frosted card without adjustment. Issue 1 fixes the immediate legibility problem; the class should be renamed or a light-background variant added to prevent future misuse.",
+      "confidence": "confirmed",
+      "file": "public/formularz.html",
+      "blocking": false
+    },
+    {
+      "id": 3,
+      "label": "styles.css still loaded on home.html",
+      "description": "home.html loads both styles.css and styles.deduped.min.css. The page-level overrides win the cascade today but depend on load order and specificity. Remove the styles.css link from home.html's head since styles.deduped.min.css covers all the same rules.",
+      "confidence": "confirmed",
+      "file": "public/home.html",
+      "blocking": false
+    }
   ],
   "reviewDoc": "/Users/mati/Documents/prezenty/.agents/tasks/review-doc.md"
 }

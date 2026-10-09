@@ -1,74 +1,109 @@
-# editTab as primary landing view with "Dodaj dla kogoś innego" entry point
+# UI Cleanup: Frosted Glass, Heading Hierarchy, Button Visibility, and Spacing
 
-The change inverts the default tab visibility so `editTab` is the landing view for logged-in users, and `addTab` is demoted to an opt-in flow reached via a new "Dodaj dla kogoś innego" button. The heading on the edit card is updated from "Edytuj Moje Prezenty" to "Dodaj i edytuj moje prezenty". Unauthenticated users are dynamically redirected to `addTab` by the auth check so they never see a blank edit view. An old `localStorage`-based flag that previously navigated to the edit tab on page load is removed, along with its polling interval.
+The change set normalizes the visual language across Prezentownik's five main pages. The core intervention is replacing solid/opaque card backgrounds with a consistent frosted glass surface (`rgba(255,255,255,0.78)` + `backdrop-filter: blur(16px) saturate(160%)`), which was already present on the homepage but absent or inconsistent on the remaining pages. Supporting changes reduce alert visual weight, tighten button styles for small screens, and suppress a `dark overlay` that was obscuring the background photo. The JS layer is untouched.
 
-**Watch for:** The `editTab` is rendered with `class="tab-content active"` (visible) in static HTML, but `checkAuth()` is async — there is a confirmed flash window where an unauthenticated user sees the edit tab's spinner before the auth response arrives and hides it. No blocking issue, but worth noting. All five review criteria pass.
+**Watch for:** (1) **confirmed** — home.html JS-generated present cards use slightly weaker glass values (`0.72` alpha, `blur(14px)`) than the CSS class standard, creating a visible inconsistency between the static container and the dynamically injected rows. (2) **confirmed** — `btn-transparent-blur` ("Dodaj dla kogoś innego") renders dark text on a near-white surface inside a white frosted card — the button blends into its own container and is not self-evidently interactive. (3) **likely** — `app-theme.css` defines `.glass-card` as a reusable utility class but the HTML files that could use it (formularz, recipients, activity) don't reference it, reproducing the same values inline; future edits must be kept in sync in multiple places.
 
-**Verdict**: APPROVED
+**Verdict**: NEEDS_CHANGES
 
 ---
 
 ## High-level view
 
-The heading is correct. `editTab`'s `<h5>` in the HTML diff (line ~513 in the current file) reads "Dodaj i edytuj moje prezenty" — exactly matching the requirement.
+The frosted glass token is now applied consistently across `recipients.html`, `activity.html`, and `formularz.html` via per-page scoped rules, matching what `home.html` already had. `app-theme.css` adds a `.glass-card` class and a `desktop-nav` sidebar that encode the canonical values, which is good, but those values are replicated as inline styles in the dynamically generated home.html HTML strings rather than consumed via the class.
 
-`editTab` is now the statically active tab (`class="tab-content active"`, no `display: none`), while `addTab` carries `style="display: none;"` as its initial state. `checkAuth()` flips both when the session is unauthenticated, and calls `loadMyPresents()` immediately on the authenticated path so the list is fetched without any tab switch needed.
+The `background-overlay` dark blur has been correctly disabled on all non-login pages; each page instead declares its own body background so the photo renders reliably under the frosted cards. The comments in the code correctly explain *why* (the deduped min.css resets body to transparent), which is useful institutional knowledge.
 
-The "Dodaj dla kogoś innego" button is present inside `editTab`'s card body, rendered as a full-width `btn-transparent-blur btn-lg` button that calls `switchTab('add', true)`. The `fromButton` flag controls whether the "Wróć do moich prezentów" back-link inside `addTab` is revealed, giving users a clear path back. The button is placed between the quick-add form and the presents list, which is a reasonable position but makes it secondary to the quick-add inline form at the top.
+Button visibility on small screens received a targeted fix in recipients.html via an `@media (max-width: 480px)` rule that drops font-size and allows wrapping for action buttons. The `btn-transparent-blur` button in formularz.html sits inside a light frosted card, where its near-white background makes it appear disabled or part of the surrounding container — the fix addresses one surface while introducing the problem on another.
 
-The old `localStorage` roundtrip (`openEditTab` flag + polling interval) is fully removed from both the HTML and JS. The tab bar menu item's `onclick` that set the flag is stripped cleanly. This simplifies the auth flow: the page loads showing the edit tab, and the auth check either confirms it (loads presents) or swaps to add tab.
-
-The `addTab` remains fully functional. The `recipientSelect` dropdown, form submission, and `?osoba=` deep-link pre-selection are untouched by this diff.
+Alert boxes in formularz.html have been de-weighted with a muted `rgba(0,0,0,0.04)` background, which is the right direction. The change is scoped to that page; activity.html's card text uses an aggressive `* { color: #2d3748 !important }` override that cascades to link text (caught with a carve-out rule), but the `text-shadow: none !important` cascade on the same selector flattens all text treatments — including the accordion headers that rely on white text on colored backgrounds.
 
 ---
 
 <details>
-<summary>Issues (1)</summary>
+<summary>Issues (4)</summary>
 
-1. **Unauthenticated flash of editTab** — `editTab` is statically visible in HTML; unauthenticated users will briefly see the edit card's spinner before `checkAuth()` responds and hides it. Low visual impact, but could be addressed by defaulting both tabs to `display: none` in HTML and letting JS always decide what to show.
+1. **Home.html JS card token drift** — Present cards injected by JS use `rgba(255,255,255,0.72)` / `blur(14px) saturate(150%)` / `rgba(255,255,255,0.55)` border / `rgba(0,0,0,0.13)` shadow. The CSS standard (`app-theme.css` `.glass-card`) is `0.78` / `blur(16px) saturate(160%)` / `rgba(255,255,255,0.6)` / `rgba(0,0,0,0.18)`. Update the inline template strings in the `renderAvailablePresents` and `renderMyReservations` functions to use the canonical values, or apply the `.glass-card` class.
+2. **btn-transparent-blur contrast** — "Dodaj dla kogoś innego" has `background: rgba(0,0,0,0.06)` on a `rgba(255,255,255,0.78)` card body. The combined visual result is near-white on white with a hairline border; on any screen with slight glare the button is invisible. Use a more distinct fill (e.g. `rgba(0,0,0,0.09)` minimum, or convert to `btn-outline-secondary` / an explicit border color that meets 3:1 contrast).
+3. **Activity page cascade clobbers accordion header text** — `activity-page .card *, .activity-page .main-card *` sets `color: #2d3748 !important; text-shadow: none !important` on all descendants. If an accordion-style card with a colored header is ever added to the activity page, the rule will render the header text dark-on-dark. The existing carve-out for `btn-primary` etc. covers buttons but not `card-header h5`. Add `.activity-page .card-header` to the carve-out list proactively.
+4. **app-theme.css glass-card utility underused** — `.glass-card` encodes the canonical frosted token but formularz.html, recipients.html, and activity.html reproduce the same rgba/blur values inline rather than using the class. This isn't a visual bug today, but a single future edit to the token will require touching five files. Adopt the utility class as part of any follow-on cleanup.
 
 </details>
 
 <details>
 <summary>Details</summary>
 
-### Heading correctness
+## Frosted glass token: canonical values vs. actual usage
 
-The diff at line ~513 shows the `<h5>` text inside `editTab`'s `card-header` changed from `Edytuj Moje Prezenty` to `Dodaj i edytuj moje prezenty` — confirmed match to the requirement.
+The agreed surface is `rgba(255,255,255,0.78)` + `backdrop-filter: blur(16px) saturate(160%)` + `1px solid rgba(255,255,255,0.6)` + `box-shadow: 0 8px 24px rgba(0,0,0,0.18)`. This exact set appears in:
 
-### editTab as default view
+- `app-theme.css` `.glass-card` (the canonical source)
+- `recipients.html` `.recipients-page .recipient-item` and the filter panel inline style
+- `formularz.html` card inline styles on both tabs (`0.78`, `blur(16px)`)
+- `activity.html` `.activity-page .card` via `!important` rules
 
-`addTab` now carries `style="display: none;"` as a static inline style (confirmed in diff: `-        <div id="addTab" class="tab-content active">` → `+        <div id="addTab" class="tab-content" style="display: none;">`). `editTab` carries `class="tab-content active"` with no `display: none` override (confirmed: `-        <div id="editTab" class="tab-content" style="display: none;">` → `+        <div id="editTab" class="tab-content active">`).
+The home.html JS-generated cards break from this in both places they appear (available presents and reservations template strings):
 
-The `tab-content.active` CSS rule in the page's `<style>` block sets `display: block`, so `editTab` renders immediately on page paint.
+```js
+// home.html ~line 588 and ~line 746
+background: rgba(255,255,255,0.72);     // should be 0.78
+backdrop-filter: blur(14px) saturate(150%);  // should be blur(16px) saturate(160%)
+border: 1px solid rgba(255,255,255,0.55);    // should be 0.6
+box-shadow: 0 6px 20px rgba(0,0,0,0.13);    // should be 0 8px 24px rgba(0,0,0,0.18)
+```
 
-The JS-side complement in `checkAuth()` adds two branches:
-- Authenticated path: calls `loadMyPresents()` directly — no tab switch needed because the tab is already visible.
-- Unauthenticated path and error path: both explicitly set `addTab` to `display: block` and `editTab` to `display: none` (confirmed lines in diff).
+The static `.stats-container` on the same page uses the correct values. At typical viewing distances on mobile the difference between `0.72` and `0.78` alpha is subtle but measurable — the dynamically loaded rows will appear marginally more transparent than the surrounding containers.
 
-There is a confirmed flash gap: between page paint and `checkAuth()` resolving, an unauthenticated user sees `editTab` with its loading spinner. The spinner disappears and `addTab` appears once the fetch completes. This is cosmetic and not a blocking regression.
+## btn-transparent-blur visibility
 
-### "Dodaj dla kogoś innego" button
+The button is styled in formularz.html:
 
-The button is added to `editTab`'s card body (confirmed in diff at the `+<div class="d-grid mb-4">` block). It uses `btn-transparent-blur btn-lg`, a class defined in the page's `<style>` block as a frosted-glass white button — consistent with the app's visual language. The `onclick` calls `switchTab('add', true)`.
+```css
+.btn-transparent-blur {
+    background: rgba(0, 0, 0, 0.06) !important;
+    border: 2px solid rgba(0, 0, 0, 0.12) !important;
+    color: #2d3748 !important;
+}
+```
 
-The `fromButton` parameter is new in this diff (`function switchTab(tab, fromButton)`). When `true`, it reveals `#backToEditLink` inside `addTab`, giving the user a clear return path. When `switchTab('add')` is called without the flag (e.g., from other code paths like `switchTab('add')` previously in the empty-list state), the back-link stays hidden — now corrected in the diff to `switchTab('add', true)` in the empty-list button as well.
+It sits inside a card whose body has `background: rgba(255,255,255,0.78)`. The rendered button background is effectively `#f0f0f0` on a `#f9f9f9` card — a contrast ratio well below the 3:1 WCAG non-text minimum for interactive elements. The earlier reported problem ("button is not visible") was on the dark-overlay version; the fix correctly moved it to a dark-on-light style, but the specific values leave it under-differentiated from the card surface.
 
-### localStorage flag removal
+## Small-screen button safety on recipients.html
 
-The diff removes 17 lines from `formularz.js`: the `DOMContentLoaded` block that read `openEditTab` from localStorage, cleared it, and then polled `currentUser` on a 100ms interval (up to 5 seconds) before calling `switchTab('edit')`. The corresponding `onclick` on the tab bar menu item is also removed from the HTML. This is a clean removal with no dangling references — confirmed by searching the remaining file content.
+The `@media (max-width: 480px)` rule in recipients.html adds `white-space: normal; font-size: 0.8rem; padding: 0.5rem 0.75rem; min-height: 36px` to `.present-item .present-actions .btn`. This correctly prevents overflow on narrow viewports. The `min-height: 36px` keeps touch targets accessible. The change is well-scoped and doesn't affect desktop.
 
-### Auth flow — no regressions
+## Activity page text cascade
 
-`switchTab('edit')` still checks `!currentUser` and shows `authModal` for unauthenticated users attempting to reach the edit tab via the back-link or any other code path. The `modalLogin` and `modalRegister` handlers are unchanged. The `authModal` still uses `data-bs-backdrop="static"` (no accidental dismissal). No auth regression.
+`activity.html` contains:
 
-### addTab accessibility
+```css
+.activity-page .card *,
+.activity-page .main-card * {
+    color: #2d3748 !important;
+    text-shadow: none !important;
+}
+```
 
-`addTab` remains fully wired: `#presentForm`, `#recipientSelect`, `#recipientName`, `#formMessage`, and `#editMyPresentsLink` are all present and their IDs are unchanged. `loadRecipients()` still runs unconditionally in `DOMContentLoaded`, so the dropdown populates regardless of which tab is active. The `?osoba=` deep-link path is intact.
+Carve-outs exist for `btn-primary`, `btn-danger`, and `btn-success` to restore white text on those buttons. The page currently has no accordion with a colored header, so this causes no visible bug today. The risk is that adding a red/orange/green card header to the activity page in the future produces dark text on a dark background. The fix is one additional carve-out line: `.activity-page .card-header { color: white !important; }` (with specificity matching the existing pattern).
 
-### Visual consistency
+The link carve-out (`.activity-page .notification-message a`) correctly preserves blue link color in notification rows — that is a new addition and works.
 
-`btn-transparent-blur` is defined in the page's inline CSS. The frosted-glass appearance (`rgba(255,255,255,0.2)`, `backdrop-filter: blur(10px)`, white border) matches the style used elsewhere on the page. The button sits inside the same `glass-card`-style container as the rest of `editTab`.
+## Alert de-weighting on formularz.html
+
+The seasonal info alert now renders at:
+```css
+.alert-info {
+    background-color: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    color: #4a5568;
+}
+```
+
+The text is still fully legible and the alert's informational content is preserved; it no longer competes visually with the primary submit button.
+
+## Sidebar dead-code retention
+
+`activity.html` and `formularz.html` both carry full sidebar component definitions (`.sidebar-header`, `.sidebar-close`, `.sidebar-item`, hundreds of lines) with `display: none !important` on the activating elements. These are the old hamburger-menu sidebars superseded by the bottom tab bar. The CSS definitions remain in the files unused. This is not a visual regression but represents meaningful dead weight that should be cleaned up in a follow-on pass.
 
 </details>
 
@@ -77,9 +112,15 @@ The diff removes 17 lines from `formularz.js`: the `DOMContentLoaded` block that
 <details>
 <summary>File map</summary>
 
-- `public/formularz.html` — swapped active/hidden state of addTab and editTab; updated editTab heading; added "Dodaj dla kogoś innego" button; added "Wróć do moich prezentów" back-link in addTab; removed `localStorage` onclick from tab bar menu item.
-- `public/formularz.js` — removed `openEditTab` localStorage polling block from DOMContentLoaded; added `loadMyPresents()` call on authenticated path in `checkAuth()`; added unauthenticated/error fallback to show addTab; added `fromButton` parameter to `switchTab()`; updated empty-list button to pass `true` to `switchTab('add', true)`.
+| File | What changed |
+|------|-------------|
+| `public/styles.css` | CSS custom properties (`--ios-*`) normalized; base `.btn`, `.form-control`, `.present-item`, `.recipient-item`, `.main-card` refactored for consistency |
+| `public/app-theme.css` | Added `.glass-card` utility class, `desktop-nav` sidebar component, toast styles, `btn-reserve` color, identity modal sizing, and unified top-bar rules |
+| `public/home.html` | Background overlay switched to transparent; `stats-container` adopts frosted surface; page-title navbar hidden on mobile; user avatar added to navbar |
+| `public/recipients.html` | Frosted glass applied to all card types via scoped `.recipients-page` rules; outer wrapper made transparent to fix `backdrop-filter` stacking; small-screen button safety rule added; notification-item rows set to solid white for readability |
+| `public/formularz.html` | Frosted glass applied to both tab cards via inline styles; dark overlay removed; `alert-info` de-weighted; `btn-transparent-blur` introduced for the "Dodaj dla kogoś innego" secondary action |
+| `public/activity.html` | Frosted glass applied to `.card`/`.main-card`; dark overlay removed; `*` color cascade added with carve-outs for buttons and links; notification rows set to solid white |
 
-Full diff: `git diff 38a5c18..HEAD -- public/formularz.html public/formularz.js`
+Full diff: `git diff main -- public/styles.css public/app-theme.css public/home.html public/recipients.html public/formularz.html public/activity.html`
 
 </details>
