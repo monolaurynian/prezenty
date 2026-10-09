@@ -427,7 +427,7 @@
 
     <div class="container">
         <!-- Add Present Tab -->
-        <div id="addTab" class="tab-content active">
+        <div id="addTab" class="tab-content" style="display: none;">
             <div class="row justify-content-center">
                 <div class="col-lg-8 col-md-10">
                     <div class="card main-card"
@@ -438,6 +438,13 @@
                             </h5>
                         </div>
                         <div class="card-body">
+                            <div id="backToEditLink" class="mb-3" style="display: none;">
+                                <a href="#" onclick="switchTab('edit'); return false;"
+                                   class="text-decoration-none fw-semibold"
+                                   style="color: #43A047; font-size: 14px;">
+                                    <i class="fas fa-arrow-left me-1"></i>Wróć do moich prezentów
+                                </a>
+                            </div>
                             <div class="alert alert-info mb-4">
                                 <i class="fas fa-info-circle me-2"></i>
                                 🎄 Nadchodzą święta! 🎁 Dodaj swoje pomysły na prezenty, aby inni mogli zobaczyć, czego
@@ -500,11 +507,11 @@
         </div>
 
         <!-- Edit Presents Tab (requires authentication) -->
-        <div id="editTab" class="tab-content" style="display: none;">
+        <div id="editTab" class="tab-content active">
             <div class="card main-card">
                 <div class="card-header bg-red" style="text-align: center;">
                     <h5 class="card-title" style="color: white !important;">
-                        <i class="fas fa-edit me-2" style="color: white;"></i>Edytuj Moje Prezenty
+                        <i class="fas fa-edit me-2" style="color: white;"></i>Dodaj i edytuj moje prezenty
                     </h5>
                 </div>
                 <div class="card-body">
@@ -527,6 +534,12 @@
                         <div id="quickAddMessage" class="alert mt-2" style="display: none;"></div>
                     </form>
                     <hr class="mb-4" style="opacity: 0.15;">
+                    <div class="d-grid mb-4">
+                        <button type="button" class="btn btn-transparent-blur btn-lg"
+                                onclick="switchTab('add', true)" style="border-radius: 14px;">
+                            <i class="fas fa-user-friends me-2"></i>Dodaj dla kogoś innego
+                        </button>
+                    </div>
                     <div id="myPresentsList">
                         <div class="text-center">
                             <div class="spinner-border" role="status">
@@ -767,8 +780,7 @@
                 <i class="ri-trophy-line"></i>
                 <span>Ranking</span>
             </a>
-            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item"
-                onclick="localStorage.setItem('openEditTab', 'true');">
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item">
                 <i class="ri-edit-line"></i>
                 <span>Edytuj Moje Prezenty</span>
             </a>

@@ -37,23 +37,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load recipients for dropdown
     loadRecipients();
-    
-    // Check for localStorage flag to open edit tab
-    if (localStorage.getItem('openEditTab') === 'true') {
-        localStorage.removeItem('openEditTab');
-        console.log('[LocalStorage] Opening edit tab');
-        // Hide add tab immediately
-        document.getElementById('addTab').style.display = 'none';
-        // Wait longer for auth to complete
-        const checkAndSwitch = setInterval(() => {
-            if (currentUser) {
-                clearInterval(checkAndSwitch);
-                switchTab('edit');
-            }
-        }, 100);
-        // Timeout after 5 seconds
-        setTimeout(() => clearInterval(checkAndSwitch), 5000);
-    }
 });
 
 function setupFormHandlers() {
@@ -178,14 +161,21 @@ function checkAuth() {
                 // Reveal the quiet "edit my presents" path under the form
                 const editLink = document.getElementById('editMyPresentsLink');
                 if (editLink) editLink.style.display = 'block';
+                // Edit tab is the default view - load presents immediately
+                loadMyPresents();
             } else {
                 currentUser = null;
                 console.log('User not authenticated');
+                // Not logged in: fall back to add tab so the page isn't blank
+                document.getElementById('addTab').style.display = 'block';
+                document.getElementById('editTab').style.display = 'none';
             }
         })
         .catch(error => {
             console.error('Auth check error:', error);
             currentUser = null;
+            document.getElementById('addTab').style.display = 'block';
+            document.getElementById('editTab').style.display = 'none';
         });
 }
 
@@ -234,13 +224,15 @@ function tryAutoSelect() {
     }
 }
 
-function switchTab(tab) {
+function switchTab(tab, fromButton) {
     const addTab = document.getElementById('addTab');
     const editTab = document.getElementById('editTab');
+    const backLink = document.getElementById('backToEditLink');
     
     if (tab === 'add') {
         addTab.style.display = 'block';
         editTab.style.display = 'none';
+        if (backLink) backLink.style.display = fromButton ? 'block' : 'none';
     } else if (tab === 'edit') {
         // Check if user is authenticated
         if (!currentUser) {
@@ -249,6 +241,7 @@ function switchTab(tab) {
         } else {
             addTab.style.display = 'none';
             editTab.style.display = 'block';
+            if (backLink) backLink.style.display = 'none';
             loadMyPresents();
         }
     }
@@ -617,7 +610,7 @@ function loadMyPresents() {
                         <i class="fas fa-gift fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">Nie masz jeszcze żadnych prezentów</h5>
                         <p class="text-muted">Dodaj swój pierwszy prezent używając formularza powyżej</p>
-                        <button class="btn btn-primary mt-3" onclick="switchTab('add')">
+                        <button class="btn btn-primary mt-3" onclick="switchTab('add', true)">
                             <i class="fas fa-plus me-2"></i>Dodaj Prezent
                         </button>
                     </div>
