@@ -631,11 +631,11 @@ function loadMyPresents() {
 function displayMyPresents(presents) {
     const myPresentsList = document.getElementById('myPresentsList');
     
-    let html = '<div class="list-group">';
+    let html = '<div class="list-group" style="gap: 0;">';
     
     presents.forEach(present => {
         html += `
-            <div class="list-group-item" data-present-id="${present.id}">
+            <div class="list-group-item" data-present-id="${present.id}" style="background: rgba(255,255,255,0.18); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.35); border-radius: 14px; margin-bottom: 10px;">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1" style="min-width: 0; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
                         <h6 class="mb-1" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">${makeLinksClickable(escapeHtml(present.title))}</h6>

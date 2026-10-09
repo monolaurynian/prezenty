@@ -13,20 +13,17 @@ A Polish Christmas gift management application built with Node.js, Express, and 
 
 ## Database Configuration
 
-The app uses MySQL database with the following configuration:
-- Host: 153.92.7.101
-- Database: u662139794_prezenty
-- User: u662139794_prezenty
+The app uses a MySQL database. All connection details are configured via environment variables — never commit actual values to the repository.
 
 ## Environment Variables
 
-Set the following environment variables:
+Set the following environment variables (e.g. in your hosting dashboard or a local `.env` file that is gitignored):
 
 ```
-DB_HOST=153.92.7.101
-DB_USER=u662139794_prezenty
+DB_HOST=your_database_host
+DB_USER=your_database_user
 DB_PASSWORD=your_database_password
-DB_NAME=u662139794_prezenty
+DB_NAME=your_database_name
 DB_PORT=3306
 SESSION_SECRET=your_session_secret
 NODE_ENV=production

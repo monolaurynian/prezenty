@@ -743,46 +743,80 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
         padding: 0 4px;
         min-height: 54px;
         height: auto;
-        /* Tighter gap so full-length labels fit on narrow phones */
-        gap: 8px;
+        gap: 4px;
     }
     
     .tab-item {
-        /* Wide flat pill on phones too - labels must fit in full */
-        padding: 6px 14px 6px;
-        min-width: 60px;
+        padding: 5px 8px 5px;
+        min-width: 0;
+        flex: 1;
     }
     
     .tab-item i {
-        font-size: 21px;
-        width: 36px;
-        height: 26px;
+        font-size: 20px;
+        width: 32px;
+        height: 24px;
     }
     
     .tab-item span {
-        font-size: 10px !important;
-        letter-spacing: 0.2px;
+        font-size: 9px !important;
+        letter-spacing: 0px;
+        white-space: nowrap;
     }
     
     .tab-fab {
-        width: 52px;
-        height: 52px;
-        top: -22px;
+        width: 50px;
+        height: 50px;
+        top: -20px;
         border-width: 3px;
     }
     
     .tab-fab i {
-        font-size: 22px;
+        font-size: 20px;
+    }
+    
+    .tab-spacer {
+        flex: 0 0 60px;
     }
     
     .tab-bar-menu-btn {
-        width: 44px;
+        width: 40px;
         height: 28px;
         top: -14px;
     }
     
     .tab-bar-menu-btn i {
-        font-size: 16px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 360px) {
+    .tab-bar-container {
+        gap: 2px;
+        padding: 0 2px;
+    }
+
+    .tab-item {
+        padding: 5px 6px 5px;
+    }
+
+    .tab-item span {
+        font-size: 8px !important;
+    }
+
+    .tab-item i {
+        font-size: 18px;
+        width: 28px;
+    }
+
+    .tab-spacer {
+        flex: 0 0 52px;
+    }
+
+    .tab-fab {
+        width: 46px;
+        height: 46px;
+        top: -18px;
     }
 }
 

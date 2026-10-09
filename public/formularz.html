@@ -111,7 +111,7 @@
             font-weight: 700;
         }
 
-        /* Transparent blur button */
+        /* Dodaj dla kogoś innego button */
         .btn-transparent-blur {
             background: rgba(255, 255, 255, 0.2) !important;
             backdrop-filter: blur(10px);
@@ -122,15 +122,15 @@
             font-size: 1.1rem;
             padding: 0.875rem 1.5rem;
             transition: all 0.3s ease;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         .btn-transparent-blur:hover {
-            background: rgba(255, 255, 255, 0.3) !important;
+            background: rgba(255, 255, 255, 0.32) !important;
             border-color: rgba(255, 255, 255, 0.6) !important;
             color: white !important;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
 
         /* Card body styling */
@@ -508,8 +508,8 @@
 
         <!-- Edit Presents Tab (requires authentication) -->
         <div id="editTab" class="tab-content" style="display: none;">
-            <div class="card main-card">
-                <div class="card-header bg-red" style="text-align: center;">
+            <div class="card main-card" style="background: transparent; border: none; box-shadow: none; backdrop-filter: none;">
+                <div class="card-header bg-red" style="text-align: center; border-radius: 14px;">
                     <h5 class="card-title" style="color: white !important;">
                         <i class="fas fa-edit me-2" style="color: white;"></i>Dodaj i edytuj moje prezenty
                     </h5>
