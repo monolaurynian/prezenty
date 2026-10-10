@@ -248,8 +248,8 @@
             const total = abandonedSummary && abandonedSummary.totalPresents != null
                 ? abandonedSummary.totalPresents : null;
             const summaryLine = `<div class="muted mb-2" style="font-size:13px;">
-                ${total != null ? `W bazie jest łącznie <strong>${total}</strong> prezentów.` : ''}
-                Znaleziono <strong>${abandonedPresents.length}</strong> prezentów bez opiekuna${abandoned.length !== abandonedPresents.length ? ` (${abandonedPresents.length - abandoned.length} z nich należy do niezidentyfikowanych osób i jest na liście powyżej)` : ''}.
+                ${total != null ? `W bazie łącznie: <strong>${total}</strong> ${plPlural(total, 'prezent', 'prezenty', 'prezentów')}.` : ''}
+                Znaleziono <strong>${abandonedPresents.length}</strong> ${plPlural(abandonedPresents.length, 'prezent', 'prezenty', 'prezentów')} bez opiekuna${abandoned.length !== abandonedPresents.length ? ` (${abandonedPresents.length - abandoned.length} z nich należy do niezidentyfikowanych osób i jest na liście powyżej)` : ''}.
             </div>`;
 
             if (abandoned.length === 0) {
@@ -284,7 +284,7 @@
             const flags = [];
             if (p.reserved) flags.push('zarezerwowany');
             if (p.bought) flags.push('kupiony');
-            if (!p.creator_gone && p.creator_username) flags.push(`dodany przez ${p.creator_username}`);
+            if (!p.creator_gone && p.creator_username) flags.push(`dodany przez: ${p.creator_username}`);
             return `
                 <div class="present-row" data-abandoned="${p.id}">
                     <div class="d-flex justify-content-between gap-2 flex-wrap align-items-start">
@@ -446,6 +446,6 @@
                 .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
         }
     </script>
-    <script src="desktop-nav.js?v=4"></script>
+    <script src="desktop-nav.js?v=5"></script>
 </body>
 </html>

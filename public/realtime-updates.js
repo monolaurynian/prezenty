@@ -251,7 +251,7 @@
             // Update reservation status
             const reserveBtn = presentElement.querySelector('.reserve-btn');
             if (reserveBtn) {
-                reserveBtn.textContent = `Zarezerwowane przez ${data.username}`;
+                reserveBtn.textContent = `Zarezerwowane przez: ${data.username}`;
                 reserveBtn.classList.remove('btn-outline-success');
                 reserveBtn.classList.add('btn-secondary');
                 reserveBtn.disabled = true;

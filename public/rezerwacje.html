@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zarezerwowane Prezenty - Życzenia Prezentowe</title>
+    <title>Zarezerwowane prezenty - Życzenia Prezentowe</title>
 
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -84,6 +84,7 @@
     <!-- Manifest (required for PWA install prompt) -->
     <link rel="manifest" href="manifest.json">
     <script src="pluralize-pl.js"></script>
+    <script src="notification-text.js"></script>
 </head>
 <body class="has-tab-bar">
     <div class="background-overlay"></div>
@@ -99,8 +100,8 @@
         </div>
 
         <div class="glass-card p-4">
-            <h4 class="mb-1"><i class="fas fa-bookmark me-2" style="color: #EF6C00;"></i>Zarezerwowane Prezenty</h4>
-            <p class="mb-2" style="opacity: 0.85;">Prezenty, które zarezerwowałeś(-aś) dla innych.</p>
+            <h4 class="mb-1"><i class="fas fa-bookmark me-2" style="color: #EF6C00;"></i>Zarezerwowane prezenty</h4>
+            <p class="mb-2" style="opacity: 0.85;">Twoje rezerwacje prezentów dla innych.</p>
 
             <div id="reservedContent">
                 <div class="text-center py-5">
@@ -328,7 +329,7 @@
             </a>
             <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
                 <i class="ri-bookmark-line"></i>
-                <span>Zarezerwowane Prezenty</span>
+                <span>Zarezerwowane prezenty</span>
             </a>
             <a href="leaderboard.html" class="tab-bar-menu-item">
                 <i class="ri-trophy-line"></i>
@@ -336,7 +337,7 @@
             </a>
             <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
                 <i class="ri-edit-line"></i>
-                <span>Edytuj Moje Prezenty</span>
+                <span>Edytuj moje prezenty</span>
             </a>
             <div class="tab-bar-menu-divider"></div>
             <!-- Secondary quick actions: compact tiles, share-sheet style -->
@@ -376,7 +377,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=15"></script>
-    <script src="desktop-nav.js?v=4"></script>
+    <script src="tab-bar-functions.js?v=16"></script>
+    <script src="desktop-nav.js?v=5"></script>
 </body>
 </html>

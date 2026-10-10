@@ -314,6 +314,7 @@
         }
     </style>
     <script src="pluralize-pl.js"></script>
+    <script src="notification-text.js"></script>
 </head>
 <body class="activity-page has-tab-bar">
     <div class="background-overlay"></div>
@@ -335,7 +336,7 @@
         <div class="sidebar-content">
             <a href="/" class="sidebar-item">
                 <i class="fas fa-home"></i>
-                <span>Strona Główna</span>
+                <span>Strona główna</span>
             </a>
             <a href="/activity.html" class="sidebar-item active">
                 <i class="fas fa-bell"></i>
@@ -470,14 +471,22 @@
             const safeTitle = escapeHtmlText(data.presentTitle || 'prezent');
             const linkified = linkifyEscaped(safeTitle);
             if (linkified !== safeTitle) {
-                return `<strong>"${linkified}"</strong>`;
+                return `<strong>„${linkified}”</strong>`;
             }
             // Opens the recipients page filtered to the present's recipient
             // with the present highlighted (see tab-bar-functions.js)
             const recipientEnc = encodeURIComponent(data.recipientName || '');
             return data.presentId ?
-                `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}, '${recipientEnc}'); return false;" style="color: ${color}; text-decoration: underline;"><strong>"${safeTitle}"</strong></a>` :
-                `<strong>"${safeTitle}"</strong>`;
+                `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}, '${recipientEnc}'); return false;" style="color: ${color}; text-decoration: underline;"><strong>„${safeTitle}”</strong></a>` :
+                `<strong>„${safeTitle}”</strong>`;
+        }
+
+        // Shared wording (notification-text.js) with this page's links
+        function activityMessage(type, data, actor, color) {
+            return notificationText(type, data, actor, {
+                person: (safe, raw) => personLinkHtml(raw),
+                present: (quoted, d) => presentLinkHtml(d, color)
+            });
         }
 
         // Notification type configuration
@@ -485,37 +494,32 @@
             recipient_added: {
                 icon: 'fa-user-plus',
                 color: '#4CAF50',
-                getMessage: (data, actor) => `<strong>${actor}</strong> dodał(a) osobę ${data.recipientName ? personLinkHtml(data.recipientName) : '<strong>nową osobę</strong>'}`
+                getMessage: (data, actor) => activityMessage('recipient_added', data, actor, '#4CAF50')
             },
             present_added: {
                 icon: 'fa-gift',
                 color: '#2196F3',
-                getMessage: (data, actor) =>
-                    `<strong>${actor}</strong> dodał(a) prezent ${presentLinkHtml(data, '#2196F3')}${forRecipient(data, actor)}`
+                getMessage: (data, actor) => activityMessage('present_added', data, actor, '#2196F3')
             },
             present_reserved: {
                 icon: 'fa-bookmark',
                 color: '#FF9800',
-                getMessage: (data, actor) =>
-                    `<strong>${actor}</strong> zarezerwował(a) prezent ${presentLinkHtml(data, '#FF9800')}${forRecipient(data, actor)}`
+                getMessage: (data, actor) => activityMessage('present_reserved', data, actor, '#FF9800')
             },
             present_unreserved: {
                 icon: 'fa-bookmark-slash',
                 color: '#9E9E9E',
-                getMessage: (data, actor) =>
-                    `<strong>${actor}</strong> anulował(a) rezerwację ${presentLinkHtml(data, '#9E9E9E')}${forRecipient(data, actor)}`
+                getMessage: (data, actor) => activityMessage('present_unreserved', data, actor, '#9E9E9E')
             },
             present_checked: {
                 icon: 'fa-check-circle',
                 color: '#4CAF50',
-                getMessage: (data, actor) =>
-                    `<strong>${actor}</strong> oznaczył(a) jako kupione ${presentLinkHtml(data, '#4CAF50')}${forRecipient(data, actor)}`
+                getMessage: (data, actor) => activityMessage('present_checked', data, actor, '#4CAF50')
             },
             present_unchecked: {
                 icon: 'fa-circle',
                 color: '#9E9E9E',
-                getMessage: (data, actor) =>
-                    `<strong>${actor}</strong> odznaczył(a) ${presentLinkHtml(data, '#9E9E9E')}${forRecipient(data, actor)}`
+                getMessage: (data, actor) => activityMessage('present_unchecked', data, actor, '#9E9E9E')
             },
             leaderboard_leader: {
                 icon: 'fa-trophy',
@@ -531,18 +535,10 @@
             }
         };
 
-        // Shared helper: " dla <recipient>" suffix so it's always visible who the present is for
         // Person name -> link to their prefiltered presents page
         function personLinkHtml(name) {
             const safe = escapeHtmlText(name);
             return `<a href="/recipients.html?osoba=${encodeURIComponent(name)}" onclick="event.stopPropagation();" style="color: #2196F3; text-decoration: underline;"><strong>${safe}</strong></a>`;
-        }
-
-        function forRecipient(data, actor) {
-            // Skipped when the recipient IS the actor ("Mati ... dla Mati")
-            if (!data.recipientName) return '';
-            if (actor && String(data.recipientName).trim().toLowerCase() === String(actor).trim().toLowerCase()) return '';
-            return ` dla ${personLinkHtml(data.recipientName)}`;
         }
 
         // Load notifications
@@ -708,10 +704,13 @@
                     // recipient's presents when we know who they're for
                     const b = entry.burst;
                     const isUnread = b.items.some(n => !n.is_read);
-                    const countText = plCount(b.items.length, 'prezent', 'prezenty', 'prezentów');
-                    const countHtml = b.recipientName
-                        ? `<a href="/recipients.html?osoba=${encodeURIComponent(b.recipientName)}" onclick="event.stopPropagation();" style="color: #2196F3; text-decoration: underline;"><strong>${countText}</strong></a>`
-                        : `<strong>${countText}</strong>`;
+                    const burstMessage = notificationText('present_added_batch',
+                        { count: b.items.length, recipientName: b.recipientName }, b.actor, {
+                            person: (safe, raw) => personLinkHtml(raw),
+                            count: (countText) => b.recipientName
+                                ? `<a href="/recipients.html?osoba=${encodeURIComponent(b.recipientName)}" onclick="event.stopPropagation();" style="color: #2196F3; text-decoration: underline;"><strong>${countText}</strong></a>`
+                                : `<strong>${countText}</strong>`
+                        });
                     return `
                         <div class="notification-item ${isUnread ? 'unread' : ''}">
                             <div class="notification-icon" style="background-color: #2196F320; color: #2196F3;">
@@ -719,7 +718,7 @@
                             </div>
                             <div class="notification-content">
                                 <div class="notification-message">
-                                    <strong>${b.actor}</strong> dodał(a) ${countHtml}${b.recipientName ? ' dla ' + personLinkHtml(b.recipientName) : ''}
+                                    ${burstMessage}
                                 </div>
                                 <div class="notification-time">
                                     <i class="fas fa-clock me-1"></i>${getTimeAgo(b.items[0].created_at)}
@@ -737,7 +736,7 @@
                     config = {
                         icon: 'fa-bell',
                         color: '#666',
-                        getMessage: (data, actor) => `<strong>${actor || 'Ktoś'}</strong> wykonał akcję`
+                        getMessage: (data, actor) => notificationText(notification.type, data, actor)
                     };
                 }
                 
@@ -987,7 +986,7 @@
             </a>
             <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
                 <i class="ri-bookmark-line"></i>
-                <span>Zarezerwowane Prezenty</span>
+                <span>Zarezerwowane prezenty</span>
             </a>
             <a href="leaderboard.html" class="tab-bar-menu-item">
                 <i class="ri-trophy-line"></i>
@@ -995,7 +994,7 @@
             </a>
             <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
                 <i class="ri-edit-line"></i>
-                <span>Edytuj Moje Prezenty</span>
+                <span>Edytuj moje prezenty</span>
             </a>
             <div class="tab-bar-menu-divider"></div>
             <!-- Secondary quick actions: compact tiles, share-sheet style -->
@@ -1035,7 +1034,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=15"></script>
-    <script src="desktop-nav.js?v=4"></script>
+    <script src="tab-bar-functions.js?v=16"></script>
+    <script src="desktop-nav.js?v=5"></script>
 </body>
 </html>

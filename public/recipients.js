@@ -635,7 +635,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     // No loading placeholder for the identified user's own
                     // card anymore: the own card is hidden by default (own
-                    // presents are managed in "Edytuj Moje Prezenty") and
+                    // presents are managed in "Edytuj moje prezenty") and
                     // only appears when explicitly selected in the person
                     // filter - see applyAllFilters in filters.js.
 
@@ -1102,7 +1102,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                                     <i class="fas fa-lock me-2"></i>Ładowanie Twoich prezentów z zachowaniem niespodzianki...
                                 ` : `
                                     <i class="fas fa-gift me-2"></i>
-                                    Twoje prezenty (${ownPresents.length}) - kliknij aby edytować
+                                    Twoje prezenty (${ownPresents.length}) - kliknij, aby edytować
                                 `}
                             </button>
                         </h2>
@@ -1118,7 +1118,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                                 ` : `
                                     <div class="alert alert-info mb-3" style="background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%); border-left: 4px solid #0d6efd;">
                                         <strong>🎁 Niespodzianka!</strong><br>
-                                        Nie możesz zobaczyć które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki!
+                                        Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki!
                                     </div>
                                     ${ownPresents.length > 0 ? `
                                         <div class="fw-bold mb-2"><i class="fas fa-list me-1"></i>Twoje dodane prezenty:</div>
@@ -1151,7 +1151,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                                                 </li>
                                             `).join('')}
                                         </ul>
-                                    ` : '<p class="text-muted mb-0">Nie dodałeś jeszcze żadnych prezentów.</p>'}
+                                    ` : '<p class="text-muted mb-0">Nie masz jeszcze dodanych prezentów.</p>'}
                                 `}
                             </div>
                         </div>
@@ -2447,7 +2447,7 @@ const VERIFIED_BADGE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusabl
 // badge never wraps onto a line of its own. Returns escaped HTML.
 function recipientNameWithBadge(name, identifiedByName) {
     if (identifiedByName == null) return escapeHtml(name);
-    const label = 'Zidentyfikowane przez: ' + identifiedByName;
+    const label = 'Potwierdzone przez: ' + identifiedByName;
     const badge = `<button type="button" class="verified-badge" aria-label="${escapeAttr(label)}" title="${escapeAttr(label)}" data-tooltip="${escapeAttr(label)}">${VERIFIED_BADGE_SVG}</button>`;
     const trimmed = String(name == null ? '' : name).trim();
     const cut = trimmed.lastIndexOf(' ') + 1;
@@ -3338,7 +3338,7 @@ function openRecipientDetailsModal(recipient, presents, isIdentified) {
     }
     const contentDiv = document.getElementById('recipientDetailsContent');
     if (isIdentified) {
-        contentDiv.innerHTML = `<div class="alert alert-warning text-center"><b>Co korci Cię żeby zobaczyć czy już ktoś kupił Twoje prezenty??? Wynocha!</b></div>`;
+        contentDiv.innerHTML = `<div class="alert alert-warning text-center"><b>Co, korci Cię, żeby zobaczyć, czy już ktoś kupił Twoje prezenty??? Wynocha!</b></div>`;
     } else {
         // Sortowanie prezentów: najpierw niekupione i niezarezerwowane, potem zarezerwowane, potem kupione
         const notBought = presents.filter(p => !p.is_checked && !p.reserved_by);

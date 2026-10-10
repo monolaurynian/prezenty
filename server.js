@@ -948,7 +948,7 @@ app.post('/api/recipients', requireAuth, async (req, res) => {
     } catch (err) {
         console.error('[POST /api/recipients] Database error adding recipient:', err, 'Request body:', req.body, 'Session:', req.session);
         if (err.code === 'ER_DUP_ENTRY') {
-            return conflict(res, 'Taka osoba já istnieje!');
+            return conflict(res, 'Taka osoba już istnieje!');
         }
         return handleDbError(err, res, 'Błąd podczas dodawania osoby');
     }
@@ -1682,7 +1682,7 @@ app.post('/api/presents', requireAuth, async (req, res) => {
 
         // Send push notification to other users (non-blocking, with error handling)
         const notificationTitle = 'Nowy prezent!';
-        const notificationBody = `Dodano nowy prezent "${title.trim()}" dla ${recipientName}`;
+        const notificationBody = `Dodano nowy prezent „${title.trim()}” (dla: ${recipientName})`;
         console.log(`📢 [PRESENT] Triggering notification for new present: "${title.trim()}" (ID: ${result.insertId})`);
 
         // Send notification asynchronously without blocking the response
@@ -3016,7 +3016,7 @@ async function ensureNotificationsTable() {
     try {
         // type is VARCHAR, not ENUM: the original ENUM silently truncated
         // unknown values (like leaderboard_leader) to '' - clients then
-        // rendered the "wykonał(a) akcję" fallback
+        // rendered the generic "nowa aktywność" fallback
         await pool.execute(`
             CREATE TABLE IF NOT EXISTS notifications (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -3306,7 +3306,7 @@ app.post('/api/formularz/present', async (req, res) => {
 
             // Send push notification to other users (non-blocking)
             const notificationTitle = 'Nowy prezent!';
-            const notificationBody = `Dodano nowy prezent "${presentTitle.trim()}" dla ${notificationRecipientName}`;
+            const notificationBody = `Dodano nowy prezent „${presentTitle.trim()}” (dla: ${notificationRecipientName})`;
             console.log(`📢 [FORMULARZ] Triggering notification for new present: "${presentTitle.trim()}" (ID: ${presentId})`);
 
             sendNotificationToUsers(notificationActorId, notificationTitle, notificationBody, {
@@ -3452,7 +3452,7 @@ app.post('/api/user/identify', requireAuth, async (req, res) => {
 
         if (existingRecipient) {
             console.log('[POST /api/user/identify] User already identified as:', existingRecipient);
-            return conflict(res, 'Jesteś już zidentyfikowany jako ' + existingRecipient.name);
+            return conflict(res, 'Twoje konto jest już powiązane z: ' + existingRecipient.name);
         }
 
         // Check if recipient with this name already exists

@@ -100,7 +100,7 @@ function applyStatusFilter(filterType) {
 }
 
 // The identified user's own card is hidden by default - own presents are
-// managed in "Edytuj Moje Prezenty". It only shows when the person filter
+// managed in "Edytuj moje prezenty". It only shows when the person filter
 // explicitly selects it (still anonymized server-side, so no spoilers).
 function getOwnRecipientId() {
     try {

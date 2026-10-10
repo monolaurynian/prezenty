@@ -741,6 +741,7 @@
 
     <link rel="apple-touch-icon" href="icon-180.png?v=4">
     <script src="pluralize-pl.js"></script>
+    <script src="notification-text.js"></script>
 </head>
 
 <body class="has-tab-bar">
@@ -758,7 +759,7 @@
             <div class="navbar-brand">
                 <div class="brand-container">
                     <span class="brand-text">
-                        <i class="fas fa-trophy me-2"></i>Ranking Użytkowników
+                        <i class="fas fa-trophy me-2"></i>Ranking użytkowników
                     </span>
                 </div>
             </div>
@@ -777,7 +778,7 @@
         <div class="sidebar-content">
             <a href="/" class="sidebar-item">
                 <i class="fas fa-home"></i>
-                <span>Strona Główna</span>
+                <span>Strona główna</span>
             </a>
             <a href="/activity.html" class="sidebar-item">
                 <i class="fas fa-bell"></i>
@@ -835,7 +836,7 @@
 
         <div id="podiumSection" class="podium-section" style="display: none;">
             <h2 class="text-center mb-4" style="color: #2d3748; font-weight: 700;">
-                <i class="fas fa-medal me-2"></i>Najwięcej Prezentów
+                <i class="fas fa-medal me-2"></i>Najwięcej prezentów
             </h2>
             <div class="podium" id="podium">
                 <!-- Will be populated by JavaScript -->
@@ -859,7 +860,7 @@
                     </p>
                     <a href="/formularz.html" class="btn btn-light btn-lg"
                         style="padding: 15px 40px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 8px 30px rgba(0,0,0,0.4);">
-                        <i class="fas fa-gift me-2"></i>Dodaj Prezent
+                        <i class="fas fa-gift me-2"></i>Dodaj prezent
                     </a>
                 </div>
             </div>
@@ -868,7 +869,7 @@
         <!-- Activity Podium -->
         <div id="activityPodiumSection" class="podium-section" style="display: none;">
             <h2 class="text-center mb-4" style="color: #2d3748; font-weight: 700;">
-                <i class="fas fa-fire me-2"></i>Najbardziej Aktywni
+                <i class="fas fa-fire me-2"></i>Najbardziej aktywni
             </h2>
             <p style="text-align: center; color: #718096; margin-bottom: 30px;">Użytkownicy, którzy kupili i
                 zarezerwowali najwięcej prezentów</p>
@@ -879,14 +880,14 @@
 
         <!-- Activity Leaderboard (Bought & Reserved) -->
         <div id="activityLeaderboard" class="ranking-list" style="display: none;">
-            <h3><i class="fas fa-list-ol me-2"></i>Pełna Lista Aktywności</h3>
+            <h3><i class="fas fa-list-ol me-2"></i>Pełna lista aktywności</h3>
             <div id="activityList">
                 <!-- Will be populated by JavaScript -->
             </div>
         </div>
 
         <div id="rankingList" class="ranking-list" style="display: none;">
-            <h3><i class="fas fa-list-ol me-2"></i>Najwięcej Prezentów</h3>
+            <h3><i class="fas fa-list-ol me-2"></i>Najwięcej prezentów</h3>
             <div id="usersList">
                 <!-- Will be populated by JavaScript -->
             </div>
@@ -898,7 +899,7 @@
             <div class="empty-state">
                 <i class="fas fa-users"></i>
                 <h3>Brak aktywnych użytkowników</h3>
-                <p>Bądź pierwszym, który doda prezenty i pojawi się w rankingu!</p>
+                <p>Dodaj prezenty i zostań pierwszą osobą w rankingu!</p>
             </div>
 
             <!-- Call to Action for Empty State -->
@@ -906,7 +907,7 @@
                 style="text-align: center; margin-top: 30px; padding: 40px; background: rgba(244, 67, 54, 0.7); backdrop-filter: blur(10px); border-radius: 20px;">
                 <a href="/formularz.html" class="btn btn-light btn-lg"
                     style="padding: 15px 40px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                    <i class="fas fa-gift me-2"></i>Dodaj Pierwszy Prezent
+                    <i class="fas fa-gift me-2"></i>Dodaj pierwszy prezent
                 </a>
             </div>
         </div>
@@ -1263,7 +1264,7 @@
             </a>
             <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
                 <i class="ri-bookmark-line"></i>
-                <span>Zarezerwowane Prezenty</span>
+                <span>Zarezerwowane prezenty</span>
             </a>
             <a href="leaderboard.html" class="tab-bar-menu-item">
                 <i class="ri-trophy-line"></i>
@@ -1272,7 +1273,7 @@
             <a href="formularz.html" class="tab-bar-menu-item edit-presents-item"
                 onclick="localStorage.setItem('openEditTab', 'true');">
                 <i class="ri-edit-line"></i>
-                <span>Edytuj Moje Prezenty</span>
+                <span>Edytuj moje prezenty</span>
             </a>
             <div class="tab-bar-menu-divider"></div>
             <!-- Secondary quick actions: compact tiles, share-sheet style -->
@@ -1320,8 +1321,8 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=15"></script>
-    <script src="desktop-nav.js?v=4"></script>
+    <script src="tab-bar-functions.js?v=16"></script>
+    <script src="desktop-nav.js?v=5"></script>
 </body>
 
 </html>

@@ -835,6 +835,7 @@
         }
     </style>
     <script src="pluralize-pl.js"></script>
+    <script src="notification-text.js"></script>
 </head>
 
 <body class="recipients-page has-tab-bar">
@@ -855,7 +856,7 @@
         <div class="sidebar-content">
             <a href="/" class="sidebar-item">
                 <i class="fas fa-home"></i>
-                <span>Strona Główna</span>
+                <span>Strona główna</span>
             </a>
             <a href="/activity.html" class="sidebar-item">
                 <i class="fas fa-bell"></i>
@@ -867,11 +868,11 @@
             </a>
             <a href="/formularz.html" class="sidebar-item">
                 <i class="fas fa-plus"></i>
-                <span>Dodaj Prezent</span>
+                <span>Dodaj prezent</span>
             </a>
             <a href="/formularz.html" class="sidebar-item" onclick="localStorage.setItem('openEditTab', 'true');">
                 <i class="fas fa-edit"></i>
-                <span>Edytuj Moje Prezenty</span>
+                <span>Edytuj moje prezenty</span>
             </a>
             <div class="sidebar-divider"></div>
             <a href="#" class="sidebar-item" onclick="openSettingsModal(); return false;">
@@ -1055,7 +1056,7 @@
                 <div class="modal-header aws-modal-header">
                     <div class="aws-modal-title-section">
                         <h5 class="modal-title">
-                            <i class="fas fa-edit me-2"></i>Edytuj Prezent
+                            <i class="fas fa-edit me-2"></i>Edytuj prezent
                         </h5>
                         <p class="aws-modal-subtitle">Zmień informacje o prezencie</p>
                     </div>
@@ -1117,7 +1118,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-bookmark me-2"></i>Zarezerwowane Prezenty
+                        <i class="fas fa-bookmark me-2"></i>Zarezerwowane prezenty
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1143,7 +1144,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-user-plus me-2"></i>Dodaj Nową Osobę
+                        <i class="fas fa-user-plus me-2"></i>Dodaj nową osobę
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1160,7 +1161,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
                     <button type="button" class="btn btn-success" onclick="addRecipientFromModal()">
-                        <i class="fas fa-plus me-1"></i>Dodaj Osobę
+                        <i class="fas fa-plus me-1"></i>Dodaj osobę
                     </button>
                 </div>
             </div>
@@ -1225,8 +1226,8 @@
                         <h6 class="text-muted mb-3">Czy to jesteś Ty?</h6>
                         <p class="mb-0">Chcesz zidentyfikować się jako <strong id="identificationRecipientName"
                                 class="text-primary"></strong>?</p>
-                        <small class="text-muted d-block mt-2">Po identyfikacji będziesz mógł zarządzać swoimi
-                            prezentami</small>
+                        <small class="text-muted d-block mt-2">Po identyfikacji możesz zarządzać swoimi
+                            prezentami.</small>
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center">
@@ -1323,7 +1324,7 @@
                 <div class="modal-body">
                     <p>Czy na pewno chcesz anulować identyfikację jako <strong
                             id="cancelIdentificationRecipientName"></strong>?</p>
-                    <p class="text-muted">Po anulowaniu będziesz mógł ponownie zidentyfikować się jako ta osoba.</p>
+                    <p class="text-muted">Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
@@ -1386,7 +1387,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title text-warning">
-                        <i class="fas fa-bookmark me-2"></i>Prezent Zarezerwowany
+                        <i class="fas fa-bookmark me-2"></i>Prezent zarezerwowany
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1796,14 +1797,25 @@
 
         // Person name -> link to their prefiltered presents page
         function personLinkHtml(name) {
-            return `<a href="/recipients.html?osoba=${encodeURIComponent(name)}" onclick="event.stopPropagation();" style="color: #2196F3; text-decoration: underline;"><strong>${name}</strong></a>`;
+            return `<a href="/recipients.html?osoba=${encodeURIComponent(name)}" onclick="event.stopPropagation();" style="color: #2196F3; text-decoration: underline;"><strong>${notificationTextEscape(name)}</strong></a>`;
         }
 
-        // " dla X" suffix - skipped when X is the actor themselves
-        function forWhom(d, a) {
-            if (!d.recipientName) return '';
-            if (a && String(d.recipientName).trim().toLowerCase() === String(a).trim().toLowerCase()) return '';
-            return ' dla ' + personLinkHtml(d.recipientName);
+        function notificationTextEscape(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : String(text);
+            return div.innerHTML;
+        }
+
+        // Shared wording (notification-text.js); the actor is printed
+        // separately by renderNotification, so it's left out here
+        function bellMessage(type, data, actor, color) {
+            return notificationText(type, data, actor, {
+                showActor: false,
+                person: (safe, raw) => personLinkHtml(raw),
+                present: (quoted, d) => d.presentId ?
+                    `<span onclick="event.stopPropagation(); window.navigateToPresent(${Number(d.presentId)});" style="color: ${color}; text-decoration: underline; cursor: pointer;"><strong>${quoted}</strong></span>` :
+                    `<strong>${quoted}</strong>`
+            });
         }
 
         function renderNotification(notification) {
@@ -1818,7 +1830,7 @@
                     </div>
                     <div class="notification-content">
                         <div class="notification-text">
-                            <strong>${notification.actor_username || 'Ktoś'}</strong> ${config.getMessage(notification.data, notification.actor_username || 'Ktoś')}
+                            <strong>${notificationTextEscape(notification.actor_username || 'Ktoś')}</strong> ${config.getMessage(notification.data, notification.actor_username || 'Ktoś')}
                         </div>
                         <div class="notification-time">${timeAgo}</div>
                     </div>
@@ -1832,57 +1844,32 @@
                 recipient_added: {
                     icon: 'fa-user-plus',
                     color: '#4CAF50',
-                    getMessage: (data, actor) => `dodał(a) osobę ${data.recipientName ? personLinkHtml(data.recipientName) : 'nową osobę'}`
+                    getMessage: (data, actor) => bellMessage('recipient_added', data, actor, '#4CAF50')
                 },
                 present_added: {
                     icon: 'fa-gift',
                     color: '#2196F3',
-                    getMessage: (data, actor) => {
-                        const presentLink = data.presentId ? 
-                            `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #2196F3; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
-                            `<strong>"${data.presentTitle}"</strong>`;
-                        return `dodał(a) prezent ${presentLink}${forWhom(data, actor)}`;
-                    }
+                    getMessage: (data, actor) => bellMessage('present_added', data, actor, '#2196F3')
                 },
                 present_reserved: {
                     icon: 'fa-bookmark',
                     color: '#FF9800',
-                    getMessage: (data, actor) => {
-                        const presentLink = data.presentId ? 
-                            `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #FF9800; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
-                            `<strong>"${data.presentTitle}"</strong>`;
-                        return `zarezerwował(a) prezent ${presentLink}${forWhom(data, actor)}`;
-                    }
+                    getMessage: (data, actor) => bellMessage('present_reserved', data, actor, '#FF9800')
                 },
                 present_unreserved: {
                     icon: 'fa-bookmark-slash',
                     color: '#9E9E9E',
-                    getMessage: (data, actor) => {
-                        const presentLink = data.presentId ? 
-                            `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
-                            `<strong>"${data.presentTitle}"</strong>`;
-                        return `anulował(a) rezerwację ${presentLink}${forWhom(data, actor)}`;
-                    }
+                    getMessage: (data, actor) => bellMessage('present_unreserved', data, actor, '#9E9E9E')
                 },
                 present_checked: {
                     icon: 'fa-check-circle',
                     color: '#4CAF50',
-                    getMessage: (data, actor) => {
-                        const presentLink = data.presentId ? 
-                            `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #4CAF50; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
-                            `<strong>"${data.presentTitle}"</strong>`;
-                        return `oznaczył(a) jako kupione ${presentLink}${forWhom(data, actor)}`;
-                    }
+                    getMessage: (data, actor) => bellMessage('present_checked', data, actor, '#4CAF50')
                 },
                 present_unchecked: {
                     icon: 'fa-circle',
                     color: '#9E9E9E',
-                    getMessage: (data, actor) => {
-                        const presentLink = data.presentId ? 
-                            `<span onclick="event.stopPropagation(); window.navigateToPresent(${data.presentId});" style="color: #9E9E9E; text-decoration: underline; cursor: pointer;"><strong>"${data.presentTitle}"</strong></span>` : 
-                            `<strong>"${data.presentTitle}"</strong>`;
-                        return `odznaczył(a) ${presentLink}${forWhom(data, actor)}`;
-                    }
+                    getMessage: (data, actor) => bellMessage('present_unchecked', data, actor, '#9E9E9E')
                 },
                 leaderboard_leader: {
                     icon: 'fa-trophy',
@@ -2303,32 +2290,32 @@
             recipient_added: {
                 icon: 'fa-user-plus',
                 color: '#4CAF50',
-                getMessage: (data, actor) => `${actor} dodał(a) osobę ${data.recipientName}`
+                getMessage: (data, actor) => notificationText('recipient_added', data, actor, { html: false })
             },
             present_added: {
                 icon: 'fa-gift',
                 color: '#2196F3',
-                getMessage: (data, actor) => `${actor} dodał(a) prezent "${data.presentTitle}"${forWhom(data, actor)}`
+                getMessage: (data, actor) => notificationText('present_added', data, actor, { html: false })
             },
             present_reserved: {
                 icon: 'fa-bookmark',
                 color: '#FF9800',
-                getMessage: (data, actor) => `${actor} zarezerwował(a) "${data.presentTitle}"${forWhom(data, actor)}`
+                getMessage: (data, actor) => notificationText('present_reserved', data, actor, { html: false })
             },
             present_unreserved: {
                 icon: 'fa-bookmark-slash',
                 color: '#9E9E9E',
-                getMessage: (data, actor) => `${actor} anulował(a) rezerwację "${data.presentTitle}"${forWhom(data, actor)}`
+                getMessage: (data, actor) => notificationText('present_unreserved', data, actor, { html: false })
             },
             present_checked: {
                 icon: 'fa-check-circle',
                 color: '#4CAF50',
-                getMessage: (data, actor) => `${actor} oznaczył(a) jako kupione "${data.presentTitle}"${forWhom(data, actor)}`
+                getMessage: (data, actor) => notificationText('present_checked', data, actor, { html: false })
             },
             present_unchecked: {
                 icon: 'fa-circle',
                 color: '#9E9E9E',
-                getMessage: (data, actor) => `${actor} odznaczył(a) "${data.presentTitle}"${forWhom(data, actor)}`
+                getMessage: (data, actor) => notificationText('present_unchecked', data, actor, { html: false })
             },
             leaderboard_leader: {
                 icon: 'fa-trophy',
@@ -2382,7 +2369,7 @@
     <script src="fast-loader.js"></script>
 
     <!-- Main app (critical - load immediately) -->
-    <script src="recipients.js?v=23&t=1111111111"></script>
+    <script src="recipients.js?v=24&t=1111111111"></script>
 
     <!-- Scroll to recipient from leaderboard -->
     <script>
@@ -2442,17 +2429,17 @@
     </script>
 
     <!-- Filters -->
-    <script src="filters.js?v=7"></script>
+    <script src="filters.js?v=8"></script>
 
     <!-- Debug script (temporary - remove after fixing) -->
     <script src="profile-picture-debug.js"></script>
 
     <!-- Non-critical scripts (defer to load after page is interactive) -->
     <script src="update-checker.js" defer></script>
-    <script src="realtime-updates.js" defer></script>
+    <script src="realtime-updates.js?v=2" defer></script>
     
     <!-- Tab bar functions (shared across pages) -->
-    <script src="tab-bar-functions.js?v=15"></script>
+    <script src="tab-bar-functions.js?v=16"></script>
 
     <!-- Bottom Tab Bar -->
     <div class="bottom-tab-bar">
@@ -2518,7 +2505,7 @@
             </a>
             <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
                 <i class="ri-bookmark-line"></i>
-                <span>Zarezerwowane Prezenty</span>
+                <span>Zarezerwowane prezenty</span>
             </a>
             <a href="leaderboard.html" class="tab-bar-menu-item">
                 <i class="ri-trophy-line"></i>
@@ -2526,7 +2513,7 @@
             </a>
             <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
                 <i class="ri-edit-line"></i>
-                <span>Edytuj Moje Prezenty</span>
+                <span>Edytuj moje prezenty</span>
             </a>
             <div class="tab-bar-menu-divider"></div>
             <!-- Secondary quick actions: compact tiles, share-sheet style -->
@@ -2568,7 +2555,7 @@
     </div>
 
     <!-- Notification functions now loaded from tab-bar-functions.js -->
-    <script src="desktop-nav.js?v=4"></script>
+    <script src="desktop-nav.js?v=5"></script>
 </body>
 
 </html>

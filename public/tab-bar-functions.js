@@ -1,5 +1,14 @@
 // Tab Bar Functions - Shared across all pages
 
+// Notification wording lives in notification-text.js. Pages normally
+// include it before this file; load it on demand for any page that doesn't
+if (typeof window !== 'undefined' && typeof window.notificationText !== 'function' &&
+    !document.querySelector('script[src*="notification-text.js"]')) {
+    const notifTextScript = document.createElement('script');
+    notifTextScript.src = '/notification-text.js';
+    document.head.appendChild(notifTextScript);
+}
+
 // Toggle hamburger menu
 function toggleTabBarMenu() {
     const overlay = document.getElementById('tabBarOverlay');
@@ -205,28 +214,12 @@ function getNotificationMessage(notif) {
     
     const actor = notif.actor_username || 'Ktoś';
     // Person name -> link to their prefiltered presents page
-    const personLink = (name) => `<a href="/recipients.html?osoba=${encodeURIComponent(name)}" onclick="event.stopPropagation();" style="color: #2196F3; text-decoration: underline;"><strong>${name}</strong></a>`;
-    // " dla X" suffix - skipped when X is the actor themselves
-    const forWhom = (d, a) => (d.recipientName && String(d.recipientName).trim().toLowerCase() !== String(a).trim().toLowerCase())
-        ? ' dla ' + personLink(d.recipientName) : '';
-    const presentTitle = data.presentTitle || 'prezent';
-    const presentId = data.presentId;
+    const personLink = (safe, name) => `<a href="/recipients.html?osoba=${encodeURIComponent(name)}" onclick="event.stopPropagation();" style="color: #2196F3; text-decoration: underline;"><strong>${safe}</strong></a>`;
+    const presentId = Number(data.presentId) || null;
     const recipientEnc = encodeURIComponent(data.recipientName || '');
-    const presentLink = presentId ? `<a href="#" onclick="scrollToPresentFromNotification(${presentId}, '${recipientEnc}'); return false;" style="color: #2196F3; text-decoration: underline; cursor: pointer;"><strong>${presentTitle}</strong></a>` : `<strong>${presentTitle}</strong>`;
+    const presentLink = (quoted) => presentId ? `<a href="#" onclick="scrollToPresentFromNotification(${presentId}, '${recipientEnc}'); return false;" style="color: #2196F3; text-decoration: underline; cursor: pointer;"><strong>${quoted}</strong></a>` : `<strong>${quoted}</strong>`;
     
     switch(notif.type) {
-        case 'recipient_added':
-            return `<strong>${actor}</strong> dodał(a) osobę ${data.recipientName ? personLink(data.recipientName) : '<strong>nową osobę</strong>'}`;
-        case 'present_added':
-            return `<strong>${actor}</strong> dodał(a) prezent "${presentLink}"${forWhom(data, actor)}`;
-        case 'present_reserved':
-            return `<strong>${actor}</strong> zarezerwował(a) "${presentLink}"${forWhom(data, actor)}`;
-        case 'present_unreserved':
-            return `<strong>${actor}</strong> anulował(a) rezerwację "${presentLink}"${forWhom(data, actor)}`;
-        case 'present_checked':
-            return `<strong>${actor}</strong> oznaczył(a) jako kupione "${presentLink}"${forWhom(data, actor)}`;
-        case 'present_unchecked':
-            return `<strong>${actor}</strong> odznaczył(a) "${presentLink}"${forWhom(data, actor)}`;
         case 'leaderboard_leader':
             return `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" style="color: #2196F3; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`;
         case 'anon_message': {
@@ -234,7 +227,11 @@ function getNotificationMessage(notif) {
             return `💬 <a href="${threadHref}" style="color: #2196F3; text-decoration: underline;"><strong>${data.label || 'Nowa wiadomość'}</strong></a>${data.preview ? ': "' + escapeHtmlNotif(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`;
         }
         default:
-            return `<strong>${actor}</strong> wykonał(a) akcję`;
+            // Shared wording (notification-text.js) for every activity type
+            if (typeof notificationText === 'function') {
+                return notificationText(notif.type, data, actor, { person: personLink, present: presentLink });
+            }
+            return `<strong>${escapeHtmlNotif(actor)}</strong> · nowa aktywność`;
     }
 }
 

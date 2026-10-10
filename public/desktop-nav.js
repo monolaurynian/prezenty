@@ -16,15 +16,15 @@
     const path = (window.location.pathname.replace(/\/$/, '') || '/').toLowerCase();
 
     const items = [
-        { href: '/', icon: 'ri-home-line', activeIcon: 'ri-home-fill', label: 'Strona Główna', match: ['/', '/home.html', '/home'] },
+        { href: '/', icon: 'ri-home-line', activeIcon: 'ri-home-fill', label: 'Strona główna', match: ['/', '/home.html', '/home'] },
         { href: '/activity.html', icon: 'ri-notification-3-line', activeIcon: 'ri-notification-3-fill', label: 'Aktywność', match: ['/activity', '/activity.html'], badge: true },
         { href: '/recipients.html', icon: 'ri-gift-2-line', activeIcon: 'ri-gift-2-fill', label: 'Wszystkie prezenty', match: ['/recipients', '/recipients.html'] },
         { href: '/leaderboard.html', icon: 'ri-trophy-line', activeIcon: 'ri-trophy-fill', label: 'Ranking', match: ['/leaderboard.html', '/leaderboard'] },
-        { href: '/formularz.html', icon: 'ri-gift-line', activeIcon: 'ri-gift-fill', label: 'Dodaj Prezent', match: ['/formularz', '/formularz.html'] },
+        { href: '/formularz.html', icon: 'ri-gift-line', activeIcon: 'ri-gift-fill', label: 'Dodaj prezent', match: ['/formularz', '/formularz.html'] },
         { href: '/rezerwacje.html', icon: 'ri-bookmark-line', activeIcon: 'ri-bookmark-fill', label: 'Zarezerwowane', match: ['/rezerwacje', '/rezerwacje.html'] },
-        { href: '/wiadomosci.html', icon: 'ri-chat-private-line', activeIcon: 'ri-chat-private-fill', label: 'Anonimowe Wiadomości', match: ['/wiadomosci', '/wiadomosci.html'], msgBadge: true },
+        { href: '/wiadomosci.html', icon: 'ri-chat-private-line', activeIcon: 'ri-chat-private-fill', label: 'Anonimowe wiadomości', match: ['/wiadomosci', '/wiadomosci.html'], msgBadge: true },
         { divider: true },
-        { href: '/formularz.html', icon: 'ri-edit-line', label: 'Edytuj Moje Prezenty', editTab: true },
+        { href: '/formularz.html', icon: 'ri-edit-line', label: 'Edytuj moje prezenty', editTab: true },
         { href: '/archiwum.html', icon: 'ri-archive-line', label: 'Archiwum', match: ['/archiwum', '/archiwum.html'] },
         { href: '/ustawienia.html', icon: 'ri-settings-3-line', label: 'Ustawienia', match: ['/ustawienia', '/ustawienia.html'] },
         { href: '#', icon: 'ri-logout-box-r-line', label: 'Wyloguj', logout: true }

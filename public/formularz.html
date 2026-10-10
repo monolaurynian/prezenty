@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formularz Prezentów</title>
+    <title>Formularz prezentów</title>
 
     <!-- Cache Control Meta Tags -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -472,6 +472,297 @@
             display: none;
         }
     </style>
+    <style>
+        /* ---- Edit tab: add form vs. "Moje prezenty" list ----
+           Desktop (>768px): the form is its own light-green bounded card at
+           the top, the list has a heading + count and a divider.
+           Mobile (<=768px): the form becomes a thumb-zone composer fixed
+           just above the bottom tab bar (name + round add button on the
+           right, chevron on the left reveals the optional description).
+           formularz.js keeps --quick-add-bottom / --quick-add-h in sync with
+           the tab bar, the on-screen keyboard and the composer height. */
+        .quick-add-section {
+            background: #f3faf4;
+            border: 1px solid rgba(30, 126, 52, 0.28);
+            border-left: 4px solid #28a745;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 28px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .quick-add-composer {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-areas:
+                "heading heading"
+                "name    name"
+                "desc    desc"
+                "msg     submit";
+            gap: 10px;
+            align-items: center;
+            margin: 0;
+        }
+
+        .quick-add-heading {
+            grid-area: heading;
+            margin: 0;
+            color: #1b5e20;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .quick-add-toggle { display: none; }
+        .quick-add-name { grid-area: name; min-width: 0; }
+        .quick-add-desc { grid-area: desc; min-width: 0; }
+        .quick-add-desc textarea { resize: vertical; }
+
+        .quick-add-submit {
+            grid-area: submit;
+            justify-self: end;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            min-height: 48px;
+            min-width: 48px;
+            border-radius: 999px;
+            /* Darker than .btn-green so the white label clears 4.5:1 */
+            background: linear-gradient(135deg, #1e7e34 0%, #19692c 100%) !important;
+            border-color: #19692c !important;
+        }
+
+        .quick-add-message {
+            grid-area: msg;
+            margin: 0;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        /* Opaque status colours (the theme makes alerts translucent, which
+           is unreadable when the pill floats over the list on mobile) */
+        .quick-add-message.alert-success {
+            background: #d1e7dd !important;
+            border: 1px solid #a3cfbb !important;
+            color: #0a3622 !important;
+        }
+
+        .quick-add-message.alert-danger {
+            background: #f8d7da !important;
+            border: 1px solid #f1aeb5 !important;
+            color: #58151c !important;
+        }
+
+        .quick-add-toggle:focus-visible,
+        .quick-add-submit:focus-visible {
+            outline: 3px solid #1a56db;
+            outline-offset: 2px;
+        }
+
+        .my-presents-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .my-presents-heading {
+            margin: 0;
+            color: #1a1a1a;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .my-presents-heading i { color: #c8202f; }
+
+        .my-presents-count {
+            flex: 0 0 auto;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #fff3cd;
+            border: 1px solid #ffda6a;
+            color: #664d03;
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Newly added present: brief yellow flash + green ring.
+           (The item background is !important, so the flash is an overlay.) */
+        #myPresentsList .my-present-item.is-new {
+            position: relative;
+            animation: myPresentNewRing 2.4s ease-out;
+        }
+
+        #myPresentsList .my-present-item.is-new::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: rgba(255, 193, 7, 0.28);
+            pointer-events: none;
+            animation: myPresentNewFlash 2.4s ease-out forwards;
+        }
+
+        @keyframes myPresentNewRing {
+            0%, 60% { box-shadow: 0 0 0 3px rgba(30, 126, 52, 0.7), 0 2px 8px rgba(0, 0, 0, 0.1); }
+            100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        }
+
+        @keyframes myPresentNewFlash {
+            0%, 50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            /* A backdrop-filter on the card would turn it into the containing
+               block for the fixed composer - drop it on mobile and make the
+               card a little more opaque instead. */
+            #editTab .main-card,
+            #editTab .main-card:hover {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                background: rgba(255, 255, 255, 0.94) !important;
+                /* Same reason: no hover lift transform / filter on mobile */
+                transform: none !important;
+                filter: none !important;
+                will-change: auto !important;
+            }
+
+            #editTab .card-body {
+                padding: 1.25rem 1rem;
+            }
+
+            .quick-add-section {
+                background: none;
+                border: 0;
+                padding: 0;
+                margin: 0;
+                box-shadow: none;
+            }
+
+            .quick-add-composer {
+                position: fixed;
+                left: 12px;
+                right: 12px;
+                bottom: var(--quick-add-bottom, calc(max(12px, env(safe-area-inset-bottom, 0px)) + 90px));
+                z-index: 999; /* under the tab bar (1000) and its menus */
+                grid-template-columns: 48px minmax(0, 1fr) 52px;
+                grid-template-areas: "toggle name submit";
+                gap: 8px;
+                padding: 8px;
+                background: rgba(255, 255, 255, 0.98);
+                border: 1px solid rgba(0, 0, 0, 0.08);
+                border-top: 3px solid #28a745;
+                border-radius: 20px;
+                box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+                transition: bottom 0.25s ease;
+            }
+
+            .quick-add-composer.is-expanded {
+                grid-template-areas:
+                    "toggle name submit"
+                    "desc   desc submit";
+            }
+
+            /* Heading stays for screen readers (aria-labelledby) */
+            .quick-add-heading,
+            .quick-add-submit-label {
+                position: absolute !important;
+                width: 1px !important;
+                height: 1px !important;
+                padding: 0 !important;
+                margin: -1px !important;
+                overflow: hidden !important;
+                clip: rect(0, 0, 0, 0) !important;
+                white-space: nowrap !important;
+                border: 0 !important;
+            }
+
+            .quick-add-toggle {
+                grid-area: toggle;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 48px;
+                height: 48px;
+                padding: 0;
+                border: 1px solid #cbd2d9;
+                border-radius: 50%;
+                background: #eef1f4;
+                color: #2d3748;
+                font-size: 1rem;
+            }
+
+            .quick-add-toggle i { transition: transform 0.2s ease; }
+            .quick-add-toggle[aria-expanded="true"] { background: #e3f2e6; border-color: #28a745; color: #1b5e20; }
+            .quick-add-toggle[aria-expanded="true"] i { transform: rotate(180deg); }
+
+            .quick-add-name .form-control {
+                height: 48px;
+                padding: 0.5rem 0.875rem;
+                border-radius: 14px;
+                font-size: 16px; /* >=16px: no iOS zoom on focus */
+            }
+
+            .quick-add-desc { display: none; }
+            .quick-add-composer.is-expanded .quick-add-desc { display: block; }
+
+            .quick-add-desc .form-control {
+                font-size: 16px;
+                padding: 0.5rem 0.875rem;
+                border-radius: 14px;
+                max-height: 30vh;
+            }
+
+            .quick-add-submit {
+                align-self: end;
+                width: 52px;
+                height: 52px;
+                min-height: 52px;
+                padding: 0;
+                margin-bottom: -2px;
+                font-size: 1.25rem;
+            }
+
+            /* Status pill floats just above the composer */
+            .quick-add-message {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: calc(100% + 8px);
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+                border-radius: 12px;
+            }
+
+            /* Reserve room so the composer + tab bar never cover the last
+               present or the "Dodaj dla kogoś innego" button */
+            body.has-tab-bar.quick-add-docked {
+                padding-bottom: calc(var(--quick-add-bottom, 100px) + var(--quick-add-h, 72px) + 20px) !important;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .quick-add-composer,
+            .quick-add-toggle i {
+                transition: none !important;
+            }
+
+            #myPresentsList .my-present-item.is-new {
+                animation: none;
+                box-shadow: 0 0 0 3px rgba(30, 126, 52, 0.7), 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            #myPresentsList .my-present-item.is-new::before {
+                animation: none;
+                opacity: 1;
+            }
+        }
+    </style>
     <!-- Manifest (required for PWA install prompt) -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png?v=1">
@@ -507,7 +798,7 @@
             <div class="sidebar-menu-items">
                 <a href="/" class="sidebar-menu-item">
                     <i class="fas fa-home"></i>
-                    <span>Strona Główna</span>
+                    <span>Strona główna</span>
                 </a>
                 <a href="/activity.html" class="sidebar-menu-item">
                     <i class="fas fa-bell"></i>
@@ -524,7 +815,7 @@
                 <div class="sidebar-divider"></div>
                 <button class="sidebar-menu-item" onclick="switchTab('edit'); toggleSidebar();">
                     <i class="fas fa-edit"></i>
-                    <span>Edytuj Moje Prezenty</span>
+                    <span>Edytuj moje prezenty</span>
                 </button>
             </div>
         </div>
@@ -545,7 +836,7 @@
                         style="background: rgba(255, 255, 255, 0.78); backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 20px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);">
                         <div class="card-header bg-red">
                             <h5 class="card-title">
-                                <i class="fas fa-gift me-2"></i>Dodaj Swój Prezent
+                                <i class="fas fa-gift me-2"></i>Dodaj swój prezent
                             </h5>
                         </div>
                         <div class="card-body">
@@ -582,7 +873,7 @@
                                         <i class="fas fa-gift me-1"></i>Nazwa prezentu
                                     </label>
                                     <input type="text" class="form-control" id="presentTitle"
-                                        placeholder="Co chciałbyś dostać?" required>
+                                        placeholder="Np. książka, słuchawki…" required>
                                 </div>
 
                                 <div class="mb-3">
@@ -595,7 +886,7 @@
 
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-green btn-lg">
-                                        <i class="fas fa-plus me-2"></i>Dodaj Prezent
+                                        <i class="fas fa-plus me-2"></i>Dodaj prezent
                                     </button>
                                 </div>
                             </form>
@@ -627,23 +918,45 @@
                 </div>
                 <div class="card-body">
                     <!-- Quick add: create a new present for yourself without
-                         leaving the edit view -->
-                    <form id="quickAddForm" class="mb-3" onsubmit="return false;">
-                        <label class="form-label fw-semibold" for="quickAddTitle">
-                            <i class="fas fa-plus me-1" style="color: #43A047;"></i>Dodaj nowy prezent
-                        </label>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <input type="text" class="form-control" id="quickAddTitle"
-                                placeholder="Nazwa prezentu..." style="flex: 1 1 200px; min-width: 0;">
-                            <button type="submit" class="btn btn-success fw-semibold" id="quickAddBtn"
-                                onclick="quickAddPresent()" style="white-space: nowrap;">
-                                <i class="fas fa-plus me-1"></i>Dodaj
+                         leaving the edit view. Desktop: a bounded card at the
+                         top. Mobile (<=768px): a thumb-zone composer fixed
+                         just above the bottom tab bar (see .quick-add-*). -->
+                    <section class="quick-add-section" aria-labelledby="quickAddHeading">
+                        <form id="quickAddForm" class="quick-add-composer" novalidate
+                              onsubmit="quickAddPresent(); return false;">
+                            <h6 id="quickAddHeading" class="quick-add-heading">
+                                <i class="fas fa-plus me-1" aria-hidden="true"></i>Dodaj nowy prezent
+                            </h6>
+                            <button type="button" class="quick-add-toggle" id="quickAddToggle"
+                                    aria-expanded="false" aria-controls="quickAddDescWrap"
+                                    aria-label="Dodaj opis (opcjonalnie)">
+                                <i class="fas fa-chevron-up" aria-hidden="true"></i>
                             </button>
+                            <div class="quick-add-name">
+                                <label class="visually-hidden" for="quickAddTitle">Nazwa prezentu</label>
+                                <input type="text" class="form-control" id="quickAddTitle"
+                                    placeholder="Nazwa prezentu…" autocomplete="off" enterkeyhint="send"
+                                    maxlength="255">
+                            </div>
+                            <div class="quick-add-desc" id="quickAddDescWrap">
+                                <label class="visually-hidden" for="quickAddComments">Opis (opcjonalnie)</label>
+                                <textarea class="form-control" id="quickAddComments" rows="2"
+                                    placeholder="Opis, linki, gdzie kupić… (opcjonalnie)"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-green quick-add-submit" id="quickAddBtn">
+                                <i class="fas fa-plus" aria-hidden="true"></i><span class="quick-add-submit-label">Dodaj</span>
+                            </button>
+                            <div id="quickAddMessage" class="alert quick-add-message" role="status"
+                                 aria-live="polite" style="display: none;"></div>
+                        </form>
+                    </section>
+                    <section class="my-presents-section" aria-labelledby="myPresentsHeading">
+                        <div class="my-presents-header">
+                            <h6 id="myPresentsHeading" class="my-presents-heading">
+                                <i class="fas fa-gift me-2" aria-hidden="true"></i>Moje prezenty
+                            </h6>
+                            <span class="my-presents-count" id="myPresentsCount" hidden></span>
                         </div>
-                        <textarea class="form-control mt-2" id="quickAddComments" rows="2"
-                            placeholder="Opis, linki, gdzie kupić... (opcjonalnie)"></textarea>
-                        <div id="quickAddMessage" class="alert mt-2" style="display: none;"></div>
-                    </form>
                     <div id="myPresentsList">
                         <div class="text-center">
                             <div class="spinner-border" role="status">
@@ -651,7 +964,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="d-grid mt-3 mb-1">
+                    </section>
+                    <div class="d-grid mt-3 mb-1 add-for-other-wrap">
                         <button type="button" class="btn btn-secondary-light btn-lg"
                                 onclick="switchTab('add', true)">
                             <span class="btn-icon-badge" aria-hidden="true"><i class="fas fa-user-plus"></i></span>Dodaj dla kogoś innego
@@ -670,7 +984,7 @@
                     <h5 class="modal-title">
                         <i class="fas fa-sign-in-alt me-2"></i>Zaloguj się
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
                 </div>
                 <div class="modal-body">
                     <form id="loginModalForm">
@@ -709,9 +1023,9 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-lock me-2"></i>Wymagana Autoryzacja
+                        <i class="fas fa-lock me-2"></i>Wymagana autoryzacja
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
                 </div>
                 <div class="modal-body">
                     <p class="text-center mb-4">
@@ -791,9 +1105,9 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-edit me-2"></i>Edytuj Prezent
+                        <i class="fas fa-edit me-2"></i>Edytuj prezent
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
                 </div>
                 <div class="modal-body">
                     <form id="editPresentForm">
@@ -823,7 +1137,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="formularz.js?v=16"></script>
+    <script src="formularz.js?v=17"></script>
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebarMenu');
@@ -884,7 +1198,7 @@
             </a>
             <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
                 <i class="ri-bookmark-line"></i>
-                <span>Zarezerwowane Prezenty</span>
+                <span>Zarezerwowane prezenty</span>
             </a>
             <a href="leaderboard.html" class="tab-bar-menu-item">
                 <i class="ri-trophy-line"></i>
@@ -892,7 +1206,7 @@
             </a>
             <a href="formularz.html" class="tab-bar-menu-item edit-presents-item">
                 <i class="ri-edit-line"></i>
-                <span>Edytuj Moje Prezenty</span>
+                <span>Edytuj moje prezenty</span>
             </a>
             <div class="tab-bar-menu-divider"></div>
             <!-- Secondary quick actions: compact tiles, share-sheet style -->
@@ -940,7 +1254,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=15"></script>
+    <script src="tab-bar-functions.js?v=16"></script>
     
     <script>
         function logout() {

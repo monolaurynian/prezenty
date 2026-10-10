@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup form handlers
     setupFormHandlers();
+    setupQuickAddComposer();
     
     // Load recipients for dropdown
     loadRecipients();
@@ -382,16 +383,22 @@ function submitPresent() {
     });
 }
 
-// Quick add on the "Edytuj Moje Prezenty" tab - adds a present for the
-// identified user without leaving the edit view
+// Quick add on the "Dodaj i edytuj moje prezenty" tab - adds a present for
+// the identified user without leaving the edit view. Submitted by the
+// form (Enter in the name input or the round add button).
 function quickAddPresent() {
     const input = document.getElementById('quickAddTitle');
     const commentsInput = document.getElementById('quickAddComments');
+    const btn = document.getElementById('quickAddBtn');
     const title = input ? input.value.trim() : '';
     const comments = commentsInput ? commentsInput.value.trim() : '';
 
+    // Ignore repeated Enter presses while a request is in flight
+    if (!btn || btn.disabled) return;
+
     if (!title) {
         showQuickAddMessage('Wpisz nazwę prezentu', 'danger');
+        if (input) input.focus();
         return;
     }
     if (!identifiedName) {
@@ -399,10 +406,11 @@ function quickAddPresent() {
         return;
     }
 
-    const btn = document.getElementById('quickAddBtn');
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Dodawanie...';
+    // Label is visually hidden on mobile (icon-only round button)
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span class="quick-add-submit-label">Dodawanie…</span>';
     btn.disabled = true;
+    let added = false;
 
     fetch('/api/formularz/present', {
         method: 'POST',
@@ -416,10 +424,13 @@ function quickAddPresent() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                added = true;
                 input.value = '';
                 if (commentsInput) commentsInput.value = '';
                 showQuickAddMessage('Prezent dodany! 🎁', 'success');
-                loadMyPresents();
+                // Scroll to + flash the new item (newest first, so fall
+                // back to the first item if the id isn't returned)
+                loadMyPresents(data.presentId || 'first');
             } else {
                 showQuickAddMessage(data.error || 'Błąd podczas dodawania prezentu', 'danger');
             }
@@ -428,17 +439,147 @@ function quickAddPresent() {
         .finally(() => {
             btn.innerHTML = originalText;
             btn.disabled = false;
+            // Back to the name field so several presents can be added in a row
+            if (added && input) input.focus({ preventScroll: true });
         });
+}
+
+// ---- Quick add composer (thumb zone on mobile) ----
+// On <=768px the quick add form is fixed just above the bottom tab bar.
+// Keeps it above the tab bar (and the FAB poking out of it), follows the
+// tab bar when it slides away, lifts above the on-screen keyboard via the
+// visualViewport API, and reserves matching bottom padding on the page.
+function setupQuickAddComposer() {
+    const form = document.getElementById('quickAddForm');
+    const toggle = document.getElementById('quickAddToggle');
+    if (!form) return;
+    const body = document.body;
+    const mobileQuery = window.matchMedia('(max-width: 768px)');
+
+    if (toggle) {
+        toggle.addEventListener('click', () => {
+            const open = toggle.getAttribute('aria-expanded') !== 'true';
+            toggle.setAttribute('aria-expanded', String(open));
+            toggle.setAttribute('aria-label', open ? 'Ukryj opis' : 'Dodaj opis (opcjonalnie)');
+            form.classList.toggle('is-expanded', open);
+            if (open) {
+                const desc = document.getElementById('quickAddComments');
+                if (desc) desc.focus({ preventScroll: true });
+            }
+            updateComposerLayout();
+        });
+    }
+
+    function tabBarOffset() {
+        const bar = document.querySelector('.bottom-tab-bar');
+        if (!bar || getComputedStyle(bar).display === 'none') return 12;
+        const barStyle = getComputedStyle(bar);
+        const inset = parseFloat(barStyle.bottom) || 0;
+        // Bar slid away on scroll - let the composer drop into its place
+        if (bar.classList.contains('tab-bar-hidden')) return Math.max(inset, 12);
+        const fab = bar.querySelector('.tab-fab');
+        const fabPoke = fab ? Math.max(0, -(parseFloat(getComputedStyle(fab).top) || 0)) : 0;
+        return inset + bar.offsetHeight + fabPoke + 8;
+    }
+
+    function keyboardOffset() {
+        const vv = window.visualViewport;
+        if (!vv) return 0;
+        // Part of the layout viewport covered by the keyboard
+        const covered = window.innerHeight - (vv.height + vv.offsetTop);
+        return covered > 60 ? covered : 0;
+    }
+
+    function updateComposerLayout() {
+        // (offsetParent is always null for fixed elements - use client rects)
+        const docked = mobileQuery.matches && form.getClientRects().length > 0 &&
+            getComputedStyle(form).position === 'fixed';
+        body.classList.toggle('quick-add-docked', docked);
+        if (!docked) return;
+        const kb = keyboardOffset();
+        const bottom = Math.max(tabBarOffset(), kb ? kb + 8 : 0);
+        form.style.setProperty('--quick-add-bottom', bottom + 'px');
+        body.style.setProperty('--quick-add-bottom', bottom + 'px');
+        body.style.setProperty('--quick-add-h', form.offsetHeight + 'px');
+    }
+
+    window._updateQuickAddComposer = updateComposerLayout;
+
+    if (window.ResizeObserver) {
+        new ResizeObserver(updateComposerLayout).observe(form);
+    }
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', updateComposerLayout);
+        window.visualViewport.addEventListener('scroll', updateComposerLayout);
+    }
+    window.addEventListener('resize', updateComposerLayout);
+    if (mobileQuery.addEventListener) mobileQuery.addEventListener('change', updateComposerLayout);
+
+    // Tab bar is injected/hidden by other scripts - follow its class changes
+    const watchBar = () => {
+        const bar = document.querySelector('.bottom-tab-bar');
+        if (bar && window.MutationObserver) {
+            new MutationObserver(updateComposerLayout).observe(bar, { attributes: true, attributeFilter: ['class', 'style'] });
+        }
+    };
+    watchBar();
+
+    // #editTab is shown/hidden via inline style - re-check when that happens
+    const editTab = document.getElementById('editTab');
+    if (editTab && window.MutationObserver) {
+        new MutationObserver(updateComposerLayout).observe(editTab, { attributes: true, attributeFilter: ['style', 'class'] });
+    }
+
+    updateComposerLayout();
+}
+
+// Scroll a list item into the part of the screen the composer and the
+// on-screen keyboard leave visible, then flash it briefly
+function revealNewPresent(item) {
+    if (!item) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const vv = window.visualViewport;
+    const form = document.getElementById('quickAddForm');
+    const viewTop = (vv ? vv.offsetTop : 0) + 12;
+    let viewBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    if (form && getComputedStyle(form).position === 'fixed') {
+        viewBottom = Math.min(viewBottom, form.getBoundingClientRect().top);
+    }
+    viewBottom -= 12;
+    const rect = item.getBoundingClientRect();
+    let delta = 0;
+    if (rect.top < viewTop) delta = rect.top - viewTop;
+    else if (rect.bottom > viewBottom) delta = rect.bottom - viewBottom;
+    if (delta) window.scrollBy({ top: delta, behavior: reduceMotion ? 'auto' : 'smooth' });
+
+    item.classList.remove('is-new');
+    void item.offsetWidth; // restart the animation
+    item.classList.add('is-new');
+    setTimeout(() => item.classList.remove('is-new'), 2600);
+}
+
+// "3 prezenty" badge next to the "Moje prezenty" heading
+function updateMyPresentsCount(count) {
+    const badge = document.getElementById('myPresentsCount');
+    if (!badge) return;
+    if (typeof count !== 'number') {
+        count = document.querySelectorAll('#myPresentsList .my-present-item').length;
+    }
+    badge.textContent = typeof window.plCount === 'function'
+        ? window.plCount(count, 'prezent', 'prezenty', 'prezentów')
+        : String(count);
+    badge.hidden = false;
 }
 
 function showQuickAddMessage(message, type) {
     const el = document.getElementById('quickAddMessage');
     if (!el) return;
     el.textContent = message;
-    el.className = `alert alert-${type} mt-2`;
+    el.className = `alert alert-${type} quick-add-message`;
     el.style.display = 'block';
+    clearTimeout(el._hideTimer);
     if (type === 'success') {
-        setTimeout(() => { el.style.display = 'none'; }, 4000);
+        el._hideTimer = setTimeout(() => { el.style.display = 'none'; }, 4000);
     }
 }
 
@@ -594,25 +735,37 @@ function showAuthMessage(message, type) {
     authMessage.style.display = 'block';
 }
 
-function loadMyPresents() {
+// highlightId: id of a just-added present to scroll to and flash
+// ('first' = the newest item, the list is sorted newest first)
+function loadMyPresents(highlightId) {
     const myPresentsList = document.getElementById('myPresentsList');
-    myPresentsList.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Ładowanie...</span></div></div>';
+    // Keep the old list (and scroll position) while refreshing after an add
+    if (!highlightId) {
+        myPresentsList.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Ładowanie...</span></div></div>';
+    }
     
-    fetch('/api/formularz/my-presents')
+    return fetch('/api/formularz/my-presents')
         .then(response => response.json())
         .then(data => {
             console.log('[Load My Presents] Received data:', data);
             if (data.presents && data.presents.length > 0) {
                 console.log('[Load My Presents] First present:', data.presents[0]);
                 displayMyPresents(data.presents);
+                if (highlightId) {
+                    const item = highlightId === 'first'
+                        ? myPresentsList.querySelector('.my-present-item')
+                        : myPresentsList.querySelector(`.my-present-item[data-present-id="${Number(highlightId)}"]`);
+                    revealNewPresent(item || myPresentsList.querySelector('.my-present-item'));
+                }
             } else {
+                updateMyPresentsCount(0);
                 myPresentsList.innerHTML = `
                     <div class="text-center py-5">
                         <i class="fas fa-gift fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">Nie masz jeszcze żadnych prezentów</h5>
-                        <p class="text-muted">Dodaj swój pierwszy prezent używając formularza powyżej</p>
+                        <p class="text-muted">Wpisz nazwę prezentu w polu „Nazwa prezentu…”, aby dodać pierwszy</p>
                         <button class="btn btn-primary mt-3" onclick="switchTab('add', true)">
-                            <i class="fas fa-plus me-2"></i>Dodaj Prezent
+                            <i class="fas fa-plus me-2"></i>Dodaj prezent
                         </button>
                     </div>
                 `;
@@ -659,6 +812,7 @@ function displayMyPresents(presents) {
     
     html += '</div>';
     myPresentsList.innerHTML = html;
+    updateMyPresentsCount(presents.length);
 }
 
 function makeLinksClickable(text) {
@@ -786,6 +940,7 @@ function deletePresent(id) {
         item.style.transform = 'translateX(12px)';
         setTimeout(() => {
             item.remove();
+            updateMyPresentsCount();
             // Last present gone - swap in the empty state in place
             const list = document.querySelector('#myPresentsList .list-group');
             if (list && list.children.length === 0) {
@@ -834,6 +989,7 @@ function undoRemoveMyPresent(restore) {
     } else {
         parent.appendChild(node);
     }
+    updateMyPresentsCount();
 }
 
 // Empty state shown in place when the last present is removed
@@ -844,9 +1000,10 @@ function renderMyPresentsEmptyState() {
         <div class="text-center py-5">
             <i class="fas fa-gift fa-3x text-muted mb-3"></i>
             <h5 class="text-muted">Nie masz jeszcze żadnych prezentów</h5>
-            <p class="text-muted">Dodaj swój pierwszy prezent używając formularza powyżej</p>
+            <p class="text-muted">Wpisz nazwę prezentu w polu „Nazwa prezentu…”, aby dodać pierwszy</p>
         </div>
     `;
+    updateMyPresentsCount(0);
 }
 
 function escapeHtml(text) {

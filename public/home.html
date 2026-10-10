@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Strona Główna - Prezentownik</title>
+    <title>Strona główna - Prezentownik</title>
 
     <!-- Force cache refresh for users with old version -->
     <script>
@@ -224,6 +224,7 @@
 
     <link rel="apple-touch-icon" href="icon-180.png?v=4">
     <script src="pluralize-pl.js"></script>
+    <script src="notification-text.js"></script>
 </head>
 
 <body class="has-tab-bar">
@@ -234,7 +235,7 @@
             <div class="navbar-brand">
                 <div class="brand-container" style="display: flex; align-items: center; gap: 15px;">
                     <span class="brand-text">
-                        <i class="fas fa-home me-2"></i>Strona Główna
+                        <i class="fas fa-home me-2"></i>Strona główna
                     </span>
                 </div>
             </div>
@@ -254,13 +255,13 @@
         <!-- Cumulative Progress Bars -->
         <div id="cumulativeProgressSection" class="stats-container">
             <h5 style="color: #2d3748; font-weight: 700; margin-bottom: 16px; text-align: center; font-size: 1rem;">
-                <i class="fas fa-chart-line me-2"></i>Ogólny Postęp
+                <i class="fas fa-chart-line me-2"></i>Ogólny postęp
             </h5>
             <!-- Buying Progress -->
             <div style="margin-bottom: 25px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
-                        <i class="fas fa-shopping-bag" style="color: #43A047; margin-right: 8px;"></i>Kupione Prezenty
+                        <i class="fas fa-shopping-bag" style="color: #43A047; margin-right: 8px;"></i>Kupione prezenty
                     </label>
                     <span id="boughtStats" style="font-weight: 600; color: #43A047; font-size: 16px;">0/0</span>
                 </div>
@@ -274,7 +275,7 @@
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
-                        <i class="fas fa-bookmark" style="color: #EF6C00; margin-right: 8px;"></i>Zarezerwowane Prezenty
+                        <i class="fas fa-bookmark" style="color: #EF6C00; margin-right: 8px;"></i>Zarezerwowane prezenty
                     </label>
                     <span id="reservedStats" style="font-weight: 600; color: #EF6C00; font-size: 16px;">0/0</span>
                 </div>
@@ -298,7 +299,7 @@
                         <button class="accordion-button" type="button" data-bs-toggle="collapse"
                             data-bs-target="#collapseAvailable" aria-expanded="true"
                             style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; font-weight: 600;">
-                            <i class="fas fa-gifts me-2"></i>Dostępne Prezenty
+                            <i class="fas fa-gifts me-2"></i>Dostępne prezenty
                         </button>
                     </h2>
                     <div id="collapseAvailable" class="accordion-collapse collapse show"
@@ -337,7 +338,7 @@
                         <button class="accordion-button" type="button" data-bs-toggle="collapse"
                             data-bs-target="#collapseReservations" aria-expanded="true"
                             style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; font-weight: 600;">
-                            <i class="fas fa-bookmark me-2"></i>Moje Rezerwacje
+                            <i class="fas fa-bookmark me-2"></i>Moje rezerwacje
                         </button>
                     </h2>
                     <div id="collapseReservations" class="accordion-collapse collapse show"
@@ -407,11 +408,11 @@
     </script>
 
     <!-- Load recipients.js for shared functions (but don't auto-init) -->
-    <script src="recipients.js?v=23&t=1111111111"></script>
+    <script src="recipients.js?v=24&t=1111111111"></script>
 
     <!-- Non-critical scripts (defer to load after page is interactive) -->
     <script src="update-checker.js" defer></script>
-    <script src="realtime-updates.js" defer></script>
+    <script src="realtime-updates.js?v=2" defer></script>
 
     <script>
         // Check authentication
@@ -835,7 +836,7 @@
                                     <div class="home-present-actions" style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
                                         ${present.is_checked ? `
                                             <button class="btn btn-sm btn-outline-danger" onclick="markAsUnbought(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
-                                                <i class="fas fa-undo me-1"></i>Anuluj Zakup
+                                                <i class="fas fa-undo me-1"></i>Anuluj zakup
                                             </button>
                                         ` : `
                                             <button class="btn btn-sm btn-success" onclick="markAsBought(${present.id})" style="white-space: nowrap; padding: 6px 16px; font-size: 13px;">
@@ -1056,7 +1057,7 @@
         }
 
         function markAsBought(presentId) {
-            // Optimistic: moves instantly from "Moje Rezerwacje" to "Kupione"
+            // Optimistic: moves instantly from "Moje rezerwacje" to "Kupione"
             const prev = optimisticUpdatePresent(presentId, { is_checked: true });
             beginOp();
 
@@ -1087,7 +1088,7 @@
         }
 
         function markAsUnbought(presentId) {
-            // Optimistic: moves instantly from "Kupione" back to "Moje Rezerwacje"
+            // Optimistic: moves instantly from "Kupione" back to "Moje rezerwacje"
             const prev = optimisticUpdatePresent(presentId, { is_checked: false });
             beginOp();
 
@@ -1215,7 +1216,7 @@
             </a>
             <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
                 <i class="ri-bookmark-line"></i>
-                <span>Zarezerwowane Prezenty</span>
+                <span>Zarezerwowane prezenty</span>
             </a>
             <a href="leaderboard.html" class="tab-bar-menu-item">
                 <i class="ri-trophy-line"></i>
@@ -1224,7 +1225,7 @@
             <a href="formularz.html" class="tab-bar-menu-item edit-presents-item"
                 onclick="localStorage.setItem('openEditTab', 'true');">
                 <i class="ri-edit-line"></i>
-                <span>Edytuj Moje Prezenty</span>
+                <span>Edytuj moje prezenty</span>
             </a>
             <div class="tab-bar-menu-divider"></div>
             <!-- Secondary quick actions: compact tiles, share-sheet style -->
@@ -1290,8 +1291,8 @@
                         <h6 class="text-muted mb-3">Czy to jesteś Ty?</h6>
                         <p class="mb-0">Chcesz zidentyfikować się jako <strong id="identificationRecipientName"
                                 class="text-primary"></strong>?</p>
-                        <small class="text-muted d-block mt-2">Po identyfikacji będziesz mógł zarządzać swoimi
-                            prezentami</small>
+                        <small class="text-muted d-block mt-2">Po identyfikacji możesz zarządzać swoimi
+                            prezentami.</small>
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center">
@@ -1393,10 +1394,10 @@
                             <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
                         </div>
                         <h6 class="text-muted mb-3">Czy na pewno chcesz anulować identyfikację?</h6>
-                        <p class="mb-0">Przestaniesz być zidentyfikowany jako <strong
-                                id="cancelIdentificationRecipientName" class="text-primary"></strong></p>
-                        <small class="text-muted d-block mt-2">Będziesz mógł ponownie się zidentyfikować w każdej
-                            chwili</small>
+                        <p class="mb-0">Identyfikacja jako <strong
+                                id="cancelIdentificationRecipientName" class="text-primary"></strong> zostanie anulowana.</p>
+                        <small class="text-muted d-block mt-2">Możesz ponownie się zidentyfikować w każdej
+                            chwili.</small>
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center">
@@ -1441,7 +1442,7 @@
                 <div class="modal-header aws-modal-header">
                     <div class="aws-modal-title-section">
                         <h5 class="modal-title">
-                            <i class="fas fa-edit me-2"></i>Edytuj Prezent
+                            <i class="fas fa-edit me-2"></i>Edytuj prezent
                         </h5>
                         <p class="aws-modal-subtitle">Zmień informacje o prezencie</p>
                     </div>
@@ -1497,8 +1498,8 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=15"></script>
-    <script src="desktop-nav.js?v=4"></script>
+    <script src="tab-bar-functions.js?v=16"></script>
+    <script src="desktop-nav.js?v=5"></script>
 </body>
 
 </html>
