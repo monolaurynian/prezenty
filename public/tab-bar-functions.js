@@ -231,7 +231,7 @@ function getNotificationMessage(notif) {
             if (typeof notificationText === 'function') {
                 return notificationText(notif.type, data, actor, { person: personLink, present: presentLink });
             }
-            return `<strong>${escapeHtmlNotif(actor)}</strong> · nowa aktywność`;
+            return `<strong>${escapeHtmlNotif(actor)}</strong> coś zmienia ✨`;
     }
 }
 

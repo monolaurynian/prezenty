@@ -394,3 +394,110 @@
         padding: 1rem 2rem 2rem;
     }
 }
+
+/* ============================================================
+   "Edytuj prezent" modal -> bottom sheet on mobile
+   The dialog used to sit at the TOP of the screen, so the fields
+   and the Zapisz button were the furthest thing from the thumb.
+   On phones it now slides up from the bottom edge like a native
+   sheet. Scoped to #editPresentModal so every other modal
+   (authModal, loginModal, addPresentModal, ...) is untouched.
+   ID-based selectors beat the page-level inline <style> blocks
+   and Bootstrap's .modal-content, so no !important is needed.
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+    /* Pin the dialog to the bottom edge, full width */
+    #editPresentModal .modal-dialog {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        /* .modal-lg on recipients/home must not re-narrow it */
+        pointer-events: auto;
+    }
+
+    /* Sheet attached to the bottom: rounded top, square bottom.
+       Constrained height so a long form scrolls INSIDE the sheet
+       instead of growing off-screen. */
+    #editPresentModal .modal-content {
+        border-radius: 20px 20px 0 0;
+        border-bottom: none;
+        max-height: 90vh;
+        max-height: 90dvh; /* accounts for mobile browser chrome */
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Decorative grab handle. Purely visual - the header keeps its
+       own title + close button layout, we just reserve room above. */
+    #editPresentModal .modal-content::before {
+        content: "";
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(0, 0, 0, 0.18);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    #editPresentModal .modal-header {
+        padding-top: 1.5rem;
+        border-radius: 20px 20px 0 0;
+    }
+
+    #editPresentModal .modal-body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        min-height: 0; /* let flex shrink the body, not the footer */
+    }
+
+    /* Keep Zapisz clear of the iPhone home indicator */
+    #editPresentModal .modal-footer {
+        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Slide up from the bottom instead of Bootstrap's drop-from-top */
+    #editPresentModal.modal.fade .modal-dialog {
+        transform: translateY(100%);
+        transition: transform 0.3s ease-out;
+    }
+
+    #editPresentModal.modal.show .modal-dialog {
+        transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+        #editPresentModal.modal.fade .modal-dialog,
+        #editPresentModal.modal.show .modal-dialog {
+            transform: none;
+            transition: none;
+        }
+    }
+}
+
+/* --- Roomier "Dodatkowe informacje" box ---
+   The markup says rows="3", which is too cramped for a description
+   with a link in it. Bumped to roughly 5-6 rows while keeping
+   resize: vertical so it can still be dragged. */
+textarea#editPresentComments.form-control,
+textarea#presentComments.form-control {
+    min-height: 120px;
+    resize: vertical;
+}
+
+@media (min-width: 769px) {
+
+    textarea#editPresentComments.form-control,
+    textarea#presentComments.form-control {
+        min-height: 132px;
+    }
+}

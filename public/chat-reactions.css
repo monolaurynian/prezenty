@@ -1,0 +1,362 @@
+/* ============================================================
+   Emoji reactions in the anonymous chat
+   Own stylesheet on purpose: the chat bubbles force
+   `.chat-bubble.from-me * { color: #fff !important }`, so the chips
+   live OUTSIDE the bubble in a per-message wrapper. Everything here
+   is scoped to the new .chat-msg-row / .chat-reaction* classes and
+   the #reactionSheet elements, so no existing chat rule changes.
+   ============================================================ */
+
+/* --- Per-message wrapper: bubble on top, chip strip underneath ---
+   Takes over the 82% width and the left/right alignment the bubble
+   used to own, so the layout is pixel-identical without reactions. */
+.chat-msg-row {
+    display: flex;
+    flex-direction: column;
+    max-width: 82%;
+    min-width: 0;
+}
+
+.chat-msg-row.from-me {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.chat-msg-row.from-them {
+    align-self: flex-start;
+    align-items: flex-start;
+}
+
+/* The bubble keeps its own styling; its 82% is now relative to the row */
+.chat-msg-row > .chat-bubble {
+    max-width: 100%;
+}
+
+/* --- Chip strip --- */
+.chat-reactions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    max-width: 100%;
+}
+
+.chat-msg-row.from-me .chat-reactions {
+    justify-content: flex-end;
+}
+
+/* The 1px border is the chip's only outline, so it carries the component
+   boundary: #868F99 on #ffffff measures ~3.3:1 and clears the WCAG
+   1.4.11 non-text floor (the usual rgba(0,0,0,0.1) hairline is ~1.25:1). */
+.chat-reaction-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 32px;
+    padding: 4px 10px;
+    border: 1px solid #868F99;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #2d3748;
+    font-size: 13px;
+    line-height: 1.2;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.chat-reaction-chip:hover {
+    background: #f8f9fa;
+}
+
+.chat-reaction-chip .chat-reaction-emoji {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.chat-reaction-chip .chat-reaction-count {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* The current user's own reaction, in the chat's own purple accent
+   (#7B1FA2, the from-me bubble / btn-anon colour).
+   #4A148C on #F3E5F5 measures 9.87:1 and the #7B1FA2 border 6.84:1 -
+   an orange variant only reached 3.46:1, below the 4.5:1 floor.
+   The thicker border + inner ring are the NON-colour cue (WCAG 1.4.1):
+   the pressed chip stays recognisable without seeing the hue. Padding
+   drops by the extra border width so nothing reflows on toggle. */
+.chat-reaction-chip[aria-pressed="true"] {
+    background: #F3E5F5;
+    border-color: #7B1FA2;
+    border-width: 2px;
+    padding: 3px 9px;
+    box-shadow: inset 0 0 0 1px #ffffff, 0 1px 3px rgba(0, 0, 0, 0.12);
+    color: #4A148C;
+}
+
+.chat-reaction-chip[aria-pressed="true"]:hover {
+    background: #E1BEE7;
+}
+
+/* --- "Add reaction" affordance ---
+   Two classes deep so it beats the chat page's `.glass-card * { color }`.
+   It draws as a 32px circle but keeps a 44x44 TOUCH target through the
+   ::after hit slop below: a 44px-tall button under every bubble pushed
+   roughly a message per screen out of the 58vh chat scroller, and the
+   slop buys the thumb size back without the layout height. */
+.chat-reactions .chat-reaction-add {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #4a5568;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+/* Invisible 44x44 hit area, centred on the 32px circle */
+.chat-reactions .chat-reaction-add::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+}
+
+.chat-reactions .chat-reaction-add:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: #2d3748;
+}
+
+/* Mouse/trackpad only: keep the strip quiet until the message is hovered
+   (or the row holds focus). Opacity, not display, so the button stays in
+   the tab order and in the accessibility tree at all times. */
+@media (hover: hover) and (pointer: fine) {
+    .chat-reactions .chat-reaction-add {
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    .chat-msg-row:hover .chat-reaction-add,
+    .chat-msg-row:focus-within .chat-reaction-add,
+    .chat-reactions .chat-reaction-add:focus,
+    .chat-reactions .chat-reaction-add:focus-visible {
+        opacity: 1;
+    }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: reduce) {
+    .chat-reactions .chat-reaction-add {
+        transition: none;
+    }
+}
+
+.chat-reaction-chip:focus-visible,
+.chat-reaction-add:focus-visible,
+.reaction-sheet-btn:focus-visible,
+#reactionSheetClose:focus-visible {
+    outline: 2px solid #1E88E5;
+    outline-offset: 2px;
+}
+
+/* ============================================================
+   Picker: bottom sheet on phones, centred card on desktop.
+   Hand-rolled (not a Bootstrap modal) so it can live in this file
+   and sit above the 9999 notifications panel / toast layer.
+   ============================================================ */
+
+#reactionSheetOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#reactionSheetOverlay.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+#reactionSheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background: #ffffff;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-height: 90vh;
+    max-height: 90dvh; /* accounts for mobile browser chrome */
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+    visibility: hidden;
+}
+
+#reactionSheet.is-open {
+    transform: translateY(0);
+    visibility: visible;
+}
+
+/* Decorative grab handle, matching the "Edytuj prezent" sheet */
+#reactionSheet::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.18);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.reaction-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 20px 12px;
+    flex-shrink: 0;
+}
+
+.reaction-sheet-header h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+#reactionSheetClose {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: #2d3748;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+#reactionSheetClose:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.reaction-sheet-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 0 20px 8px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+}
+
+/* Same ~3.3:1 boundary as the chips - the #f8f9fa fill is a hair off the
+   sheet's white, so the border is what defines the button */
+.reaction-sheet-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+    border: 1px solid #868F99;
+    border-radius: 14px;
+    background: #f8f9fa;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.reaction-sheet-btn:hover {
+    background: #f1f3f5;
+}
+
+/* Thicker border + inner ring: the already-picked emoji is identifiable
+   without relying on the purple fill (WCAG 1.4.1) */
+.reaction-sheet-btn[aria-pressed="true"] {
+    background: #F3E5F5;
+    border-color: #7B1FA2;
+    border-width: 2px;
+    box-shadow: inset 0 0 0 1px #ffffff;
+}
+
+/* --- Desktop: the same element becomes a small centred card --- */
+@media (min-width: 769px) {
+    #reactionSheet {
+        left: 50%;
+        right: auto;
+        bottom: auto;
+        top: 50%;
+        /* Fixed width, not auto: at the grid's intrinsic ~209px the title
+           and the close button collided in the header */
+        width: 320px;
+        max-width: calc(100vw - 32px);
+        border-radius: 20px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        padding-bottom: 8px;
+        transform: translate(-50%, -50%) scale(0.95);
+        opacity: 0;
+        transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+    }
+
+    #reactionSheet.is-open {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+
+    #reactionSheet::before {
+        display: none;
+    }
+
+    .reaction-sheet-header {
+        padding: 16px 20px 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #reactionSheetOverlay,
+    #reactionSheet,
+    #reactionSheet.is-open {
+        transition: none;
+    }
+
+    #reactionSheet {
+        transform: none;
+    }
+
+    #reactionSheet.is-open {
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) and (min-width: 769px) {
+    #reactionSheet,
+    #reactionSheet.is-open {
+        transform: translate(-50%, -50%);
+    }
+}

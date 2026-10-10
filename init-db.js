@@ -83,6 +83,50 @@ async function initializeDatabase() {
             PRIMARY KEY (session_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
         console.log("✓ Sessions table created");
+        // ---- Anonymous chat (wiadomości) ----
+        // MIRROR of ensureAnonMessageTables() in server.js, which stays the
+        // runtime source of truth (it creates these lazily on first use).
+        // Keep both in sync. Everything is CREATE TABLE IF NOT EXISTS, so
+        // re-running this against an existing database is a no-op.
+        await connection.execute(`CREATE TABLE IF NOT EXISTS anon_threads (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            initiator_id INT NOT NULL,
+            target_id INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_initiator (initiator_id),
+            INDEX idx_target (target_id),
+            FOREIGN KEY (initiator_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (target_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+        console.log("✓ Anon threads table created");
+        await connection.execute(`CREATE TABLE IF NOT EXISTS anon_messages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            thread_id INT NOT NULL,
+            sender_id INT NOT NULL,
+            body TEXT NOT NULL,
+            is_read BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_thread (thread_id),
+            FOREIGN KEY (thread_id) REFERENCES anon_threads(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+        console.log("✓ Anon messages table created");
+        // Emoji reactions on chat messages. emoji uses COLLATE utf8mb4_bin
+        // because the *_ci collations compare many emoji as EQUAL, which
+        // would break both the unique key (one reaction per user per
+        // message) and GROUP BY emoji. user_id is stored for the toggle
+        // only - no endpoint ever exposes it.
+        await connection.execute(`CREATE TABLE IF NOT EXISTS anon_message_reactions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            message_id INT NOT NULL,
+            user_id INT NOT NULL,
+            emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_message_user_emoji (message_id, user_id, emoji),
+            INDEX idx_reaction_message (message_id),
+            FOREIGN KEY (message_id) REFERENCES anon_messages(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+        console.log("✓ Anon message reactions table created");
         
         // Add indexes for better query performance
         console.log("\nAdding database indexes for better performance...");
@@ -116,6 +160,8 @@ async function initializeDatabase() {
         console.log("- recipients (for gift recipients with profile pictures stored as BLOB)");
         console.log("- presents (for gift ideas)");
         console.log("- sessions (for express-session)");
+        console.log("- anon_threads / anon_messages (anonymous chat)");
+        console.log("- anon_message_reactions (emoji reactions on chat messages)");
         console.log("\nIndexes created for optimal query performance");
         
     } catch (error) {

@@ -10,7 +10,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link href="bottom-tab-bar.css?v=41" rel="stylesheet">
-    <link href="app-theme.css?v=13" rel="stylesheet">
+    <link href="app-theme.css?v=14" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
         .tab-bar-notifications-panel.show {
@@ -730,6 +730,186 @@
                 right: -280px;
             }
         }
+
+        /* ===== Activity leaderboard entry ("Pełna lista aktywności") =====
+           Page-scoped layout for the rows rendered by renderActivityLeaderboard().
+           The two stats are stacked by default and each one is a single
+           unbreakable unit, so a count can never be split from its adjective
+           ("1" / "zarezerwowany" on separate lines). From 768px up there is
+           room for one inline row with the bullet separator. */
+        .activity-card {
+            display: grid;
+            grid-template-columns: auto auto minmax(0, 1fr) auto;
+            grid-template-areas:
+                "rank avatar name  score"
+                "rank avatar stats stats";
+            align-items: center;
+            column-gap: 12px;
+            row-gap: 4px;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .activity-rank {
+            grid-area: rank;
+            font-size: 20px;
+            font-weight: 700;
+            color: #718096;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .activity-avatar-img {
+            grid-area: avatar;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .activity-avatar-emoji {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .activity-name {
+            grid-area: name;
+            min-width: 0;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 1.3;
+            color: #2d3748;
+            overflow-wrap: break-word;
+        }
+
+        .activity-stats {
+            grid-area: stats;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 3px;
+            font-size: 13px;
+            line-height: 1.3;
+            /* 5.8:1 on white - AA for small text */
+            color: #5a6677;
+        }
+
+        .activity-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            /* the number and its adjective are one unit */
+            white-space: nowrap;
+        }
+
+        /* fixed icon column so the stat labels line up under each other */
+        .activity-stat i {
+            flex: 0 0 14px;
+            width: 14px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* screen-reader-only noun, so "1 zarezerwowany" reads as
+           "1 zarezerwowany prezent" without costing layout width */
+        .activity-stat-noun {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+
+        /* only meaningful when the stats share a row */
+        .activity-stat-sep {
+            display: none;
+        }
+
+        .activity-score {
+            grid-area: score;
+            text-align: right;
+        }
+
+        .activity-score-value {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.1;
+            color: #667eea;
+        }
+
+        .activity-score-label {
+            font-size: 12px;
+            line-height: 1.2;
+            color: #5a6677;
+        }
+
+        @media (max-width: 480px) {
+            .activity-card {
+                column-gap: 10px;
+            }
+
+            .activity-rank {
+                font-size: 16px;
+                min-width: 22px;
+            }
+
+            .activity-avatar-img {
+                width: 42px;
+                height: 42px;
+            }
+
+            .activity-avatar-emoji {
+                font-size: 1.25rem;
+            }
+
+            .activity-score-value {
+                font-size: 20px;
+            }
+        }
+
+        /* Below 360px a name and the score cannot share a row without the name
+           breaking mid-word, so the score drops to its own line. */
+        @media (max-width: 359px) {
+            .activity-card {
+                grid-template-columns: auto auto minmax(0, 1fr);
+                grid-template-areas:
+                    "rank avatar name"
+                    "rank avatar stats"
+                    "rank avatar score";
+            }
+        }
+
+        @media (min-width: 768px) {
+            .activity-card {
+                grid-template-areas:
+                    "rank avatar name  score"
+                    "rank avatar stats score";
+                column-gap: 15px;
+            }
+
+            .activity-stats {
+                flex-direction: row;
+                align-items: center;
+                /* if the row ever runs out of room it breaks between the two
+                   stats, never inside one */
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .activity-stat-sep {
+                display: block;
+                color: #8a93a5;
+            }
+        }
     </style>
     <!-- Manifest (required for PWA install prompt) -->
     <link rel="manifest" href="manifest.json">
@@ -1017,26 +1197,31 @@
                 if (totalActivity === 0) return ''; // Skip users with no activity
 
                 const avatarHTML = user.profile_picture
-                    ? `<img src="${user.profile_picture}" alt="${user.username}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">`
-                    : `<div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white;">${getEmojiAvatar(user.username)}</div>`;
+                    ? `<img src="${user.profile_picture}" alt="${user.username}" class="activity-avatar-img">`
+                    : `<div class="activity-avatar-img activity-avatar-emoji" aria-hidden="true">${getEmojiAvatar(user.username)}</div>`;
+
+                // noun for the screen-reader-only part, agreeing with the count
+                const giftNoun = (n) => plPlural(n, 'prezent', 'prezenty', 'prezentów');
 
                 return `
-                    <div class="user-card" style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: white; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                        <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
-                            <div style="font-size: 20px; font-weight: 700; color: #718096; min-width: 30px;">#${index + 1}</div>
-                            ${avatarHTML}
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600; color: #2d3748; font-size: 16px;">${user.username}</div>
-                                <div style="font-size: 13px; color: #718096;">
-                                    <i class="fas fa-check-circle" style="color: #4CAF50;"></i> ${plCount(boughtCount, 'kupiony', 'kupione', 'kupionych')}
-                                    <span style="margin: 0 8px;">•</span>
-                                    <i class="fas fa-bookmark" style="color: #FF9800;"></i> ${plCount(reservedCount, 'zarezerwowany', 'zarezerwowane', 'zarezerwowanych')}
-                                </div>
-                            </div>
+                    <div class="user-card activity-card">
+                        <div class="activity-rank">#${index + 1}</div>
+                        ${avatarHTML}
+                        <div class="activity-name">${user.username}</div>
+                        <div class="activity-stats">
+                            <span class="activity-stat">
+                                <i class="fas fa-check-circle" style="color: #4CAF50;" aria-hidden="true"></i>
+                                <span>${plCount(boughtCount, 'kupiony', 'kupione', 'kupionych')}<span class="activity-stat-noun"> ${giftNoun(boughtCount)}</span></span>
+                            </span>
+                            <span class="activity-stat-sep" aria-hidden="true">•</span>
+                            <span class="activity-stat">
+                                <i class="fas fa-bookmark" style="color: #FF9800;" aria-hidden="true"></i>
+                                <span>${plCount(reservedCount, 'zarezerwowany', 'zarezerwowane', 'zarezerwowanych')}<span class="activity-stat-noun"> ${giftNoun(reservedCount)}</span></span>
+                            </span>
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 24px; font-weight: 700; color: #667eea;">${totalActivity}</div>
-                            <div style="font-size: 12px; color: #718096;">aktywność</div>
+                        <div class="activity-score">
+                            <div class="activity-score-value">${totalActivity}</div>
+                            <div class="activity-score-label">${plPlural(totalActivity, 'aktywność', 'aktywności', 'aktywności')}</div>
                         </div>
                     </div>
                 `;

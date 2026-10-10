@@ -427,6 +427,7 @@ function quickAddPresent() {
                 added = true;
                 input.value = '';
                 if (commentsInput) commentsInput.value = '';
+                if (window._resetQuickAddComposer) window._resetQuickAddComposer();
                 showQuickAddMessage('Prezent dodany! 🎁', 'success');
                 // Scroll to + flash the new item (newest first, so fall
                 // back to the first item if the id isn't returned)
@@ -456,19 +457,166 @@ function setupQuickAddComposer() {
     const body = document.body;
     const mobileQuery = window.matchMedia('(max-width: 768px)');
 
-    if (toggle) {
-        toggle.addEventListener('click', () => {
-            const open = toggle.getAttribute('aria-expanded') !== 'true';
+    const nameInput = document.getElementById('quickAddTitle');
+    const descInput = document.getElementById('quickAddComments');
+    // Set when the user closes the description with the chevron - don't
+    // auto-reopen it again for the same entry (reset on the next present)
+    let descDismissed = false;
+
+    function setDescExpanded(open) {
+        if (toggle) {
             toggle.setAttribute('aria-expanded', String(open));
             toggle.setAttribute('aria-label', open ? 'Ukryj opis' : 'Dodaj opis (opcjonalnie)');
-            form.classList.toggle('is-expanded', open);
-            if (open) {
-                const desc = document.getElementById('quickAddComments');
-                if (desc) desc.focus({ preventScroll: true });
-            }
-            updateComposerLayout();
+        }
+        form.classList.toggle('is-expanded', open);
+        updateComposerLayout();
+    }
+
+    function isDescExpanded() {
+        return form.classList.contains('is-expanded');
+    }
+
+    // ---- Attention scrim ----
+    // While the composer is active the rest of the page is dimmed so the
+    // bright composer is the obvious place to look. Visual state only: a
+    // dismissal never clears the fields and never collapses a description
+    // the user typed into. Not a modal - no focus trap, no scroll lock.
+    const scrim = document.getElementById('quickAddScrim');
+    let blurTimer = null;
+    let composerPointerAt = 0; // last pointerdown inside the composer
+    let suppressActivateUntil = 0; // ignore refocus right after a dismissal
+
+    function isComposerActive() {
+        return body.classList.contains('quick-add-active');
+    }
+
+    function activateComposer() {
+        if (Date.now() < suppressActivateUntil) return;
+        clearTimeout(blurTimer);
+        body.classList.add('quick-add-active');
+    }
+
+    function deactivateComposer(suppressMs) {
+        clearTimeout(blurTimer);
+        if (suppressMs) suppressActivateUntil = Date.now() + suppressMs;
+        body.classList.remove('quick-add-active');
+    }
+
+    if (toggle) {
+        toggle.addEventListener('click', () => {
+            const open = !isDescExpanded();
+            descDismissed = !open;
+            setDescExpanded(open);
+            if (open && descInput) descInput.focus({ preventScroll: true });
+            // Collapsing with the chevron is a "done for now" signal
+            else deactivateComposer(300);
         });
     }
+
+    // Progressive disclosure: reveal the (optional, recommended)
+    // description as soon as a name is typed. Focus stays in the name field.
+    if (nameInput) {
+        nameInput.addEventListener('input', () => {
+            const hasName = nameInput.value.trim() !== '';
+            if (hasName) {
+                if (!isDescExpanded() && !descDismissed) setDescExpanded(true);
+            } else {
+                // Name cleared - back to the compact bar for the next present
+                // (unless a description was already typed, so it isn't hidden)
+                descDismissed = false;
+                if (isDescExpanded() && !(descInput && descInput.value.trim())) {
+                    setDescExpanded(false);
+                }
+            }
+        });
+    }
+
+    // Enter adds a new line in the description; Ctrl/Cmd+Enter submits
+    if (descInput) {
+        descInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.isComposing) {
+                e.preventDefault();
+                quickAddPresent();
+            }
+        });
+    }
+
+    // Active as soon as a composer field is focused (so the dimming
+    // arrives together with the on-screen keyboard), and again when the
+    // user starts typing after a dismissal.
+    form.addEventListener('focusin', activateComposer);
+    form.addEventListener('focusout', (e) => {
+        // Moving between the composer's own controls keeps it active
+        if (e.relatedTarget && form.contains(e.relatedTarget)) return;
+        clearTimeout(blurTimer);
+        blurTimer = setTimeout(() => {
+            if (document.activeElement && form.contains(document.activeElement)) return;
+            // iOS doesn't focus buttons on tap, so a tap on the chevron or
+            // the "+" button arrives here as a plain blur - never dismiss
+            // before those handlers (and the submit) have run
+            if (Date.now() - composerPointerAt < 500) return;
+            deactivateComposer();
+        }, 150);
+    });
+    document.addEventListener('pointerdown', (e) => {
+        if (form.contains(e.target)) composerPointerAt = Date.now();
+    }, true);
+
+    const onComposerInput = () => {
+        suppressActivateUntil = 0;
+        activateComposer();
+    };
+    if (nameInput) nameInput.addEventListener('input', onComposerInput);
+    if (descInput) descInput.addEventListener('input', onComposerInput);
+
+    // Escape leaves the composer: undim and drop the keyboard, but keep
+    // whatever was typed (and keep the description open if it is open)
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || e.isComposing || !isComposerActive()) return;
+        const el = document.activeElement;
+        const inComposer = el && form.contains(el);
+        // Some engines revert/clear an input's value on Escape
+        if (inComposer) e.preventDefault();
+        // No suppression window: blurring means nothing refocuses us, so a
+        // deliberate tap back into the field must dim again right away
+        deactivateComposer();
+        if (inComposer && typeof el.blur === 'function') el.blur();
+    });
+
+    // A tap on the scrim dismisses; a drag on it is a scroll, so the list
+    // stays scrollable (the scrim isn't scrollable itself, so touch
+    // scrolling chains straight to the page - no scroll lock needed)
+    if (scrim) {
+        let tapX = 0;
+        let tapY = 0;
+        let tapAt = 0;
+        if (window.PointerEvent) {
+            scrim.addEventListener('pointerdown', (e) => {
+                tapX = e.clientX;
+                tapY = e.clientY;
+                tapAt = Date.now();
+            });
+            scrim.addEventListener('pointerup', (e) => {
+                if (Date.now() - tapAt > 700) return;
+                if (Math.abs(e.clientX - tapX) > 12 || Math.abs(e.clientY - tapY) > 12) return;
+                // The tap already blurred the field, so no suppression is
+                // needed - tapping back into the composer dims again at once
+                deactivateComposer();
+            });
+        } else {
+            scrim.addEventListener('click', () => deactivateComposer());
+        }
+    }
+
+    // Called after a successful add: compact state for the next present
+    window._resetQuickAddComposer = () => {
+        descDismissed = false;
+        setDescExpanded(false);
+        // Undim so the new item flashing in the list is visible. The
+        // suppression window covers the programmatic refocus of the name
+        // field; typing the next name dims again.
+        deactivateComposer(600);
+    };
 
     function tabBarOffset() {
         const bar = document.querySelector('.bottom-tab-bar');
@@ -495,7 +643,11 @@ function setupQuickAddComposer() {
         const docked = mobileQuery.matches && form.getClientRects().length > 0 &&
             getComputedStyle(form).position === 'fixed';
         body.classList.toggle('quick-add-docked', docked);
-        if (!docked) return;
+        if (!docked) {
+            // Desktop, or the edit tab was left - never leave the page dimmed
+            deactivateComposer();
+            return;
+        }
         const kb = keyboardOffset();
         const bottom = Math.max(tabBarOffset(), kb ? kb + 8 : 0);
         form.style.setProperty('--quick-add-bottom', bottom + 'px');
@@ -781,18 +933,33 @@ function loadMyPresents(highlightId) {
         });
 }
 
+// Last rendered presents by id (used by the "+ Dodaj szczegóły" chip)
+let myPresentsById = new Map();
+
 function displayMyPresents(presents) {
     const myPresentsList = document.getElementById('myPresentsList');
+    setupAddDetailsChip(myPresentsList);
+    myPresentsById = new Map(presents.map(p => [String(p.id), p]));
     
     let html = '<div class="list-group" style="gap: 0;">';
     
     presents.forEach(present => {
+        const hasComments = !!(present.comments && String(present.comments).trim());
+        const titleHasLink = /https?:\/\//i.test(present.title || '');
+        // Nudge towards details only when there's nothing beyond the name
+        const addDetailsChip = (!hasComments && !titleHasLink)
+            ? `<button type="button" class="my-present-add-details" data-add-details="${present.id}"
+                       aria-label="Dodaj szczegóły do: ${escapeAttr(present.title)}">
+                   <i class="fas fa-plus" aria-hidden="true"></i>Dodaj szczegóły
+               </button>`
+            : '';
         html += `
             <div class="list-group-item my-present-item" data-present-id="${present.id}">
                 <div class="d-flex justify-content-between align-items-start my-present-row">
                     <div class="flex-grow-1 my-present-body">
                         <h6 class="mb-1 my-present-title">${makeLinksClickable(escapeHtml(present.title))}</h6>
-                        ${present.comments ? `<p class="mb-1 my-present-comments">${makeLinksClickable(escapeHtml(present.comments))}</p>` : ''}
+                        ${hasComments ? `<p class="mb-1 my-present-comments">${makeLinksClickable(escapeHtml(present.comments))}</p>` : ''}
+                        ${addDetailsChip}
                         <small class="my-present-date">
                             <i class="fas fa-calendar me-1"></i>${formatDate(present.created_at)}
                         </small>
@@ -813,6 +980,20 @@ function displayMyPresents(presents) {
     html += '</div>';
     myPresentsList.innerHTML = html;
     updateMyPresentsCount(presents.length);
+}
+
+// One delegated listener on the list container (survives re-renders):
+// the chip opens the existing edit modal with the description focused
+function setupAddDetailsChip(list) {
+    if (!list || list._addDetailsBound) return;
+    list._addDetailsBound = true;
+    list.addEventListener('click', (e) => {
+        const chip = e.target.closest('[data-add-details]');
+        if (!chip || !list.contains(chip)) return;
+        const present = myPresentsById.get(chip.getAttribute('data-add-details'));
+        if (!present) return;
+        openEditPresentModal(present.id, present.title, present.comments || '', present.recipient_id, true);
+    });
 }
 
 function makeLinksClickable(text) {
@@ -855,7 +1036,7 @@ function makeLinksClickable(text) {
     return text;
 }
 
-function openEditPresentModal(id, title, comments, recipientId) {
+function openEditPresentModal(id, title, comments, recipientId, focusComments) {
     console.log('[Edit Modal] Opening with:', { id, title, comments, recipientId });
     document.getElementById('editPresentId').value = id;
     document.getElementById('editPresentTitle').value = title;
@@ -863,6 +1044,15 @@ function openEditPresentModal(id, title, comments, recipientId) {
     document.getElementById('editRecipientSelect').value = recipientId;
     console.log('[Edit Modal] Set recipientId to:', document.getElementById('editRecipientSelect').value);
     document.getElementById('editPresentMessage').style.display = 'none';
+    if (focusComments) {
+        const modalEl = document.getElementById('editPresentModal');
+        modalEl.addEventListener('shown.bs.modal', () => {
+            const ta = document.getElementById('editPresentComments');
+            ta.focus();
+            const end = ta.value.length;
+            ta.setSelectionRange(end, end);
+        }, { once: true });
+    }
     editPresentModal.show();
 }
 
@@ -1010,6 +1200,13 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// escapeHtml leaves quotes alone - also escape them for attribute values
+function escapeAttr(text) {
+    return escapeHtml(text == null ? '' : String(text))
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function formatDate(dateString) {

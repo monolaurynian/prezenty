@@ -1,25 +1,27 @@
 // Shared wording for activity / notification messages.
-// Gender-neutral Polish: "Monika · rezerwacja: „Książka” (dla: Tomek)"
-// instead of "Monika zarezerwował(a) …". Names after "dla" use the colon
-// form because names can't be declined reliably.
+// Warm activity-feed style with present-tense verbs, which are
+// gender-neutral in Polish: "Monika rezerwuje „Książka” dla: Tomek 🔖".
+// Names after "dla" use the colon form because names can't be declined
+// reliably.
 //
 //   notificationText(type, data, actor, opts) -> HTML string (or plain text)
 //
 // type:  recipient_added | present_added | present_reserved |
 //        present_unreserved | present_checked | present_unchecked |
 //        present_added_batch (data.count = number of presents)
-//        anything else -> "<actor> · nowa aktywność"
+//        anything else -> "<actor> coś zmienia ✨"
 // data:  { presentTitle, recipientName, count, ... } (notification payload)
 // actor: username of whoever did it (falsy -> "Ktoś")
 // opts (all optional) - renderers keep their own links/markup:
 //   html:      true (default) escapes values; false returns plain text
-//   showActor: true (default) prefixes "<actor> · "; false returns "· …"
-//              for renderers that print the actor themselves
+//   showActor: true (default) prefixes "<actor> "; false returns only the
+//              rest ("dodaje prezent …") for renderers that print the
+//              actor themselves
 //   actor(escapedActor)              -> markup for the actor
 //   person(escapedName, rawName)     -> markup for a person name
 //   present(quotedTitle, data)       -> markup for the present title;
 //                                       quotedTitle is already escaped
-//   count(countText, data)           -> markup for "5 nowych prezentów"
+//   count(countText, data)           -> markup for "5 prezentów"
 (function (root) {
     function escapeHtml(text) {
         return String(text == null ? '' : text)
@@ -36,9 +38,13 @@
             try { plCount = require('./pluralize-pl.js').plCount; } catch (e) { /* browser */ }
         }
         if (typeof plCount === 'function') {
-            return plCount(n, 'nowy prezent', 'nowe prezenty', 'nowych prezentów');
+            return plCount(n, 'prezent', 'prezenty', 'prezentów');
         }
-        return `nowe prezenty: ${n}`;
+        // Same rule as pluralize-pl.js, in case it isn't loaded
+        const abs = Math.abs(n), last = abs % 10, lastTwo = abs % 100;
+        const word = abs === 1 ? 'prezent'
+            : (last >= 2 && last <= 4 && !(lastTwo >= 12 && lastTwo <= 14)) ? 'prezenty' : 'prezentów';
+        return `${n} ${word}`;
     }
 
     function sameName(a, b) {
@@ -57,41 +63,43 @@
         const person = (name) => (opts.person ? opts.person(esc(name), name) : strong(esc(name)));
         const quoted = `„${esc(data.presentTitle || 'prezent')}”`;
         const present = opts.present ? opts.present(quoted, data) : strong(quoted);
-        // " (dla: X)" - skipped when X is the actor themselves
+        // " dla: X" - skipped when X is the actor themselves (own list)
         const forWhom = (data.recipientName && !(actor && sameName(data.recipientName, actor)))
-            ? ` (dla: ${person(data.recipientName)})` : '';
+            ? ` dla: ${person(data.recipientName)}` : '';
 
         let body;
         switch (type) {
             case 'recipient_added':
-                body = data.recipientName ? `nowa osoba: ${person(data.recipientName)}` : 'nowa osoba';
+                body = data.recipientName
+                    ? `dodaje nową osobę: ${person(data.recipientName)} 👤`
+                    : 'dodaje nową osobę 👤';
                 break;
             case 'present_added':
-                body = `nowy prezent ${present}${forWhom}`;
+                body = `dodaje prezent ${present}${forWhom} 🎁`;
                 break;
             case 'present_reserved':
-                body = `rezerwacja: ${present}${forWhom}`;
+                body = `rezerwuje ${present}${forWhom} 🔖`;
                 break;
             case 'present_unreserved':
-                body = `anulowana rezerwacja: ${present}${forWhom}`;
+                body = `rezygnuje z rezerwacji ${present}${forWhom}`;
                 break;
             case 'present_checked':
-                body = `kupione: ${present}${forWhom}`;
+                body = `kupuje ${present}${forWhom} ✅`;
                 break;
             case 'present_unchecked':
-                body = `cofnięto „kupione”: ${present}${forWhom}`;
+                body = `cofa oznaczenie „kupione” przy ${present}${forWhom}`;
                 break;
             case 'present_added_batch': {
                 const n = Number(data.count) || 0;
                 const text = esc(countText(n));
-                body = `${opts.count ? opts.count(text, data) : strong(text)}${forWhom}`;
+                body = `dodaje ${opts.count ? opts.count(text, data) : strong(text)}${forWhom} 🎁`;
                 break;
             }
             default:
-                body = 'nowa aktywność';
+                body = 'coś zmienia ✨';
         }
 
-        return opts.showActor === false ? `· ${body}` : `${actorOut} · ${body}`;
+        return opts.showActor === false ? body : `${actorOut} ${body}`;
     }
 
     root.notificationText = notificationText;

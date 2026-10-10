@@ -16,7 +16,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.deduped.min.css">
     <link href="bottom-tab-bar.css?v=41" rel="stylesheet">
-    <link href="app-theme.css?v=13" rel="stylesheet">
+    <link href="app-theme.css?v=14" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
         .tab-bar-notifications-panel.show {
@@ -518,6 +518,61 @@
         .quick-add-desc { grid-area: desc; min-width: 0; }
         .quick-add-desc textarea { resize: vertical; }
 
+        /* Short, motivating helper above the optional description */
+        .quick-add-hint {
+            margin: 0 0 6px;
+            color: #2f5d34;
+            font-size: 0.875rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        /* "+ Dodaj szczegóły" nudge on presents without a description */
+        #myPresentsList .my-present-add-details {
+            position: relative;
+            display: flex;
+            width: fit-content;
+            max-width: 100%;
+            align-items: center;
+            gap: 6px;
+            min-height: 32px;
+            margin: 4px 0 8px;
+            padding: 4px 12px;
+            border: 1.5px dashed #c99700;
+            border-radius: 999px;
+            background: #fff8e1;
+            color: #664d03;
+            font-size: 0.875rem;
+            font-weight: 600;
+            line-height: 1.2;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        /* Invisible hit area: 44px tall tap target around the 32px pill */
+        #myPresentsList .my-present-add-details::after {
+            content: "";
+            position: absolute;
+            inset: -6px -4px;
+        }
+
+        #myPresentsList .my-present-add-details i { font-size: 0.75rem; }
+
+        #myPresentsList .my-present-add-details:hover {
+            background: #ffefb3;
+            border-style: solid;
+        }
+
+        #myPresentsList .my-present-add-details:focus-visible {
+            outline: 3px solid #1a56db;
+            outline-offset: 2px;
+            border-style: solid;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #myPresentsList .my-present-add-details { transition: none; }
+        }
+
         .quick-add-submit {
             grid-area: submit;
             justify-self: end;
@@ -618,6 +673,15 @@
             100% { opacity: 0; }
         }
 
+        /* Desktop (>768px): no scrim. The add form is already a bounded
+           green card at the top of the page with nothing competing for
+           attention, and there is no keyboard or thumb-reach problem to
+           solve there - a full-page dim would only feel heavy-handed.
+           (The mobile rules below switch it on.) */
+        .quick-add-scrim {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             /* A backdrop-filter on the card would turn it into the containing
                block for the fixed composer - drop it on mobile and make the
@@ -652,8 +716,13 @@
                 bottom: var(--quick-add-bottom, calc(max(12px, env(safe-area-inset-bottom, 0px)) + 90px));
                 z-index: 999; /* under the tab bar (1000) and its menus */
                 grid-template-columns: 48px minmax(0, 1fr) 52px;
-                grid-template-areas: "toggle name submit";
-                gap: 8px;
+                /* The desc row is always there but collapses to 0 height
+                   (row-gap 0; the open desc adds its own top margin) */
+                grid-template-areas:
+                    "toggle name submit"
+                    "desc   desc submit";
+                column-gap: 8px;
+                row-gap: 0;
                 padding: 8px;
                 background: rgba(255, 255, 255, 0.98);
                 border: 1px solid rgba(0, 0, 0, 0.08);
@@ -661,12 +730,6 @@
                 border-radius: 20px;
                 box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
                 transition: bottom 0.25s ease;
-            }
-
-            .quick-add-composer.is-expanded {
-                grid-template-areas:
-                    "toggle name submit"
-                    "desc   desc submit";
             }
 
             /* Heading stays for screen readers (aria-labelledby) */
@@ -709,8 +772,32 @@
                 font-size: 16px; /* >=16px: no iOS zoom on focus */
             }
 
-            .quick-add-desc { display: none; }
-            .quick-add-composer.is-expanded .quick-add-desc { display: block; }
+            /* Collapsed: zero height, hidden from tab order / AT. Opens
+               upward (the composer is anchored at the bottom) with a short
+               height + fade transition. */
+            .quick-add-desc {
+                max-height: 0;
+                margin-top: 0;
+                opacity: 0;
+                overflow: hidden;
+                visibility: hidden;
+                transition: max-height 0.2s ease, margin-top 0.2s ease,
+                    opacity 0.15s ease, visibility 0s linear 0.2s;
+            }
+
+            .quick-add-composer.is-expanded .quick-add-desc {
+                max-height: calc(30vh + 40px);
+                margin-top: 8px;
+                opacity: 1;
+                visibility: visible;
+                transition: max-height 0.2s ease, margin-top 0.2s ease,
+                    opacity 0.15s ease 0.05s, visibility 0s;
+            }
+
+            .quick-add-hint {
+                margin: 0 4px 4px;
+                font-size: 0.8125rem;
+            }
 
             .quick-add-desc .form-control {
                 font-size: 16px;
@@ -744,11 +831,56 @@
             body.has-tab-bar.quick-add-docked {
                 padding-bottom: calc(var(--quick-add-bottom, 100px) + var(--quick-add-h, 72px) + 20px) !important;
             }
+
+            /* ---- Attention scrim ----
+               While the composer is active (name/description focused or
+               being typed into) everything behind it is dimmed so the
+               bright composer is the obvious place to look. Decorative
+               only: aria-hidden, not focusable, no role="dialog", no focus
+               trap and no scroll lock - a tap dismisses it, a drag still
+               scrolls the list. No backdrop-filter: the page background is
+               a photo, so a blur here costs frames for a muddy result. */
+            .quick-add-scrim {
+                display: block;
+                position: fixed;
+                inset: 0;
+                /* Above all page content (header, list, "Dodaj dla kogoś
+                   innego"), below the composer (999) and the bottom tab
+                   bar (1000), so the bar stays bright and clickable */
+                z-index: 998;
+                background: rgba(0, 0, 0, 0.45);
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                -webkit-tap-highlight-color: transparent;
+                transition: opacity 0.18s ease, visibility 0s linear 0.18s;
+            }
+
+            body.quick-add-active .quick-add-scrim {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transition: opacity 0.18s ease, visibility 0s;
+            }
+
+            /* Lift the composer off the dimmed page: a deeper shadow and a
+               fully opaque surface (at 0.98 the dimmed list underneath
+               showed through just enough to be noticeable) */
+            body.quick-add-active .quick-add-composer {
+                background: #ffffff;
+                box-shadow: 0 10px 36px rgba(0, 0, 0, 0.45);
+            }
         }
+
+
 
         @media (prefers-reduced-motion: reduce) {
             .quick-add-composer,
-            .quick-add-toggle i {
+            .quick-add-toggle i,
+            .quick-add-desc,
+            .quick-add-composer.is-expanded .quick-add-desc,
+            .quick-add-scrim,
+            body.quick-add-active .quick-add-scrim {
                 transition: none !important;
             }
 
@@ -940,8 +1072,10 @@
                             </div>
                             <div class="quick-add-desc" id="quickAddDescWrap">
                                 <label class="visually-hidden" for="quickAddComments">Opis (opcjonalnie)</label>
+                                <p class="quick-add-hint" id="quickAddHint">Szczegóły pomagają trafić <span aria-hidden="true">🎯</span></p>
                                 <textarea class="form-control" id="quickAddComments" rows="2"
-                                    placeholder="Opis, linki, gdzie kupić… (opcjonalnie)"></textarea>
+                                    aria-describedby="quickAddHint"
+                                    placeholder="Rozmiar, kolor, link do sklepu…"></textarea>
                             </div>
                             <button type="submit" class="btn btn-green quick-add-submit" id="quickAddBtn">
                                 <i class="fas fa-plus" aria-hidden="true"></i><span class="quick-add-submit-label">Dodaj</span>
@@ -1137,7 +1271,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="formularz.js?v=17"></script>
+    <script src="formularz.js?v=19"></script>
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebarMenu');
@@ -1146,6 +1280,12 @@
             overlay.classList.toggle('show');
         }
     </script>
+
+    <!-- Attention scrim for the mobile quick-add composer. Decorative
+         (aria-hidden, not focusable, never in the tab order): it only dims
+         the page behind the composer. formularz.js toggles
+         body.quick-add-active. -->
+    <div class="quick-add-scrim" id="quickAddScrim" aria-hidden="true"></div>
 
     <!-- Bottom Tab Bar -->
     <div class="bottom-tab-bar">

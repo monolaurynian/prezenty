@@ -22,6 +22,7 @@
     <link href="styles.deduped.min.css" rel="stylesheet">
     <link href="bottom-tab-bar.css?v=41" rel="stylesheet">
     <link href="app-theme.css?v=13" rel="stylesheet">
+    <link href="chat-reactions.css?v=2" rel="stylesheet">
     <style>
         html, body { overflow-x: hidden; max-width: 100vw; }
         body {
@@ -152,6 +153,10 @@
     </style>
     <script src="pluralize-pl.js"></script>
     <script src="notification-text.js"></script>
+    <!-- Loaded in <head> (not at the end of <body>) so window.ChatReactions
+         exists by the time the page's own inline script runs. It defers its
+         DOM wiring to DOMContentLoaded. -->
+    <script src="chat-reactions.js?v=2"></script>
 </head>
 <body class="has-tab-bar">
     <div class="background-overlay"></div>
@@ -224,6 +229,21 @@
         </div>
     </div>
 
+    <!-- Reaction picker: bottom sheet on phones (thumb reach), centred
+         card on desktop. Styles live in chat-reactions.css, behaviour in
+         chat-reactions.js. -->
+    <div id="reactionSheetOverlay"></div>
+    <div id="reactionSheet" role="dialog" aria-modal="true"
+        aria-labelledby="reactionSheetTitle" aria-hidden="true" inert>
+        <div class="reaction-sheet-header">
+            <h2 id="reactionSheetTitle">Wybierz reakcję</h2>
+            <button type="button" id="reactionSheetClose" aria-label="Zamknij">
+                <i class="ri-close-line" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="reaction-sheet-grid" id="reactionSheetGrid"></div>
+    </div>
+
     <!-- Toasts -->
     <div class="toast-container position-fixed top-0 end-0 p-3">
         <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -249,6 +269,15 @@
         // Signature of the last rendered message list - re-render (and
         // scroll to bottom) only when something actually changed
         let lastChatSignature = null;
+        // Separate signature for reactions: when only those changed we
+        // repaint the chip strips in place, so the chat never scroll-jumps
+        let lastReactionSignature = null;
+
+        // Safe stand-in if chat-reactions.js fails to load (stale cache) -
+        // the chat keeps working, just without reaction UI
+        const reactionsApi = window.ChatReactions || {
+            ingest: () => '', strip: () => '', refreshStrips: () => {}, reset: () => {}
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             fetch('/api/auth')
@@ -440,6 +469,8 @@
             currentThreadId = threadId;
             newChatTargetId = null;
             lastChatSignature = null;
+            lastReactionSignature = null;
+            reactionsApi.reset();
             if (pushHistory) {
                 history.pushState({ rozmowa: threadId }, '', '/wiadomosci?rozmowa=' + threadId);
             }
@@ -456,6 +487,8 @@
             currentThreadId = null;
             newChatTargetId = targetUserId;
             lastChatSignature = null;
+            lastReactionSignature = null;
+            reactionsApi.reset();
             document.getElementById('listView').style.display = 'none';
             document.getElementById('chatView').style.display = 'block';
             document.getElementById('deleteThreadBtn').style.display = 'none';
@@ -483,6 +516,9 @@
         function showListView(replaceUrl) {
             currentThreadId = null;
             newChatTargetId = null;
+            lastChatSignature = null;
+            lastReactionSignature = null;
+            reactionsApi.reset();
             document.getElementById('deleteThreadBtn').style.display = 'none';
             document.getElementById('chatView').style.display = 'none';
             document.getElementById('listView').style.display = 'block';
@@ -563,16 +599,33 @@
                     const box = document.getElementById('chatMessages');
                     const msgs = d.messages || [];
 
+                    // Reactions ride along in this payload - no second
+                    // polling loop. Ingest first so the strips below (and
+                    // the reaction signature) use the fresh aggregate.
+                    const rsig = reactionsApi.ingest(msgs);
+
                     // Nothing new - keep the DOM (and scroll position) as is
                     const sig = currentThreadId + ':' + msgs.length + ':' + (msgs.length ? msgs[msgs.length - 1].id : 0);
-                    if (sig === lastChatSignature) return;
+                    if (sig === lastChatSignature) {
+                        // Same messages, different reactions: repaint only
+                        // the chip strips, leaving scroll and previews alone
+                        if (rsig !== lastReactionSignature) {
+                            lastReactionSignature = rsig;
+                            reactionsApi.refreshStrips();
+                        }
+                        return;
+                    }
                     lastChatSignature = sig;
+                    lastReactionSignature = rsig;
 
                     box.innerHTML = msgs.map(m => `
-                        <div class="chat-bubble ${m.fromMe ? 'from-me' : 'from-them'}">
-                            ${renderMessageBody(m.body)}
-                            <div id="lp-${m.id}"></div>
-                            <div class="chat-time">${timeAgo(m.createdAt)}</div>
+                        <div class="chat-msg-row ${m.fromMe ? 'from-me' : 'from-them'}">
+                            <div class="chat-bubble ${m.fromMe ? 'from-me' : 'from-them'}">
+                                ${renderMessageBody(m.body)}
+                                <div id="lp-${m.id}"></div>
+                                <div class="chat-time">${timeAgo(m.createdAt)}</div>
+                            </div>
+                            <div class="chat-reactions" data-reactions-for="${m.id}">${reactionsApi.strip(m)}</div>
                         </div>
                     `).join('');
                     box.scrollTop = box.scrollHeight;

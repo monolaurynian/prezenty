@@ -12,6 +12,18 @@ const cron = require('cron');
 const https = require('https');
 const sharp = require('sharp');
 const { plPlural, plCount } = require('./public/pluralize-pl');
+const { notificationText } = require('./public/notification-text');
+// Chat reaction logic lives next to its client script (same shared-file
+// pattern as pluralize-pl / notification-text) so the allowlist exists
+// exactly once and the aggregation is unit-testable without a DB.
+const {
+    isAllowedReactionEmoji,
+    buildReactionList,
+    groupReactionsByMessage,
+    parseMessageId: parseReactionMessageId,
+    toggleAction: reactionToggleAction,
+    reactionThrottleStep
+} = require('./public/chat-reactions');
 // const webpush = require('web-push'); // Now enabled below
 
 // Load .env file in development, but not in production
@@ -1682,7 +1694,11 @@ app.post('/api/presents', requireAuth, async (req, res) => {
 
         // Send push notification to other users (non-blocking, with error handling)
         const notificationTitle = 'Nowy prezent!';
-        const notificationBody = `Dodano nowy prezent „${title.trim()}” (dla: ${recipientName})`;
+        // Same wording as the activity feed, as plain text
+        const notificationBody = notificationText('present_added', {
+            presentTitle: title.trim(),
+            recipientName: recipient_id ? recipientName : null
+        }, req.session.username, { html: false });
         console.log(`📢 [PRESENT] Triggering notification for new present: "${title.trim()}" (ID: ${result.insertId})`);
 
         // Send notification asynchronously without blocking the response
@@ -2568,6 +2584,27 @@ async function ensureAnonMessageTables() {
             FOREIGN KEY (thread_id) REFERENCES anon_threads(id) ON DELETE CASCADE
         )
     `);
+    // Emoji reactions on messages. The reactor's user_id is stored HERE
+    // AND NOWHERE ELSE - no endpoint ever emits it, clients only ever see
+    // { emoji, count, mine }. Reactions deliberately create no
+    // notification, no push and no activity-feed entry.
+    // MIRRORED in init-db.js (fresh installs) - keep both in sync.
+    await pool.execute(`
+        CREATE TABLE IF NOT EXISTS anon_message_reactions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            message_id INT NOT NULL,
+            user_id INT NOT NULL,
+            -- utf8mb4_bin: the *_ci collations compare many emoji as
+            -- EQUAL, which would break both the unique key (one reaction
+            -- per user per message) and GROUP BY emoji
+            emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_message_user_emoji (message_id, user_id, emoji),
+            INDEX idx_reaction_message (message_id),
+            FOREIGN KEY (message_id) REFERENCES anon_messages(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    `);
     // NOTE: multiple threads per sender->recipient pair are allowed by
     // design (each compose starts a fresh thread) - separate threads help
     // tell genuine conversations apart from test ones
@@ -2718,6 +2755,19 @@ app.get('/api/wiadomosci/threads/:id', requireAuth, async (req, res) => {
             [thread.id, userId]
         );
 
+        // Reactions for the WHOLE thread in one grouped query (no N+1).
+        // Scoped by thread_id after the participation check above, so
+        // reactions from other conversations are unreachable. Only the
+        // aggregate leaves the server - `mine` replaces any user id.
+        const [reactionRows] = await pool.execute(`
+            SELECT r.message_id, r.emoji, COUNT(*) AS cnt, MAX(r.user_id = ?) AS mine
+            FROM anon_message_reactions r
+            JOIN anon_messages m ON m.id = r.message_id
+            WHERE m.thread_id = ?
+            GROUP BY r.message_id, r.emoji
+        `, [userId, thread.id]);
+        const reactionsByMessage = groupReactionsByMessage(reactionRows);
+
         const isInitiator = thread.initiator_id === userId;
         const [uRows] = await pool.execute('SELECT username FROM users WHERE id = ?', [thread.target_id]);
         const targetName = uRows.length ? uRows[0].username : '?';
@@ -2731,7 +2781,9 @@ app.get('/api/wiadomosci/threads/:id', requireAuth, async (req, res) => {
                 id: m.id,
                 fromMe: m.sender_id === userId,
                 body: m.body,
-                createdAt: m.created_at
+                createdAt: m.created_at,
+                // Aggregate only: [{ emoji, count, mine }]
+                reactions: reactionsByMessage.get(Number(m.id)) || []
             }))
         });
     } catch (err) {
@@ -2794,6 +2846,106 @@ app.post('/api/wiadomosci/threads/:id/messages', requireAuth, async (req, res) =
         res.json({ success: true });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas wysyłania odpowiedzi');
+    }
+});
+
+// ---- Emoji reactions on a message ----
+// Toggle: tapping the same emoji again removes it, a different emoji on
+// the same message is allowed. Idempotent by the unique key.
+// NO notification of any kind is produced here - no notifications row,
+// no push, no activity feed, no is_read change. That is deliberate
+// ("you don't need to notify about them").
+
+// Server-side throttle. The client debounces rapid taps, but that only
+// protects a well-behaved client; this caps what one session can do to
+// the pool. 30 toggles / 10 s is far above thumb speed. In-memory and
+// per-process, which is enough - no rate-limiting dependency is added.
+const REACTION_RATE_MAX = 30;
+const REACTION_RATE_WINDOW_MS = 10 * 1000;
+const reactionRateBuckets = new Map(); // userId -> { start, hits }
+
+function reactionRateAllows(userId) {
+    const now = Date.now();
+    // Opportunistic prune so the map cannot grow without bound
+    if (reactionRateBuckets.size > 500) {
+        reactionRateBuckets.forEach((bucket, key) => {
+            if (now - Number(bucket.start) >= REACTION_RATE_WINDOW_MS) reactionRateBuckets.delete(key);
+        });
+    }
+    const next = reactionThrottleStep(
+        reactionRateBuckets.get(userId), now, REACTION_RATE_MAX, REACTION_RATE_WINDOW_MS
+    );
+    reactionRateBuckets.set(userId, next);
+    return next.allowed;
+}
+
+app.post('/api/wiadomosci/messages/:messageId/reactions', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.status(503).json({ error: 'Niedostępne w trybie demo' });
+    const userId = req.session.userId;
+
+    const messageId = parseReactionMessageId(req.params.messageId);
+    if (messageId === null) return badRequest(res, 'Nieprawidłowa wiadomość');
+
+    // Allowlist is the ONLY source of storable values - anything else is
+    // rejected before it can reach the database
+    const emoji = req.body ? req.body.emoji : null;
+    if (!isAllowedReactionEmoji(emoji)) return badRequest(res, 'Nieprawidłowa reakcja');
+
+    // Cheap checks first; the throttle counts only well-formed attempts
+    if (!reactionRateAllows(userId)) {
+        return res.status(429).json({ error: 'Zbyt wiele reakcji. Odczekaj chwilę' });
+    }
+
+    try {
+        await ensureAnonMessageTables();
+
+        // Message + thread in one go, so participation is verified from
+        // the message itself (sender_id is never read or returned)
+        const [mRows] = await pool.execute(`
+            SELECT m.id, t.initiator_id, t.target_id
+            FROM anon_messages m
+            JOIN anon_threads t ON t.id = m.thread_id
+            WHERE m.id = ?
+        `, [messageId]);
+        if (mRows.length === 0) return notFound(res, 'Nie znaleziono wiadomości');
+        const row = mRows[0];
+        if (row.initiator_id !== userId && row.target_id !== userId) {
+            return forbidden(res, 'To nie Twoja rozmowa');
+        }
+
+        // Toggle: delete first, insert only when nothing was removed.
+        // INSERT IGNORE swallows the duplicate-key a racing double tap
+        // would cause - the response still reflects the real aggregate.
+        const [del] = await pool.execute(
+            'DELETE FROM anon_message_reactions WHERE message_id = ? AND user_id = ? AND emoji = ?',
+            [messageId, userId, emoji]
+        );
+        const action = reactionToggleAction(del.affectedRows);
+        if (action === 'added') {
+            await pool.execute(
+                'INSERT IGNORE INTO anon_message_reactions (message_id, user_id, emoji) VALUES (?, ?, ?)',
+                [messageId, userId, emoji]
+            );
+        }
+
+        const [aggRows] = await pool.execute(`
+            SELECT emoji, COUNT(*) AS cnt, MAX(user_id = ?) AS mine
+            FROM anon_message_reactions
+            WHERE message_id = ?
+            GROUP BY emoji
+        `, [userId, messageId]);
+
+        // Identity-free log line: no user id, no emoji->user pairing
+        console.log(`💜 [WIADOMOSCI] Reaction ${action} on message ${messageId}`);
+        res.json({
+            success: true,
+            action,
+            messageId,
+            emoji,
+            reactions: buildReactionList(aggRows)
+        });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas zapisywania reakcji');
     }
 });
 
@@ -3306,7 +3458,12 @@ app.post('/api/formularz/present', async (req, res) => {
 
             // Send push notification to other users (non-blocking)
             const notificationTitle = 'Nowy prezent!';
-            const notificationBody = `Dodano nowy prezent „${presentTitle.trim()}” (dla: ${notificationRecipientName})`;
+            // Same wording as the activity feed, as plain text
+            // (anonymous submissions -> "Ktoś dodaje prezent …")
+            const notificationBody = notificationText('present_added', {
+                presentTitle: presentTitle.trim(),
+                recipientName: notificationRecipientName
+            }, req.session && req.session.userId ? req.session.username : null, { html: false });
             console.log(`📢 [FORMULARZ] Triggering notification for new present: "${presentTitle.trim()}" (ID: ${presentId})`);
 
             sendNotificationToUsers(notificationActorId, notificationTitle, notificationBody, {

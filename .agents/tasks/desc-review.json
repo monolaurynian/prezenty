@@ -1,0 +1,22 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "severity": "minor",
+      "blocking": false,
+      "confidence": "possible",
+      "label": "Stale focus listener on the edit modal",
+      "file": "public/formularz.js",
+      "detail": "openEditPresentModal(..., true) adds a { once: true } shown.bs.modal listener before show(). If show() is a no-op (modal already open/transitioning, double tap), the listener lingers and the next normal edit open focuses the description instead of the title. Remove it on hidden.bs.modal or gate it with a per-open flag."
+    },
+    {
+      "severity": "minor",
+      "blocking": false,
+      "confidence": "possible",
+      "label": "Expanded composer height with a real keyboard",
+      "file": "public/formularz.html",
+      "detail": "Expanded composer is ~165px; at 320x640 with an on-screen keyboard little of the list stays visible. Not verifiable in the harness - check on a device and reduce textarea rows while the keyboard is open if cramped."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\matmamon\\OneDrive - amazon.com\\Documents\\Prezenty\\prezenty/.agents/tasks/desc-review-doc.md"
+}
