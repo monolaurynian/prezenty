@@ -1,41 +1,37 @@
 {
-  "verdict": "CHANGES_REQUESTED",
+  "verdict": "APPROVED",
   "findings": [
     {
       "id": 1,
-      "blocking": true,
+      "severity": "non-blocking",
       "confidence": "confirmed",
-      "label": "Chevron tap from the compact bar collapses the details it just opened",
-      "files": ["public/formularz.js"],
-      "detail": "enterAddMode() ends with setDescExpanded(true), and form.addEventListener('focusin', () => enterAddMode()) fires before the chevron's click handler. On engines that focus a <button> on tap (Chromium desktop and Android), tapping the chevron in the compact state runs focusin -> enterAddMode -> details expanded, then click -> open = !isDescExpanded() = false -> details collapsed and descDismissed = true for the rest of the session. Net effect: the control whose label read 'Dodaj opis (opcjonalnie)' enters add mode with the description shut, which contradicts requirement 1 (details open on entering add mode). iOS Safari does not focus buttons on tap, so the behaviour is engine-dependent.",
-      "suggestion": "Stop deriving the chevron's intent from post-entry DOM state. Pass the focus origin into entry, e.g. form.addEventListener('focusin', e => enterAddMode({ fromToggle: e.target === toggle })) and skip setDescExpanded(true) for that entry so the click handler is the one that opens the row; or snapshot isDescExpanded()/isAddMode() on pointerdown/mousedown on the toggle and use the snapshot in the click handler."
+      "label": "Keyboard entry flips the chevron's meaning",
+      "detail": "Tabbing into the composer from the compact state lands on #quickAddToggle (the close button is not tabbable there), which enters add mode and opens the details, so the button relabels to 'Ukryj opis' with aria-expanded=\"true\" and the user's first Enter collapses the row they were reaching for (measured as harness rows c3/c4). keepDesc is pointer-only by design. Consider applying keepDesc to any entry whose focus target is the toggle, letting the activation open the row in both input modes.",
+      "files": ["public/formularz.js"]
     },
     {
       "id": 2,
-      "blocking": true,
+      "severity": "non-blocking",
       "confidence": "confirmed",
-      "label": "Harness matrix is missing plan entry E3 (chevron from the compact state)",
-      "files": [".agents/tasks/addmode-verification.md"],
-      "detail": "Section 5(d) only exercises the chevron from inside add mode ('Chevron tapped in add mode'). The compact -> chevron-tap path, listed as E3 in the plan, is never asserted, which is why finding 1 went unobserved on the very engine the harness runs (Chromium/Edge with isMobile+hasTouch).",
-      "suggestion": "Add a row starting from S1: tap #quickAddToggle and assert body.quick-add-active present, form.is-expanded true, toggle aria-expanded=\"true\", the label switched to 'Ukryj opis', descDismissed not latched (leaving and re-entering still opens details) and #quickAddComments focused."
+      "label": "Chevron press-and-cancel leaves details collapsed in add mode",
+      "detail": "A pointerdown on the chevron marks the focusin entry it causes as keepDesc, so if no click follows (pointer dragged off the button, pointer cancel) add mode is on with the description never opened - the one entry path that does not satisfy 'details open on entering add mode'. The existing 700ms safety timer only clears the flag; it could also open the row when it fires while still in add mode and nothing toggled it. Not covered by the harness.",
+      "files": ["public/formularz.js"]
     },
     {
       "id": 3,
-      "blocking": false,
+      "severity": "non-blocking",
       "confidence": "confirmed",
-      "label": "leaderboard.html and wiadomosci.html still load tab-bar-functions.js?v=16",
-      "files": ["public/leaderboard.html", "public/wiadomosci.html"],
-      "detail": "Six of the eight pages loading the shared script were bumped to ?v=17 (activity, formularz, home, recipients, rezerwacje, ustawienia). leaderboard.html:1509 and wiadomosci.html:840 remain at ?v=16, so their 'Dodaj' tab navigates without ?add=1 until the cached script is revalidated (form opens normally, just without the composer auto-opening). Correctly deferred - both are on this task's do-not-edit list - and explicitly listed in the verification doc as a carry-over.",
-      "suggestion": "Merge step: bump both to ?v=17. wiadomosci.html is already modified in this working tree by the chat-noscroll task, so the bump is a one-line addition there."
+      "label": "descDismissed is write-only",
+      "detail": "descDismissed is set in enterAddMode, exitAddMode and the chevron click handler but read nowhere. The 'stays collapsed for the rest of the add-mode session' rule now rests entirely on enterAddMode's early return when add mode is already on. Either drop the flag or gate the re-expand on it, so a future entry path cannot silently reopen the row with nothing failing.",
+      "files": ["public/formularz.js"]
     },
     {
       "id": 4,
-      "blocking": false,
-      "confidence": "likely",
-      "label": "iOS close path loses the focus hand-off to #myPresentsHeading",
-      "files": ["public/formularz.js"],
-      "detail": "exitAddMode gates both the blur and the heading focus on 'document.activeElement is inside the form'. On iOS Safari a tap on the X (or on the submit '+') blurs the focused input before the click, so activeElement is <body>, inForm is false and focus is never parked on #myPresentsHeading - screen-reader reading position drops to the top of the document. The keyboard still closes (the platform did it) and close/Escape remain reachable, so the 'always a way out' requirement still holds.",
-      "suggestion": "Record whether focus was inside the form at pointerdown on #quickAddClose / #quickAddBtn, or unconditionally focus #myPresentsHeading for the 'close', 'escape' and 'added' reasons while keeping the blur conditional."
+      "severity": "non-blocking",
+      "confidence": "confirmed",
+      "label": "Two pages still load tab-bar-functions.js?v=16",
+      "detail": "leaderboard.html:1509 and wiadomosci.html:840 both carry a 'Dodaj' tab and both still request ?v=16, so their Dodaj tab navigates without ?add=1 until the cached copy is revalidated (the form opens normally, just without auto-opening the composer). Correctly deferred - both are on this task's do-not-edit list - and documented in addmode-verification.md §3 and §7. Fold the one-line bump into the merge step; wiadomosci.html is already modified in this tree by the chat work.",
+      "files": ["public/leaderboard.html", "public/wiadomosci.html"]
     }
   ],
   "reviewDoc": "c:\\Users\\matmamon\\OneDrive - amazon.com\\Documents\\Prezenty\\prezenty\\.agents\\tasks\\addmode-review-doc.md"

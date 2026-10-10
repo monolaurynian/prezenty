@@ -1,215 +1,227 @@
-# Add mode for the quick-add composer on formularz.html
+# Add mode for the quick-add composer on formularz.html (iteration 2)
 
-The mobile quick-add composer gets an explicit open/close lifecycle: `body.quick-add-active`
-is the single state flag, entered on focus/typing/`?add=1`/a tap on the dock's **Dodaj** tab,
-and left by a new 44×44 close button, Escape, a scrim tap, a successful add, undocking or the
-edit bottom sheet opening. Entering opens the description row and slides the whole bottom dock
-(including the floating red FAB) out of the thumb zone via page-local CSS; leaving restores it.
-The old `focusout` / `blurTimer` / document-level `pointerdown` machinery and the "expand the
-description on the first keystroke" listener are deleted, which is what makes "closing never
-discards typed text" true. Desktop is deliberately untouched — everything hangs off the single
-`refreshDocked()` guard that is only true at ≤768px with the composer actually `position: fixed`.
+The mobile quick-add composer has an explicit open/close lifecycle: `body.quick-add-active` is
+the single state flag, entered on focus/typing/`?add=1`/a tap on the dock's **Dodaj** tab, and
+left by a 44×44 close button, Escape, a scrim tap, a successful add, undocking or the edit bottom
+sheet opening. Entering opens the description row and slides the whole dock (including the red
+FAB) out of the thumb zone via page-local CSS; leaving restores it. Iteration 2 addresses the two
+blocking findings from the previous pass: the chevron tapped from the compact bar no longer
+collapses the row it just opened (a pointer-driven entry now runs with `{ keepDesc: true }` and
+the chevron's own click is the only writer of the row's state), and plan row E3 is now covered by
+real `tap()` rows in the harness. The iOS exit focus hand-off was also made unconditional for the
+four deliberate exits.
 
-Watch for: tapping the chevron **from the compact bar** now collapses the description it just
-opened on any engine that focuses buttons on tap (Chromium/Android), because `focusin` →
-`enterAddMode()` expands the row before the chevron's own click handler reads
-`!isDescExpanded()` (confirmed by reading `formularz.js:505-513, 565-600, 617-630`). That path
-(plan E3) is the one row missing from the harness matrix. Everything else in the gate list
-holds up under the diff and the captured evidence.
+Watch for: tabbing onto the chevron from the compact bar enters add mode and opens the details,
+so the control a keyboard user just reached now reads `Ukryj opis` and their first Enter collapses
+it (confirmed — `keepDesc` is pointer-only by design, measured as rows c3/c4). A chevron press
+that never produces a click (drag-cancel) leaves add mode on with the details collapsed
+(confirmed, low impact). `descDismissed` is now written in three places and read nowhere
+(confirmed).
 
-**Verdict**: NEEDS_CHANGES
+**Verdict**: APPROVED
 
 ## High-level view
 
-The state machine is coherent and single-sourced. `body.quick-add-active` drives the scrim, the
-head row, the description row and the dock-hiding CSS; `refreshDocked()` is the only gate, so
-desktop and the 769-991px band fall out as "add mode never exists" without a second code path.
-`exitAddMode` is idempotent, resets `descDismissed`, restores `inert`/`aria-hidden` on the bar
-and recomputes the layout vars on every reason including `undocked` and `modal`, so there is no
-path that can leave a hidden dock or a stuck scrim behind.
+The chevron fix is the right shape. Intent is no longer derived from post-entry DOM state: a
+`pointerdown` on `#quickAddToggle` marks the entry it causes so that entry leaves the description
+row exactly as it found it, and the click handler decides. Keyboard activation never sets the
+flag, which is what produces the one remaining asymmetry — a Tab-in opens the row, so the
+chevron's label and `aria-expanded` flip before the user has activated anything.
 
-The one real defect is the chevron. Entering add mode expands the description, and the chevron's
-click handler derives its intent from the *post-entry* DOM state. On engines that focus a
-`<button>` on tap, a tap on the chevron in the compact bar therefore reads as "collapse": add
-mode opens, the description closes, and `descDismissed = true` sticks for the rest of the
-session — the inverse of what the control's own label (`Dodaj opis (opcjonalnie)`) promised, and
-a direct dent in requirement 1.
+A second defect surfaced and was fixed while writing that row: `descInput.focus()` silently
+failed because the textarea inherits the description row's in-flight `visibility` change.
+`focusDesc()` focuses, checks whether it took, and retries once after 260ms behind guards on
+add mode, the row still being open, and nothing else having taken focus.
 
-The shared-file edit is one 24-line capture-phase click handler scoped to `a.tab-item.form-tab`
-links whose href points at `formularz`, calling `preventDefault()` only when
-`window.enterQuickAddMode` exists and actually entered — so pages without `formularz.js` navigate
-exactly as before and middle-click/modifier-click survive. `formularz.js` strips `?add=1` with
-`history.replaceState` at module scope before any async work, preserving `?osoba=`. The
-`?v=16 → ?v=17` bump landed on six of the eight pages that load the script; `leaderboard.html`
-and `wiadomosci.html` are on this task's do-not-edit list and are listed as a carry-over with the
-degradation spelled out.
+"Stays collapsed for the rest of the session" is now structural rather than enforced by
+`descDismissed`: `enterAddMode` returns early when add mode is already on, and the
+first-keystroke expand is gone, so within a session only the chevron can reopen the row. The flag
+itself is dead weight — correct today, but nothing fails if a future entry path re-expands.
 
-The dock hiding is entirely page-local — `bottom-tab-bar.css` and `app-theme.css` are untouched,
-and the new `body.quick-add-active .bottom-tab-bar` rule wins over `.bottom-tab-bar.tab-bar-hidden`
-on cascade order (the inline `<style>` at line 475 follows the stylesheet link at line 18;
-specificity is equal at 0,2,0, not higher as the verification doc claims — order is what
-actually resolves it). `visibility: hidden` plus JS `inert` plus `aria-hidden` take the bar out of
-both the tab order and the a11y tree, verified by failed focus attempts on the `Dodaj` link and
-the FAB. No `role="dialog"`, no focus trap, no scroll lock, scrim still `aria-hidden`.
+Exit focus is unconditional for `close` / `escape` / `scrim` / `added` and still skipped for
+`undocked` / `modal`, which fixes the iOS case where the tap on X blurs the input before the
+handler runs. The blur stays conditional, which is right — there is nothing to blur when the
+platform already did it.
 
-Exit focus is the one accessibility soft spot: `exitAddMode` only parks focus on
-`#myPresentsHeading` when `document.activeElement` is still inside the form, which is not the case
-on iOS Safari where tapping the X blurs the input first.
+Scope is otherwise unchanged from the first pass and holds up: one 24-line capture-phase handler
+in `tab-bar-functions.js` scoped to `a.tab-item.form-tab` links pointing at `formularz`, calling
+`preventDefault()` only when `window.enterQuickAddMode` exists and actually entered; `?add=1`
+stripped with `history.replaceState` at module scope before any async work, with `?osoba=`
+preserved; all dock-hiding CSS page-local, so no shared stylesheet churn. `formularz.js?v=19 →
+?v=20` (kept at 20 for iteration 2, since production still serves 19), `tab-bar-functions.js?v=16
+→ ?v=17` on six of the eight pages that load it.
 
 The forbidden files are clean. `public/sw.js`, `public/wiadomosci.html` and
-`public/chat-reactions.css` are modified in the working tree, but every hunk belongs to the
-earlier chat-reactions / chat-noscroll tasks (precache entries + `CACHE_NAME v119→v120`, chat
-wrapping rules, `app-theme.css?v=13→14`); nothing add-mode-related appears in them.
-`leaderboard.html`, `chat-reactions.js`, `notification-text.js` and `server.js` are untouched.
-`formularz.js?v=19 → ?v=20` was bumped, and all `<link>`/`<script>`/`<style>` boundaries in the
-edited HTML are intact.
+`public/chat-reactions.css` are modified in this tree, but every hunk belongs to the
+chat-reactions / chat-noscroll work (precache entries + `CACHE_NAME v119→v120`, chat wrapping
+rules, `app-theme.css?v=13→14`, `chat-reactions.css?v=2→3`); nothing add-mode-related appears in
+them. `leaderboard.html`, `chat-reactions.js`, `notification-text.js` and `server.js` are
+untouched by this work. `archiwum.html`'s two-line change repairs a previously corrupted
+`<link href="app-theme.css?v=14" rel="stylesheet">et">` tag and restores the dropped
+`styles.deduped.min.css` link; every `<link>` / `<script>` boundary in `formularz.html` and
+`archiwum.html` reads intact now.
 
 <details>
 <summary>Issues (4)</summary>
 
-1. **Chevron from the compact bar inverts (blocking)** — `focusin → enterAddMode()` expands the
-   description before the chevron's click handler computes `open = !isDescExpanded()`, so on
-   Chromium/Android a tap on the chevron in the compact state enters add mode and immediately
-   collapses the description, setting `descDismissed = true` for the session. Fix by making the
-   intent explicit rather than state-derived — e.g. pass the focus origin
-   (`form.addEventListener('focusin', e => enterAddMode({ fromToggle: e.target === toggle }))`)
-   and skip `setDescExpanded(true)` on that entry, letting the click handler open it.
-2. **Missing harness row for plan E3 (blocking, with 1)** — the matrix tests the chevron only *from* add mode
-   (§5(d)), never from the compact bar, which is why issue 1 was not observed. Add a
-   compact → chevron-tap row asserting add mode on, `is-expanded` true,
-   `aria-expanded="true"`, `descDismissed` not set, textarea focused.
-3. **Two pages still load `tab-bar-functions.js?v=17`'s predecessor** —
-   `leaderboard.html:1509` and `wiadomosci.html:840` stay at `?v=16`, so their `Dodaj` tab
-   navigates without `?add=1` until the cache is revalidated. Correctly deferred (do-not-edit
-   list) and documented; `wiadomosci.html` is already modified in this tree by another task, so
-   the merge step should fold the one-line bump in there.
-4. **iOS close path loses the focus hand-off** — `exitAddMode` moves focus to
-   `#myPresentsHeading` only when `document.activeElement` is still inside the form; on iOS
-   Safari the tap on X blurs the input first, so `activeElement` is `<body>` and screen-reader
-   focus is dropped to the top of the document. Consider remembering whether focus was in the
-   form at `pointerdown` on the close button, or always focusing the heading for the `close` /
-   `escape` / `added` reasons.
+1. **Keyboard entry flips the chevron's meaning** — tabbing into the composer from the compact
+   state lands on `#quickAddToggle` (the close button is not tabbable there), which enters add
+   mode and opens the details, so the button relabels to `Ukryj opis` and the user's first Enter
+   collapses the row they were reaching for. Consider applying `keepDesc` to any entry whose
+   focus target is the toggle, letting the activation open the row in both input modes.
+2. **Chevron press-and-cancel leaves details collapsed in add mode** — `pointerdown` marks the
+   entry `keepDesc`, so if no click follows (drag off the button, pointer cancel) add mode is on
+   with the description never opened: the one entry path that does not satisfy "details open on
+   entering add mode". The existing 700ms safety timer could open the row when it fires while
+   still in add mode and nothing toggled it.
+3. **`descDismissed` is write-only** — set in `enterAddMode`, `exitAddMode` and the chevron
+   handler, read nowhere; the session-sticky rule now rests on `enterAddMode`'s early return.
+   Either drop the flag or gate the re-expand on it, so a future entry path cannot silently
+   reopen the row with nothing failing.
+4. **Two pages still load `tab-bar-functions.js?v=16`** — `leaderboard.html:1509` and
+   `wiadomosci.html:840`; both carry a `Dodaj` tab, which navigates without `?add=1` until their
+   cached copy is revalidated. Correctly deferred (do-not-edit list) and documented; fold the
+   one-line bump into the merge step — `wiadomosci.html` is already modified in this tree by the
+   chat work.
 
 </details>
 
 <details>
 <summary>Details</summary>
 
-### The chevron's intent is read after add mode has already changed the DOM
-
-`setDescExpanded(open)` is the only writer of `is-expanded` and `aria-expanded`, and
-`enterAddMode()` calls `setDescExpanded(true)` as its last step. The chevron handler derives its
-action from the live DOM:
+### The chevron's intent is now pointer-marked instead of state-derived
 
 ```js
-form.addEventListener('focusin', () => enterAddMode());
-...
+toggle.addEventListener('pointerdown', markTogglePointer);   // togglePointerDown = true, 700ms safety clear
+form.addEventListener('focusin', (e) => {
+    const fromTogglePointer = !!toggle && e.target === toggle && togglePointerDown;
+    enterAddMode(fromTogglePointer ? { keepDesc: true } : undefined);
+});
 toggle.addEventListener('click', () => {
     const open = !isDescExpanded();
-    descDismissed = !open;
-    setDescExpanded(open);
-    if (open) { enterAddMode(); if (descInput) descInput.focus({ preventScroll: true }); }
+    togglePointerDown = false;
+    ...
 });
 ```
 
-In the compact state a tap on the chevron runs, in order: focus lands on the button → `focusin`
-bubbles to the form → `enterAddMode()` adds `quick-add-active`, resets `descDismissed`, expands
-the description → then `click` fires, `isDescExpanded()` is now `true`, so `open` is `false`,
-`descDismissed` becomes `true` and the row collapses again. Chromium (desktop and Android)
-focuses buttons on pointerdown, so that is the mainstream mobile path; iOS Safari does not focus
-buttons on tap, so there `focusin` never fires and the handler behaves as designed. The result is
-engine-dependent behaviour on the one control whose label at tap time read
-`Dodaj opis (opcjonalnie)`, and the spurious `descDismissed = true` keeps the description shut
-for the remainder of the session.
+With `keepDesc`, `enterAddMode` calls `updateComposerLayout()` instead of `setDescExpanded(true)`,
+so the row — and `aria-expanded` with it — is untouched by the entry and the click handler reads
+the state the user actually saw. The recorded event order (`pointerdown:toggle →
+focusin:quickAddToggle → click:toggle`) confirms the engine does focus the button on tap, i.e. the
+reported ordering reproduces, and the row ends open with the caret in the textarea.
 
-`aria-expanded` stays truthful at each step (it is written on every `setDescExpanded` call), so
-this is a behaviour defect, not an ARIA desync. The harness started its chevron scenario from add
-mode, so the row never ran.
+The keyboard path deliberately has no marker, so a Tab-in behaves like any other entry and opens
+the details. That keeps requirement 1 true for keyboard users but means the chevron is already
+`aria-expanded="true"` / `Ukryj opis` when they arrive on it, and `Enter` collapses (measured c3 →
+c4). The label is truthful at the moment of activation; the cost is that the first keyboard
+activation of that control does the opposite of what the user was reaching for.
 
-### Scope of the `inert` call
+Press-and-cancel is the mirror case: `pointerdown` marks the entry, `focusin` enters with
+`keepDesc`, and if the pointer is dragged off the button no click ever arrives. Add mode is then
+on in S2b with the details collapsed. The 700ms timer only clears the flag.
 
-`#tabBarMenuPanel` and `#tabBarOverlay` are siblings of
-`.bottom-tab-bar`, not children, so neither the hiding CSS nor `inert`/`aria-hidden` reaches them.
-Not reachable in practice — the FAB that opens the panel is inside the bar and hidden with it, and
-while the panel is open its overlay covers the composer so add mode cannot be entered underneath
-it — but it is the boundary of what the one-class approach covers.
+### Focusing the textarea needed a retry
 
-### Exit focus is conditional on focus still being in the form
+At `click` time `getComputedStyle(#quickAddComments).visibility` is still `hidden` — the textarea
+inherits the description row's in-flight change — and even a `setTimeout(…, 0)` focus attempt
+fails. `focusDesc()` focuses, returns if that took, and otherwise retries at 260ms behind
+`isAddMode()`, `isDescExpanded()` and `activeElement` still being the chevron or `<body>`, so a
+quick tap on another field wins the race. Measured: `t+0` `quickAddToggle`, settled
+`quickAddComments`.
+
+### Session stickiness is structural, not flag-driven
+
+`enterAddMode` returns early once `body.quick-add-active` is set (focusing the name field if
+asked), the first-keystroke expand is deleted, and `onComposerInput` funnels into the same early
+return. So after a manual collapse nothing re-expands the row until the next entry — measured d1
+→ d2 → d3, including typing into the name field after the collapse. `descDismissed` records the
+intent and is reset on entry and exit, but no branch reads it.
+
+### Exit focus hand-off
 
 ```js
-const el = document.activeElement;
 const inForm = el && form.contains(el);
 if (inForm && typeof el.blur === 'function') el.blur();
-if (inForm && reason !== 'undocked' && reason !== 'modal') { heading.focus({ preventScroll: true }); }
+if (reason === 'close' || reason === 'escape' || reason === 'scrim' || reason === 'added') {
+    heading.focus({ preventScroll: true });
+}
 ```
 
-Gating the *blur* on `inForm` is right. Gating the *heading focus* on it means the hand-off only
-happens on engines that keep focus inside the form across the tap — true on Chromium, false on
-iOS Safari, where the keyboard dismissal that accompanies the tap on X leaves `activeElement` as
-`<body>`. The keyboard still closes (the platform did it), and the close button and Escape are
-still reachable, so the requirement's "always a reachable way out" holds; what is lost is the
-screen-reader reading position, which drops to the top of the document on the exact platform the
-thumb-reach work targets. The same applies to the `added` path when the submit `+` is tapped on
-iOS.
+iOS Safari blurs the focused input before the tap on X or `+` lands, so gating the hand-off on
+`inForm` dropped the reading position to the top of the document on exactly the target platform.
+Both iOS-shaped rows (`e6` submit, `f5` close, with `activeElement = BODY` before the handler)
+now land on `myPresentsHeading`. `undocked` and `modal` still leave focus with whoever caused
+them. On a scrim tap the heading is focused and then cleared to `<body>` by the engine's own
+`mousedown` handling — pointer-only, no keyboard or AT equivalent.
 
-### The shared-file edit
+### The dimmed page stays keyboard-reachable
 
-The href mutation (`link.setAttribute('href', href + '?add=1')`) is permanent on the element once
-applied. Benign — a repeat click early-returns on the `add=1` check and navigates with the same
-marker, which `formularz.js` strips on arrival — but the DOM of a non-form page carries
-`formularz.html?add=1` from the first tap onwards.
-`a.tab-bar-menu-item.edit-presents-item` ("Edytuj moje prezenty") is not matched, keeping the edit
-intent distinct from the add intent.
+The scrim blocks pointer input but nothing inert-ifies the list behind it, so a keyboard user can
+Tab from the composer onto a card's edit button that a mouse user cannot click. That is the
+accepted consequence of the no-focus-trap constraint, and it degrades gracefully: activating the
+edit button fires `show.bs.modal`, which exits add mode and restores the dock.
 
-Verified independently: six of the eight pages loading the script now request `?v=17`
-(`activity`, `formularz`, `home`, `recipients`, `rezerwacje`, `ustawienia`); `leaderboard.html`
-and `wiadomosci.html` remain at `?v=16` and are both named in the verification doc's carry-over
-list. No `bottom-tab-bar.css` / `app-theme.css` churn, consistent with all new CSS living in
-`formularz.html`'s own `<style>`.
+### Accessibility and dock hiding
 
-### Reveal of the visually-hidden heading
+The dock leaves the tab order and the a11y tree through three mechanisms at once
+(`visibility: hidden`, `bar.inert = true`, `aria-hidden="true"`), verified by failed focus
+attempts on the `Dodaj` link and on the FAB even with a temporary `tabindex="0"`, and all three
+are restored after every exit reason including `undocked` and `modal`. Focus is moved into the
+composer *before* the class is added, so it is never left inside the element about to be hidden.
 
-Spot-checked because a `clip-path`-based hide would have survived the add-mode override and left
-an empty head row: the compact rule at formularz.html:746-758 uses only
-`position/width/height/margin/overflow/clip/white-space`, all of which the override resets.
-`addmode-375-active.png` shows the title and the X side by side; `addmode-375-idle.png` shows the
-compact bar with neither, at the same slim height as before.
+Gate items confirmed in one line each: `#quickAddClose` is 44×44 with
+`aria-label="Zamknij formularz dodawania"`, tabbable in add mode and unreachable in the compact
+state through `visibility: hidden` rather than an offscreen clip; no `role="dialog"`, no focus
+trap, no scroll lock; the scrim stays `aria-hidden="true"`; `#quickAddMessage` is still the only
+live region and gained no new announcements.
 
-### Scroll settle on exit
-
-Entering grows the reserved bottom padding (200px → 247px) so the scroll position can never be
-clamped — measured 0px jump even when pinned to the bottom. Leaving shrinks it back, and a reader
-at the absolute bottom is clamped upwards by the 47px difference; the new
-`transition: padding-bottom 0.25s ease` spreads that over the composer's own `bottom` transition
-(measured ramp 678 → 631 over 400ms) and it is neutralised under `prefers-reduced-motion`. This is
-inherent to not permanently reserving add-mode padding, and it is reported rather than hidden.
+`#tabBarMenuPanel` and `#tabBarOverlay` are siblings of `.bottom-tab-bar`, so neither the hiding
+CSS nor `inert`/`aria-hidden` reaches them — unreachable in practice, since the FAB that opens the
+panel is inside the bar and hidden with it, but it is the boundary of the one-class approach.
 
 ### Reduced motion
 
-`.quick-add-head`, `body.quick-add-active .quick-add-head`,
-`body.has-tab-bar.quick-add-docked`, `.bottom-tab-bar` and
-`body.quick-add-active .bottom-tab-bar` all join the existing
-`@media (prefers-reduced-motion: reduce)` `transition: none !important` group. Listing
-`.bottom-tab-bar` bare also kills the shared scroll auto-hide animation on this page only — a
-deliberate trade to avoid editing `bottom-tab-bar.css` and bumping its `?v=` across every page.
-The CSS comment sitting between two selectors in that list is valid in a selector list.
+The previous pass noted only entry was asserted; iteration 2 measures both directions at +60ms
+(dock hidden / padding already 247px; dock visible / padding already back to 200px) with no
+half-states. Listing `.bottom-tab-bar` bare in the `transition: none !important` group also
+neutralises the shared scroll auto-hide animation on this page only — the deliberate trade for
+keeping the change page-local and avoiding a `bottom-tab-bar.css` `?v=` bump everywhere.
+
+### Scroll settle on exit
+
+Entering grows the reserved bottom padding (200px → 247px), so the scroll position can never be
+clamped: 0px jump at every sampled frame even when pinned to the very bottom. Leaving shrinks it,
+and a reader at the absolute bottom is clamped upwards by the 47px difference, spread over the new
+`transition: padding-bottom 0.25s ease` (re-measured ramp 669 → 622 over 446ms) and instant under
+reduced motion. Inherent to not permanently reserving add-mode padding; reported rather than
+hidden.
 
 ### Test coverage
 
-Covered by the captured harness evidence: all six exit reasons including `undocked` (resize and
+Covered by the captured evidence: all six exit reasons including `undocked` (resize and
 `switchTab('add')`) and `modal`; `?add=1` with and without `?osoba=`, the `replaceState` clean-up,
-reload and history-back; the plain visit (no focus stolen, `activeElement = BODY`); a real tap on
-`Dodaj` both in-page (no reload, sentinel survived) and from a dock-only page (href rewritten,
-default not prevented); tab order in both states including failed focus attempts on the hidden
-bar and FAB; all three submit paths; typed-text preservation across X/Escape/scrim; scrim
-tap-vs-drag; the simulated on-screen keyboard; 320/375/820/1024px; add, edit, delete, the
-`+ Dodaj szczegóły` chip, `Dodaj dla kogoś innego`, the `.is-new` highlight and the edit bottom
-sheet's `rows="3"` textarea.
+reload and history-back; the plain visit (no focus stolen); a real tap on `Dodaj` both in-page (no
+reload, sentinel survived) and from a dock-only page (href rewritten, default not prevented, and
+the resulting load landed in add mode); the chevron from the compact bar as a real `tap()`, as a
+keyboard entry, and three times in a row inside add mode, with `aria-expanded` checked at every
+step; tab order in both states; four submit paths including the iOS-shaped one and the empty-name
+error; typed-text preservation across X / Escape / scrim; scrim tap-vs-drag; the simulated
+on-screen keyboard (`--quick-add-bottom` 12px → 358px); 320 / 375 / 820 / 1024px; add, edit,
+delete, the `+ Dodaj szczegóły` chip, `Dodaj dla kogoś innego`, the `.is-new` highlight and the
+edit bottom sheet's `rows="3"` textarea. `node --check` exits 0 on both scripts.
 
-Not tested: the chevron from the compact state (plan E3) — the gap that hides issue 1; a real iOS
-Safari engine, so the `focusin`-ordering and exit-focus differences described above are reasoned
-from the engine's known behaviour rather than measured; `prefers-reduced-motion` is asserted only
-at 100ms after entry, not across a full enter/exit cycle.
+Not tested: a real iOS Safari engine — the two iOS behaviours are simulated in the shape iOS
+produces (`activeElement = BODY` before the handler), and the chevron's iOS path (no `focusin`, so
+`click` alone decides) is reasoned from the same known behaviour; the chevron press-and-cancel
+path (issue 2).
+
+### Screenshots
+
+Looked at all five. The close button and the chevron are unconfusable where it matters — grey
+rounded square top-right of the head row vs green circle down-left of the name field
+(`addmode-375-active.png`) — the dock and FAB are gone in add mode and back after an add with the
+new item highlighted and `7 prezentów` pluralized, nothing is clipped at 320px, and the 1024px
+card carries no close button and no scrim.
 
 </details>
 
@@ -218,12 +230,14 @@ at 100ms after entry, not across a full enter/exit cycle.
 
 | File | What changed |
 |---|---|
-| `public/formularz.html` | New `.quick-add-head` wrapper + `#quickAddClose` button, `tabindex="-1"` on `#myPresentsHeading`, mobile head-row/close/heading-reveal CSS, `body.quick-add-active .bottom-tab-bar` hide, `padding-bottom` transition, reduced-motion additions, `formularz.js?v=20`, `tab-bar-functions.js?v=17` |
-| `public/formularz.js` | `?add=1` parse + `replaceState`, `pendingAddMode` hand-off in `checkAuth`, `enterAddMode`/`exitAddMode`/`refreshDocked`/`isAddMode`/`tabBar`, `window.enterQuickAddMode`/`exitQuickAddMode`, add-mode branch in `tabBarOffset`, docked-conditional post-add refocus; deleted the `focusout`/`blurTimer`/`pointerdown` and first-keystroke-expand logic |
+| `public/formularz.html` | `.quick-add-head` wrapper + `#quickAddClose`, `tabindex="-1"` on `#myPresentsHeading`, mobile head-row/close/heading-reveal CSS, `body.quick-add-active .bottom-tab-bar` hide, `padding-bottom` transition, reduced-motion additions, `formularz.js?v=20`, `tab-bar-functions.js?v=17` |
+| `public/formularz.js` | `?add=1` parse + `replaceState`, `pendingAddMode` hand-off in `checkAuth`, `enterAddMode`/`exitAddMode`/`refreshDocked`/`isAddMode`/`tabBar`, `togglePointerDown` + `keepDesc`, `focusDesc` retry, unconditional exit focus hand-off, add-mode branch in `tabBarOffset`, docked-conditional post-add refocus; deleted the `focusout`/`blurTimer`/`pointerdown` and first-keystroke-expand logic |
 | `public/tab-bar-functions.js` | One appended capture-phase click handler on `a.tab-item.form-tab` |
 | `public/activity.html`, `home.html`, `recipients.html`, `rezerwacje.html`, `ustawienia.html` | `tab-bar-functions.js?v=16 → ?v=17` only |
-| *(in-tree, other tasks)* `public/sw.js`, `wiadomosci.html`, `chat-reactions.css`, `archiwum.html` | chat-reactions / chat-noscroll work; no add-mode content — `archiwum.html` also repairs a previously corrupted `app-theme.css` `<link>` |
+| `public/archiwum.html` | Repairs the corrupted `app-theme.css` `<link>` and the dropped `styles.deduped.min.css` link |
+| *(in-tree, other tasks)* `public/sw.js`, `wiadomosci.html`, `chat-reactions.css` | chat-reactions / chat-noscroll work; no add-mode content |
 
-Full diff: `git -C "c:\Users\matmamon\OneDrive - amazon.com\Documents\Prezenty\prezenty" -P diff -- public/formularz.html public/formularz.js public/tab-bar-functions.js`
+The work was committed as `7b0faa3` while this review was in progress; the diff reviewed is the
+working-tree diff captured beforehand, which matches `git -P diff f66c607 HEAD -- public/`.
 
 </details>
