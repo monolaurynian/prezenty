@@ -505,8 +505,15 @@
             margin: 0;
         }
 
-        .quick-add-heading {
+        .quick-add-head {
             grid-area: heading;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .quick-add-heading {
             margin: 0;
             color: #1b5e20;
             font-size: 1rem;
@@ -514,6 +521,9 @@
         }
 
         .quick-add-toggle { display: none; }
+        /* Desktop: the form is a permanent inline card, so there is
+           nothing to close (the mobile rules switch it on) */
+        .quick-add-close { display: none; }
         .quick-add-name { grid-area: name; min-width: 0; }
         .quick-add-desc { grid-area: desc; min-width: 0; }
         .quick-add-desc textarea { resize: vertical; }
@@ -610,6 +620,7 @@
         }
 
         .quick-add-toggle:focus-visible,
+        .quick-add-close:focus-visible,
         .quick-add-submit:focus-visible {
             outline: 3px solid #1a56db;
             outline-offset: 2px;
@@ -716,9 +727,10 @@
                 bottom: var(--quick-add-bottom, calc(max(12px, env(safe-area-inset-bottom, 0px)) + 90px));
                 z-index: 999; /* under the tab bar (1000) and its menus */
                 grid-template-columns: 48px minmax(0, 1fr) 52px;
-                /* The desc row is always there but collapses to 0 height
-                   (row-gap 0; the open desc adds its own top margin) */
+                /* The head and desc rows are always there but collapse to
+                   0 height (row-gap 0; each open row adds its own margin) */
                 grid-template-areas:
+                    "head   head head"
                     "toggle name submit"
                     "desc   desc submit";
                 column-gap: 8px;
@@ -745,6 +757,60 @@
                 white-space: nowrap !important;
                 border: 0 !important;
             }
+
+            /* Head row (title + close): collapsed to nothing in the compact
+               state so the bar keeps its slim height, revealed in add mode.
+               The heading itself stays visibility:visible throughout (only
+               clipped by the visually-hidden rule above) so the section's
+               aria-labelledby name never disappears. */
+            .quick-add-head {
+                grid-area: head;
+                max-height: 0;
+                margin-bottom: 0;
+                overflow: hidden;
+                transition: max-height 0.2s ease, margin-bottom 0.2s ease;
+            }
+
+            body.quick-add-active .quick-add-head {
+                max-height: 56px;
+                margin-bottom: 6px;
+            }
+
+            /* In add mode the title becomes visible - it is the same node,
+               so there is no duplicated string and no empty accname */
+            body.quick-add-active .quick-add-heading {
+                position: static !important;
+                width: auto !important;
+                height: auto !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                clip: auto !important;
+                white-space: normal !important;
+                font-size: 0.9rem;
+            }
+
+            /* Explicit close control. 44x44 and in the tab order, but only
+               while there is something to close: visibility:hidden (not just
+               the parent's overflow clip) keeps it out of the tab order and
+               the accessibility tree in the compact state. A rounded square
+               with an x - deliberately unlike the round chevron below it. */
+            .quick-add-close {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex: 0 0 auto;
+                width: 44px;
+                height: 44px;
+                padding: 0;
+                border: 1px solid #cbd2d9;
+                border-radius: 12px;
+                background: #eef1f4;
+                color: #44515e;
+                font-size: 1.1rem;
+                visibility: hidden;
+            }
+
+            body.quick-add-active .quick-add-close { visibility: visible; }
 
             .quick-add-toggle {
                 grid-area: toggle;
@@ -830,6 +896,14 @@
                present or the "Dodaj dla kogoś innego" button */
             body.has-tab-bar.quick-add-docked {
                 padding-bottom: calc(var(--quick-add-bottom, 100px) + var(--quick-add-h, 72px) + 20px) !important;
+                /* Entering add mode grows this padding (the composer gets
+                   taller faster than it drops), which can never move the
+                   scroll position. Leaving shrinks it, and a reader pinned
+                   to the very bottom of the page then gets clamped upwards
+                   by the difference - matching the composer's own
+                   `bottom` transition spreads that over the same 0.25s, so
+                   it settles instead of snapping. */
+                transition: padding-bottom 0.25s ease;
             }
 
             /* ---- Attention scrim ----
@@ -870,6 +944,28 @@
                 background: #ffffff;
                 box-shadow: 0 10px 36px rgba(0, 0, 0, 0.45);
             }
+
+            /* ---- Add mode owns the thumb zone ----
+               The dock (and the red FAB poking out of it) slide out while a
+               present is being typed, so the composer can sit at the very
+               bottom. visibility:hidden - not just a transform - so the bar
+               leaves the accessibility tree AND the tab order while hidden;
+               formularz.js additionally sets inert/aria-hidden on it. The
+               composer drops to the dock's own inset (see tabBarOffset in
+               formularz.js), and the page's bottom padding is recomputed, so
+               nothing is clipped. Higher specificity than
+               .bottom-tab-bar.tab-bar-hidden and later in the cascade, so
+               the scroll auto-hide cannot fight it. */
+            body.quick-add-active .bottom-tab-bar {
+                /* +56px clears the FAB, which pokes ~18px above the bar's
+                   own box - so the whole dock ends up below the fold */
+                transform: translateY(calc(100% + 56px));
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.3s ease, visibility 0s linear 0.3s;
+            }
         }
 
 
@@ -880,7 +976,15 @@
             .quick-add-desc,
             .quick-add-composer.is-expanded .quick-add-desc,
             .quick-add-scrim,
-            body.quick-add-active .quick-add-scrim {
+            body.quick-add-active .quick-add-scrim,
+            .quick-add-head,
+            body.quick-add-active .quick-add-head,
+            body.has-tab-bar.quick-add-docked,
+            /* Both directions: the base slide-back transition lives in
+               bottom-tab-bar.css, which is shared, so it is neutralised
+               here (page-local, no cross-page cache churn) */
+            .bottom-tab-bar,
+            body.quick-add-active .bottom-tab-bar {
                 transition: none !important;
             }
 
@@ -1056,9 +1160,19 @@
                     <section class="quick-add-section" aria-labelledby="quickAddHeading">
                         <form id="quickAddForm" class="quick-add-composer" novalidate
                               onsubmit="quickAddPresent(); return false;">
-                            <h6 id="quickAddHeading" class="quick-add-heading">
-                                <i class="fas fa-plus me-1" aria-hidden="true"></i>Dodaj nowy prezent
-                            </h6>
+                            <!-- Head row: the title plus the explicit close
+                                 control. Desktop shows the title only (the
+                                 form is a permanent card - nothing to close);
+                                 mobile reveals the whole row in add mode. -->
+                            <div class="quick-add-head">
+                                <h6 id="quickAddHeading" class="quick-add-heading">
+                                    <i class="fas fa-plus me-1" aria-hidden="true"></i>Dodaj nowy prezent
+                                </h6>
+                                <button type="button" class="quick-add-close" id="quickAddClose"
+                                        aria-label="Zamknij formularz dodawania">
+                                    <i class="fas fa-xmark" aria-hidden="true"></i>
+                                </button>
+                            </div>
                             <button type="button" class="quick-add-toggle" id="quickAddToggle"
                                     aria-expanded="false" aria-controls="quickAddDescWrap"
                                     aria-label="Dodaj opis (opcjonalnie)">
@@ -1086,7 +1200,8 @@
                     </section>
                     <section class="my-presents-section" aria-labelledby="myPresentsHeading">
                         <div class="my-presents-header">
-                            <h6 id="myPresentsHeading" class="my-presents-heading">
+                            <!-- tabindex="-1": focus target when add mode exits -->
+                            <h6 id="myPresentsHeading" class="my-presents-heading" tabindex="-1">
                                 <i class="fas fa-gift me-2" aria-hidden="true"></i>Moje prezenty
                             </h6>
                             <span class="my-presents-count" id="myPresentsCount" hidden></span>
@@ -1271,7 +1386,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="formularz.js?v=19"></script>
+    <script src="formularz.js?v=20"></script>
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebarMenu');
@@ -1394,7 +1509,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=16"></script>
+    <script src="tab-bar-functions.js?v=17"></script>
     
     <script>
         function logout() {

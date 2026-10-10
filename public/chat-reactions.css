@@ -39,7 +39,11 @@
     align-items: center;
     gap: 6px;
     margin-top: 4px;
+    /* Wraps onto more lines rather than widening the row: six chips with
+       3-digit counts are wider than a 320px screen. min-width: 0 keeps it
+       shrinkable as a flex item of .chat-msg-row. */
     max-width: 100%;
+    min-width: 0;
 }
 
 .chat-msg-row.from-me .chat-reactions {
@@ -102,17 +106,27 @@
 
 /* --- "Add reaction" affordance ---
    Two classes deep so it beats the chat page's `.glass-card * { color }`.
-   It draws as a 32px circle but keeps a 44x44 TOUCH target through the
-   ::after hit slop below: a 44px-tall button under every bubble pushed
-   roughly a message per screen out of the 58vh chat scroller, and the
-   slop buys the thumb size back without the layout height. */
+   It still DRAWS as a 32px circle and still occupies only 32px of row
+   height (a 44px-tall button under every bubble pushed roughly a message
+   per screen out of the 58vh chat scroller), but the two axes of the
+   44x44 touch target are now built differently:
+
+     - WIDTH is a real 44px box. A 44px-wide ::after centred on a 32px
+       button hung 6px past the right edge of every right-aligned row,
+       which is content the flex layout knows nothing about - it showed up
+       as a 6px horizontal scrollbar on .chat-messages (whose
+       `overflow-y: auto` makes overflow-x compute to `auto`). A real box
+       is laid out, so `max-width: 100%` on the strip actually contains it.
+     - HEIGHT is still ::after slop, because that axis is the one we do
+       not want in the layout, and the chat scroller handles it anyway. */
 .chat-reactions .chat-reaction-add {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
+    width: 44px;
     height: 32px;
+    flex: none;
     padding: 0;
     border: none;
     background: transparent;
@@ -120,24 +134,54 @@
     font-size: 18px;
     line-height: 1;
     cursor: pointer;
-    border-radius: 50%;
 }
 
-/* Invisible 44x44 hit area, centred on the 32px circle */
-.chat-reactions .chat-reaction-add::after {
+/* The visible 32px circle, drawn inside the 44px box. It carries the
+   hover fill and the focus ring so both keep hugging the circle. */
+.chat-reactions .chat-reaction-add::before {
     content: "";
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 44px;
-    height: 44px;
+    width: 32px;
+    height: 32px;
     transform: translate(-50%, -50%);
     border-radius: 50%;
+    background: transparent;
+    transition: background 0.15s ease;
+}
+
+/* The icon is in normal flow, so it would paint UNDER an absolutely
+   positioned ::before - position it to lift it back on top. */
+.chat-reactions .chat-reaction-add > i {
+    position: relative;
+    z-index: 1;
+}
+
+/* Invisible vertical hit slop: 44px tall, never wider than the button's
+   own 44px box (left/right: 0 instead of a centred fixed width). */
+.chat-reactions .chat-reaction-add::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 44px;
+    transform: translateY(-50%);
 }
 
 .chat-reactions .chat-reaction-add:hover {
-    background: rgba(0, 0, 0, 0.06);
     color: #2d3748;
+}
+
+.chat-reactions .chat-reaction-add:hover::before {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chat-reactions .chat-reaction-add::before {
+        transition: none;
+    }
 }
 
 /* Mouse/trackpad only: keep the strip quiet until the message is hovered
@@ -167,6 +211,18 @@
 .chat-reaction-add:focus-visible,
 .reaction-sheet-btn:focus-visible,
 #reactionSheetClose:focus-visible {
+    outline: 2px solid #1E88E5;
+    outline-offset: 2px;
+}
+
+/* The add button's box is 44x32 but it reads as a 32px circle, so the
+   ring goes on the circle (::before) - same 36px ring as before the box
+   grew. Outline, not box-shadow, so forced-colours mode keeps it. */
+.chat-reactions .chat-reaction-add:focus-visible {
+    outline: none;
+}
+
+.chat-reactions .chat-reaction-add:focus-visible::before {
     outline: 2px solid #1E88E5;
     outline-offset: 2px;
 }

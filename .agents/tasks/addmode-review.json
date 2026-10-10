@@ -1,0 +1,42 @@
+{
+  "verdict": "CHANGES_REQUESTED",
+  "findings": [
+    {
+      "id": 1,
+      "blocking": true,
+      "confidence": "confirmed",
+      "label": "Chevron tap from the compact bar collapses the details it just opened",
+      "files": ["public/formularz.js"],
+      "detail": "enterAddMode() ends with setDescExpanded(true), and form.addEventListener('focusin', () => enterAddMode()) fires before the chevron's click handler. On engines that focus a <button> on tap (Chromium desktop and Android), tapping the chevron in the compact state runs focusin -> enterAddMode -> details expanded, then click -> open = !isDescExpanded() = false -> details collapsed and descDismissed = true for the rest of the session. Net effect: the control whose label read 'Dodaj opis (opcjonalnie)' enters add mode with the description shut, which contradicts requirement 1 (details open on entering add mode). iOS Safari does not focus buttons on tap, so the behaviour is engine-dependent.",
+      "suggestion": "Stop deriving the chevron's intent from post-entry DOM state. Pass the focus origin into entry, e.g. form.addEventListener('focusin', e => enterAddMode({ fromToggle: e.target === toggle })) and skip setDescExpanded(true) for that entry so the click handler is the one that opens the row; or snapshot isDescExpanded()/isAddMode() on pointerdown/mousedown on the toggle and use the snapshot in the click handler."
+    },
+    {
+      "id": 2,
+      "blocking": true,
+      "confidence": "confirmed",
+      "label": "Harness matrix is missing plan entry E3 (chevron from the compact state)",
+      "files": [".agents/tasks/addmode-verification.md"],
+      "detail": "Section 5(d) only exercises the chevron from inside add mode ('Chevron tapped in add mode'). The compact -> chevron-tap path, listed as E3 in the plan, is never asserted, which is why finding 1 went unobserved on the very engine the harness runs (Chromium/Edge with isMobile+hasTouch).",
+      "suggestion": "Add a row starting from S1: tap #quickAddToggle and assert body.quick-add-active present, form.is-expanded true, toggle aria-expanded=\"true\", the label switched to 'Ukryj opis', descDismissed not latched (leaving and re-entering still opens details) and #quickAddComments focused."
+    },
+    {
+      "id": 3,
+      "blocking": false,
+      "confidence": "confirmed",
+      "label": "leaderboard.html and wiadomosci.html still load tab-bar-functions.js?v=16",
+      "files": ["public/leaderboard.html", "public/wiadomosci.html"],
+      "detail": "Six of the eight pages loading the shared script were bumped to ?v=17 (activity, formularz, home, recipients, rezerwacje, ustawienia). leaderboard.html:1509 and wiadomosci.html:840 remain at ?v=16, so their 'Dodaj' tab navigates without ?add=1 until the cached script is revalidated (form opens normally, just without the composer auto-opening). Correctly deferred - both are on this task's do-not-edit list - and explicitly listed in the verification doc as a carry-over.",
+      "suggestion": "Merge step: bump both to ?v=17. wiadomosci.html is already modified in this working tree by the chat-noscroll task, so the bump is a one-line addition there."
+    },
+    {
+      "id": 4,
+      "blocking": false,
+      "confidence": "likely",
+      "label": "iOS close path loses the focus hand-off to #myPresentsHeading",
+      "files": ["public/formularz.js"],
+      "detail": "exitAddMode gates both the blur and the heading focus on 'document.activeElement is inside the form'. On iOS Safari a tap on the X (or on the submit '+') blurs the focused input before the click, so activeElement is <body>, inForm is false and focus is never parked on #myPresentsHeading - screen-reader reading position drops to the top of the document. The keyboard still closes (the platform did it) and close/Escape remain reachable, so the 'always a way out' requirement still holds.",
+      "suggestion": "Record whether focus was inside the form at pointerdown on #quickAddClose / #quickAddBtn, or unconditionally focus #myPresentsHeading for the 'close', 'escape' and 'added' reasons while keeping the blur conditional."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\matmamon\\OneDrive - amazon.com\\Documents\\Prezenty\\prezenty\\.agents\\tasks\\addmode-review-doc.md"
+}

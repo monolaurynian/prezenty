@@ -497,3 +497,26 @@ function updateMessagesBadge() {
     updateMessagesBadge();
     setInterval(updateMessagesBadge, 30000);
 })();
+
+// ---- The "Dodaj" dock tab opens the add composer ----
+// Marks the navigation with ?add=1 so formularz.js knows to open the quick
+// add composer and focus the name field (it strips the param immediately,
+// so a refresh never re-triggers it). Already on the form page: no reload -
+// formularz.js opens the composer in place. Touches only .tab-item.form-tab
+// links pointing at formularz, so it is a no-op on pages without one, and
+// never calls preventDefault on the navigating path (middle-click,
+// modifier-click and long-press keep working). The menu panel's
+// "Edytuj moje prezenty" item is deliberately not matched - that is an edit
+// intent, not an add intent.
+document.addEventListener('click', function (e) {
+    const link = e.target && e.target.closest && e.target.closest('a.tab-item.form-tab');
+    if (!link) return;
+    const href = link.getAttribute('href') || '';
+    if (!/formularz(\.html)?($|[?#])/.test(href) || href.indexOf('add=1') !== -1) return;
+    if (typeof window.enterQuickAddMode === 'function' &&
+        window.enterQuickAddMode({ focus: true })) {
+        e.preventDefault(); // already here - open in place instead of reloading
+        return;
+    }
+    link.setAttribute('href', href + (href.indexOf('?') === -1 ? '?' : '&') + 'add=1');
+}, true);

@@ -20,6 +20,23 @@ try {
     autoSelectedFromCache = !!identifiedName;
 } catch (e) {}
 
+// ---- "Dodaj" tab marker ----
+// The dock's "Dodaj" tab navigates here with ?add=1 (added by
+// tab-bar-functions.js) to say "open the composer and focus it". The param
+// is stripped straight away - before any async work - so a refresh or a
+// back/forward never re-triggers add mode. Other params (?osoba=) survive.
+let pendingAddMode = false;
+try {
+    const addParams = new URLSearchParams(window.location.search);
+    if (addParams.get('add') === '1') {
+        pendingAddMode = true;
+        addParams.delete('add');
+        const addQs = addParams.toString();
+        history.replaceState(null, '', window.location.pathname +
+            (addQs ? '?' + addQs : '') + window.location.hash);
+    }
+} catch (e) {}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Bootstrap modals
     authModal = new bootstrap.Modal(document.getElementById('authModal'));
@@ -165,6 +182,13 @@ function checkAuth() {
                 // Edit tab is the default view - show it now that auth is confirmed
                 document.getElementById('editTab').style.display = 'block';
                 loadMyPresents();
+                // Arrived from the dock's "Dodaj" tab: open the composer and
+                // put the caret in the name field. Ignored on desktop (and
+                // when the composer isn't docked) - enterQuickAddMode says no.
+                if (pendingAddMode) {
+                    pendingAddMode = false;
+                    if (window.enterQuickAddMode) window.enterQuickAddMode({ focus: true });
+                }
             } else {
                 currentUser = null;
                 console.log('User not authenticated');
@@ -427,7 +451,9 @@ function quickAddPresent() {
                 added = true;
                 input.value = '';
                 if (commentsInput) commentsInput.value = '';
-                if (window._resetQuickAddComposer) window._resetQuickAddComposer();
+                // Fields are cleared above, so leaving add mode cannot lose
+                // anything: collapse, drop the keyboard, bring the dock back
+                if (window.exitQuickAddMode) window.exitQuickAddMode('added');
                 showQuickAddMessage('Prezent dodany! 🎁', 'success');
                 // Scroll to + flash the new item (newest first, so fall
                 // back to the first item if the id isn't returned)
@@ -440,8 +466,14 @@ function quickAddPresent() {
         .finally(() => {
             btn.innerHTML = originalText;
             btn.disabled = false;
-            // Back to the name field so several presents can be added in a row
-            if (added && input) input.focus({ preventScroll: true });
+            // Desktop: back to the name field so several presents can be
+            // added in a row. Mobile (docked): deliberately not - add mode
+            // has just closed the keyboard and brought the dock back, and
+            // refocusing would reopen both. One tap on the compact bar
+            // starts the next present.
+            if (added && input && !document.body.classList.contains('quick-add-docked')) {
+                input.focus({ preventScroll: true });
+            }
         });
 }
 
@@ -459,8 +491,10 @@ function setupQuickAddComposer() {
 
     const nameInput = document.getElementById('quickAddTitle');
     const descInput = document.getElementById('quickAddComments');
-    // Set when the user closes the description with the chevron - don't
-    // auto-reopen it again for the same entry (reset on the next present)
+    const closeBtn = document.getElementById('quickAddClose');
+    // Set when the user collapses the description with the chevron: it then
+    // stays collapsed for the rest of this add-mode session, and opens again
+    // the next time add mode is entered.
     let descDismissed = false;
 
     function setDescExpanded(open) {
@@ -476,59 +510,176 @@ function setupQuickAddComposer() {
         return form.classList.contains('is-expanded');
     }
 
-    // ---- Attention scrim ----
-    // While the composer is active the rest of the page is dimmed so the
-    // bright composer is the obvious place to look. Visual state only: a
-    // dismissal never clears the fields and never collapses a description
-    // the user typed into. Not a modal - no focus trap, no scroll lock.
+    // ---- Add mode ----
+    // body.quick-add-active is the single source of truth: "the user is
+    // adding a present". It dims the page behind the composer (scrim),
+    // reveals the head row with the close button, opens the description and
+    // slides the bottom tab bar out so the composer owns the thumb zone.
+    // It is NOT a modal: no role="dialog", no focus trap, no scroll lock,
+    // and the scrim stays aria-hidden. Add mode never reads or writes the
+    // field values, so closing it keeps whatever was typed.
     const scrim = document.getElementById('quickAddScrim');
-    let blurTimer = null;
-    let composerPointerAt = 0; // last pointerdown inside the composer
-    let suppressActivateUntil = 0; // ignore refocus right after a dismissal
+    let suppressEnterUntil = 0; // the tap that closed must not re-open
 
-    function isComposerActive() {
+    function tabBar() {
+        return document.querySelector('.bottom-tab-bar');
+    }
+
+    function isAddMode() {
         return body.classList.contains('quick-add-active');
     }
 
-    function activateComposer() {
-        if (Date.now() < suppressActivateUntil) return;
-        clearTimeout(blurTimer);
+    // The composer is "docked" when it is the fixed mobile bar (<=768px and
+    // the edit tab actually on screen). Add mode only exists when docked -
+    // on desktop the form is a permanent inline card with nothing to open,
+    // close, focus or uncover.
+    // (offsetParent is always null for fixed elements - use client rects)
+    function refreshDocked() {
+        const docked = mobileQuery.matches && form.getClientRects().length > 0 &&
+            getComputedStyle(form).position === 'fixed';
+        body.classList.toggle('quick-add-docked', docked);
+        return docked;
+    }
+
+    // Returns true only when add mode is on afterwards, so callers (the
+    // "Dodaj" tab handler) can tell whether they still need to navigate.
+    function enterAddMode(opts) {
+        const wantFocus = !!(opts && opts.focus);
+        // Set only when the entry is itself a tap on the chevron: that tap's
+        // own click handler is what opens (or closes) the description, so
+        // entry must leave the row exactly as it found it.
+        const keepDesc = !!(opts && opts.keepDesc);
+        if (!refreshDocked()) return false;
+        if (isAddMode()) {
+            // Already open (e.g. "Dodaj" tapped while typing): just take focus
+            if (wantFocus && nameInput) nameInput.focus({ preventScroll: true });
+            return true;
+        }
+        if (!wantFocus && Date.now() < suppressEnterUntil) return false;
+        suppressEnterUntil = 0;
+        const bar = tabBar();
+        // Focus FIRST: focus must never be left inside the bar we hide next
+        if (nameInput && (wantFocus ||
+            (document.activeElement && bar && bar.contains(document.activeElement)))) {
+            nameInput.focus({ preventScroll: true });
+        }
         body.classList.add('quick-add-active');
+        if (bar) {
+            // Belt and braces on top of visibility: hidden - the bar must
+            // leave the tab order and the accessibility tree while hidden
+            bar.inert = true;
+            bar.setAttribute('aria-hidden', 'true');
+        }
+        // Details open with the form, not on the first keystroke
+        descDismissed = false;
+        if (keepDesc) {
+            updateComposerLayout(); // what setDescExpanded would have done
+        } else {
+            setDescExpanded(true); // also recomputes the layout vars
+        }
+        return true;
     }
 
-    function deactivateComposer(suppressMs) {
-        clearTimeout(blurTimer);
-        if (suppressMs) suppressActivateUntil = Date.now() + suppressMs;
+    // reason: 'close' | 'escape' | 'scrim' | 'added' | 'undocked' | 'modal'
+    function exitAddMode(reason) {
+        if (!isAddMode()) return false;
+        const bar = tabBar();
         body.classList.remove('quick-add-active');
+        if (bar) {
+            bar.inert = false;
+            bar.removeAttribute('aria-hidden');
+        }
+        descDismissed = false;
+        setDescExpanded(false);
+        // Blurring the focused field is what dismisses the on-screen
+        // keyboard; focus then parks on the list heading so keyboard and
+        // screen reader users keep a sensible place in the page. When the
+        // composer merely stopped being docked, or a modal took over, focus
+        // belongs to whoever caused that - leave it alone.
+        const el = document.activeElement;
+        const inForm = el && form.contains(el);
+        if (inForm && typeof el.blur === 'function') el.blur();
+        // The hand-off is unconditional for the deliberate exits: iOS Safari
+        // blurs the input before the tap on X/+ lands, so focus is already on
+        // <body> by now and gating it on "focus was still in the form" would
+        // drop the reading position to the top of the page on exactly that
+        // platform.
+        if (reason === 'close' || reason === 'escape' || reason === 'scrim' || reason === 'added') {
+            const heading = document.getElementById('myPresentsHeading');
+            if (heading && typeof heading.focus === 'function') {
+                heading.focus({ preventScroll: true });
+            }
+        }
+        // The same tap/keypress must not immediately re-enter via focusin
+        suppressEnterUntil = Date.now() + 300;
+        updateComposerLayout();
+        return true;
     }
 
+    // The chevron is a details toggle and nothing else - it never exits add
+    // mode (a control that sometimes hides a field and sometimes closes the
+    // whole composer is exactly the ambiguity to avoid). The close button
+    // is the way out.
+    // Chromium and Android focus a <button> on tap, so a tap on the chevron
+    // from the compact bar fires focusin - and with it add mode, which opens
+    // the description - BEFORE the chevron's own click handler runs. Reading
+    // the live state there would then say "already open, so collapse it" and
+    // the tap would shut the row it had just opened (and latch
+    // descDismissed). This flag marks a pointer-driven chevron entry so that
+    // entry leaves the row untouched and the click below is the only thing
+    // that decides. Keyboard activation never sets it, so tabbing into the
+    // chevron still opens the description like any other entry.
+    let togglePointerDown = false;
+    // The description row fades in, and the textarea inherits that
+    // in-flight visibility change, so it is not focusable in the same tick
+    // as the class change. Focus it now and, if that silently failed, once
+    // more after the transition - but only while nothing else has taken
+    // focus in the meantime, so a quick tap on another field still wins.
+    function focusDesc() {
+        if (!descInput) return;
+        descInput.focus({ preventScroll: true });
+        if (document.activeElement === descInput) return;
+        setTimeout(() => {
+            const el = document.activeElement;
+            if (!isAddMode() || !isDescExpanded()) return;
+            if (el !== toggle && el !== document.body && el !== null) return;
+            descInput.focus({ preventScroll: true });
+        }, 260);
+    }
     if (toggle) {
+        const markTogglePointer = () => {
+            togglePointerDown = true;
+            // Safety net in case no click follows the press (drag, cancel)
+            setTimeout(() => { togglePointerDown = false; }, 700);
+        };
+        toggle.addEventListener('pointerdown', markTogglePointer);
+        if (!window.PointerEvent) toggle.addEventListener('mousedown', markTogglePointer);
         toggle.addEventListener('click', () => {
             const open = !isDescExpanded();
+            togglePointerDown = false;
             descDismissed = !open;
             setDescExpanded(open);
-            if (open && descInput) descInput.focus({ preventScroll: true });
-            // Collapsing with the chevron is a "done for now" signal
-            else deactivateComposer(300);
+            if (open) {
+                // Opening from the compact bar also enters add mode. The
+                // chevron is an explicit intent, so it is not subject to the
+                // "the tap that closed must not re-open" window.
+                suppressEnterUntil = 0;
+                enterAddMode({ keepDesc: true });
+                focusDesc();
+            }
         });
     }
 
-    // Progressive disclosure: reveal the (optional, recommended)
-    // description as soon as a name is typed. Focus stays in the name field.
-    if (nameInput) {
-        nameInput.addEventListener('input', () => {
-            const hasName = nameInput.value.trim() !== '';
-            if (hasName) {
-                if (!isDescExpanded() && !descDismissed) setDescExpanded(true);
-            } else {
-                // Name cleared - back to the compact bar for the next present
-                // (unless a description was already typed, so it isn't hidden)
-                descDismissed = false;
-                if (isDescExpanded() && !(descInput && descInput.value.trim())) {
-                    setDescExpanded(false);
-                }
-            }
-        });
+    // Explicit close control: always reachable, including by keyboard
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => exitAddMode('close'));
+    }
+
+    // The edit bottom sheet takes over the screen - don't leave add mode
+    // (and a hidden tab bar) underneath it
+    const editModalEl = document.getElementById('editPresentModal');
+    if (editModalEl) {
+        editModalEl.addEventListener('show.bs.modal', () => exitAddMode('modal'));
     }
 
     // Enter adds a new line in the description; Ctrl/Cmd+Enter submits
@@ -541,46 +692,35 @@ function setupQuickAddComposer() {
         });
     }
 
-    // Active as soon as a composer field is focused (so the dimming
-    // arrives together with the on-screen keyboard), and again when the
-    // user starts typing after a dismissal.
-    form.addEventListener('focusin', activateComposer);
-    form.addEventListener('focusout', (e) => {
-        // Moving between the composer's own controls keeps it active
-        if (e.relatedTarget && form.contains(e.relatedTarget)) return;
-        clearTimeout(blurTimer);
-        blurTimer = setTimeout(() => {
-            if (document.activeElement && form.contains(document.activeElement)) return;
-            // iOS doesn't focus buttons on tap, so a tap on the chevron or
-            // the "+" button arrives here as a plain blur - never dismiss
-            // before those handlers (and the submit) have run
-            if (Date.now() - composerPointerAt < 500) return;
-            deactivateComposer();
-        }, 150);
+    // Add mode starts as soon as anything in the composer is focused, so
+    // the open form arrives together with the on-screen keyboard. There is
+    // deliberately no focusout/blur exit: dismissing the keyboard with its
+    // own Done button leaves add mode on (the close button and the scrim
+    // are both one tap away), and nothing can end add mode behind the
+    // user's back and discard what they typed.
+    form.addEventListener('focusin', (e) => {
+        // A tap on the chevron owns the description row itself (see the
+        // togglePointerDown comment) - this entry must not pre-empt it
+        const fromTogglePointer = !!toggle && e.target === toggle && togglePointerDown;
+        enterAddMode(fromTogglePointer ? { keepDesc: true } : undefined);
     });
-    document.addEventListener('pointerdown', (e) => {
-        if (form.contains(e.target)) composerPointerAt = Date.now();
-    }, true);
 
+    // Safety net: typing always means "I am adding a present"
     const onComposerInput = () => {
-        suppressActivateUntil = 0;
-        activateComposer();
+        suppressEnterUntil = 0;
+        enterAddMode();
     };
     if (nameInput) nameInput.addEventListener('input', onComposerInput);
     if (descInput) descInput.addEventListener('input', onComposerInput);
 
-    // Escape leaves the composer: undim and drop the keyboard, but keep
-    // whatever was typed (and keep the description open if it is open)
+    // Escape closes add mode: undim, drop the keyboard, collapse - but keep
+    // whatever was typed, so reopening restores it
     document.addEventListener('keydown', (e) => {
-        if (e.key !== 'Escape' || e.isComposing || !isComposerActive()) return;
+        if (e.key !== 'Escape' || e.isComposing || !isAddMode()) return;
         const el = document.activeElement;
-        const inComposer = el && form.contains(el);
         // Some engines revert/clear an input's value on Escape
-        if (inComposer) e.preventDefault();
-        // No suppression window: blurring means nothing refocuses us, so a
-        // deliberate tap back into the field must dim again right away
-        deactivateComposer();
-        if (inComposer && typeof el.blur === 'function') el.blur();
+        if (el && form.contains(el)) e.preventDefault();
+        exitAddMode('escape');
     });
 
     // A tap on the scrim dismisses; a drag on it is a scroll, so the list
@@ -599,27 +739,27 @@ function setupQuickAddComposer() {
             scrim.addEventListener('pointerup', (e) => {
                 if (Date.now() - tapAt > 700) return;
                 if (Math.abs(e.clientX - tapX) > 12 || Math.abs(e.clientY - tapY) > 12) return;
-                // The tap already blurred the field, so no suppression is
-                // needed - tapping back into the composer dims again at once
-                deactivateComposer();
+                exitAddMode('scrim');
             });
         } else {
-            scrim.addEventListener('click', () => deactivateComposer());
+            scrim.addEventListener('click', () => exitAddMode('scrim'));
         }
     }
 
-    // Called after a successful add: compact state for the next present
-    window._resetQuickAddComposer = () => {
-        descDismissed = false;
-        setDescExpanded(false);
-        // Undim so the new item flashing in the list is visible. The
-        // suppression window covers the programmatic refocus of the name
-        // field; typing the next name dims again.
-        deactivateComposer(600);
-    };
+    // Entry points for the dock's "Dodaj" tab (tab-bar-functions.js) and
+    // for the successful-add path in quickAddPresent()
+    window.enterQuickAddMode = (opts) => enterAddMode(opts);
+    window.exitQuickAddMode = (reason) => exitAddMode(reason);
 
     function tabBarOffset() {
         const bar = document.querySelector('.bottom-tab-bar');
+        // Add mode: the bar has slid out, so the composer takes its place -
+        // down to the bar's own bottom inset, which keeps the safe-area
+        // inset on devices that have one.
+        if (isAddMode()) {
+            if (!bar) return 12;
+            return Math.max(parseFloat(getComputedStyle(bar).bottom) || 0, 12);
+        }
         if (!bar || getComputedStyle(bar).display === 'none') return 12;
         const barStyle = getComputedStyle(bar);
         const inset = parseFloat(barStyle.bottom) || 0;
@@ -639,13 +779,11 @@ function setupQuickAddComposer() {
     }
 
     function updateComposerLayout() {
-        // (offsetParent is always null for fixed elements - use client rects)
-        const docked = mobileQuery.matches && form.getClientRects().length > 0 &&
-            getComputedStyle(form).position === 'fixed';
-        body.classList.toggle('quick-add-docked', docked);
+        const docked = refreshDocked();
         if (!docked) {
-            // Desktop, or the edit tab was left - never leave the page dimmed
-            deactivateComposer();
+            // Desktop, or the edit tab was left - never leave the page
+            // dimmed or the tab bar hidden
+            exitAddMode('undocked');
             return;
         }
         const kb = keyboardOffset();

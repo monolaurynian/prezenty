@@ -1,67 +1,58 @@
 {
-  "verdict": "CHANGES_REQUESTED",
+  "verdict": "APPROVED",
   "findings": [
     {
       "id": 1,
-      "blocking": true,
+      "blocking": false,
       "confidence": "confirmed",
-      "label": "Focus and aria-pressed announcement lost on every chip repaint",
-      "file": "public/chat-reactions.js",
-      "detail": "refreshStrips() rebuilds container.innerHTML for every [data-reactions-for] strip in the thread, not just the changed one. It runs on the optimistic toggle, on the server response, and on reaction-only polls. The focused chip is detached, so keyboard focus drops to <body> and the next Tab restarts from the top of the page; a screen reader also never hears the state change, because the button carrying the new aria-pressed value is a different element than the one that was activated. Fix: capture the active chip's message id + emoji before the repaint and re-focus the equivalent chip (falling back to the .chat-reaction-add button when the chip disappears) - closeSheet() already does exactly this lookup for the add button - or mutate the existing chips' textContent/aria-* in place instead of replacing them."
+      "label": "Focus lost on the new-message re-render path",
+      "file": "public/wiadomosci.html",
+      "detail": "The strip-only repaint is now focus-safe (pass-1 blocking finding is fixed), but loadThreadMessages() still does box.innerHTML = msgs.map(...) whenever a poll brings a NEW message. That destroys and recreates every chip in the thread, so a user sitting on a chip loses focus to <body> and the next Tab restarts at the top of the page. Narrower than the original finding (it needs a new message to arrive, not just a reaction change) but newly consequential because the rebuilt subtree now holds focusable controls. Fix: after the rebuild, re-focus the chip matching the (messageId, emoji) that was active, reusing the lookup refreshStrips() already performs."
     },
     {
       "id": 2,
       "blocking": false,
       "confidence": "confirmed",
-      "label": "Pressed state signalled by colour alone",
+      "label": "Add-button hit slop overhangs the bubble",
       "file": "public/chat-reactions.css",
-      "detail": ".chat-reaction-chip[aria-pressed=\"true\"] differs from the default only in background, border-color and color. aria-pressed covers assistive tech, but a non-colour cue (border width, ring, or a leading check glyph) would satisfy WCAG 1.4.1 for sighted users with colour-vision deficiency."
+      "detail": ".chat-reactions has margin-top: 4px and .chat-reaction-add is 32px tall, while its ::after hit slop is 44x44 centred on the button - so the slop extends 6px above the button box, i.e. ~2px into the bubble above it. The button is position: relative, so the pseudo-element paints over the bubble's non-positioned content and will absorb a tap in that band. Realistic impact is a link on the bubble's last line directly above the add button. Fix: cap the upward slop (e.g. asymmetric top/height) or raise .chat-reactions margin-top to 6px."
     },
     {
       "id": 3,
       "blocking": false,
       "confidence": "confirmed",
-      "label": "Unpressed chip border contrast ~1.25:1",
-      "file": "public/chat-reactions.css",
-      "detail": "rgba(0,0,0,0.10) on #ffffff. Disclosed by the implementer and consistent with .chat-bubble.from-them and .thread-row, so it introduces no new convention, but it will not pass a strict WCAG 1.4.11 non-text-contrast audit."
+      "label": "Chip accessible name changes on activation alongside aria-pressed",
+      "file": "public/chat-reactions.js",
+      "detail": "chipLabel() appends 'Dodaj swoją reakcję' / 'Usuń swoją reakcję' depending on `mine`, so the accessible name changes on toggle while aria-pressed also carries the state. Screen readers announce both. Not incorrect, but the conventional toggle pattern is a stable name with aria-pressed alone carrying state. Cosmetic; no action required before release."
     },
     {
       "id": 4,
       "blocking": false,
       "confidence": "confirmed",
-      "label": "No server-side throttle on the toggle endpoint",
-      "file": "server.js",
-      "detail": "Debouncing is client-side only (the inFlight Set). UNIQUE (message_id, user_id, emoji) caps storage at six rows per user per message so there is no unbounded growth, and no rate-limiting infrastructure exists anywhere in server.js, but a participant can still spin the endpoint."
-    },
-    {
-      "id": 5,
-      "blocking": false,
-      "confidence": "confirmed",
-      "label": "Chat density: a 44px add button under every message",
-      "file": "public/chat-reactions.js",
-      "detail": "strip() always appends the add button, so every message grows by ~44px inside the max-height: 58vh message scroller and fewer messages fit on a phone screen. Consider revealing the add button on hover/focus on desktop, or collapsing the strip height when a message has no reactions."
-    },
-    {
-      "id": 6,
-      "blocking": false,
-      "confidence": "confirmed",
       "label": "DDL and aggregation never executed against MySQL",
       "file": ".agents/tasks/chat-reactions-verification.md",
-      "detail": "No database was available, so the CREATE TABLE, the real GROUP BY and the DELETE/INSERT IGNORE are proven only as SQL text with bound parameters (the utf8mb4_bin collation trap is handled up front). Worth one npm run init-db plus a two-account smoke test before release."
+      "detail": "Carried over from pass 1 and still open: no database was reachable (no node_modules, no .env, no DB_PASSWORD, no mysql/mysqld/docker on PATH), so CREATE TABLE, the real GROUP BY and the DELETE/INSERT IGNORE are proven only as SQL text with bound parameters. The utf8mb4_bin collation trap is handled up front. Orchestrator task, not an implementation defect: run npm run init-db plus a two-account smoke test before release."
     }
   ],
+  "resolvedFromPreviousPass": [
+    "1 (blocking) - focus and aria-pressed announcement lost on every chip repaint: refreshStrips() now reconciles each strip in place via syncStrip()/applyChip(); surviving chips are mutated and never moved, the add button persists for the strip's lifetime, the picker grid is built once and only its aria-pressed updated, and a chip that disappears hands focus to the add button of the same message.",
+    "2 - pressed state signalled by colour alone: pressed chip and sheet button now add border-width 2px plus an inset 1px white ring, with padding reduced by the same amount so nothing reflows on toggle.",
+    "3 - unpressed chip border contrast: raised from rgba(0,0,0,0.10) (~1.25:1) to #868F99, measured 3.28:1 on #ffffff and 3.11:1 on #f8f9fa.",
+    "4 - no server-side throttle: 30 toggles / 10 s per user id via an in-memory fixed-window counter (pure reactionThrottleStep()), checked after validation and before any query, self-pruning above 500 entries, 429 'Zbyt wiele reakcji. Odczekaj chwilę', surfaced in the client toast with optimistic rollback. No new dependency.",
+    "5 - chat density: the add button is now a 32px circle with a 44x44 invisible hit slop (strip row 32px instead of 44) and is revealed on row hover/focus only under (hover: hover) and (pointer: fine), using opacity so it stays in the tab order and the accessibility tree. Touch behaviour unchanged."
+  ],
   "checklist": {
-    "1_privacy": "PASS - both read paths go through buildReactionList(), which emits only {emoji,count,mine}; user_id/sender_id/username never appear in any response.",
-    "2_no_notifications": "PASS - the new handler and the thread-GET addition reference no notifications table, no web-push, no activity feed, no is_read, and do not call notification-text.js.",
-    "3_auth_and_participation": "PASS - requireAuth on the new endpoint; participation re-derived via anon_messages JOIN anon_threads with 403 'To nie Twoja rozmowa'; the thread aggregate is scoped by thread_id after the existing 403 check.",
-    "4_sql": "PASS - every statement is pool.execute with ? placeholders; message id passes a ^[0-9]+$ regex before parseInt and reaches SQL as a number.",
-    "5_emoji_allowlist": "PASS - isAllowedReactionEmoji() checked server-side before any query; off-list values get 400 'Nieprawidłowa reakcja'.",
-    "6_toggle": "PASS - UNIQUE KEY uniq_message_user_emoji (message_id, user_id, emoji) in both DDLs; DELETE-then-INSERT IGNORE is idempotent and the response is the recomputed aggregate.",
-    "7_performance": "PASS - one grouped query per thread load (no N+1); INDEX idx_reaction_message (message_id) present in both DDLs.",
-    "8_a11y": "FAIL (blocking finding 1) - all other requirements met: real buttons, keyboard reachable, aria-pressed, gender-neutral Polish aria-labels, dialog role + aria-modal, Tab trap, Escape close, focus return from the sheet, prefers-reduced-motion at both breakpoints, HTML escaping via esc(). Chip repaints lose focus and never announce the state change.",
-    "9_polish_wording": "PASS - gender-neutral sentence-case strings throughout; plurals via plCount(n,'osoba','osoby','osób'); no dodal(a) or masculine-only forms.",
-    "10_forbidden_files": "PASS for this task - formularz.html, formularz.js, notification-text.js, sw.js and app-theme.css show as modified in git diff --stat, but grepping their diffs for reaction|reakcj|chat-reactions returns no matches; those edits are concurrent agents' work. Reaction CSS is entirely in the new public/chat-reactions.css, and the reaction-specific server.js footprint is four targeted additions, not a rewrite.",
-    "11_init_db": "PASS - anon_threads, anon_messages and anon_message_reactions added to init-db.js (46 added lines, 0 removed) with definitions mirroring ensureAnonMessageTables() and cross-reference comments in both files."
+    "1_privacy": "PASS - both read paths go through buildReactionList(), which emits exactly {emoji,count,mine} and drops off-allowlist or empty buckets; mine comes from MAX(r.user_id = ?) so no user id is projected. Toggle response is {success,action,messageId,emoji,reactions}. Log line carries messageId + action only.",
+    "2_no_notifications": "PASS - the toggle handler and the thread-GET addition reference no notifications table, no ensureNotificationsTable, no sendPushToUser/webpush/notifyAnonMessage, no activity feed, no is_read write, and never call notification-text.js. The notificationText(...) hunks in the server.js diff are a concurrent task's work.",
+    "3_auth_and_participation": "PASS - requireAuth on the new endpoint; participation re-derived via SELECT m.id, t.initiator_id, t.target_id FROM anon_messages m JOIN anon_threads t with 404 then 403 'To nie Twoja rozmowa'; the thread aggregate is WHERE m.thread_id = ? after the pre-existing participation check at server.js:2745.",
+    "4_sql": "PASS - every reaction statement is pool.execute with ? placeholders and the emoji never enters SQL text; parseMessageId() requires /^[0-9]+$/ plus Number.isSafeInteger and > 0, so the id reaches SQL as an integer and '7abc', '-1', '1.5', '0', '1 OR 1=1' are rejected with 400 before any query. DDL is a static template literal.",
+    "5_emoji_allowlist": "PASS - isAllowedReactionEmoji() is checked server-side from the shared module before the throttle and before any query; off-list values get 400 'Nieprawidłowa reakcja'.",
+    "6_toggle": "PASS - UNIQUE KEY uniq_message_user_emoji (message_id, user_id, emoji) on an emoji column with COLLATE utf8mb4_bin, in both ensureAnonMessageTables() and init-db.js; DELETE-then-conditional-INSERT IGNORE is idempotent and the response is the recomputed aggregate.",
+    "7_performance": "PASS - one grouped query per thread load fanned out by groupReactionsByMessage() (no N+1); INDEX idx_reaction_message (message_id) in both DDLs; the toggle re-read is scoped to the single message.",
+    "8_a11y": "PASS with one non-blocking gap (finding 1) - real <button type=\"button\"> throughout, keyboard reachable, aria-pressed on toggles, gender-neutral Polish aria-labels, in-place chip mutation so the state flip is announced on the activated control, dialog role + aria-modal + aria-labelledby, aria-hidden/inert while closed, focus to the first emoji on open, Tab trap, Escape close (double-fire guarded), focus return with an add-button fallback, prefers-reduced-motion honoured at both breakpoints including the new opacity transition, esc() on all interpolated values. Gaps: focus lost on the new-message innerHTML rebuild (finding 1), hit-slop overhang (finding 2), name-changes-on-toggle nit (finding 3).",
+    "9_polish_wording": "PASS - gender-neutral sentence-case strings throughout (Wybierz reakcję, Dodaj reakcję do wiadomości, Dodaj/Usuń swoją reakcję, Zbyt wiele reakcji. Odczekaj chwilę, Nieprawidłowa reakcja, To nie Twoja rozmowa); neutral emoji names; plurals via plCount(n,'osoba','osoby','osób') with a numeric fallback; no dodal(a) or masculine-only forms.",
+    "10_forbidden_files": "PASS for this task - formularz.html, formularz.js, notification-text.js, sw.js and app-theme.css show as modified in git diff --stat, but grepping their combined diff for reaction|reakcj|chat-reaction returns 0 lines (the sw.js hunk is a one-line CACHE_NAME bump to prezenty-v119). Reaction CSS is entirely in the new public/chat-reactions.css with nothing added to wiadomosci.html's inline <style>; the server.js footprint is five targeted additive edits, not a rewrite.",
+    "11_init_db": "PASS - anon_threads, anon_messages and anon_message_reactions added to init-db.js (+46, -0) with definitions mirroring ensureAnonMessageTables(), CREATE TABLE IF NOT EXISTS throughout, cross-reference comments in both files, and the three tables listed in the closing summary."
   },
   "reviewDoc": "c:\\Users\\matmamon\\OneDrive - amazon.com\\Documents\\Prezenty\\prezenty\\.agents\\tasks\\chat-reactions-review-doc.md"
 }
