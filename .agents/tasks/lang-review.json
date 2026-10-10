@@ -1,0 +1,7 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    "(likely, non-blocking) formularz.html still loads tab-bar-functions.js?v=15. Returning users on that page can keep the cached old script with the 'dodał(a)' wording and no notification-text loader. LANG may not edit formularz.html, so the UI branch or the merge step should bump it to ?v=16."
+  ],
+  "reviewDoc": "c:\\Users\\matmamon\\OneDrive - amazon.com\\Documents\\Prezenty\\prezenty/.agents/tasks/lang-review-doc.md"
+}
