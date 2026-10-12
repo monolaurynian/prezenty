@@ -41,11 +41,11 @@ npm run optimize-db
 
 ### Method 2: Run Directly with Node
 ```bash
-node optimize-db.js
+node scripts/optimize-db.js
 ```
 
 ### Method 3: Windows Batch File
-Double-click: `apply-optimizations.bat`
+Double-click: `scripts/apply-optimizations.bat`
 
 ### Method 4: Manual SQL (if you have database access)
 Run these SQL commands in your database:
@@ -74,8 +74,8 @@ CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires);
 ## Files Modified
 
 - ✅ `server.js` - Optimized queries and increased cache
-- ✅ `init-db.js` - Now creates indexes automatically
-- ✅ `optimize-db.js` - Updated with all indexes
+- ✅ `scripts/init-db.js` - Now creates indexes automatically
+- ✅ `scripts/optimize-db.js` - Updated with all indexes
 - ✅ `package.json` - Added optimize-db script
 
 ## Verify It's Working

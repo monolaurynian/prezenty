@@ -140,7 +140,7 @@ the cache is empty and the CDNs are unreachable, the suite fails with
 ## Honest limits - what this suite can NOT tell you
 
 - **No database.** `DEMO_MODE` runs with no MySQL pool at all, so no SQL is
-  executed. The suite cannot verify any query, `init-db.js`, a migration, or
+  executed. The suite cannot verify any query, `scripts/init-db.js`, a migration, or
   the real `anon_message_reactions` DDL - in particular
   `emoji VARCHAR(16) ... COLLATE utf8mb4_bin` and the
   `uniq_message_user_emoji` unique key, both of which exist precisely because

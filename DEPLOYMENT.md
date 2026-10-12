@@ -143,7 +143,7 @@ If you need to create database tables:
 
 2. **Remote Setup:**
    - Use database management tool
-   - Run SQL commands from `init-db.js`
+   - Run SQL commands from `scripts/init-db.js`
    - Or deploy temporarily with database access
 
 ## Support

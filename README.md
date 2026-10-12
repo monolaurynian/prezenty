@@ -75,6 +75,14 @@ The app creates the following tables:
 - `npm run test:e2e:headed` or `npm run test:e2e:ui` to debug a failure; `npm run test:e2e:report` opens the last HTML report.
 - See [`tests/README.md`](tests/README.md) for how to add a test, where the demo fixtures live, and what the suite cannot verify (no database, so no SQL, migrations or MySQL behaviour).
 
+## Project layout
+- `server.js` - Express app and API routes
+- `public/` - static front end (HTML, CSS, client JS, service worker)
+- `tests/` - Playwright end-to-end suite (see [`tests/README.md`](tests/README.md))
+- `scripts/` - database and diagnostic scripts (see [`scripts/README.md`](scripts/README.md)); `npm run init-db`, `test-db` and `optimize-db` point here
+- `docs/archive/` - historical fix notes, kept for reference (see [`docs/archive/README.md`](docs/archive/README.md))
+- `DEPLOYMENT.md`, `Dockerfile`, `render.yaml`, `vercel.json` - deployment guide and config
+- `.agents/` - task plans, reviews and verification notes
 ## Profile Pictures
 
 Profile pictures are stored directly in the MySQL database as BLOB data, eliminating the need for file system storage or external storage services.

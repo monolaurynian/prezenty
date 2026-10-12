@@ -2604,7 +2604,7 @@ async function ensureAnonMessageTables() {
     // AND NOWHERE ELSE - no endpoint ever emits it, clients only ever see
     // { emoji, count, mine }. Reactions deliberately create no
     // notification, no push and no activity-feed entry.
-    // MIRRORED in init-db.js (fresh installs) - keep both in sync.
+    // MIRRORED in scripts/init-db.js (fresh installs) - keep both in sync.
     await pool.execute(`
         CREATE TABLE IF NOT EXISTS anon_message_reactions (
             id INT AUTO_INCREMENT PRIMARY KEY,

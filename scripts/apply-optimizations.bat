@@ -1,4 +1,6 @@
 @echo off
+REM Run from the repo root so npm finds package.json.
+cd /d "%~dp0.."
 echo 🚀 Applying Database Performance Optimizations...
 echo.
 
@@ -12,6 +14,6 @@ echo.
 echo 📝 Next steps:
 echo 1. Restart your server: npm start
 echo 2. Clear browser cache and reload the app
-echo 3. Check PERFORMANCE_OPTIMIZATION.md for details
+echo 3. Check docs/archive/performance/PERFORMANCE_OPTIMIZATION.md for details
 echo.
 pause

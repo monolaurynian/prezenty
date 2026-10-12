@@ -14,9 +14,9 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report tests/.report",
     "postinstall": "echo 'Dependencies installed successfully'",
-    "init-db": "node init-db.js",
-    "test-db": "node test-db.js",
-    "optimize-db": "node optimize-db.js"
+    "init-db": "node scripts/init-db.js",
+    "test-db": "node scripts/test-db.js",
+    "optimize-db": "node scripts/optimize-db.js"
   },
   "keywords": [
     "christmas",

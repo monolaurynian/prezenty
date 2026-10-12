@@ -1,5 +1,5 @@
 // Diagnostic script: checks DB read/write health and sessions table
-// Usage: set DB_PASSWORD env var, then: node db-diagnose.js
+// Usage: set DB_PASSWORD env var, then: node scripts/db-diagnose.js
 const mysql = require('mysql2/promise');
 
 const config = {
@@ -14,7 +14,7 @@ const config = {
 
 if (!config.password) {
     console.error('Set DB_PASSWORD environment variable first, e.g.:');
-    console.error('  $env:DB_PASSWORD="yourpassword"; node db-diagnose.js');
+    console.error('  $env:DB_PASSWORD="yourpassword"; node scripts/db-diagnose.js');
     process.exit(1);
 }
 

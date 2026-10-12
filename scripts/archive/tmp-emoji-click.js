@@ -1,6 +1,10 @@
+// ARCHIVED one-off: patched public/home.html once to add click-to-preview on recipient avatars.
+// Already applied; kept for reference only. Do not run again.
 const fs = require('fs');
+const path = require('path');
+const HOME_HTML = path.join(__dirname, '..', '..', 'public', 'home.html');
 const D = String.fromCharCode(36); // dollar sign
-let t = fs.readFileSync('public/home.html', 'utf8');
+let t = fs.readFileSync(HOME_HTML, 'utf8');
 const anchor = ': `<div style="display: flex; width: 40px;';
 console.log('anchor occurrences:', t.split(anchor).length - 1);
 const marker = 'flex-shrink: 0;">';
@@ -15,5 +19,5 @@ while ((idx = t.indexOf(anchor, idx)) !== -1) {
   idx = before.length + onclick.length;
   count++;
 }
-fs.writeFileSync('public/home.html', t);
+fs.writeFileSync(HOME_HTML, t);
 console.log('patched blocks:', count);
