@@ -21,6 +21,12 @@ const urlsToCache = [
   '/leaderboard-page.js?v=1',
   '/formularz-page.css?v=1',
   '/formularz-page-edit.css?v=1',
+  '/activity-page.css?v=1',
+  '/activity-page.js?v=1',
+  '/ustawienia-page.css?v=1',
+  '/ustawienia-page.js?v=1',
+  '/wiadomosci-page.css?v=1',
+  '/wiadomosci-page.js?v=1',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'
