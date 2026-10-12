@@ -106,7 +106,7 @@ if you doubt a result.
 
 ## Where the demo data lives
 
-All of it is in `server.js`, inside `if (DEMO_MODE)` branches only:
+All of it is defined in `lib/demo-data.js` and read only from `if (DEMO_MODE)` branches:
 
 - `demoData` - recipients and presents, including a 41-character unbreakable
   name, a 64-character single-word title, a long URL title, a present with no

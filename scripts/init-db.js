@@ -84,7 +84,7 @@ async function initializeDatabase() {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
         console.log("✓ Sessions table created");
         // ---- Anonymous chat (wiadomości) ----
-        // MIRROR of ensureAnonMessageTables() in server.js, which stays the
+        // MIRROR of ensureAnonMessageTables() in lib/chat.js, which stays the
         // runtime source of truth (it creates these lazily on first use).
         // Keep both in sync. Everything is CREATE TABLE IF NOT EXISTS, so
         // re-running this against an existing database is a no-op.

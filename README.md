@@ -76,7 +76,9 @@ The app creates the following tables:
 - See [`tests/README.md`](tests/README.md) for how to add a test, where the demo fixtures live, and what the suite cannot verify (no database, so no SQL, migrations or MySQL behaviour).
 
 ## Project layout
-- `server.js` - Express app and API routes
+- `server.js` - Express entry point: middleware, sessions, mounting routers, startup
+- `routes/` - Express routers grouped by domain (system, pages, auth, recipients, presents, notifications, leaderboard, chat, formularz, archive)
+- `lib/` - shared logic used by the routers (database pool, push, notifications, caches, demo data, cron jobs)
 - `public/` - static front end (HTML, CSS, client JS, service worker)
 - `tests/` - Playwright end-to-end suite (see [`tests/README.md`](tests/README.md))
 - `scripts/` - database and diagnostic scripts (see [`scripts/README.md`](scripts/README.md)); `npm run init-db`, `test-db` and `optimize-db` point here
