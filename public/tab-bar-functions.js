@@ -216,15 +216,22 @@ function getNotificationMessage(notif) {
     // Person name -> link to their prefiltered presents page
     const personLink = (safe, name) => `<a href="/recipients.html?osoba=${encodeURIComponent(name)}" onclick="event.stopPropagation();" style="color: #2196F3; text-decoration: underline;"><strong>${safe}</strong></a>`;
     const presentId = Number(data.presentId) || null;
-    const recipientEnc = encodeURIComponent(data.recipientName || '');
+    // encodeURIComponent leaves ' ! ( ) * ~ - _ . untouched, and the value is
+    // dropped into a single-quoted JS string inside an onclick attribute, so a
+    // recipient name like  '-alert(1)-'  (no character that gets encoded) used
+    // to close the string and run. Encode the apostrophe too; the string then
+    // holds only [A-Za-z0-9 - _ . ! ~ * ( ) %] and cannot end itself.
+    // decodeURIComponent in scrollToPresentFromNotification restores the name.
+    const recipientEnc = encodeURIComponent(data.recipientName || '').replace(/'/g, '%27');
     const presentLink = (quoted) => presentId ? `<a href="#" onclick="scrollToPresentFromNotification(${presentId}, '${recipientEnc}'); return false;" style="color: #2196F3; text-decoration: underline; cursor: pointer;"><strong>${quoted}</strong></a>` : `<strong>${quoted}</strong>`;
     
     switch(notif.type) {
         case 'leaderboard_leader':
-            return `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" style="color: #2196F3; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`;
+            // leaderName / previousLeaderName are recipients.name (user supplied)
+            return `🏆 <strong>${escapeHtmlNotif(data.leaderName || 'Ktoś')}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${escapeHtmlNotif(data.previousLeaderName)}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" style="color: #2196F3; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`;
         case 'anon_message': {
             const threadHref = data.threadId ? `/wiadomosci?rozmowa=${data.threadId}` : '/wiadomosci';
-            return `💬 <a href="${threadHref}" style="color: #2196F3; text-decoration: underline;"><strong>${data.label || 'Nowa wiadomość'}</strong></a>${data.preview ? ': "' + escapeHtmlNotif(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`;
+            return `💬 <a href="${threadHref}" style="color: #2196F3; text-decoration: underline;"><strong>${escapeHtmlNotif(data.label || 'Nowa wiadomość')}</strong></a>${data.preview ? ': "' + escapeHtmlNotif(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`;
         }
         default:
             // Shared wording (notification-text.js) for every activity type
@@ -439,39 +446,107 @@ function updateNotificationsForDeletedPresent(presentId) {
 // Scrolling down slides the dock away to give content the full screen;
 // scrolling up (or being near the top) brings it back. Mobile only -
 // on desktop the sidebar replaces the dock anyway.
+//
+// ONE source of truth: `body.dock-hidden`. The class lives on <body>, never
+// on the bar, so a page can hang extra elements (formularz.html's quick-add
+// composer) off the same flag and have them travel in lockstep instead of
+// measuring each other's live geometry mid-scroll. This handler reads only
+// window.scrollY / innerWidth and documentElement.scrollHeight - never the
+// geometry of the bar or of any element that follows it.
+//
+// PRECEDENCE between the two mechanisms that can hide the dock
+// (`body.quick-add-active` and `body.dock-hidden`): they are mutually
+// exclusive, enforced here in JS, not by cascade order.
+//   1. `quick-add-active` (formularz.html's deliberate add-mode hide) wins
+//      absolutely. While it is set this handler returns before reading or
+//      writing anything but its own seeds. It is the only mechanism that
+//      ever touches `visibility`, `inert` or `aria-hidden` on the dock.
+//   2. `dock-hidden` (this transient hide-on-scroll) is only ever set while
+//      `quick-add-active` is off, and only ever affects `transform`,
+//      `opacity` and `pointer-events` - the same contract the old
+//      `.tab-bar-hidden` had on all 8 pages that load this file.
+//   3. Leaving add mode calls `window.resetDockAutoHide()`, which re-seeds
+//      from the current scroll position, zeroes the accumulator and leaves
+//      the dock SHOWN - so the dock's state after an exit never depends on
+//      which way the user last scrolled.
 (function initTabBarAutoHide() {
     const bar = document.querySelector('.bottom-tab-bar');
     if (!bar) return;
 
     let lastY = window.scrollY;
+    let accum = 0; // signed travel since the last direction change
     let ticking = false;
-    const DELTA = 8; // ignore sub-threshold jitters (e.g. rubber-banding)
+    // Hysteresis: hiding needs more sustained travel than showing, so a
+    // small bounce (rubber-banding, a scroll-position clamp) can never flip
+    // the state the way a single symmetric threshold did.
+    const HIDE = 14;
+    const SHOW = 8;
+    const NOISE = 1; // sub-pixel deltas are not motion
+
+    // No-op guard: DOMTokenList re-serialises the attribute even when the
+    // token set does not change, so writing it every tick used to fire one
+    // mutation (and one forced layout in formularz.js) per scroll event.
+    function setDockHidden(flag) {
+        if (document.body.classList.contains('dock-hidden') === flag) return;
+        document.body.classList.toggle('dock-hidden', flag);
+    }
+
+    function reseed() {
+        lastY = window.scrollY;
+        accum = 0;
+        setDockHidden(false);
+    }
 
     function onScroll() {
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(() => {
-            const y = window.scrollY;
-            const diff = y - lastY;
+            ticking = false;
 
-            const panelOpen = document.querySelector(
-                '.tab-bar-menu-panel.show, .tab-bar-notifications-panel.show');
-
-            if (window.innerWidth >= 992 || panelOpen || y < 40) {
-                // Desktop, open panel, or near the top: always visible
-                bar.classList.remove('tab-bar-hidden');
-            } else if (diff > DELTA) {
-                bar.classList.add('tab-bar-hidden');
-            } else if (diff < -DELTA) {
-                bar.classList.remove('tab-bar-hidden');
+            // (1) add mode owns the dock - stay out of it entirely
+            if (document.body.classList.contains('quick-add-active')) {
+                lastY = window.scrollY;
+                accum = 0;
+                return;
             }
 
-            if (Math.abs(diff) > DELTA) lastY = y;
-            ticking = false;
+            // All reads before any write
+            const y = window.scrollY;
+            const maxY = document.documentElement.scrollHeight - window.innerHeight;
+            const panelOpen = document.querySelector(
+                '.tab-bar-menu-panel.show, .tab-bar-notifications-panel.show');
+            const diff = y - lastY;
+            lastY = y;
+
+            // Force-show: desktop, an open panel, near the top, or near the
+            // bottom. The near-bottom rule means the reader always lands at
+            // the true end of the page with the dock shown, which is the
+            // state the reserved bottom padding is sized for.
+            if (window.innerWidth >= 992 || panelOpen || y < 40 || maxY - y < 72) {
+                accum = 0;
+                setDockHidden(false);
+                return;
+            }
+
+            if (Math.abs(diff) < NOISE) return;
+            if ((diff > 0) !== (accum > 0)) accum = 0; // direction change
+            accum += diff;
+
+            if (accum > HIDE) {
+                accum = 0;
+                setDockHidden(true);
+            } else if (accum < -SHOW) {
+                accum = 0;
+                setDockHidden(false);
+            }
         });
     }
 
     window.addEventListener('scroll', onScroll, { passive: true });
+    // Exported so a page that deliberately hid the dock (add mode) can hand
+    // it back in a known-good state from any scroll position.
+    window.resetDockAutoHide = reseed;
+    reseed();
 })();
 
 // ---- Unread anonymous-messages badge on the Wiadomości dock tab ----

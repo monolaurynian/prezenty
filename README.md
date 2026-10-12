@@ -70,6 +70,11 @@ The app creates the following tables:
 5. Run database initialization: `npm run init-db`
 6. Start development server: `npm run dev`
 
+### Testing
+- `npm test` runs the end-to-end suite: it boots the real `server.js` in demo mode on a free port, drives the real pages in headless Edge, and asserts.
+- `npm run test:e2e:headed` or `npm run test:e2e:ui` to debug a failure; `npm run test:e2e:report` opens the last HTML report.
+- See [`tests/README.md`](tests/README.md) for how to add a test, where the demo fixtures live, and what the suite cannot verify (no database, so no SQL, migrations or MySQL behaviour).
+
 ## Profile Pictures
 
 Profile pictures are stored directly in the MySQL database as BLOB data, eliminating the need for file system storage or external storage services.

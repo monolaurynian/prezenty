@@ -26,10 +26,24 @@
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 }
 
-.bottom-tab-bar.tab-bar-hidden {
-    transform: translateY(calc(100% + 28px));
+/* Hide-on-scroll. The flag is `body.dock-hidden` (set by
+   initTabBarAutoHide in tab-bar-functions.js) rather than a class on the bar
+   itself, so a page can move other bottom-anchored furniture by the same
+   amount at the same time: formularz.html's quick-add composer sets
+   --dock-hide-shift to the exact distance between its resting offset and the
+   dock's own inset and both elements translate by it, so no gap can open
+   between them. Pages that do not set the variable keep the original travel.
+   Transient only - transform/opacity/pointer-events, so the dock stays in
+   the tab order (the deliberate add-mode hide is the one that uses
+   visibility/inert/aria-hidden). */
+body.dock-hidden .bottom-tab-bar {
+    transform: translateY(var(--dock-hide-shift, calc(100% + 28px)));
     opacity: 0;
     pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bottom-tab-bar { transition: none; }
 }
 
 .tab-bar-container {

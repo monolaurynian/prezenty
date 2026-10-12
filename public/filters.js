@@ -560,7 +560,7 @@ function showAutocomplete(results, query) {
                 html += `
                     <div class="autocomplete-item autocomplete-present match" 
                          data-type="present" 
-                         data-name="${escapeHtml(present.name)}" 
+                         data-name="${escapeAttr(present.name)}" 
                          data-recipient-id="${recipient.id}">
                         <i class="fas fa-gift me-2"></i>
                         <div class="autocomplete-item-content">
@@ -683,6 +683,18 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Escape for use inside quoted HTML attributes (escapeHtml leaves quotes
+// as-is, so a name containing " would close the attribute). Mirrors
+// escapeAttr in recipients.js.
+function escapeAttr(text) {
+    return String(text == null ? '' : text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 // Escape regex special characters

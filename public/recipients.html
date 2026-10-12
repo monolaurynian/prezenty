@@ -34,7 +34,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="styles.deduped.min.css" rel="stylesheet">
     <link href="aws-design.css?v=4" rel="stylesheet">
-    <link href="bottom-tab-bar.css?v=41" rel="stylesheet">
+    <link href="bottom-tab-bar.css?v=42" rel="stylesheet">
     <link href="app-theme.css?v=14" rel="stylesheet">
     <link href="filters.css?v=7" rel="stylesheet">
     <style>
@@ -836,6 +836,7 @@
     </style>
     <script src="pluralize-pl.js"></script>
     <script src="notification-text.js"></script>
+    <script src="escape-html.js"></script>
 </head>
 
 <body class="recipients-page has-tab-bar">
@@ -1874,12 +1875,19 @@
                 leaderboard_leader: {
                     icon: 'fa-trophy',
                     color: '#FFC107',
-                    getMessage: (data, actor) => `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
+                    // leaderName / previousLeaderName are recipients.name, i.e.
+                    // user supplied, and renderNotification feeds this straight
+                    // to innerHTML. Element context, so the page's own
+                    // notificationTextEscape is enough. (The second
+                    // leaderboard_leader config further down this file is the
+                    // html:false plain-text one - do not escape that one.)
+                    getMessage: (data, actor) => `🏆 <strong>${notificationTextEscape(data.leaderName || 'Ktoś')}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${notificationTextEscape(data.previousLeaderName)}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
                 },
                 anon_message: {
                     icon: 'fa-comment-dots',
                     color: '#7B1FA2',
-                    getMessage: (data, actor) => `💬 <strong>${data.label || 'Nowa wiadomość'}</strong> - <a href="${data.threadId ? '/wiadomosci?rozmowa=' + data.threadId : '/wiadomosci'}" style="color: #7B1FA2;">otwórz</a>`
+                    // Same innerHTML path as leaderboard_leader above.
+                    getMessage: (data, actor) => `💬 <strong>${notificationTextEscape(data.label || 'Nowa wiadomość')}</strong> - <a href="${data.threadId ? '/wiadomosci?rozmowa=' + data.threadId : '/wiadomosci'}" style="color: #7B1FA2;">otwórz</a>`
                 }
             };
             return configs[type] || configs.present_added;
@@ -2369,7 +2377,7 @@
     <script src="fast-loader.js"></script>
 
     <!-- Main app (critical - load immediately) -->
-    <script src="recipients.js?v=24&t=1111111111"></script>
+    <script src="recipients.js?v=25&t=1111111111"></script>
 
     <!-- Scroll to recipient from leaderboard -->
     <script>
@@ -2429,7 +2437,7 @@
     </script>
 
     <!-- Filters -->
-    <script src="filters.js?v=8"></script>
+    <script src="filters.js?v=9"></script>
 
     <!-- Debug script (temporary - remove after fixing) -->
     <script src="profile-picture-debug.js"></script>
@@ -2439,7 +2447,7 @@
     <script src="realtime-updates.js?v=2" defer></script>
     
     <!-- Tab bar functions (shared across pages) -->
-    <script src="tab-bar-functions.js?v=17"></script>
+    <script src="tab-bar-functions.js?v=19"></script>
 
     <!-- Bottom Tab Bar -->
     <div class="bottom-tab-bar">

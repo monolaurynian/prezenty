@@ -48,7 +48,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.deduped.min.css">
-    <link href="bottom-tab-bar.css?v=41" rel="stylesheet">
+    <link href="bottom-tab-bar.css?v=42" rel="stylesheet">
     <link href="app-theme.css?v=14" rel="stylesheet">
     <style>
         body {
@@ -225,6 +225,7 @@
     <link rel="apple-touch-icon" href="icon-180.png?v=4">
     <script src="pluralize-pl.js"></script>
     <script src="notification-text.js"></script>
+    <script src="escape-html.js"></script>
 </head>
 
 <body class="has-tab-bar">
@@ -408,7 +409,7 @@
     </script>
 
     <!-- Load recipients.js for shared functions (but don't auto-init) -->
-    <script src="recipients.js?v=24&t=1111111111"></script>
+    <script src="recipients.js?v=25&t=1111111111"></script>
 
     <!-- Non-critical scripts (defer to load after page is interactive) -->
     <script src="update-checker.js" defer></script>
@@ -573,7 +574,7 @@
 
             if (identifiedRecipient) {
                 if (identifiedRecipient.profile_picture) {
-                    link.innerHTML = `<img src="/api/recipients/${identifiedRecipient.id}/profile-picture" alt="${escapeHtml(identifiedRecipient.name)}"
+                    link.innerHTML = `<img src="/api/recipients/${identifiedRecipient.id}/profile-picture" alt="${PrezentyEscape.escapeAttr(identifiedRecipient.name)}"
                         style="width: 100%; height: 100%; object-fit: cover;"
                         onerror="this.outerHTML='${getEmojiAvatar(identifiedRecipient.name)}';">`;
                 } else {
@@ -637,14 +638,14 @@
 
                 const avatarHTML = recipient.profile_picture
                     ? `<img src="/api/recipients/${recipient.id}/profile-picture" 
-                           alt="${escapeHtml(recipient.name)}" 
+                           alt="${PrezentyEscape.escapeAttr(recipient.name)}" 
                            style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; cursor: pointer;"
-                           onclick="openProfilePicturePreview(${recipient.id}, '${escapeHtml(recipient.name).replace(/'/g, "\\'")}', '/api/recipients/${recipient.id}/profile-picture')"
+                           data-preview-recipient="${recipient.id}" data-preview-name="${PrezentyEscape.escapeAttr(recipient.name)}" data-preview-url="/api/recipients/${recipient.id}/profile-picture"
                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                        <div style="display: none; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
                            ${getEmojiAvatar(recipient.name)}
                        </div>`
-                    : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0; cursor: pointer;" onclick="openProfilePicturePreview(${recipient.id}, '${escapeHtml(recipient.name).replace(/'/g, "\\'")}', null)">
+                    : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0; cursor: pointer;" data-preview-recipient="${recipient.id}" data-preview-name="${PrezentyEscape.escapeAttr(recipient.name)}">
                            ${getEmojiAvatar(recipient.name)}
                        </div>`;
 
@@ -797,14 +798,14 @@
 
                 const avatarHTML = recipient.profile_picture
                     ? `<img src="/api/recipients/${recipient.id}/profile-picture" 
-                           alt="${escapeHtml(recipient.name)}" 
+                           alt="${PrezentyEscape.escapeAttr(recipient.name)}" 
                            style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; cursor: pointer;"
-                           onclick="openProfilePicturePreview(${recipient.id}, '${escapeHtml(recipient.name).replace(/'/g, "\\'")}', '/api/recipients/${recipient.id}/profile-picture')"
+                           data-preview-recipient="${recipient.id}" data-preview-name="${PrezentyEscape.escapeAttr(recipient.name)}" data-preview-url="/api/recipients/${recipient.id}/profile-picture"
                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                        <div style="display: none; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0;">
                            ${getEmojiAvatar(recipient.name)}
                        </div>`
-                    : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0; cursor: pointer;" onclick="openProfilePicturePreview(${recipient.id}, '${escapeHtml(recipient.name).replace(/'/g, "\\'")}', null)">
+                    : `<div style="display: flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; flex-shrink: 0; cursor: pointer;" data-preview-recipient="${recipient.id}" data-preview-name="${PrezentyEscape.escapeAttr(recipient.name)}">
                            ${getEmojiAvatar(recipient.name)}
                        </div>`;
 
@@ -1012,6 +1013,22 @@
                 })
                 .finally(endOp);
         }
+
+        // The avatars used to call this from an inline
+        // onclick="openProfilePicturePreview(id, '<name>', url)" - a JS string
+        // literal inside an HTML attribute, escaped with the quote-unsafe
+        // textContent helper, so a name containing " closed the attribute
+        // outright. The name now travels as a data attribute and `dataset`
+        // hands back the decoded original.
+        document.addEventListener('click', function (e) {
+            const el = e.target.closest && e.target.closest('[data-preview-name]');
+            if (!el) return;
+            openProfilePicturePreview(
+                Number(el.dataset.previewRecipient),
+                el.dataset.previewName,
+                el.dataset.previewUrl || null
+            );
+        });
 
         function openProfilePicturePreview(recipientId, recipientName, profilePictureUrl) {
             const modal = document.getElementById('profilePreviewModal');
@@ -1498,7 +1515,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=17"></script>
+    <script src="tab-bar-functions.js?v=19"></script>
     <script src="desktop-nav.js?v=5"></script>
 </body>
 

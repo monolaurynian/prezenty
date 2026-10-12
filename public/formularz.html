@@ -15,7 +15,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.deduped.min.css">
-    <link href="bottom-tab-bar.css?v=41" rel="stylesheet">
+    <link href="bottom-tab-bar.css?v=42" rel="stylesheet">
     <link href="app-theme.css?v=14" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
@@ -477,10 +477,14 @@
            Desktop (>768px): the form is its own light-green bounded card at
            the top, the list has a heading + count and a divider.
            Mobile (<=768px): the form becomes a thumb-zone composer fixed
-           just above the bottom tab bar (name + round add button on the
-           right, chevron on the left reveals the optional description).
-           formularz.js keeps --quick-add-bottom / --quick-add-h in sync with
-           the tab bar, the on-screen keyboard and the composer height. */
+           just above the bottom tab bar. Collapsed it is a single tappable
+           "Dodaj prezent…" row with a decorative cue; in add mode the
+           same row grows a title, a close button, the chevron that reveals
+           the optional description and the round add button.
+           formularz.js keeps --quick-add-bottom (where it sits) and
+           --quick-add-reserve (how much room the page keeps free for it) in
+           sync with the tab bar, the on-screen keyboard and the row's
+           height. */
         .quick-add-section {
             background: #f3faf4;
             border: 1px solid rgba(30, 126, 52, 0.28);
@@ -522,8 +526,11 @@
 
         .quick-add-toggle { display: none; }
         /* Desktop: the form is a permanent inline card, so there is
-           nothing to close (the mobile rules switch it on) */
+           nothing to close (the mobile rules switch it on), and there is no
+           collapsed state either - so the compact bar's decorative cue is
+           not rendered at all */
         .quick-add-close { display: none; }
+        .quick-add-cue { display: none; }
         .quick-add-name { grid-area: name; min-width: 0; }
         .quick-add-desc { grid-area: desc; min-width: 0; }
         .quick-add-desc textarea { resize: vertical; }
@@ -741,7 +748,58 @@
                 border-top: 3px solid #28a745;
                 border-radius: 20px;
                 box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
-                transition: bottom 0.25s ease;
+                /* `bottom` handles the add-mode / on-screen-keyboard moves;
+                   `transform` handles hide-on-scroll. Disjoint triggers, and
+                   the one overlap (entering add mode while the dock is
+                   scroll-hidden) is handled by the add-mode rule below.
+                   Nothing here animates the grid: the collapsed and the
+                   add-mode row use the SAME grid-template-columns, so the
+                   name field's box is identical in both states and no
+                   engine-dependent column interpolation is involved. */
+                transition: bottom 0.25s ease,
+                    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            /* ---- Hide-on-scroll: the composer and the dock are ONE unit ----
+               Same flag (body.dock-hidden, written only by
+               initTabBarAutoHide in tab-bar-functions.js), same property
+               (transform), same distance (--dock-hide-shift, set by
+               formularz.js to exactly dockRestOffset() - dockFloor()), same
+               0.3s cubic-bezier as bottom-tab-bar.css. So the 28px between
+               the composer and the dock is preserved for the whole travel
+               and no gap can open between them. Nothing here changes the
+               page's reserved bottom padding, so document.scrollHeight
+               cannot move mid-gesture. */
+            body.dock-hidden:not(.quick-add-active) .quick-add-composer {
+                transform: translateY(var(--dock-hide-shift, 98px));
+            }
+
+            /* PRECEDENCE: add mode wins. formularz.js also removes
+               `dock-hidden` on entry, so this is a belt-and-braces guard
+               against a stale class; the composer must sit at its add-mode
+               `bottom` and nowhere else.
+               The two properties must UNWIND TOGETHER. Entering add mode
+               from a scroll-hidden dock changes both at once: `bottom` goes
+               110 -> 12 (which moves the box DOWN 98px) while the hide
+               `translateY(98px)` goes back to 0 (which moves it UP 98px).
+               They cancel exactly - the rendered bottom edge stays at 12px
+               for the whole 250ms - but only while both use the SAME
+               duration and the SAME easing. Dropping `transform` from this
+               list (or giving it a different curve) is what made the
+               composer snap ~98px up and glide back on every "scroll down
+               the list, tap the bar" entry. */
+            body.quick-add-active .quick-add-composer {
+                transform: none;
+                transition: bottom 0.25s ease, transform 0.25s ease;
+            }
+
+            /* The whole compact row is the "start adding" affordance */
+            body:not(.quick-add-active) .quick-add-composer {
+                cursor: pointer;
+            }
+
+            body:not(.quick-add-active) .quick-add-composer:active {
+                background: #f4f8f5;
             }
 
             /* Heading stays for screen readers (aria-labelledby) */
@@ -812,6 +870,18 @@
 
             body.quick-add-active .quick-add-close { visibility: visible; }
 
+            /* The chevron is a details toggle, so it exists only where there
+               are details to toggle: add mode. In the compact bar it would
+               be a control that, when pressed, first opens the form (which
+               opens the description) and then collapses the very row the
+               user was reaching for - and its label would still read
+               "Dodaj opis (opcjonalnie)" at that moment. visibility:hidden
+               (not just opacity) takes it out of the tab order AND the
+               accessibility tree, so that sequence is now unreachable
+               rather than merely discouraged. Its 48px grid column stays
+               reserved, so the name field's box does not move between the
+               two states; the decorative .quick-add-cue below takes over
+               the cell visually. */
             .quick-add-toggle {
                 grid-area: toggle;
                 display: inline-flex;
@@ -825,11 +895,42 @@
                 background: #eef1f4;
                 color: #2d3748;
                 font-size: 1rem;
+                visibility: hidden;
+                pointer-events: none;
+            }
+
+            body.quick-add-active .quick-add-toggle {
+                visibility: visible;
+                pointer-events: auto;
             }
 
             .quick-add-toggle i { transition: transform 0.2s ease; }
             .quick-add-toggle[aria-expanded="true"] { background: #e3f2e6; border-color: #28a745; color: #1b5e20; }
             .quick-add-toggle[aria-expanded="true"] i { transform: rotate(180deg); }
+
+            /* ---- The compact bar's one affordance ----
+               Decorative only (aria-hidden, pointer-events: none, no tab
+               stop, no accessible name of its own): the whole row is the
+               tap target and the name field is its single tab stop, so a
+               second focusable "add" control here would just be the "+"
+               problem again. It shares the chevron's grid cell and its
+               exact 48x48 box, and the chevron's expanded palette, so the
+               compact row and the add-mode row line up pixel for pixel. */
+            .quick-add-cue {
+                grid-area: toggle;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: #e3f2e6;
+                color: #1b5e20;
+                font-size: 1.1rem;
+                pointer-events: none;
+            }
+
+            body.quick-add-active .quick-add-cue { visibility: hidden; }
 
             .quick-add-name .form-control {
                 height: 48px;
@@ -872,6 +973,21 @@
                 max-height: 30vh;
             }
 
+            /* The "+" is the real submit control, so it exists only where
+               there is something to submit: add mode. In the compact state
+               the row has no submit affordance at all - it was a second
+               green "add" button sitting ~44px above the dock's own green
+               "Dodaj" tab, and with an empty field it could not submit
+               anything. visibility:hidden takes it out of the tab order and
+               the accessibility tree, and its 52px grid column stays
+               RESERVED: the name field's box is then byte-identical in both
+               states, so entering and leaving add mode moves nothing
+               horizontally and nothing depends on an engine interpolating
+               grid-template-columns (WebKit/iOS does not).
+               The explicit transition is required: .btn-green sets
+               `transition: all 0.3s ease`, and `visibility` is a
+               transitionable discrete property, so inheriting that would
+               delay the flip by ~150ms+. */
             .quick-add-submit {
                 align-self: end;
                 width: 52px;
@@ -880,6 +996,29 @@
                 padding: 0;
                 margin-bottom: -2px;
                 font-size: 1.25rem;
+                visibility: hidden;
+                pointer-events: none;
+                transition: visibility 0s, background-color 0.18s ease,
+                    box-shadow 0.18s ease;
+            }
+
+            body.quick-add-active .quick-add-submit {
+                visibility: visible;
+                pointer-events: auto;
+            }
+
+            /* Collapsed, the name field is a prompt, not an input: no box,
+               no shadow, so the row reads as one tappable "start adding"
+               surface instead of a form someone forgot to fill in. The
+               field keeps its size and its position - only the chrome goes
+               - so nothing moves when add mode paints it back in.
+               Keyed on body.quick-add-active, NOT on .is-expanded: the user
+               can collapse the details row while add mode is on, and the
+               field must stay a real-looking input then. */
+            body:not(.quick-add-active) .quick-add-name .form-control {
+                background: transparent;
+                border-color: transparent;
+                box-shadow: none;
             }
 
             /* Status pill floats just above the composer */
@@ -895,7 +1034,14 @@
             /* Reserve room so the composer + tab bar never cover the last
                present or the "Dodaj dla kogoś innego" button */
             body.has-tab-bar.quick-add-docked {
-                padding-bottom: calc(var(--quick-add-bottom, 100px) + var(--quick-add-h, 72px) + 20px) !important;
+                /* --quick-add-reserve is where the composer sits plus how
+                   tall it is, as one number, written by formularz.js. One
+                   number and not a pair, because the page's scroll height
+                   depends on their SUM: while the form opens, the offset
+                   drops in one write and the height grows over 0.2s, so a
+                   live pair dips ~98px for a few frames and clamps a reader
+                   pinned to the bottom of the page. */
+                padding-bottom: calc(var(--quick-add-reserve, 172px) + 20px) !important;
                 /* Entering add mode grows this padding (the composer gets
                    taller faster than it drops), which can never move the
                    scroll position. Leaving shrinks it, and a reader pinned
@@ -952,10 +1098,17 @@
                leaves the accessibility tree AND the tab order while hidden;
                formularz.js additionally sets inert/aria-hidden on it. The
                composer drops to the dock's own inset (see tabBarOffset in
-               formularz.js), and the page's bottom padding is recomputed, so
-               nothing is clipped. Higher specificity than
-               .bottom-tab-bar.tab-bar-hidden and later in the cascade, so
-               the scroll auto-hide cannot fight it. */
+               formularz.js); the page's bottom padding is sized for the
+               dock-shown state and only ever changes with add mode, never
+               with scrolling, so nothing is clipped.
+               PRECEDENCE is enforced in JS, not by cascade order:
+               `quick-add-active` and `dock-hidden` are mutually exclusive -
+               entering add mode removes `dock-hidden` and the scroll
+               handler returns early while add mode is on, and leaving calls
+               window.resetDockAutoHide() to hand the dock back shown. This
+               rule is therefore the only one that ever touches visibility /
+               inert / aria-hidden on the dock; hide-on-scroll only ever
+               touches transform / opacity / pointer-events. */
             body.quick-add-active .bottom-tab-bar {
                 /* +56px clears the FAB, which pokes ~18px above the bar's
                    own box - so the whole dock ends up below the fold */
@@ -972,6 +1125,8 @@
 
         @media (prefers-reduced-motion: reduce) {
             .quick-add-composer,
+            body.dock-hidden:not(.quick-add-active) .quick-add-composer,
+            body.quick-add-active .quick-add-composer,
             .quick-add-toggle i,
             .quick-add-desc,
             .quick-add-composer.is-expanded .quick-add-desc,
@@ -1009,6 +1164,7 @@
 
     <link rel="apple-touch-icon" href="icon-180.png?v=4">
     <script src="pluralize-pl.js"></script>
+    <script src="escape-html.js"></script>
 </head>
 
 <body class="has-tab-bar">
@@ -1173,6 +1329,12 @@
                                     <i class="fas fa-xmark" aria-hidden="true"></i>
                                 </button>
                             </div>
+                            <!-- Decorative "start adding" cue for the compact
+                                 bar: aria-hidden and not focusable, because
+                                 the whole row is the tap target and
+                                 #quickAddTitle is its single tab stop. It
+                                 shares the chevron's grid cell. -->
+                            <span class="quick-add-cue" aria-hidden="true"><i class="fas fa-plus"></i></span>
                             <button type="button" class="quick-add-toggle" id="quickAddToggle"
                                     aria-expanded="false" aria-controls="quickAddDescWrap"
                                     aria-label="Dodaj opis (opcjonalnie)">
@@ -1186,7 +1348,7 @@
                             </div>
                             <div class="quick-add-desc" id="quickAddDescWrap">
                                 <label class="visually-hidden" for="quickAddComments">Opis (opcjonalnie)</label>
-                                <p class="quick-add-hint" id="quickAddHint">Szczegóły pomagają trafić <span aria-hidden="true">🎯</span></p>
+                                <p class="quick-add-hint" id="quickAddHint">Szczegóły ułatwią zakupy <span aria-hidden="true">🎯</span></p>
                                 <textarea class="form-control" id="quickAddComments" rows="2"
                                     aria-describedby="quickAddHint"
                                     placeholder="Rozmiar, kolor, link do sklepu…"></textarea>
@@ -1386,7 +1548,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="formularz.js?v=20"></script>
+    <script src="formularz.js?v=22"></script>
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebarMenu');
@@ -1509,7 +1671,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=17"></script>
+    <script src="tab-bar-functions.js?v=19"></script>
     
     <script>
         function logout() {

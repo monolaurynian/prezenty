@@ -44,3 +44,10 @@ Thumbs.db
 *.swo
 *~ 
 /public/uploads
+# End-to-end test artifacts (see tests/README.md)
+tests/.auth/
+tests/.report/
+tests/.results/
+tests/.cache/
+playwright-report/
+test-results/

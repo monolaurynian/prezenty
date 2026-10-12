@@ -1,0 +1,54 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "id": 1,
+      "label": "safeImageSrc backslash bypass",
+      "blocking": false,
+      "confidence": "confirmed",
+      "where": "public/escape-html.js (safeImageSrc same-origin test)",
+      "detail": "The same-origin test is charAt(0) === '/' && charAt(1) !== '/', which accepts '/\\evil.example/x.png'. WHATWG URL parsing treats a leading /\\ like //, so it resolves to https://evil.example/x.png (verified: new URL('/\\evil.example/x.png','https://prezenty.example/page').href). Impact is an off-origin image request (IP/UA/referrer leak), not script execution, and profile_picture is server-generated today, so nothing reaches it in practice. Fix: also reject charAt(1) === '\\\\', and add the case to the safeImageSrc rejection list in tests/e2e/xss-usernames.spec.js."
+    },
+    {
+      "id": 2,
+      "label": "Forbidden-list files edited under a claimed scope lift",
+      "blocking": false,
+      "confidence": "confirmed",
+      "where": "public/tab-bar-functions.js, public/formularz.js, public/formularz.html",
+      "detail": "The diff shows this fix edited three files the brief listed as forbidden: notification-name escaping and the apostrophe encode in tab-bar-functions.js (~226-234), escapeAttr + two jsStringAttr call sites in formularz.js, and the escape-html.js script tag at formularz.html:1167. The verification note (sec. 11) records that the orchestrator lifted the restriction once the composer workflow released those files, and the composer workflow's own initTabBarAutoHide rewrite is in the same file, which corroborates the release. The edits are correct and close the plan's highest-priority remaining sink. Needs orchestrator confirmation of the lift; not a code defect."
+    },
+    {
+      "id": 3,
+      "label": "/escape-html.js not precached by the service worker",
+      "blocking": false,
+      "confidence": "confirmed",
+      "where": "public/sw.js",
+      "detail": "CACHE_NAME is bumped to 'prezenty-v122' but urlsToCache still lacks '/escape-html.js', which six pages (leaderboard, intro, osoby, home, recipients, formularz) now hard-depend on. A first offline load of those pages fails closed because the render functions throw on PrezentyEscape. sw.js is forbidden to this task, so the owner needs to add the entry."
+    },
+    {
+      "id": 4,
+      "label": "safeImageSrc not applied on the /recipients and / avatars",
+      "blocking": false,
+      "confidence": "confirmed",
+      "where": "public/recipients.js:1176, public/home.html:574/638/798",
+      "detail": "These avatar URLs are escaped for the attribute (escapeAttr) but not scheme-allowlisted, so the defence-in-depth posture is inconsistent with the leaderboard and intro pages. Low risk: the home.html URLs are built from a numeric recipient id, and recipients.js:1176 reads a server-written column. Worth a follow-up for parity."
+    },
+    {
+      "id": 5,
+      "label": "activity.html still interpolates presentId raw into an onclick",
+      "blocking": false,
+      "confidence": "confirmed",
+      "where": "public/activity.html:483",
+      "detail": "${data.presentId} goes raw into the scrollToPresentFromNotification onclick. It is a server-written numeric id and tab-bar-functions.js wraps the equivalent in Number(); wrap it here for parity."
+    },
+    {
+      "id": 6,
+      "label": "Podium and ranking cards remain mouse-only",
+      "blocking": false,
+      "confidence": "confirmed",
+      "where": "public/leaderboard.html:1276, 1327, 1367",
+      "detail": "The clickable divs still have no tabindex or role, unchanged by this fix and deliberately so to avoid new a11y.spec.js interactions. Candidate follow-up, not a regression introduced here."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\matmamon\\OneDrive - amazon.com\\Documents\\Prezenty\\prezenty\\.agents\\tasks\\xss-fix-review-doc.md"
+}

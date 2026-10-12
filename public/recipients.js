@@ -419,7 +419,7 @@ function showSearchDropdown(results, query) {
         presents.slice(0, 5).forEach(result => {
             const highlighted = highlightText(result.name, query);
             html += `
-                <div class="search-result-item" onclick="scrollToPresent(this)" data-present-name="${escapeHtml(result.name)}">
+                <div class="search-result-item" onclick="scrollToPresent(this)" data-present-name="${escapeAttr(result.name)}">
                     <i class="fas fa-gift me-2"></i>
                     <div>
                         <div>${highlighted}</div>
@@ -1133,15 +1133,15 @@ function displayRecipientsWithPresents(recipients, presents) {
                                                         <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto mt-2 mt-md-0">
                                                             <button class="btn btn-sm btn-primary w-100 w-md-auto edit-present-btn"
                                                                 data-present-id="${p.id}"
-                                                                data-present-title="${escapeHtml(p.title)}"
+                                                                data-present-title="${escapeAttr(p.title)}"
                                                                 data-recipient-id="${p.recipient_id}"
-                                                                data-present-comments="${escapeHtml(p.comments || '')}"
+                                                                data-present-comments="${escapeAttr(p.comments || '')}"
                                                                 style="max-width:50px; min-width:50px;">
                                                                 <i class="fas fa-edit" style="color: white;"></i>
                                                             </button>
                                                             <button class="btn btn-sm btn-danger w-100 w-md-auto delete-present-btn"
                                                                 data-present-id="${p.id}"
-                                                                data-present-title="${escapeHtml(p.title)}"
+                                                                data-present-title="${escapeAttr(p.title)}"
                                                                 data-recipient-id="${recipient.id}"
                                                                 style="max-width:50px; min-width:50px;">
                                                                 <i class="fas fa-trash-alt"></i>
@@ -1173,7 +1173,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                     <div class="col-lg-2 col-md-6 text-center">
                         <div class="recipient-avatar" style="position: relative; display: inline-block;">
                             ${recipient.profile_picture && recipient.profile_picture.trim() !== '' ?
-                `<img src="${getFullProfilePictureUrl(escapeHtml(recipient.profile_picture))}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
+                `<img src="${escapeAttr(getFullProfilePictureUrl(recipient.profile_picture))}" alt="Zdjęcie profilowe" class="img-fluid" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer;">` :
                 `<div class="profile-picture-placeholder" onclick="openProfilePicturePreview(${recipient.id})" style="cursor: pointer; font-size: 4rem;">
                                     ${getEmojiAvatar(recipient.name)}
                                 </div>`
@@ -1186,11 +1186,11 @@ function displayRecipientsWithPresents(recipients, presents) {
                             <div class="profile-name-with-check d-flex align-items-center justify-content-center">
                                 <h6 class="mt-2 mb-1 me-2">${recipientNameWithBadge(recipient.name, verifiedByName)}</h6>
                                 ${!isIdentified && !hasAnyIdentification ? `
-                                    <button class="btn profile-check-btn d-none d-lg-block" onclick="identifyAsRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')" title="To jestem ja">
+                                    <button class="btn profile-check-btn d-none d-lg-block" onclick="identifyAsRecipient(${recipient.id}, ${PrezentyEscape.jsStringAttr(escapeHtml(recipient.name))})" title="To jestem ja">
                                         <i class="fas fa-user-check"></i>
                                     </button>
                                 ` : isIdentified ? `
-                                    <button class="btn profile-check-btn identified d-none d-lg-block" onclick="cancelIdentification(${recipient.id}, '${escapeHtml(recipient.name)}')" title="To jest Twój profil">
+                                    <button class="btn profile-check-btn identified d-none d-lg-block" onclick="cancelIdentification(${recipient.id}, ${PrezentyEscape.jsStringAttr(escapeHtml(recipient.name))})" title="To jest Twój profil">
                                         <i class="fas fa-check-circle"></i>
                                     </button>
                                 ` : ''}
@@ -1214,7 +1214,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                         <div class="profile-buttons">
                             
                             <div class="mt-2 d-none d-md-block">
-                                <button class="btn btn-outline-secondary btn-sm" style="max-width: 100%; white-space: normal;" onclick="shareFormularzLink('${escapeHtml(recipient.name)}')" title="Wyślij tej osobie link do formularza życzeń">
+                                <button class="btn btn-outline-secondary btn-sm" style="max-width: 100%; white-space: normal;" onclick="shareFormularzLink(${PrezentyEscape.jsStringAttr(escapeHtml(recipient.name))})" title="Wyślij tej osobie link do formularza życzeń">
                                     <i class="fas fa-share-alt me-1"></i>Udostępnij
                                 </button>
                             </div>
@@ -1234,19 +1234,19 @@ function displayRecipientsWithPresents(recipients, presents) {
                             </h5> </center>
                             ${!isIdentified && !hasAnyIdentification ? `
                                 <div class="mt-2">
-                                    <button class="btn btn-outline-success btn-sm identify-btn" onclick="identifyAsRecipient(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                                    <button class="btn btn-outline-success btn-sm identify-btn" onclick="identifyAsRecipient(${recipient.id}, ${PrezentyEscape.jsStringAttr(escapeHtml(recipient.name))})">
                                         <i class="fas fa-user-check me-1"></i>To jestem ja
                                     </button>
                                 </div>
                             ` : isIdentified ? `
                                 <div class="mt-2">
-                                    <button class="btn btn-outline-success btn-sm identify-btn" onclick="cancelIdentification(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                                    <button class="btn btn-outline-success btn-sm identify-btn" onclick="cancelIdentification(${recipient.id}, ${PrezentyEscape.jsStringAttr(escapeHtml(recipient.name))})">
                                         <i class="fas fa-check-circle me-1"></i>To jest Twój profil
                                     </button>
                                 </div>
                             ` : ''}
                             <div class="mt-2 d-md-none">
-                                <button class="btn btn-outline-secondary btn-sm" style="max-width: 100%; white-space: normal;" onclick="shareFormularzLink('${escapeHtml(recipient.name)}')" title="Wyślij tej osobie link do formularza życzeń">
+                                <button class="btn btn-outline-secondary btn-sm" style="max-width: 100%; white-space: normal;" onclick="shareFormularzLink(${PrezentyEscape.jsStringAttr(escapeHtml(recipient.name))})" title="Wyślij tej osobie link do formularza życzeń">
                                     <i class="fas fa-share-alt me-1"></i>Udostępnij
                                 </button>
                                 ${recipient.identified_by && Number(recipient.identified_by) !== Number(currentUserId) ? `
@@ -1440,15 +1440,15 @@ function showRecipientSelectionModal() {
             } else {
                 availableRecipientsList.innerHTML = availableRecipients.map(recipient => `
                 <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div style="cursor:pointer;" onclick="identifyAsRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                    <div style="cursor:pointer;" onclick="identifyAsRecipientFromSelection(${recipient.id}, ${PrezentyEscape.jsStringAttr(escapeHtml(recipient.name))})">
                         <i class="fas fa-user me-2"></i>
                         <strong class="recipient-name-clickable">${escapeHtml(recipient.name)}</strong>
                     </div>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-success identify-btn-modal" onclick="identifyAsRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                        <button class="btn btn-sm btn-success identify-btn-modal" onclick="identifyAsRecipientFromSelection(${recipient.id}, ${PrezentyEscape.jsStringAttr(escapeHtml(recipient.name))})">
                             <i class="fas fa-check me-1"></i>To jestem ja
                         </button>
-                        <button class="btn btn-outline-danger btn-sm" style="width: 28%;" onclick="deleteRecipientFromSelection(${recipient.id}, '${escapeHtml(recipient.name)}')">
+                        <button class="btn btn-outline-danger btn-sm" style="width: 28%;" onclick="deleteRecipientFromSelection(${recipient.id}, ${PrezentyEscape.jsStringAttr(escapeHtml(recipient.name))})">
                             <i class="fas fa-trash"></i>
                         </button>
                         <style>
@@ -2171,8 +2171,8 @@ function generateReservationButton(present) {
         }
         return `
             <button class="btn btn-secondary btn-sm w-100 w-md-auto reserve-btn" 
-                    onclick="showReservedByOtherModal('${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}')" 
-                    title="Zarezerwowane przez: ${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}">
+                    onclick="showReservedByOtherModal(${PrezentyEscape.jsStringAttr(escapeHtml(present.reserved_by_username || 'Nieznany użytkownik'))})" 
+                    title="Zarezerwowane przez: ${escapeAttr(present.reserved_by_username || 'Nieznany użytkownik')}">
                 <i class="fas fa-bookmark"></i>
                 <span class="d-inline d-md-none ms-1">Niedostępne</span>
             </button>
@@ -4109,7 +4109,9 @@ function updatePresentReservationUI(present) {
         // Reserved by someone else
         reserveBtn.className = 'btn btn-secondary btn-sm w-100 w-md-auto reserve-btn';
         reserveBtn.innerHTML = '<i class="fas fa-bookmark"></i> <span class="d-none d-md-inline">Zarezerwowane</span>';
-        reserveBtn.setAttribute('onclick', `showReservedByOtherModal('${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}')`);
+        // setAttribute: no HTML-parsing step, so the value only needs to be a valid
+        // JS string literal (JSON.stringify) - '${...}' used to end on an apostrophe.
+        reserveBtn.setAttribute('onclick', `showReservedByOtherModal(${JSON.stringify(escapeHtml(present.reserved_by_username || 'Nieznany użytkownik'))})`);
         reserveBtn.setAttribute('title', `Zarezerwowane przez: ${escapeHtml(present.reserved_by_username || 'Nieznany użytkownik')}`);
         presentElement.classList.add('reserved-by-other');
         presentElement.classList.remove('reserved-by-me');
@@ -4287,15 +4289,15 @@ function addPresentToIdentifiedUserAccordion(recipientElement, present) {
                 <div class="d-flex gap-2 justify-content-center justify-content-md-end w-100 w-md-auto mt-2 mt-md-0">
                     <button class="btn btn-sm btn-primary w-100 w-md-auto edit-present-btn"
                         data-present-id="${present.id}"
-                        data-present-title="${escapeHtml(present.title)}"
+                        data-present-title="${escapeAttr(present.title)}"
                         data-recipient-id="${present.recipient_id}"
-                        data-present-comments="${escapeHtml(present.comments || '')}"
+                        data-present-comments="${escapeAttr(present.comments || '')}"
                         style="max-width:50px; min-width:50px;">
                         <i class="fas fa-edit" style="color: white;"></i>
                     </button>
                     <button class="btn btn-sm btn-danger w-100 w-md-auto delete-present-btn"
                         data-present-id="${present.id}"
-                        data-present-title="${escapeHtml(present.title)}"
+                        data-present-title="${escapeAttr(present.title)}"
                         data-recipient-id="${present.recipient_id}"
                         style="max-width:50px; min-width:50px;">
                         <i class="fas fa-trash-alt"></i>

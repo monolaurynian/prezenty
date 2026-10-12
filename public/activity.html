@@ -32,7 +32,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="styles.deduped.min.css" rel="stylesheet">
     <link href="aws-design.css" rel="stylesheet">
-    <link href="bottom-tab-bar.css?v=41" rel="stylesheet">
+    <link href="bottom-tab-bar.css?v=42" rel="stylesheet">
     <link href="app-theme.css?v=14" rel="stylesheet">
     <style>
         /* Critical styles for notifications panel */
@@ -475,7 +475,10 @@
             }
             // Opens the recipients page filtered to the present's recipient
             // with the present highlighted (see tab-bar-functions.js)
-            const recipientEnc = encodeURIComponent(data.recipientName || '');
+            // encodeURIComponent leaves ' untouched and this lands in a
+            // single-quoted JS string inside onclick, so encode it as well
+            // (see the same fix in tab-bar-functions.js).
+            const recipientEnc = encodeURIComponent(data.recipientName || '').replace(/'/g, '%27');
             return data.presentId ?
                 `<a href="#" onclick="scrollToPresentFromNotification(${data.presentId}, '${recipientEnc}'); return false;" style="color: ${color}; text-decoration: underline;"><strong>„${safeTitle}”</strong></a>` :
                 `<strong>„${safeTitle}”</strong>`;
@@ -524,14 +527,17 @@
             leaderboard_leader: {
                 icon: 'fa-trophy',
                 color: '#FFC107',
+                // leaderName / previousLeaderName are recipients.name, i.e.
+                // user supplied, and this string goes straight to innerHTML.
+                // Element context, so the page's own escapeHtmlText is enough.
                 getMessage: (data) =>
-                    `🏆 <strong>${data.leaderName || 'Ktoś'}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${data.previousLeaderName}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z <strong>${data.presentCount || '?'}</strong> ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
+                    `🏆 <strong>${escapeHtmlText(data.leaderName || 'Ktoś')}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${escapeHtmlText(data.previousLeaderName)}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z <strong>${data.presentCount || '?'}</strong> ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
             },
             anon_message: {
                 icon: 'fa-comment-dots',
                 color: '#7B1FA2',
                 getMessage: (data) =>
-                    `💬 <a href="${data.threadId ? '/wiadomosci?rozmowa=' + data.threadId : '/wiadomosci'}" style="color: #7B1FA2; text-decoration: underline;"><strong>${data.label || 'Nowa wiadomość'}</strong></a>${data.preview ? ': "' + escapeHtmlText(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`
+                    `💬 <a href="${data.threadId ? '/wiadomosci?rozmowa=' + data.threadId : '/wiadomosci'}" style="color: #7B1FA2; text-decoration: underline;"><strong>${escapeHtmlText(data.label || 'Nowa wiadomość')}</strong></a>${data.preview ? ': "' + escapeHtmlText(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`
             }
         };
 
@@ -1034,7 +1040,7 @@
         </div>
     </div>
 
-    <script src="tab-bar-functions.js?v=17"></script>
+    <script src="tab-bar-functions.js?v=19"></script>
     <script src="desktop-nav.js?v=5"></script>
 </body>
 </html>

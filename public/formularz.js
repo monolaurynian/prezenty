@@ -411,6 +411,19 @@ function submitPresent() {
 // the identified user without leaving the edit view. Submitted by the
 // form (Enter in the name input or the round add button).
 function quickAddPresent() {
+    // The compact bar can never submit. It has no submit control at all -
+    // the "+" exists only in add mode - but a preserved draft plus an
+    // implicit form submission (Enter reaching the form, enterkeyhint="send",
+    // an assistive-technology "submit") could otherwise post straight from
+    // the collapsed row. Open the composer instead, so the user sees what
+    // they are about to add.
+    if (document.body.classList.contains('quick-add-docked') &&
+        !document.body.classList.contains('quick-add-active')) {
+        if (typeof window.enterQuickAddMode === 'function') {
+            window.enterQuickAddMode({ focus: true });
+        }
+        return;
+    }
     const input = document.getElementById('quickAddTitle');
     const commentsInput = document.getElementById('quickAddComments');
     const btn = document.getElementById('quickAddBtn');
@@ -492,10 +505,6 @@ function setupQuickAddComposer() {
     const nameInput = document.getElementById('quickAddTitle');
     const descInput = document.getElementById('quickAddComments');
     const closeBtn = document.getElementById('quickAddClose');
-    // Set when the user collapses the description with the chevron: it then
-    // stays collapsed for the rest of this add-mode session, and opens again
-    // the next time add mode is entered.
-    let descDismissed = false;
 
     function setDescExpanded(open) {
         if (toggle) {
@@ -520,6 +529,21 @@ function setupQuickAddComposer() {
     // field values, so closing it keeps whatever was typed.
     const scrim = document.getElementById('quickAddScrim');
     let suppressEnterUntil = 0; // the tap that closed must not re-open
+    // --quick-add-reserve: the room the page keeps free under the list (see
+    // updateComposerLayout). Entering add mode is the one moment where a
+    // live reading of it is briefly too SMALL: `bottom` drops from the
+    // composer's resting offset to the dock floor (110 -> 12px) in a single
+    // write, while the row's height grows (70 -> 215px) over the 0.2s
+    // head/description transition. Reserving that dip would shrink
+    // document.scrollHeight, and a reader pinned to the bottom of the page
+    // would be clamped upwards by the difference - measured at 9px of
+    // uninvited scroll on entry at max scroll, up to 98px on a longer page.
+    // So for the length of the entry the reserve may only grow.
+    // Leaving add mode is deliberately NOT floored: the reserve shrinks back
+    // by 47px over the padding transition documented on
+    // body.has-tab-bar.quick-add-docked, which is existing behaviour.
+    let reserve = 0;
+    let reserveFloorUntil = 0;
 
     function tabBar() {
         return document.querySelector('.bottom-tab-bar');
@@ -545,11 +569,18 @@ function setupQuickAddComposer() {
     // "Dodaj" tab handler) can tell whether they still need to navigate.
     function enterAddMode(opts) {
         const wantFocus = !!(opts && opts.focus);
-        // Set only when the entry is itself a tap on the chevron: that tap's
-        // own click handler is what opens (or closes) the description, so
-        // entry must leave the row exactly as it found it.
-        const keepDesc = !!(opts && opts.keepDesc);
         if (!refreshDocked()) return false;
+        // THE EARLY RETURN BELOW IS WHERE THIS RULE LIVES: "a details row the
+        // user collapsed with the chevron stays collapsed for the rest of
+        // this add-mode session." Entry is the only thing that opens the row,
+        // and entry is a no-op once add mode is on, so nothing can re-open it
+        // behind the user's back. The rule needs no state flag (the old
+        // `descDismissed` was deleted): it rests on three facts - (a) this
+        // early return, (b) there is deliberately no first-keystroke
+        // expand, and (c) while add mode is on, the chevron's own click
+        // handler is the only writer of `is-expanded`. A fresh entry opens
+        // the row again, which is the wanted behaviour - and is exactly why
+        // a flag that survived entry would have been wrong.
         if (isAddMode()) {
             // Already open (e.g. "Dodaj" tapped while typing): just take focus
             if (wantFocus && nameInput) nameInput.focus({ preventScroll: true });
@@ -557,6 +588,9 @@ function setupQuickAddComposer() {
         }
         if (!wantFocus && Date.now() < suppressEnterUntil) return false;
         suppressEnterUntil = 0;
+        // The row is about to drop 98px and grow 145px taller, at different
+        // speeds - hold the reserved padding until both have landed
+        reserveFloorUntil = Date.now() + 320;
         const bar = tabBar();
         // Focus FIRST: focus must never be left inside the bar we hide next
         if (nameInput && (wantFocus ||
@@ -564,6 +598,14 @@ function setupQuickAddComposer() {
             nameInput.focus({ preventScroll: true });
         }
         body.classList.add('quick-add-active');
+        // PRECEDENCE (1): the deliberate add-mode hide wins absolutely over
+        // the transient hide-on-scroll. Dropping `dock-hidden` here means
+        // the two flags are never set at once, so the dock has exactly one
+        // hiding mechanism at any moment and the composer never has to
+        // choose between two transforms. The scroll handler in
+        // tab-bar-functions.js returns early while `quick-add-active` is
+        // set, so it cannot put the class back.
+        body.classList.remove('dock-hidden');
         if (bar) {
             // Belt and braces on top of visibility: hidden - the bar must
             // leave the tab order and the accessibility tree while hidden
@@ -571,12 +613,7 @@ function setupQuickAddComposer() {
             bar.setAttribute('aria-hidden', 'true');
         }
         // Details open with the form, not on the first keystroke
-        descDismissed = false;
-        if (keepDesc) {
-            updateComposerLayout(); // what setDescExpanded would have done
-        } else {
-            setDescExpanded(true); // also recomputes the layout vars
-        }
+        setDescExpanded(true); // also recomputes the layout vars
         return true;
     }
 
@@ -589,7 +626,14 @@ function setupQuickAddComposer() {
             bar.inert = false;
             bar.removeAttribute('aria-hidden');
         }
-        descDismissed = false;
+        // PRECEDENCE (3): hand the dock back in a known-good state. The
+        // reseed clears the scroll handler's accumulator and its last-known
+        // scroll position and leaves the dock SHOWN, so where add mode was
+        // left - and which way the user last scrolled while it was on -
+        // cannot decide the dock's state afterwards. The typeof guard
+        // matters: a stale cached tab-bar-functions.js?v=17 has no such
+        // export, and then nothing auto-hides anyway.
+        if (typeof window.resetDockAutoHide === 'function') window.resetDockAutoHide();
         setDescExpanded(false);
         // Blurring the focused field is what dismisses the on-screen
         // keyboard; focus then parks on the list heading so keyboard and
@@ -620,16 +664,16 @@ function setupQuickAddComposer() {
     // mode (a control that sometimes hides a field and sometimes closes the
     // whole composer is exactly the ambiguity to avoid). The close button
     // is the way out.
-    // Chromium and Android focus a <button> on tap, so a tap on the chevron
-    // from the compact bar fires focusin - and with it add mode, which opens
-    // the description - BEFORE the chevron's own click handler runs. Reading
-    // the live state there would then say "already open, so collapse it" and
-    // the tap would shut the row it had just opened (and latch
-    // descDismissed). This flag marks a pointer-driven chevron entry so that
-    // entry leaves the row untouched and the click below is the only thing
-    // that decides. Keyboard activation never sets it, so tabbing into the
-    // chevron still opens the description like any other entry.
-    let togglePointerDown = false;
+    // It is also add-mode-only: `visibility: hidden` in the compact bar
+    // keeps it out of the tab order and the accessibility tree there. That
+    // removed a whole class of coordination code. There used to be a
+    // pointerdown flag here, because a tap on the chevron *from the compact
+    // bar* fired focusin -> add mode -> "details open", and the chevron's
+    // own click then read that fresh state as "already open, so collapse
+    // it" and shut the row it had just opened. The chevron can no longer be
+    // pressed while collapsed, so every chevron event now happens with add
+    // mode already on, where enterAddMode() early-returns and never touches
+    // the row - no flag, no race, nothing to keep in sync.
     // The description row fades in, and the textarea inherits that
     // in-flight visibility change, so it is not focusable in the same tick
     // as the class change. Focus it now and, if that silently failed, once
@@ -647,24 +691,18 @@ function setupQuickAddComposer() {
         }, 260);
     }
     if (toggle) {
-        const markTogglePointer = () => {
-            togglePointerDown = true;
-            // Safety net in case no click follows the press (drag, cancel)
-            setTimeout(() => { togglePointerDown = false; }, 700);
-        };
-        toggle.addEventListener('pointerdown', markTogglePointer);
-        if (!window.PointerEvent) toggle.addEventListener('mousedown', markTogglePointer);
+        // This handler is the ONLY writer of `is-expanded` once add mode is
+        // on - see the rule documented at enterAddMode()'s early return.
         toggle.addEventListener('click', () => {
             const open = !isDescExpanded();
-            togglePointerDown = false;
-            descDismissed = !open;
             setDescExpanded(open);
             if (open) {
-                // Opening from the compact bar also enters add mode. The
-                // chevron is an explicit intent, so it is not subject to the
-                // "the tap that closed must not re-open" window.
+                // Reachable only in add mode (the chevron is hidden from
+                // pointer, keyboard and AT while collapsed), so this entry
+                // is a no-op safety net for a programmatic activation: the
+                // details row must never be left open with add mode off.
                 suppressEnterUntil = 0;
-                enterAddMode({ keepDesc: true });
+                enterAddMode();
                 focusDesc();
             }
         });
@@ -698,11 +736,21 @@ function setupQuickAddComposer() {
     // own Done button leaves add mode on (the close button and the scrim
     // are both one tap away), and nothing can end add mode behind the
     // user's back and discard what they typed.
-    form.addEventListener('focusin', (e) => {
-        // A tap on the chevron owns the description row itself (see the
-        // togglePointerDown comment) - this entry must not pre-empt it
-        const fromTogglePointer = !!toggle && e.target === toggle && togglePointerDown;
-        enterAddMode(fromTogglePointer ? { keepDesc: true } : undefined);
+    form.addEventListener('focusin', () => {
+        enterAddMode();
+    });
+
+    // The compact bar carries no submit control and no chevron, so the row
+    // itself is the "start adding" affordance: a tap anywhere on it opens
+    // the form. The keyboard path reaches the same state by a different
+    // door - #quickAddTitle is the collapsed row's single tab stop and
+    // focusing it enters add mode via the focusin listener above.
+    form.addEventListener('click', () => {
+        if (isAddMode()) return;
+        // The tap that closed add mode must not re-open it
+        if (Date.now() < suppressEnterUntil) return;
+        // No-op on desktop: enterAddMode bails out of refreshDocked()
+        enterAddMode({ focus: true });
     });
 
     // Safety net: typing always means "I am adding a present"
@@ -751,23 +799,39 @@ function setupQuickAddComposer() {
     window.enterQuickAddMode = (opts) => enterAddMode(opts);
     window.exitQuickAddMode = (reason) => exitAddMode(reason);
 
-    function tabBarOffset() {
+    // ---- Dock geometry: pure measurement, never dock *visibility* ----
+    // Both helpers depend only on the dock's resting box (its inset, its
+    // height, the FAB poke) - never on whether it is currently hidden by
+    // hide-on-scroll. That is deliberate: deriving the composer's offset
+    // (and through it the page's bottom padding) from the dock's live
+    // visibility is what used to make document.scrollHeight change in the
+    // middle of a scroll gesture, which clamped the scroll position, which
+    // the scroll handler then read as "scrolled up" and answered by showing
+    // the dock again. The composer now reserves space for the dock-shown
+    // state at all times and travels by transform instead.
+
+    // The dock's own bottom inset - keeps the safe-area inset on devices
+    // that have one. Also where the composer sits in add mode, because the
+    // dock is deliberately out of the way then.
+    function dockFloor() {
         const bar = document.querySelector('.bottom-tab-bar');
-        // Add mode: the bar has slid out, so the composer takes its place -
-        // down to the bar's own bottom inset, which keeps the safe-area
-        // inset on devices that have one.
-        if (isAddMode()) {
-            if (!bar) return 12;
-            return Math.max(parseFloat(getComputedStyle(bar).bottom) || 0, 12);
-        }
+        if (!bar) return 12;
+        return Math.max(parseFloat(getComputedStyle(bar).bottom) || 0, 12);
+    }
+
+    // Where the composer rests with the dock on screen: clear of the dock
+    // and of the red FAB poking out of its top.
+    function dockRestOffset() {
+        const bar = document.querySelector('.bottom-tab-bar');
         if (!bar || getComputedStyle(bar).display === 'none') return 12;
-        const barStyle = getComputedStyle(bar);
-        const inset = parseFloat(barStyle.bottom) || 0;
-        // Bar slid away on scroll - let the composer drop into its place
-        if (bar.classList.contains('tab-bar-hidden')) return Math.max(inset, 12);
+        const inset = parseFloat(getComputedStyle(bar).bottom) || 0;
         const fab = bar.querySelector('.tab-fab');
         const fabPoke = fab ? Math.max(0, -(parseFloat(getComputedStyle(fab).top) || 0)) : 0;
         return inset + bar.offsetHeight + fabPoke + 8;
+    }
+
+    function tabBarOffset() {
+        return isAddMode() ? dockFloor() : dockRestOffset();
     }
 
     function keyboardOffset() {
@@ -778,19 +842,55 @@ function setupQuickAddComposer() {
         return covered > 60 ? covered : 0;
     }
 
+    // The collapsed bar's prompt. It is the row's only piece of text, so it
+    // has to say what the row does rather than name a field nobody is
+    // filling in yet; in add mode the head row carries the title
+    // ("Dodaj nowy prezent") instead and the field goes back to labelling
+    // itself. Gender-neutral imperative, sentence case, like every other
+    // Polish string in the composer.
+    // "Dodaj prezent…" and not the longer "Dodaj nowy prezent…": measured at
+    // 320px the collapsed field has 130px of room and the long form needs
+    // 159px, so it was clipped mid-word on the narrowest supported screen.
+    // Called from updateComposerLayout(), which runs on setup, entry, exit,
+    // resize and the media-query change - so the two states cannot disagree.
+    function syncPlaceholder(docked) {
+        if (!nameInput) return;
+        const prompt = docked && !isAddMode() ? 'Dodaj prezent…' : 'Nazwa prezentu…';
+        if (nameInput.placeholder !== prompt) nameInput.placeholder = prompt;
+    }
+
     function updateComposerLayout() {
         const docked = refreshDocked();
+        syncPlaceholder(docked);
         if (!docked) {
             // Desktop, or the edit tab was left - never leave the page
             // dimmed or the tab bar hidden
             exitAddMode('undocked');
+            // No composer travel off the docked layout: let the shared
+            // bottom-tab-bar.css default (calc(100% + 28px)) drive the dock
+            // on its own, exactly as on the other seven pages.
+            body.style.removeProperty('--dock-hide-shift');
             return;
         }
+        // How far the composer/dock pair travels when hide-on-scroll fires:
+        // exactly the gap between the composer's resting offset and the
+        // dock's own inset, so both elements move by the same number of
+        // pixels and the 28px between them is preserved for the whole
+        // travel. Written here (layout time), never from a scroll handler.
+        body.style.setProperty('--dock-hide-shift',
+            Math.max(0, dockRestOffset() - dockFloor()) + 'px');
         const kb = keyboardOffset();
         const bottom = Math.max(tabBarOffset(), kb ? kb + 8 : 0);
         form.style.setProperty('--quick-add-bottom', bottom + 'px');
         body.style.setProperty('--quick-add-bottom', bottom + 'px');
-        body.style.setProperty('--quick-add-h', form.offsetHeight + 'px');
+        // How much vertical room the composer needs the page to keep free
+        // below its content: where the composer sits plus how tall it is.
+        // It must never DIP, because the page's padding-bottom is derived
+        // from it and a reader pinned to the bottom of the page gets clamped
+        // upwards by any shrink. See reserveFloorUntil.
+        const live = bottom + form.offsetHeight;
+        reserve = Date.now() < reserveFloorUntil ? Math.max(live, reserve) : live;
+        body.style.setProperty('--quick-add-reserve', reserve + 'px');
     }
 
     window._updateQuickAddComposer = updateComposerLayout;
@@ -805,14 +905,10 @@ function setupQuickAddComposer() {
     window.addEventListener('resize', updateComposerLayout);
     if (mobileQuery.addEventListener) mobileQuery.addEventListener('change', updateComposerLayout);
 
-    // Tab bar is injected/hidden by other scripts - follow its class changes
-    const watchBar = () => {
-        const bar = document.querySelector('.bottom-tab-bar');
-        if (bar && window.MutationObserver) {
-            new MutationObserver(updateComposerLayout).observe(bar, { attributes: true, attributeFilter: ['class', 'style'] });
-        }
-    };
-    watchBar();
+    // There is deliberately NO observer on the dock's class/style. The
+    // composer's layout no longer depends on the dock's visibility (see
+    // dockRestOffset), so following the hide-on-scroll class would only
+    // force a layout read per scroll event and re-open the clamp loop.
 
     // #editTab is shown/hidden via inline style - re-check when that happens
     const editTab = document.getElementById('editTab');
@@ -1103,7 +1199,7 @@ function displayMyPresents(presents) {
                         </small>
                     </div>
                     <div class="btn-group-vertical ms-2 my-present-actions">
-                        <button class="btn btn-sm btn-outline-primary" aria-label="Edytuj prezent" onclick="openEditPresentModal(${present.id}, '${escapeHtml(present.title)}', '${escapeHtml(present.comments || '')}', ${present.recipient_id})">
+                        <button class="btn btn-sm btn-outline-primary" aria-label="Edytuj prezent" onclick="openEditPresentModal(${present.id}, ${PrezentyEscape.jsStringAttr(escapeHtml(present.title))}, ${PrezentyEscape.jsStringAttr(escapeHtml(present.comments || ''))}, ${present.recipient_id})">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-sm btn-outline-danger" aria-label="Usuń prezent" onclick="deletePresent(${present.id})">
@@ -1159,7 +1255,7 @@ function makeLinksClickable(text) {
             if (cleanUrl.length > 60) {
                 displayText = cleanUrl.substring(0, 57) + '...';
             }
-            return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: center; min-width: 0;"><span style="margin-right: 4px; flex-shrink: 0;">🔗</span><a href="${cleanUrl}" class="my-present-link" title="${escapeHtml(cleanUrl)}" target="_blank" rel="noopener noreferrer" style="color: #0D47A1; text-decoration: underline; display: block; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(displayText)}</a></li>`;
+            return `<li style="margin: 4px 0; padding-left: 0; display: flex; align-items: center; min-width: 0;"><span style="margin-right: 4px; flex-shrink: 0;">🔗</span><a href="${escapeAttr(cleanUrl)}" class="my-present-link" title="${escapeAttr(cleanUrl)}" target="_blank" rel="noopener noreferrer" style="color: #0D47A1; text-decoration: underline; display: block; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(displayText)}</a></li>`;
         }).join('');
 
         const urlList = `<ul style="margin: 8px 0 8px 0; padding-left: 0; list-style: none;">${linksList}</ul>`;

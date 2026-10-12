@@ -359,6 +359,7 @@
         }
     </style>
     <script src="pluralize-pl.js"></script>
+    <script src="escape-html.js"></script>
 </head>
 <body>
     <div class="intro-container">
@@ -598,14 +599,21 @@
             const medals = ['🥇', '🥈', '🥉'];
             const positions = ['first', 'second', 'third'];
 
-            podium.innerHTML = top3.map((user, index) => `
+            podium.innerHTML = top3.map((user, index) => {
+                // Names come from POST /api/recipients, so they are user
+                // supplied: escape before interpolating and allowlist the
+                // picture URL (escape-html.js). A rejected URL falls back to the
+                // same default avatar the || fallback already used.
+                const pic = PrezentyEscape.safeImageSrc(user.profile_picture) || '/images/default-avatar.svg';
+                const name = PrezentyEscape.escapeHtml(user.username);
+                return `
                 <div class="podium-place ${positions[index]}">
                     <div class="podium-rank">${medals[index]}</div>
-                    <img src="${user.profile_picture || '/images/default-avatar.svg'}" 
-                         alt="${user.username}" 
+                    <img src="${pic}" 
+                         alt="${name}" 
                          class="podium-avatar"
                          onerror="this.src='/images/default-avatar.svg'">
-                    <div class="podium-name">${user.username}</div>
+                    <div class="podium-name">${name}</div>
                     <div class="podium-score">
                         <i class="fas fa-gift me-1"></i>${plCount(Number(user.total_presents) || 0, 'prezent', 'prezenty', 'prezentów')}
                     </div>
@@ -613,26 +621,32 @@
                         <div style="font-size: 24px; font-weight: 700;">#${index + 1}</div>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             // Other users (4-10)
             const others = users.slice(3, 10);
             if (others.length > 0) {
-                otherUsers.innerHTML = others.map((user, index) => `
+                otherUsers.innerHTML = others.map((user, index) => {
+                    // Same reasoning as the podium above.
+                    const pic = PrezentyEscape.safeImageSrc(user.profile_picture) || '/images/default-avatar.svg';
+                    const name = PrezentyEscape.escapeHtml(user.username);
+                    return `
                     <div class="user-row">
                         <div class="user-rank">#${index + 4}</div>
-                        <img src="${user.profile_picture || '/images/default-avatar.svg'}" 
-                             alt="${user.username}" 
+                        <img src="${pic}" 
+                             alt="${name}" 
                              class="user-avatar"
                              onerror="this.src='/images/default-avatar.svg'">
                         <div class="user-info">
-                            <div class="user-name">${user.username}</div>
+                            <div class="user-name">${name}</div>
                         </div>
                         <div class="user-score">
                             <i class="fas fa-gift me-1"></i>${user.total_presents}
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
             } else {
                 otherUsers.innerHTML = '';
             }

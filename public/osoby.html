@@ -70,6 +70,7 @@
     <!-- Manifest (required for PWA install prompt) -->
     <link rel="manifest" href="manifest.json">
     <script src="pluralize-pl.js"></script>
+    <script src="escape-html.js"></script>
 </head>
 <body>
     <div class="background-overlay"></div>
@@ -218,7 +219,7 @@
                             <span class="person-name"><i class="fas fa-user me-2" style="color:#6b7280;"></i>${escapeHtml(person.name)}
                                 <span style="font-weight:400; color:#6b7280; font-size:13px;">(${plCount(theirPresents.length, 'prezent', 'prezenty', 'prezentów')})</span>
                             </span>
-                            <button class="btn btn-outline-danger btn-sm" onclick="deletePerson(${person.id}, '${escapeHtml(person.name).replace(/'/g, "\\'")}')">
+                            <button class="btn btn-outline-danger btn-sm" onclick="deletePerson(${person.id}, ${PrezentyEscape.jsStringAttr(escapeHtml(person.name))})">
                                 <i class="fas fa-user-xmark me-1"></i>Usuń osobę
                             </button>
                         </div>
@@ -320,6 +321,12 @@
                 .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
         }
 
+        // The delete button used to interpolate the title into its onclick as
+        // a JS string literal. escapeHtml on this page is the textContent
+        // idiom, which does NOT escape quotes, so a title containing a double
+        // quote closed the attribute and could add arbitrary ones. The id is
+        // all the handler ever needed - the title is looked up from the
+        // presents array, exactly as deleteAbandoned already does.
         function presentRow(p) {
             const isAbandoned = abandonedPresents.some(a => a.id === p.id);
             return `
@@ -335,7 +342,7 @@
                             <button class="btn btn-outline-primary btn-sm" onclick="startEdit(${p.id})" title="Edytuj">
                                 <i class="fas fa-pen"></i>
                             </button>
-                            <button class="btn btn-outline-danger btn-sm" onclick="deletePresent(${p.id}, '${escapeHtml(p.title).replace(/'/g, "\\'")}')" title="Usuń">
+                            <button class="btn btn-outline-danger btn-sm" data-delete-present="${p.id}" title="Usuń">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -350,7 +357,7 @@
 
             row.innerHTML = `
                 <div class="d-flex flex-column gap-2">
-                    <input type="text" class="form-control form-control-sm" id="editTitle-${presentId}" value="${escapeHtml(p.title)}" placeholder="Nazwa prezentu">
+                    <input type="text" class="form-control form-control-sm" id="editTitle-${presentId}" value="${PrezentyEscape.escapeAttr(p.title)}" placeholder="Nazwa prezentu">
                     <textarea class="form-control form-control-sm" id="editComments-${presentId}" rows="2" placeholder="Komentarz (opcjonalnie)">${escapeHtml(p.comments || '')}</textarea>
                     <div class="d-flex gap-2">
                         <button class="btn btn-success btn-sm" onclick="saveEdit(${presentId})">
@@ -386,8 +393,18 @@
                 .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
         }
 
-        function deletePresent(presentId, title) {
-            if (!confirm(`Usunąć prezent "${title}"?`)) return;
+        // Delegated so the row markup never has to carry the title. The rows
+        // are re-rendered on every change, hence a document-level listener.
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest && e.target.closest('[data-delete-present]');
+            if (!btn) return;
+            deletePresent(Number(btn.dataset.deletePresent));
+        });
+
+        function deletePresent(presentId) {
+            const p = presents.find(x => x.id === presentId);
+            const label = p ? `"${p.title}"` : 'ten prezent';
+            if (!confirm(`Usunąć prezent ${label}?`)) return;
             fetch(`/api/presents/${presentId}`, { method: 'DELETE' })
                 .then(r => r.json())
                 .then(d => {

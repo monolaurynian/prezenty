@@ -1,6 +1,7 @@
 // Shared wording for activity / notification messages.
 // Warm activity-feed style with present-tense verbs, which are
-// gender-neutral in Polish: "Monika rezerwuje „Książka” dla: Tomek 🔖".
+// gender-neutral in Polish: "Monika rezerwuje „Książka” dla: Tomek".
+// No emoji here - the notification UI already shows a per-type icon.
 // Names after "dla" use the colon form because names can't be declined
 // reliably.
 //
@@ -9,7 +10,7 @@
 // type:  recipient_added | present_added | present_reserved |
 //        present_unreserved | present_checked | present_unchecked |
 //        present_added_batch (data.count = number of presents)
-//        anything else -> "<actor> coś zmienia ✨"
+//        anything else -> "<actor> coś zmienia"
 // data:  { presentTitle, recipientName, count, ... } (notification payload)
 // actor: username of whoever did it (falsy -> "Ktoś")
 // opts (all optional) - renderers keep their own links/markup:
@@ -71,20 +72,20 @@
         switch (type) {
             case 'recipient_added':
                 body = data.recipientName
-                    ? `dodaje nową osobę: ${person(data.recipientName)} 👤`
-                    : 'dodaje nową osobę 👤';
+                    ? `dodaje nową osobę: ${person(data.recipientName)}`
+                    : 'dodaje nową osobę';
                 break;
             case 'present_added':
-                body = `dodaje prezent ${present}${forWhom} 🎁`;
+                body = `dodaje prezent ${present}${forWhom}`;
                 break;
             case 'present_reserved':
-                body = `rezerwuje ${present}${forWhom} 🔖`;
+                body = `rezerwuje ${present}${forWhom}`;
                 break;
             case 'present_unreserved':
                 body = `rezygnuje z rezerwacji ${present}${forWhom}`;
                 break;
             case 'present_checked':
-                body = `kupuje ${present}${forWhom} ✅`;
+                body = `kupuje ${present}${forWhom}`;
                 break;
             case 'present_unchecked':
                 body = `cofa oznaczenie „kupione” przy ${present}${forWhom}`;
@@ -92,11 +93,11 @@
             case 'present_added_batch': {
                 const n = Number(data.count) || 0;
                 const text = esc(countText(n));
-                body = `dodaje ${opts.count ? opts.count(text, data) : strong(text)}${forWhom} 🎁`;
+                body = `dodaje ${opts.count ? opts.count(text, data) : strong(text)}${forWhom}`;
                 break;
             }
             default:
-                body = 'coś zmienia ✨';
+                body = 'coś zmienia';
         }
 
         return opts.showActor === false ? body : `${actorOut} ${body}`;

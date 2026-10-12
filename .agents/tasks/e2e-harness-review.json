@@ -1,0 +1,46 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "id": 1,
+      "label": "forbidOnly gated on CI",
+      "blocking": false,
+      "confidence": "confirmed",
+      "file": "playwright.config.js:25",
+      "detail": "forbidOnly: !!process.env.CI instead of the planned forbidOnly: true. A committed test.only would silently reduce the suite to one test and still exit 0. Set it unconditionally."
+    },
+    {
+      "id": 2,
+      "label": "Overflow assertions match a message string",
+      "blocking": false,
+      "confidence": "confirmed",
+      "file": "tests/e2e/wrapping.spec.js:90,128,139; tests/e2e/chat-reactions.spec.js:371",
+      "detail": "These assert describeOverflow(...) does not match /overflows by/, so rewording that formatter in tests/helpers/overflow.js would make them permanently green. Assert report.offenders / report.scrollers directly, as no-horizontal-overflow.spec.js does."
+    },
+    {
+      "id": 3,
+      "label": "Shared demo state restored inline",
+      "blocking": false,
+      "confidence": "likely",
+      "file": "tests/e2e/chat-reactions.spec.js (reaction toggle specs)",
+      "detail": "Specs mutate seeded reactions and undo them at the end of the test body. A mid-test failure skips the undo, so one real failure can cascade into later specs and obscure the original cause. Move the restore into afterEach or re-seed per test."
+    },
+    {
+      "id": 4,
+      "label": "Tautological assertion",
+      "blocking": false,
+      "confidence": "confirmed",
+      "file": "tests/e2e/chat-reactions.spec.js:309",
+      "detail": "expect(threadResponse === null || threadResponse.ok()).toBeTruthy() cannot fail. Drop it or assert the response was actually observed."
+    },
+    {
+      "id": 5,
+      "label": "First run needs network",
+      "blocking": false,
+      "confidence": "confirmed",
+      "file": "tests/helpers/cdn-cache.js, .gitignore:51",
+      "detail": "The CDN cache under tests/.cache/cdn/ is gitignored, so a fresh CI checkout's first run must reach cdn.jsdelivr.net and cdnjs.cloudflare.com. Documented in tests/README.md; worth a CI note."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\matmamon\\OneDrive - amazon.com\\Documents\\Prezenty\\prezenty\\.agents\\tasks/e2e-harness-review-doc.md"
+}
