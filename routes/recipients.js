@@ -72,7 +72,7 @@ router.post('/api/recipients', requireAuth, async (req, res) => {
     clearCombinedDataCache();
     const { name } = req.body;
 
-    console.log('[POST /api/recipients] Incoming request:', { body: req.body, session: req.session });
+    console.log('[POST /api/recipients] Incoming request:', { body: req.body, userId: req.session && req.session.userId });
 
     if (!name || name.trim() === '') {
         console.log('[POST /api/recipients] Validation failed: empty name');
@@ -91,7 +91,7 @@ router.post('/api/recipients', requireAuth, async (req, res) => {
 
     try {
         const [result] = await pool.execute('INSERT INTO recipients (name) VALUES (?)', [name.trim()]);
-        console.log('[POST /api/recipients] Recipient added successfully:', result.insertId, 'Request body:', req.body, 'Session:', req.session);
+        console.log('[POST /api/recipients] Recipient added successfully:', result.insertId, 'Request body:', req.body, 'User ID:', req.session && req.session.userId);
 
         // Create notification for other users
         await createNotification('recipient_added', req.session.userId, {
@@ -102,7 +102,7 @@ router.post('/api/recipients', requireAuth, async (req, res) => {
         // Return the expected structure for frontend
         res.json({ success: true, recipient: { id: result.insertId, name: name.trim() } });
     } catch (err) {
-        console.error('[POST /api/recipients] Database error adding recipient:', err, 'Request body:', req.body, 'Session:', req.session);
+        console.error('[POST /api/recipients] Database error adding recipient:', err, 'Request body:', req.body, 'User ID:', req.session && req.session.userId);
         if (err.code === 'ER_DUP_ENTRY') {
             return conflict(res, 'Taka osoba już istnieje!');
         }
@@ -542,7 +542,7 @@ lateRouter.post('/api/user/identify', requireAuth, async (req, res) => {
     const { name } = req.body;
     const userId = req.session.userId;
 
-    console.log('[POST /api/user/identify] Incoming request:', { body: req.body, session: req.session });
+    console.log('[POST /api/user/identify] Incoming request:', { body: req.body, userId: req.session && req.session.userId });
 
     if (!name || name.trim() === '') {
         console.log('[POST /api/user/identify] Validation failed: empty name');
@@ -593,7 +593,7 @@ lateRouter.post('/api/user/identify', requireAuth, async (req, res) => {
             });
         }
     } catch (err) {
-        console.error('[POST /api/user/identify] Database error:', err, 'Session:', req.session);
+        console.error('[POST /api/user/identify] Database error:', err, 'User ID:', req.session && req.session.userId);
         return handleDbError(err, res, 'Błąd podczas identyfikacji');
     }
 });

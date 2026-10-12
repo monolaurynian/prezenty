@@ -29,6 +29,8 @@ SESSION_SECRET=your_session_secret
 NODE_ENV=production
 ```
 
+Set your own `SESSION_SECRET` and `VAPID_*` values in production; the built-in fallbacks are public. See [Rotating secrets](DEPLOYMENT.md#rotating-secrets).
+
 ## Deployment on Render
 
 1. Connect your GitHub repository to Render

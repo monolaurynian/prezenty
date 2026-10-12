@@ -9,9 +9,7 @@ router.get('/', (req, res) => {
     console.log('ROOT ROUTE HIT!');
     console.log('Root route accessed - Session:', {
         userId: req.session.userId,
-        username: req.session.username,
-        sessionID: req.sessionID,
-        cookie: req.session.cookie
+        username: req.session.username
     });
     console.log('========================================');
     

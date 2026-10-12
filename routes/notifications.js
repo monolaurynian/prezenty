@@ -6,7 +6,7 @@ const { webpush, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY } = require('../lib/webpush
 const { handleDbError } = require('../lib/http-errors');
 const { requireAuth } = require('../lib/auth');
 const { getUserIdentification } = require('../lib/queries');
-const { sendNotificationToUsers } = require('../lib/push');
+const { sendNotificationToUsers, pushServiceHost } = require('../lib/push');
 const { ensureNotificationsTable } = require('../lib/notifications');
 const { demoNotifications } = require('../lib/demo-data');
 
@@ -25,7 +25,7 @@ router.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
     }
 
     if (DEMO_MODE) {
-        console.log('Demo mode - notification subscription saved:', { userId, subscription });
+        console.log('Demo mode - notification subscription saved:', { userId, hasEndpoint: !!(subscription && subscription.endpoint) });
         res.json({ success: true });
         return;
     }
@@ -46,7 +46,7 @@ router.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
 
         // Save subscription
         console.log(`💾 [SUBSCRIPTION] Saving subscription for user ${userId}:`, {
-            endpoint: subscription.endpoint.substring(0, 50) + '...',
+            pushService: pushServiceHost(subscription.endpoint),
             hasKeys: !!(subscription.keys && subscription.keys.p256dh && subscription.keys.auth)
         });
 

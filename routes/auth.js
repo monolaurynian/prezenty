@@ -29,8 +29,7 @@ router.post('/api/login', async (req, res) => {
                 }
                 console.log('Session saved successfully:', {
                     userId: req.session.userId,
-                    username: req.session.username,
-                    sessionID: req.sessionID
+                    username: req.session.username
                 });
                 res.json({ success: true, user: { id: 1, username: username } });
             });
@@ -63,8 +62,7 @@ router.post('/api/login', async (req, res) => {
             }
             console.log('Session saved successfully:', {
                 userId: req.session.userId,
-                username: req.session.username,
-                sessionID: req.sessionID
+                username: req.session.username
             });
             res.json({ success: true, user: { id: user.id, username: user.username } });
         });
@@ -183,10 +181,7 @@ router.post('/api/logout', (req, res) => {
 router.get('/api/auth', (req, res) => {
     console.log('Auth check - Full session details:', {
         userId: req.session.userId,
-        username: req.session.username,
-        sessionID: req.sessionID,
-        cookie: req.session.cookie,
-        headers: req.headers.cookie
+        username: req.session.username
     });
     if (req.session.userId) {
         console.log('Auth check: User IS authenticated');

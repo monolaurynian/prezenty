@@ -84,6 +84,15 @@ console.log('Session configuration:', {
     HTTPS: process.env.HTTPS
 });
 
+// Warn (names only, never values) when production/non-demo runs on the committed fallback secrets
+const fallbackSecrets = [];
+if (!process.env.SESSION_SECRET) fallbackSecrets.push('SESSION_SECRET');
+if (!process.env.VAPID_PRIVATE_KEY || !process.env.VAPID_PUBLIC_KEY) fallbackSecrets.push('VAPID_PRIVATE_KEY/VAPID_PUBLIC_KEY');
+if ((process.env.NODE_ENV === 'production' || !DEMO_MODE) && fallbackSecrets.length) {
+    console.warn(`⚠️ [SECURITY] Using the committed fallback value for: ${fallbackSecrets.join(', ')}. ` +
+        'Set these env vars and rotate them (see DEPLOYMENT.md "Rotating secrets").');
+}
+
 // Create session store
 let sessionConfig = {
     name: 'prezenty.sid', // Explicit session cookie name
@@ -147,7 +156,8 @@ app.use(recipientRoutes.lateRouter); // POST /api/user/identify
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Server error:', err);
+    // Malformed JSON: body-parser attaches the raw request text as err.body, so log the message only
+    console.error('Server error:', err && err.type === 'entity.parse.failed' ? err.message : err);
 
     if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
         return badRequest(res, 'Nieprawidłowy format danych JSON');
