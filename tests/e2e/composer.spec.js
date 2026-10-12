@@ -9,7 +9,9 @@
  *     collapsed" - the compact bar carried a round green "+" submit roughly
  *     44px above the dock's own green "Dodaj" tab, and with an empty field it
  *     could not submit anything. The compact bar is now a single tappable
- *     "start adding" row: a decorative cue, a prompt, no "+" and no chevron.
+ *     "start adding" row: a decorative copy of the normal chevron (the real
+ *     toggle takes its cell in add mode), a bordered prompt field spanning
+ *     the rest of the row, and no submit button.
  *
  *  2. "the bar is fighting with the tap bar and the tap bar can't hide
  *     properly and it's jumpy" - the composer's reserved bottom padding was
@@ -267,6 +269,43 @@ const STATE = function () {
         formWidth: Math.round(formRect.width),
         nameLeft: Math.round(box.left),
         nameWidth: Math.round(box.width),
+        nameBox: { left: box.left, width: box.width, right: box.right, top: box.top },
+        // Where the composer's content box ends: the inset the chevron circle
+        // has on the left, mirrored on the right.
+        formInnerRight: formRect.right - parseFloat(getComputedStyle(form).borderRightWidth) -
+            parseFloat(getComputedStyle(form).paddingRight),
+        formInnerLeft: formRect.left + parseFloat(getComputedStyle(form).borderLeftWidth) +
+            parseFloat(getComputedStyle(form).paddingLeft),
+        cueIcon: (function () {
+            const i = document.querySelector('.quick-add-cue i');
+            return i ? i.className : null;
+        })(),
+        toggleIcon: (function () {
+            const i = document.querySelector('#quickAddToggle i');
+            return i ? i.className : null;
+        })(),
+        // The cue must be a visual twin of the real toggle's collapsed look
+        look: (function () {
+            const pick = function (sel) {
+                const el = document.querySelector(sel);
+                const cs = getComputedStyle(el);
+                const ics = getComputedStyle(el.querySelector('i'));
+                return {
+                    width: cs.width, height: cs.height, borderTopWidth: cs.borderTopWidth,
+                    borderTopColor: cs.borderTopColor, borderRadius: cs.borderTopLeftRadius,
+                    background: cs.backgroundColor, color: cs.color, iconSize: ics.fontSize,
+                    iconTransform: ics.transform
+                };
+            };
+            return { cue: pick('.quick-add-cue'), toggle: pick('#quickAddToggle') };
+        })(),
+        nameBorder: {
+            width: parseFloat(nameStyle.borderTopWidth),
+            color: nameStyle.borderTopColor,
+            visibility: nameStyle.visibility,
+            display: nameStyle.display,
+            background: nameStyle.backgroundColor
+        },
         placeholder: name.placeholder,
         promptWidth: Math.round(ctx.measureText(name.placeholder).width),
         promptRoom: Math.round(box.width -
@@ -303,7 +342,7 @@ test.describe('add-present composer', () => {
     // which is a failure that says nothing about the composer.
     test.beforeEach(async ({}, testInfo) => { testInfo.setTimeout(90000); });
 
-    test('the collapsed bar has no + and no chevron, and neither is reachable', async ({ page }) => {
+    test('the collapsed bar is [chevron] [full-width bordered input]: no submit, real controls unreachable', async ({ page }) => {
         for (const width of PHONES) {
             await openComposer(page, width);
 
@@ -319,7 +358,16 @@ test.describe('add-present composer', () => {
 
             const s = await page.evaluate(STATE);
             expect(s.addMode, `@${width}px probing must not have entered add mode`).toBe(false);
-            expect(s.submit.visibility, `@${width}px the "+" must be hidden: ${JSON.stringify(s.submit)}`).toBe('hidden');
+            expect(s.submit.visibility, `@${width}px the green submit button must be hidden: ${JSON.stringify(s.submit)}`).toBe('hidden');
+            // The form stays visible when the bar is closed: a real, bordered
+            // input (it used to be painted transparent).
+            expect(s.nameBorder.display, `@${width}px ${JSON.stringify(s.nameBorder)}`).not.toBe('none');
+            expect(s.nameBorder.visibility, `@${width}px the input must be visible: ${JSON.stringify(s.nameBorder)}`).toBe('visible');
+            expect(s.nameBorder.width, `@${width}px the input needs a border: ${JSON.stringify(s.nameBorder)}`).toBeGreaterThanOrEqual(1);
+            expect(s.nameBorder.color, `@${width}px the border must not be transparent: ${JSON.stringify(s.nameBorder)}`)
+                .not.toMatch(/^rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\s*\)$|^transparent$/);
+            expect(s.nameBorder.background, `@${width}px the field must have a fill: ${JSON.stringify(s.nameBorder)}`)
+                .not.toMatch(/^rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\s*\)$|^transparent$/);
             expect(s.toggle.visibility, `@${width}px the chevron must be hidden: ${JSON.stringify(s.toggle)}`).toBe('hidden');
             expect(s.close.visibility, `@${width}px the close control must be hidden`).toBe('hidden');
             // The one affordance: a decorative 48x48 cue in the chevron's cell
@@ -330,6 +378,23 @@ test.describe('add-present composer', () => {
                 `cue ${s.cue.left}/${s.cue.top} vs toggle ${s.toggle.left}/${s.toggle.top}`).toBe(s.toggle.left);
             expect(s.cue.top).toBe(s.toggle.top);
             expect(s.cue.pointerEvents, `@${width}px the cue must not swallow the row's tap`).toBe('none');
+            // The leading icon is the NORMAL chevron, not a "+", and looks
+            // exactly like the real toggle's collapsed look
+            expect(s.cueIcon, `@${width}px the cue icon`).toContain('fa-chevron-up');
+            expect(s.cueIcon, `@${width}px the cue icon must not be a plus`).not.toContain('fa-plus');
+            expect(s.cueIcon, `@${width}px same icon as the real toggle`).toBe(s.toggleIcon);
+            expect(s.look.cue, `@${width}px the cue must look like the real toggle`).toEqual(s.look.toggle);
+            // The bordered input spans the whole row: its right edge sits on
+            // the composer's inner right edge, mirroring the circle's inset
+            // on the left (no empty strip where the submit column was)
+            expect(Math.abs(s.nameBox.right - s.formInnerRight),
+                `@${width}px input right edge ${s.nameBox.right} vs composer inner right ${s.formInnerRight}`)
+                .toBeLessThanOrEqual(1);
+            expect(Math.abs(s.cue.left - s.formInnerLeft),
+                `@${width}px circle left ${s.cue.left} vs composer inner left ${s.formInnerLeft}`).toBeLessThanOrEqual(1);
+            expect(s.formInnerRight - s.nameBox.right,
+                `@${width}px right gap ${s.formInnerRight - s.nameBox.right}px, left gap ` +
+                `${s.cue.left - s.formInnerLeft}px`).toBeLessThanOrEqual(1);
             // The row itself is the target: >= 44px tall and obviously tappable
             expect(s.formHeight, `@${width}px collapsed row height ${s.formHeight}px`).toBeGreaterThanOrEqual(44);
             expect(s.cursor, `@${width}px the row must look tappable`).toBe('pointer');
@@ -341,7 +406,7 @@ test.describe('add-present composer', () => {
         }
     });
 
-    test('entering and leaving add mode moves the name field by 0px', async ({ page }) => {
+    test('entering and leaving add mode keeps the name field\'s left edge in place', async ({ page }) => {
         for (const width of PHONES) {
             await openComposer(page, width);
             const collapsed = await page.evaluate(STATE);
@@ -358,11 +423,18 @@ test.describe('add-present composer', () => {
 
             const seen = `@${width}px collapsed ${collapsed.nameLeft}/${collapsed.nameWidth}, ` +
                 `add mode ${active.nameLeft}/${active.nameWidth}, back ${back.nameLeft}/${back.nameWidth}`;
+            // The LEFT edge never moves. The width does, by design: collapsed
+            // the input spans the (hidden) submit column, in add mode the
+            // submit button takes it back - so the input is narrower by that
+            // column and its right edge stops short of the button.
             expect(active.nameLeft, seen).toBe(collapsed.nameLeft);
-            expect(active.nameWidth, seen).toBe(collapsed.nameWidth);
             expect(back.nameLeft, seen).toBe(collapsed.nameLeft);
             expect(back.nameWidth, seen).toBe(collapsed.nameWidth);
-            // The "+" and the chevron swap in, in the columns already reserved
+            expect(active.nameWidth, seen).toBeLessThan(collapsed.nameWidth);
+            expect(active.nameBox.right, seen + ` (submit left ${active.submit.left})`)
+                .toBeLessThanOrEqual(active.submit.left);
+            // The real submit button and the real chevron swap in, and the
+            // decorative chevron out, in the cells already reserved
             expect(active.submit.visibility).toBe('visible');
             expect(active.toggle.visibility).toBe('visible');
             expect(active.cue.visibility).toBe('hidden');
@@ -377,13 +449,94 @@ test.describe('add-present composer', () => {
         }
     });
 
+    test('entering add mode swaps the decorative chevron for the real one without shifting the input\'s left edge or row', async ({ page }) => {
+        for (const width of [320, 375]) {
+            await openComposer(page, width);
+            const before = await page.evaluate(STATE);
+            expect(before.cue.visibility, `@${width}px collapsed: decorative chevron`).toBe('visible');
+            expect(before.toggle.visibility, `@${width}px collapsed: chevron`).toBe('hidden');
+            expect(before.submit.visibility, `@${width}px collapsed: submit`).toBe('hidden');
+
+            // Every animation frame from the tap until well after both
+            // transitions have finished: the input's LEFT edge, its vertical
+            // offset from the chevron circle (same grid row, so 0) and the
+            // circle's own left edge must not move. The right edge and width
+            // do move - the submit button takes its column back - and that
+            // is instant, not animated.
+            await page.evaluate(() => {
+                const input = document.getElementById('quickAddTitle');
+                const circle = document.getElementById('quickAddToggle'); // same cell as the decorative one
+                const s = window.__nameFrames = { frames: [], run: true };
+                (function tick() {
+                    const r = input.getBoundingClientRect();
+                    const c = circle.getBoundingClientRect();
+                    s.frames.push({ left: r.left, width: r.width, rowOffset: r.top - c.top, circleLeft: c.left });
+                    if (s.run) requestAnimationFrame(tick);
+                })();
+            });
+            await page.locator(COMPOSER).tap();
+            await page.waitForFunction(() => document.body.classList.contains('quick-add-active'));
+            await page.waitForTimeout(500);
+            const frames = await page.evaluate(() => { window.__nameFrames.run = false; return window.__nameFrames.frames; });
+            const after = await page.evaluate(STATE);
+
+            const lefts = frames.map(f => f.left);
+            const offsets = frames.map(f => f.rowOffset);
+            const circles = frames.map(f => f.circleLeft);
+            const range = a => Math.max(...a) - Math.min(...a);
+            const seen = `@${width}px input left/top/right before ${before.nameBox.left}/${before.nameBox.top}/${before.nameBox.right}, ` +
+                `after ${after.nameBox.left}/${after.nameBox.top}/${after.nameBox.right} ` +
+                `(width ${before.nameBox.width} -> ${after.nameBox.width}), ` +
+                `over ${frames.length} frames: left ${Math.min(...lefts)}..${Math.max(...lefts)}, ` +
+                `offset from circle ${Math.min(...offsets)}..${Math.max(...offsets)}, ` +
+                `circle left ${Math.min(...circles)}..${Math.max(...circles)}`;
+            console.log('SHIFT ' + seen);
+            expect(Math.abs(after.nameBox.left - before.nameBox.left), seen).toBeLessThanOrEqual(1);
+            expect(range(lefts), 'left drift during entry. ' + seen).toBeLessThanOrEqual(1);
+            expect(range(offsets), 'vertical offset from the circle during entry. ' + seen).toBeLessThanOrEqual(1);
+            expect(range(circles), 'circle left drift during entry. ' + seen).toBeLessThanOrEqual(1);
+            // The width change is the submit column coming back: instant, once
+            expect(after.nameBox.width, seen).toBeLessThan(before.nameBox.width);
+
+            // Add mode: real chevron in, decorative one out, real submit in
+            expect(after.toggle.visibility, `@${width}px add mode: chevron`).toBe('visible');
+            expect(after.cue.visibility, `@${width}px add mode: decorative chevron`).toBe('hidden');
+            expect(after.submit.visibility, `@${width}px add mode: submit`).toBe('visible');
+            expect(after.expanded, `@${width}px details open with the form`).toBe(true);
+            await expect(page.locator(TOGGLE)).toHaveAttribute('aria-expanded', 'true');
+            // ...and the real toggle is focusable now
+            await page.locator(TOGGLE).focus();
+            expect(await page.evaluate(() => document.activeElement && document.activeElement.id),
+                `@${width}px the real toggle must take focus in add mode`).toBe('quickAddToggle');
+
+            // The chevron toggles the details textarea and keeps aria-expanded honest
+            await page.locator(TOGGLE).click();
+            await expect(page.locator(TOGGLE)).toHaveAttribute('aria-expanded', 'false');
+            await expect(page.locator(COMPOSER)).not.toHaveClass(/is-expanded/);
+            await page.locator(TOGGLE).click();
+            await expect(page.locator(TOGGLE)).toHaveAttribute('aria-expanded', 'true');
+            await expect(page.locator(COMPOSER)).toHaveClass(/is-expanded/);
+
+            // Leaving restores the collapsed picture and aria-expanded
+            await page.locator(CLOSE).click();
+            await page.waitForFunction(() => !document.body.classList.contains('quick-add-active'));
+            await page.waitForTimeout(400);
+            const back = await page.evaluate(STATE);
+            expect(back.cue.visibility, `@${width}px closed again: decorative chevron`).toBe('visible');
+            expect(back.toggle.visibility, `@${width}px closed again: real chevron`).toBe('hidden');
+            expect(Math.abs(back.nameBox.left - before.nameBox.left), seen).toBeLessThanOrEqual(1);
+            expect(Math.abs(back.nameBox.right - before.nameBox.right), seen).toBeLessThanOrEqual(1);
+            await expect(page.locator(TOGGLE)).toHaveAttribute('aria-expanded', 'false');
+        }
+    });
+
     test('a tap anywhere on the collapsed row opens the form and focuses the name field', async ({ page }) => {
         await openComposer(page, 375);
         const box = await page.locator(COMPOSER).boundingBox();
         const spots = [
-            { label: 'the cue', x: box.x + 32, y: box.y + box.height / 2 },
+            { label: 'the decorative chevron', x: box.x + 32, y: box.y + box.height / 2 },
             { label: 'the middle of the row', x: box.x + box.width / 2, y: box.y + box.height / 2 },
-            { label: 'the empty cell where the "+" used to be', x: box.x + box.width - 30, y: box.y + box.height / 2 }
+            { label: 'the right-hand end of the input, where the submit button used to be', x: box.x + box.width - 30, y: box.y + box.height / 2 }
         ];
 
         for (const spot of spots) {

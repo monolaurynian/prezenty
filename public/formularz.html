@@ -753,8 +753,8 @@
                    the one overlap (entering add mode while the dock is
                    scroll-hidden) is handled by the add-mode rule below.
                    Nothing here animates the grid: the collapsed and the
-                   add-mode row use the SAME grid-template-columns, so the
-                   name field's box is identical in both states and no
+                   add-mode row use the SAME grid-template-columns (only the
+                   name field's column span differs, see below), so no
                    engine-dependent column interpolation is involved. */
                 transition: bottom 0.25s ease,
                     transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -796,6 +796,20 @@
             /* The whole compact row is the "start adding" affordance */
             body:not(.quick-add-active) .quick-add-composer {
                 cursor: pointer;
+            }
+
+            /* Collapsed: the name field takes the submit column too, so the
+               bordered input runs to the same 8px inset on the right as the
+               chevron circle has on the left (the submit button is
+               visibility:hidden here, and its column used to be left empty,
+               which made the bar look lopsided). Only the column span
+               changes - never the row - so the field's LEFT edge and its
+               vertical position are the same in both states; the right edge
+               moves in the instant the submit button comes back in add mode.
+               This is a plain grid placement, not a grid-template-columns
+               change, so there is nothing for WebKit to interpolate. */
+            body:not(.quick-add-active) .quick-add-name {
+                grid-column: 2 / 4;
             }
 
             body:not(.quick-add-active) .quick-add-composer:active {
@@ -908,14 +922,17 @@
             .quick-add-toggle[aria-expanded="true"] { background: #e3f2e6; border-color: #28a745; color: #1b5e20; }
             .quick-add-toggle[aria-expanded="true"] i { transform: rotate(180deg); }
 
-            /* ---- The compact bar's one affordance ----
-               Decorative only (aria-hidden, pointer-events: none, no tab
-               stop, no accessible name of its own): the whole row is the
-               tap target and the name field is its single tab stop, so a
-               second focusable "add" control here would just be the "+"
-               problem again. It shares the chevron's grid cell and its
-               exact 48x48 box, and the chevron's expanded palette, so the
-               compact row and the add-mode row line up pixel for pixel. */
+            /* ---- The compact bar's leading chevron ----
+               A purely visual twin of the real .quick-add-toggle above, in
+               its collapsed look: same cell, 48x48 box, 1px border, fill,
+               colour and icon size, with the same chevron-up icon. It is
+               decorative only (aria-hidden, pointer-events: none, no tab
+               stop, no accessible name): a tap on it falls through to the
+               row-level click handler that enters add mode. The real toggle
+               is visibility:hidden here and takes over this exact cell in
+               add mode, so the two never exist at the same time and the
+               keyboard/press races the real chevron had in the compact bar
+               stay unreachable. */
             .quick-add-cue {
                 grid-area: toggle;
                 display: inline-flex;
@@ -923,10 +940,12 @@
                 justify-content: center;
                 width: 48px;
                 height: 48px;
+                padding: 0;
+                border: 1px solid #cbd2d9;
                 border-radius: 50%;
-                background: #e3f2e6;
-                color: #1b5e20;
-                font-size: 1.1rem;
+                background: #eef1f4;
+                color: #2d3748;
+                font-size: 1rem;
                 pointer-events: none;
             }
 
@@ -979,11 +998,12 @@
                green "add" button sitting ~44px above the dock's own green
                "Dodaj" tab, and with an empty field it could not submit
                anything. visibility:hidden takes it out of the tab order and
-               the accessibility tree, and its 52px grid column stays
-               RESERVED: the name field's box is then byte-identical in both
-               states, so entering and leaving add mode moves nothing
-               horizontally and nothing depends on an engine interpolating
-               grid-template-columns (WebKit/iOS does not).
+               the accessibility tree, and its 52px grid column stays in the
+               template: while collapsed the name field spans that column
+               (see .quick-add-name above), in add mode it gives it back.
+               The field's left edge never moves, and nothing depends on an
+               engine interpolating grid-template-columns (WebKit/iOS does
+               not).
                The explicit transition is required: .btn-green sets
                `transition: all 0.3s ease`, and `visibility` is a
                transitionable discrete property, so inheriting that would
@@ -1007,18 +1027,15 @@
                 pointer-events: auto;
             }
 
-            /* Collapsed, the name field is a prompt, not an input: no box,
-               no shadow, so the row reads as one tappable "start adding"
-               surface instead of a form someone forgot to fill in. The
-               field keeps its size and its position - only the chrome goes
-               - so nothing moves when add mode paints it back in.
-               Keyed on body.quick-add-active, NOT on .is-expanded: the user
-               can collapse the details row while add mode is on, and the
-               field must stay a real-looking input then. */
+            /* Collapsed, the name field stays a clearly visible, bordered
+               input (the user asked for the form to remain visible when the
+               bar is closed). It used to be painted transparent here. Only
+               colours are set, never width or size, so the box is identical
+               to add mode's height and nothing shifts vertically when add
+               mode starts; the row reads as [chevron] [ input ]. */
             body:not(.quick-add-active) .quick-add-name .form-control {
-                background: transparent;
-                border-color: transparent;
-                box-shadow: none;
+                background: #ffffff;
+                border-color: #8a96a3;
             }
 
             /* Status pill floats just above the composer */
@@ -1329,12 +1346,13 @@
                                     <i class="fas fa-xmark" aria-hidden="true"></i>
                                 </button>
                             </div>
-                            <!-- Decorative "start adding" cue for the compact
-                                 bar: aria-hidden and not focusable, because
+                            <!-- Compact bar: a decorative copy of the chevron
+                                 below (aria-hidden, not focusable) because
                                  the whole row is the tap target and
-                                 #quickAddTitle is its single tab stop. It
-                                 shares the chevron's grid cell. -->
-                            <span class="quick-add-cue" aria-hidden="true"><i class="fas fa-plus"></i></span>
+                                 #quickAddTitle is its single tab stop. The
+                                 real #quickAddToggle takes over this grid
+                                 cell in add mode. -->
+                            <span class="quick-add-cue" aria-hidden="true"><i class="fas fa-chevron-up"></i></span>
                             <button type="button" class="quick-add-toggle" id="quickAddToggle"
                                     aria-expanded="false" aria-controls="quickAddDescWrap"
                                     aria-label="Dodaj opis (opcjonalnie)">
