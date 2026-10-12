@@ -96,8 +96,14 @@ router.get('/api/vapid-public-key', (req, res) => {
     });
 });
 
+// Debug/test endpoints: answer only in demo mode or outside production; otherwise 404 as if they did not exist
+function debugOnly(req, res, next) {
+    if (DEMO_MODE || process.env.NODE_ENV !== 'production') return next();
+    return next('route');
+}
+
 // Debug endpoint for notification system
-router.get('/api/notifications/debug', requireAuth, async (req, res) => {
+router.get('/api/notifications/debug', debugOnly, requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
         console.log('🔍 [DEBUG] Notification debug request from user:', userId);
@@ -313,7 +319,7 @@ router.post('/api/notifications/read-all', requireAuth, async (req, res) => {
 });
 
 // Test notification endpoint
-router.post('/api/test-notification', requireAuth, async (req, res) => {
+router.post('/api/test-notification', debugOnly, requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
         const includeCurrentUser = req.body.includeCurrentUser || false;

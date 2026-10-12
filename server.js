@@ -153,6 +153,8 @@ app.use(presentRoutes.lateRouter);   // DELETE /api/presents/:id/reserve
 app.use(formularzRoutes);
 app.use(authRoutes.lateRouter);      // POST /api/register
 app.use(recipientRoutes.lateRouter); // POST /api/user/identify
+// Mounted before the error handler so errors from archive routes get the JSON error response
+app.use(archiveRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -173,9 +175,6 @@ app.use((err, req, res, next) => {
 
     handleDbError(err, res, 'Błąd serwera');
 });
-
-// Registered after the error handler, exactly as before the split
-app.use(archiveRoutes);
 
 // Initialize database and start server
 async function startServer() {
