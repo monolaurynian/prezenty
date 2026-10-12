@@ -12,7 +12,7 @@ const { DEMO_MODE, pool } = require('../lib/db');
 const { handleDbError, notFound, forbidden, badRequest } = require('../lib/http-errors');
 const { requireAuth } = require('../lib/auth');
 const { ensureAnonMessageTables, notifyAnonMessage, reactionRateAllows } = require('../lib/chat');
-const { linkPreviewCache, LINK_PREVIEW_TTL, isSafePreviewUrl, extractMeta } = require('../lib/link-preview');
+const { linkPreviewCache, LINK_PREVIEW_TTL, isSafePreviewUrl, extractMeta, fetchPreview } = require('../lib/link-preview');
 const { demoChat, demoThreadMessages, demoIsParticipant, demoOtherLabel, demoThreadList, demoUnreadCount, demoReactionRows, demoThreadReactionRows, demoReactionToggle } = require('../lib/demo-data');
 
 // Users the current user can message (everyone but themselves)
@@ -423,37 +423,23 @@ router.get('/api/link-preview', requireAuth, async (req, res) => {
     }
 
     try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 6000);
-        const response = await fetch(parsed.href, {
-            signal: controller.signal,
-            redirect: 'follow',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; PrezentyBot/1.0; link preview)',
-                'Accept': 'text/html,application/xhtml+xml'
-            }
-        });
-        clearTimeout(timer);
+        // fetchPreview validates every resolved address and every redirect hop.
+        // Hosts that resolve or redirect to private addresses yield the same
+        // graceful empty preview (catch below); literal private IPs still get
+        // the 400 from isSafePreviewUrl above.
+        const page = await fetchPreview(parsed.href);
 
-        const contentType = response.headers.get('content-type') || '';
+        const contentType = page.contentType;
         if (!contentType.includes('text/html')) {
             const data = { url: parsed.href, title: null, image: contentType.startsWith('image/') ? parsed.href : null, siteName: parsed.hostname };
             linkPreviewCache.set(parsed.href, { ts: Date.now(), data });
             return res.json(data);
         }
 
-        // Read at most ~300KB - og tags live in <head>
-        const reader = response.body.getReader();
-        let html = '';
-        const decoder = new TextDecoder();
-        while (html.length < 300000) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            html += decoder.decode(value, { stream: true });
-        }
-        reader.cancel().catch(() => {});
+        // fetchPreview reads at most ~300KB - og tags live in <head>
+        const html = page.html;
 
-        const finalUrl = response.url || parsed.href;
+        const finalUrl = page.finalUrl || parsed.href;
         let image = extractMeta(html, 'og:image') || extractMeta(html, 'twitter:image');
         if (image) {
             try { image = new URL(image, finalUrl).href; } catch (e) { image = null; }
