@@ -1,0 +1,164 @@
+
+        body {
+            background: url('seba.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            z-index: -1;
+        }
+
+        .stats-navbar {
+            /* Unified black-fade top bar (see app-theme.css).
+               Safe-area padding keeps content (incl. the avatar) clear
+               of the phone's status bar */
+            padding: calc(1rem + env(safe-area-inset-top, 0px)) 0 1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Make sure the avatar is never clipped by the navbar edges */
+        .stats-navbar,
+        .stats-navbar .container-fluid {
+            overflow: visible;
+            min-height: 56px;
+        }
+
+        .stats-navbar .container-fluid {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stats-navbar .navbar-brand {
+            margin: 0 auto;
+        }
+
+        .stats-navbar .brand-text {
+            color: white;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .stats-container {
+            /* Frosted card - unified app look */
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(16px) saturate(160%);
+            -webkit-backdrop-filter: blur(16px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            padding: 40px;
+            /* Clear gap between stacked sections - shadows overlapped and
+               adjacent rounded surfaces looked like they were clashing */
+            margin: 20px auto;
+            max-width: 1200px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        /* Inner rounded cards (accordions) must not hug the container's
+           own rounded bottom edge */
+        .stats-container > .accordion:last-child,
+        .stats-container > div:last-child {
+            margin-bottom: 2px;
+        }
+
+        .stats-container h3 {
+            color: #2d3748 !important;
+            text-shadow: none !important;
+            text-align: center !important;
+        }
+
+        /* White accordion chevrons - the section headers are colored
+           (red/orange/green), the default dark arrow gets lost on them */
+        .stats-container .accordion-button::after {
+            filter: brightness(0) invert(1);
+        }
+
+        @media (max-width: 768px) {
+            .stats-container {
+                padding: 20px;
+                margin: 14px auto;
+            }
+        }
+
+        #availablePresentsList {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px;
+        }
+
+        /* Present rows (Dostępne / Zarezerwowane / Kupione): titles wrap
+           at spaces only, never letter by letter next to the nowrap
+           action buttons. Long URLs stay on one line with an ellipsis. */
+        .home-present-title,
+        .home-present-comments {
+            word-break: normal !important;
+            overflow-wrap: break-word !important;
+            hyphens: manual;
+        }
+        .home-present-title {
+            line-height: 1.4;
+        }
+        .home-present-link {
+            display: block;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 480px) {
+            /* Less nested horizontal padding so the text gets the width */
+            .stats-container {
+                padding: 16px 12px;
+            }
+            #availablePresentsList {
+                padding: 10px 6px;
+            }
+            .home-recipient-card {
+                padding: 14px 12px !important;
+            }
+            .home-present-row {
+                padding: 10px !important;
+            }
+
+            /* Actions drop below the text instead of squeezing it */
+            .home-present-row {
+                flex-wrap: wrap !important;
+                row-gap: 10px !important;
+            }
+            .home-present-row > .home-present-main {
+                flex: 1 1 100% !important;
+                width: 100%;
+            }
+            .home-present-row > .home-present-actions {
+                flex: 1 1 100% !important;
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: flex-end !important;
+                align-items: center !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+                margin-left: auto;
+            }
+            .home-present-actions .btn {
+                min-height: 40px;
+                padding: 0.5rem 0.9rem !important;
+                font-size: 0.875rem !important;
+            }
+        }
+    
