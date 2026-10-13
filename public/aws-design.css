@@ -1,10 +1,6 @@
 /* AWS Design Language System for Prezenty App */
 
 /* Notification Bell Container - Fixed Top Right */
-.notification-bell-container {
-    position: relative;
-    display: inline-block;
-}
 
 .notification-bell-btn {
     background: rgba(255, 255, 255, 0.2);
@@ -53,20 +49,6 @@
     }
 }
 
-.notification-dropdown {
-    position: absolute;
-    top: calc(100% + 12px);
-    right: 0;
-    width: 380px;
-    max-width: 90vw;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    display: none;
-    z-index: 1000;
-    overflow: hidden;
-}
-
 .notification-dropdown.show {
     display: block;
     animation: slideDown 0.3s ease;
@@ -83,22 +65,6 @@
     }
 }
 
-.notification-dropdown-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid #E0E0E0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: linear-gradient(135deg, #F44336, #E91E63);
-}
-
-.notification-dropdown-header h6 {
-    margin: 0;
-    color: white;
-    font-weight: 600;
-    font-size: 16px;
-}
-
 .notification-dropdown-header .btn-link {
     color: white;
     font-size: 12px;
@@ -108,17 +74,6 @@
 
 .notification-dropdown-header .btn-link:hover {
     text-decoration: underline;
-}
-
-.notification-dropdown-body {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.notification-dropdown-footer {
-    padding: 12px 20px;
-    border-top: 1px solid #E0E0E0;
-    text-align: center;
 }
 
 .notification-dropdown-footer .btn-link {
@@ -137,11 +92,6 @@
         width: 40px;
         height: 40px;
         font-size: 16px;
-    }
-    
-    .notification-dropdown {
-        width: 320px;
-        right: -20px;
     }
 }
 
@@ -2833,17 +2783,6 @@ leton Loading Animation */
     }
 }
 
-.skeleton-text {
-    height: 16px;
-    margin-bottom: 8px;
-}
-
-.skeleton-title {
-    height: 24px;
-    width: 60%;
-    margin-bottom: 12px;
-}
-
 .skeleton-avatar {
     width: 80px;
     height: 80px;
@@ -2872,9 +2811,6 @@ button, .btn, .card, .present-item, .recipient-item {
 }
 
 /* Hover effects for cards */
-.aws-action-card:hover {
-    transform: translateY(-2px);
-}
 
 /* Loading state improvements */
 .updating {
@@ -2890,10 +2826,6 @@ button, .btn, .card, .present-item, .recipient-item {
     50% {
         transform: scale(1.05);
     }
-}
-
-.success-animation {
-    animation: success-pulse 0.3s ease;
 }
 
 /* Micro-interaction: Button press effect */
@@ -2961,20 +2893,11 @@ button, .btn, .card, .present-item, .recipient-item {
     }
 }
 
-.notification-pulse {
-    animation: pulse-notification 2s infinite;
-}
-
 /* Remove hover states on touch devices */
 @media (hover: none) and (pointer: coarse) {
     .reserve-btn:hover {
         transform: none !important;
         box-shadow: none !important;
-    }
-    
-    .aws-action-card:hover {
-        transform: none !important;
-        box-shadow: var(--aws-shadow-sm) !important;
     }
     
     .btn:hover {
@@ -2987,11 +2910,6 @@ button, .btn, .card, .present-item, .recipient-item {
     .reserve-btn:active {
         transform: scale(0.95) !important;
         opacity: 0.8;
-    }
-    
-    .aws-action-card:active {
-        transform: scale(0.98) !important;
-        opacity: 0.9;
     }
     
     .btn:active {
@@ -3122,37 +3040,6 @@ button, .btn, .card, .present-item, .recipient-item {
 }
 
 /* Modern minimal spinner */
-.minimal-spinner {
-    position: relative;
-    width: 60px;
-    height: 60px;
-    margin: 0 auto;
-}
-
-.spinner-ring {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border: 3px solid transparent;
-    border-top-color: var(--material-red);
-    border-radius: 50%;
-    animation: spinner-rotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-}
-
-.spinner-ring:nth-child(1) {
-    animation-delay: -0.45s;
-    border-top-color: var(--material-red);
-}
-
-.spinner-ring:nth-child(2) {
-    animation-delay: -0.3s;
-    border-top-color: var(--material-green);
-}
-
-.spinner-ring:nth-child(3) {
-    animation-delay: -0.15s;
-    border-top-color: var(--material-amber);
-}
 
 @keyframes spinner-rotate {
     0% {
@@ -3213,10 +3100,6 @@ button, .btn, .card, .present-item, .recipient-item {
     .loading-text {
         animation: none;
     }
-    
-    .spinner-ring {
-        border-top-color: var(--material-red);
-    }
 }
 
 /* Instant load indicator */
@@ -3237,60 +3120,6 @@ button, .btn, .card, .present-item, .recipient-item {
 }
 
 /* Search and Filter Bar */
-.search-filter-bar {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.search-box {
-    position: relative;
-}
-
-.search-icon {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--aws-gray-500);
-    font-size: 16px;
-    pointer-events: none;
-}
-
-.search-input {
-    padding-left: 48px;
-    padding-right: 40px;
-    height: 48px;
-    border: 2px solid var(--aws-gray-300);
-    border-radius: 24px;
-    font-size: 15px;
-    transition: all 0.2s ease;
-}
-
-.search-input:focus {
-    border-color: var(--material-blue);
-    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.1);
-    outline: none;
-}
-
-.clear-search {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--aws-gray-500);
-    padding: 4px 8px;
-    z-index: 10;
-}
-
-.clear-search:hover {
-    color: var(--aws-gray-700);
-}
-
-.filter-buttons {
-    justify-content: flex-end;
-}
 
 .filter-btn {
     border-radius: 20px;
@@ -3317,9 +3146,6 @@ button, .btn, .card, .present-item, .recipient-item {
 
 /* Mobile adjustments for search/filter */
 @media (max-width: 991px) {
-    .filter-buttons {
-        justify-content: flex-start;
-    }
     
     .filter-btn {
         flex: 1 1 auto;
@@ -3332,58 +3158,12 @@ button, .btn, .card, .present-item, .recipient-item {
 
 /* Mobile collapsible search */
 @media (max-width: 767px) {
-    .mobile-search-toggle {
-        margin-bottom: 16px;
-    }
-    
-    .search-toggle-btn {
-        width: 100%;
-        padding: 12px 20px;
-        font-size: 16px;
-        font-weight: 500;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-    }
-    
-    .search-toggle-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-    }
-    
-    .search-container {
-        max-height: 0;
-        overflow: hidden;
-        opacity: 0;
-        transition: all 0.3s ease;
-        transform: translateY(-10px);
-    }
     
     .search-container.expanded {
         max-height: 500px;
         opacity: 1;
         transform: translateY(0);
         margin-bottom: 16px;
-    }
-    
-    .close-search {
-        position: absolute;
-        right: 50px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--aws-gray-500);
-        padding: 4px 8px;
-        z-index: 10;
-    }
-    
-    .close-search:hover {
-        color: var(--aws-gray-700);
-    }
-    
-    .filter-buttons {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-top: 12px;
     }
     
     .filter-btn {
@@ -3413,36 +3193,9 @@ button, .btn, .card, .present-item, .recipient-item {
     .aws-action-section .col-md-6:nth-child(3) {
         grid-column: 1 / -1; /* Full width for third card */
     }
-    
-    .aws-action-card {
-        height: 140px;
-    }
-    
-    .aws-action-title {
-        font-size: 13px;
-    }
-    
-    .aws-action-description {
-        font-size: 11px;
-    }
 }
 
 /* Desktop - always show search */
-@media (min-width: 768px) {
-    .mobile-search-toggle {
-        display: none;
-    }
-    
-    .search-container {
-        max-height: none;
-        opacity: 1;
-        transform: none;
-    }
-    
-    .close-search {
-        display: none;
-    }
-}
 
 /* Extra small screens - optimize further */
 @media (max-width: 480px) {
@@ -3450,93 +3203,18 @@ button, .btn, .card, .present-item, .recipient-item {
         font-size: 12px;
         padding: 8px 10px;
     }
-    
-    .aws-action-card {
-        height: 120px;
-    }
-    
-    .aws-action-icon {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
-        min-height: 32px;
-        max-width: 32px;
-        max-height: 32px;
-    }
-    
-    .aws-action-icon i {
-        font-size: 14px;
-    }
-    
-    .aws-action-title {
-        font-size: 12px;
-    }
-    
-    .aws-action-description {
-        font-size: 10px;
-    }
 }
 
 /* Floating Action Button (FAB) */
-.fab-container {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 1000;
-    display: none; /* Show only on mobile */
-}
 
 @media (max-width: 991px) {
-    .fab-container {
-        display: block;
-    }
     
     /* Keep action cards visible on mobile */
-}
-
-.fab-main {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--material-red), var(--material-pink));
-    color: white;
-    border: none;
-    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    z-index: 1001;
-    position: relative;
-}
-
-.fab-main:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.6);
-}
-
-.fab-main:active {
-    transform: scale(0.95);
 }
 
 .fab-main.active {
     transform: rotate(45deg);
     background: linear-gradient(135deg, var(--material-pink), var(--material-red));
-}
-
-.fab-menu {
-    position: absolute;
-    bottom: 70px;
-    right: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(20px);
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .fab-menu.active {
@@ -3545,53 +3223,7 @@ button, .btn, .card, .present-item, .recipient-item {
     transform: translateY(0);
 }
 
-.fab-item {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: white;
-    color: var(--material-blue);
-    border: 2px solid var(--material-blue);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-}
-
-.fab-item:hover {
-    transform: scale(1.1);
-    background: var(--material-blue);
-    color: white;
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
-}
-
-.fab-item:active {
-    transform: scale(0.95);
-}
-
 /* FAB item tooltips */
-.fab-item::before {
-    content: attr(data-tooltip);
-    position: absolute;
-    right: 60px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-}
-
-.fab-item:hover::before {
-    opacity: 1;
-}
 
 /* FAB animation delays for staggered effect */
 .fab-menu.active .fab-item:nth-child(1) {
@@ -3607,11 +3239,6 @@ button, .btn, .card, .present-item, .recipient-item {
 }
 
 /* Highlight search results */
-.search-highlight {
-    background-color: rgba(255, 235, 59, 0.3);
-    padding: 2px 4px;
-    border-radius: 3px;
-}
 
 /* Smooth show/hide for filtered items */
 .recipient-item,
@@ -3639,20 +3266,6 @@ button, .btn, .card, .present-item, .recipient-item {
 }
 
 /* Search Results Dropdown */
-.search-results-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    margin-top: 8px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    max-height: 400px;
-    overflow-y: auto;
-    z-index: 1000;
-    animation: dropdown-slide-in 0.2s ease;
-}
 
 @keyframes dropdown-slide-in {
     from {
@@ -3663,16 +3276,6 @@ button, .btn, .card, .present-item, .recipient-item {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-.search-results-header {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--aws-gray-200);
-    background: var(--aws-gray-50);
-    border-radius: 12px 12px 0 0;
-    font-weight: 600;
-    font-size: 13px;
-    color: var(--aws-gray-700);
 }
 
 .results-count {
@@ -3784,10 +3387,6 @@ button, .btn, .card, .present-item, .recipient-item {
 
 /* Mobile adjustments for search dropdown */
 @media (max-width: 767px) {
-    .search-results-dropdown {
-        max-height: 300px;
-        font-size: 14px;
-    }
     
     .search-result-item {
         padding: 12px 16px;
@@ -3799,36 +3398,8 @@ button, .btn, .card, .present-item, .recipient-item {
 }
 
 /* Scrollbar styling for search results */
-.search-results-dropdown::-webkit-scrollbar {
-    width: 6px;
-}
-
-.search-results-dropdown::-webkit-scrollbar-track {
-    background: var(--aws-gray-100);
-    border-radius: 0 12px 12px 0;
-}
-
-.search-results-dropdown::-webkit-scrollbar-thumb {
-    background: var(--aws-gray-400);
-    border-radius: 3px;
-}
-
-.search-results-dropdown::-webkit-scrollbar-thumb:hover {
-    background: var(--aws-gray-500);
-}
 
 /* Faster reserve/unreserve animations */
-.smooth-slide-up {
-    animation: slide-up 0.3s ease-out;
-}
-
-.smooth-slide-down {
-    animation: slide-down 0.3s ease-out;
-}
-
-.fading {
-    animation: fade-out 0.3s ease-out;
-}
 
 @keyframes slide-up {
     from {
@@ -3878,9 +3449,6 @@ button, .btn, .card, .present-item, .recipient-item {
 
 
 /* Notification Bell Styles */
-.notification-bell-container {
-    position: relative;
-}
 
 .notification-bell-btn {
     background: transparent;
@@ -3895,15 +3463,6 @@ button, .btn, .card, .present-item, .recipient-item {
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
-}
-
-.notification-bell-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(1.05);
-}
-
-.notification-bell-btn i {
-    font-size: 18px;
 }
 
 .notification-badge {
@@ -3922,24 +3481,6 @@ button, .btn, .card, .present-item, .recipient-item {
 }
 
 /* Notification Dropdown */
-.notification-dropdown {
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    width: 380px;
-    max-width: 90vw;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s ease;
-    z-index: 1000;
-    max-height: 500px;
-    display: flex;
-    flex-direction: column;
-}
 
 .notification-dropdown.show {
     opacity: 1;
@@ -3947,35 +3488,10 @@ button, .btn, .card, .present-item, .recipient-item {
     transform: translateY(0);
 }
 
-.notification-dropdown-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid #E0E0E0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.notification-dropdown-header h6 {
-    color: #333;
-    font-weight: 600;
-    margin: 0;
-}
-
 .notification-dropdown-header .btn-link {
     color: #2196F3;
     font-size: 13px;
     padding: 0;
-}
-
-.notification-dropdown-body {
-    overflow-y: auto;
-    max-height: 400px;
-}
-
-.notification-dropdown-footer {
-    padding: 10px;
-    border-top: 1px solid #E0E0E0;
-    text-align: center;
 }
 
 .notification-dropdown-footer .btn-link {
@@ -3999,18 +3515,6 @@ button, .btn, .card, .present-item, .recipient-item {
     background-color: #F5F5F5;
 }
 
-.notification-item:last-child {
-    border-bottom: none;
-}
-
-.notification-item.unread {
-    background-color: transparent;
-}
-
-.notification-item.unread:hover {
-    background-color: rgba(0, 0, 0, 0.02);
-}
-
 .notification-icon {
     width: 36px;
     height: 36px;
@@ -4024,11 +3528,6 @@ button, .btn, .card, .present-item, .recipient-item {
 
 .notification-icon i {
     font-size: 16px;
-}
-
-.notification-content {
-    flex: 1;
-    min-width: 0;
 }
 
 .notification-text {
@@ -4059,10 +3558,6 @@ button, .btn, .card, .present-item, .recipient-item {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-    .notification-dropdown {
-        width: 320px;
-        right: -10px;
-    }
     
     .notification-item {
         padding: 12px 15px;
@@ -4208,9 +3703,6 @@ button, .btn, .card, .present-item, .recipient-item {
 
 
 /* Notification Bell Styles */
-.notification-bell-container {
-    position: relative;
-}
 
 .notification-bell-btn {
     background: transparent;
@@ -4251,61 +3743,9 @@ button, .btn, .card, .present-item, .recipient-item {
 }
 
 /* Notification Dropdown */
-.notification-dropdown {
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    width: 380px;
-    max-width: 90vw;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    display: none;
-    z-index: 1000;
-    max-height: 500px;
-    display: flex;
-    flex-direction: column;
-}
 
 .notification-dropdown.show {
     display: flex;
-}
-
-.notification-dropdown-header {
-    padding: 16px;
-    border-bottom: 1px solid #e0e0e0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.notification-dropdown-header h6 {
-    font-weight: 600;
-    color: #333;
-}
-
-.notification-dropdown-body {
-    flex: 1;
-    overflow-y: auto;
-    max-height: 400px;
-}
-
-.notification-dropdown-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 12px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    position: relative;
-}
-
-.notification-dropdown-item:last-child {
-    border-bottom: none;
-}
-
-.notification-dropdown-item:hover {
-    background-color: #f5f5f5;
 }
 
 .notification-dropdown-item.unread {
@@ -4355,31 +3795,8 @@ button, .btn, .card, .present-item, .recipient-item {
     margin-top: 14px;
 }
 
-.notification-dropdown-footer {
-    padding: 12px 16px;
-    border-top: 1px solid #e0e0e0;
-    text-align: center;
-}
-
-.notification-dropdown-footer a {
-    color: #667eea;
-    font-weight: 500;
-}
-
-.notification-dropdown-footer a:hover {
-    color: #764ba2;
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .notification-dropdown {
-        width: 320px;
-        right: -10px;
-    }
-    
-    .notification-dropdown-item {
-        padding: 10px 12px;
-    }
     
     .notification-dropdown-item .notification-icon {
         width: 32px;
@@ -4394,12 +3811,6 @@ button, .btn, .card, .present-item, .recipient-item {
 
 
 /* Floating Notification Bell - Top Right Corner */
-.notification-bell-floating {
-    position: fixed !important;
-    top: 10px !important;
-    right: 10px !important;
-    z-index: 1040 !important;
-}
 
 .notification-bell-floating .notification-bell-btn {
     position: relative;
@@ -4442,57 +3853,16 @@ button, .btn, .card, .present-item, .recipient-item {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.notification-bell-floating .notification-dropdown {
-    position: absolute !important;
-    top: 60px !important;
-    right: 0 !important;
-    width: 380px;
-    max-width: 90vw;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s ease;
-    max-height: 500px;
-    display: flex;
-    flex-direction: column;
-    z-index: 1041 !important;
-}
-
 .notification-bell-floating .notification-dropdown.show {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
 }
 
-.notification-bell-floating .notification-dropdown-header {
-    padding: 1rem;
-    border-bottom: 1px solid #e9ecef;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
-    color: white;
-    border-radius: 16px 16px 0 0;
-}
-
-.notification-bell-floating .notification-dropdown-header h6 {
-    color: white;
-    margin: 0;
-}
-
 .notification-bell-floating .notification-dropdown-header .btn-link {
     color: white;
     font-size: 0.85rem;
     padding: 0;
-}
-
-.notification-bell-floating .notification-dropdown-body {
-    padding: 0;
-    overflow-y: auto;
-    max-height: 350px;
 }
 
 .notification-bell-floating .notification-item {
@@ -4553,14 +3923,6 @@ button, .btn, .card, .present-item, .recipient-item {
     margin-top: 6px;
 }
 
-.notification-bell-floating .notification-dropdown-footer {
-    padding: 0.75rem;
-    border-top: 1px solid #e9ecef;
-    text-align: center;
-    background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
-    border-radius: 0 0 16px 16px;
-}
-
 .notification-bell-floating .notification-dropdown-footer .btn-link {
     color: white;
     font-weight: 600;
@@ -4574,20 +3936,11 @@ button, .btn, .card, .present-item, .recipient-item {
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
-    .notification-bell-floating {
-        top: 10px;
-        right: 10px;
-    }
     
     .notification-bell-floating .notification-bell-btn {
         width: 45px;
         height: 45px;
         font-size: 1.1rem;
-    }
-    
-    .notification-bell-floating .notification-dropdown {
-        width: calc(100vw - 20px);
-        right: 0;
     }
 }
 
