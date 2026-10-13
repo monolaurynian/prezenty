@@ -849,17 +849,6 @@ body.recipients-page .tab-bar-notifications-view-all a:hover,
 }
 
 /* Glass morphism variants for different backgrounds */
-.tab-bar-dark-bg {
-    background: rgba(0, 0, 0, 0.2) !important;
-    backdrop-filter: blur(15px) saturate(180%) !important;
-    border: 2px solid rgba(255, 255, 255, 0.2) !important;
-}
-
-.tab-bar-light-bg {
-    background: rgba(255, 255, 255, 0.25) !important;
-    backdrop-filter: blur(15px) saturate(180%) !important;
-    border: 2px solid rgba(255, 255, 255, 0.4) !important;
-}
 
 /* Apple-style: no per-tab colors - all inactive icons neutral gray,
    the single accent belongs to the active tab only */
