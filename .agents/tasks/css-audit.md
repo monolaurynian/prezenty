@@ -887,3 +887,9 @@ Crude static criterion (the Phase C idea, without its safelist review): a rule i
 
 The full unfiltered lists for both appendices are in `$env:TEMP\css-consolidate-1\css-audit\analyze.json` (uncovered rules per file, dead-by-token list) and `drift.json` (drift report); `$env:TEMP\css-consolidate-1\coverage.json` has the merged used ranges per file for Phase C cross-checks.
 
+
+## Phase C addendum (after dead and duplicate rule removal)
+
+The uncovered-rule lists in the sections above were produced from the pre-Phase-C files, so their line numbers no longer match files that Phase C edited (see `css-dead-rules-removed.txt` for the removed rules per file, with the original line numbers).
+Rules that runtime coverage never matched but that still pass the static criterion (some class/id token is used, or the rule is protected by a policy keep) were REPORTED only and left in place: 1,015 rules / 150,183 bytes across the 18 hand-written files (aws-design.css 372, styles.css 439, recipients-page.css 34, bottom-tab-bar.css 34, filters.css 37, remaining files 99). The totals and per-file counts are at the end of `css-dead-rules-removed.txt`.
+Unreferenced `@keyframes` in hand-written files (reported, never removed): filters.css `highlightPulse`; aws-design.css `pulse-notification`, `spinner-rotate`, `dropdown-slide-in`, `fade-out`.
