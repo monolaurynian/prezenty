@@ -82,6 +82,7 @@ The app creates the following tables:
 - `routes/` - Express routers grouped by domain (system, pages, auth, recipients, presents, notifications, leaderboard, chat, formularz, archive)
 - `lib/` - shared logic used by the routers (database pool, push, notifications, caches, demo data, cron jobs)
 - `public/` - static front end (HTML, CSS, client JS, service worker)
+- `public/CSS-README.md` - which stylesheet each page loads, which CSS files are generated or frozen, and how to rebuild them
 - `tests/` - Playwright end-to-end suite (see [`tests/README.md`](tests/README.md))
 - `scripts/` - database and diagnostic scripts (see [`scripts/README.md`](scripts/README.md)); `npm run init-db`, `test-db` and `optimize-db` point here
 - `docs/archive/` - historical fix notes, kept for reference (see [`docs/archive/README.md`](docs/archive/README.md))
