@@ -9,12 +9,16 @@
  *   - wiadomosci.html loads it as a <script> and additionally gets the UI
  *     (chips, bottom-sheet picker, optimistic toggle) as window.ChatReactions.
  *
- * Privacy: the only reaction shape that ever crosses the wire is
- * { emoji, count, mine }. There is no user id, username or per-user list
- * anywhere in here - `mine` is computed server side from the session.
+ * Privacy: the only reaction shapes that ever cross the wire are
+ * { emoji, count, mine } (aggregates) and { emoji, at, messageId, excerpt }
+ * (the conversation-list preview of the OTHER side's newest reaction). There
+ * is no user id, username or per-user list anywhere in here - `mine` is
+ * computed server side from the session.
  *
  * Reactions deliberately generate NO notifications: nothing in this file
- * touches notification-text.js, push, the activity feed or unread counts.
+ * touches push, the activity feed or unread counts. (The list-preview
+ * WORDING lives in notification-text.js, but it is only text for a row that
+ * already exists - it creates no notification.)
  */
 (function (root) {
     'use strict';
@@ -114,6 +118,40 @@
         return { start: Number(bucket.start), hits: hits, allowed: hits <= maxHits };
     }
 
+    // One-line excerpt of a message body for the conversation-list preview.
+    // Whitespace/newline runs collapse to a single space; longer text is cut
+    // by CODE POINTS (so an emoji is never split) and ends with an ellipsis.
+    function reactionExcerpt(body, max) {
+        const limit = Number.isFinite(max) && max > 1 ? Math.floor(max) : 50;
+        const text = String(body === null || body === undefined ? '' : body)
+            .replace(/\s+/g, ' ')
+            .trim();
+        const chars = Array.from(text);
+        if (chars.length <= limit) return text;
+        return chars.slice(0, limit - 1).join('').trimEnd() + '\u2026';
+    }
+    // The other side's newest reaction becomes the list preview ONLY when it
+    // is newer than the thread's last message (or targets that message
+    // itself, which removes the 1-second TIMESTAMP tie). `row` is the SQL /
+    // demo row { emoji, reacted_at, message_id, body } of the OTHER side's
+    // newest reaction (the query already excluded the viewer's own);
+    // `last` is { id, at }. Returns null (normal preview) or the wire shape
+    // { emoji, at, messageId, excerpt } - no user id, name or role.
+    function buildLastReaction(row, last) {
+        if (!row || !last || !isAllowedReactionEmoji(row.emoji)) return null;
+        const messageId = parseMessageId(row.message_id);
+        if (messageId === null) return null;
+        const reactedAt = new Date(row.reacted_at).getTime();
+        const lastAt = new Date(last.at).getTime();
+        const onLastMessage = parseMessageId(last.id) === messageId;
+        if (!onLastMessage && !(reactedAt > lastAt)) return null; // NaN fails too
+        return {
+            emoji: row.emoji,
+            at: row.reacted_at,
+            messageId: messageId,
+            excerpt: reactionExcerpt(row.body)
+        };
+    }
     const core = {
         CHAT_REACTIONS: CHAT_REACTIONS,
         CHAT_REACTION_EMOJI: CHAT_REACTION_EMOJI,
@@ -122,7 +160,9 @@
         buildReactionList: buildReactionList,
         groupReactionsByMessage: groupReactionsByMessage,
         toggleAction: toggleAction,
-        reactionThrottleStep: reactionThrottleStep
+        reactionThrottleStep: reactionThrottleStep,
+        reactionExcerpt: reactionExcerpt,
+        buildLastReaction: buildLastReaction
     };
 
     if (typeof module !== 'undefined' && module.exports) {
@@ -565,6 +605,8 @@
         groupReactionsByMessage: groupReactionsByMessage,
         toggleAction: toggleAction,
         reactionThrottleStep: reactionThrottleStep,
+        reactionExcerpt: reactionExcerpt,
+        buildLastReaction: buildLastReaction,
         ingest: ingest,
         strip: strip,
         refreshStrips: refreshStrips,

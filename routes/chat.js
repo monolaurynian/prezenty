@@ -5,6 +5,7 @@ const {
     isAllowedReactionEmoji,
     buildReactionList,
     groupReactionsByMessage,
+    buildLastReaction,
     parseMessageId: parseReactionMessageId,
     toggleAction: reactionToggleAction
 } = require('../public/chat-reactions');
@@ -38,6 +39,7 @@ router.get('/api/wiadomosci/threads', requireAuth, async (req, res) => {
         const [threads] = await pool.execute(`
             SELECT t.id, t.initiator_id, t.target_id, t.created_at,
                    u.username AS target_username,
+                   (SELECT id FROM anon_messages m WHERE m.thread_id = t.id ORDER BY m.id DESC LIMIT 1) AS last_id,
                    (SELECT body FROM anon_messages m WHERE m.thread_id = t.id ORDER BY m.id DESC LIMIT 1) AS last_body,
                    (SELECT created_at FROM anon_messages m WHERE m.thread_id = t.id ORDER BY m.id DESC LIMIT 1) AS last_at,
                    (SELECT COUNT(*) FROM anon_messages m WHERE m.thread_id = t.id AND m.is_read = 0 AND m.sender_id != ?) AS unread_count
@@ -46,6 +48,41 @@ router.get('/api/wiadomosci/threads', requireAuth, async (req, res) => {
             WHERE t.initiator_id = ? OR t.target_id = ?
             ORDER BY last_at DESC
         `, [userId, userId, userId]);
+
+        // The OTHER side's newest reaction per thread, in ONE query (no
+        // N+1). The viewer's own reactions are excluded (r.user_id <> ?) in
+        // both the outer filter and the "newest" pick, so they can never
+        // become - or mask - the preview, whichever role the viewer has.
+        // Newest = highest id (toggle is DELETE-then-INSERT, so id order is
+        // creation order). No identity leaves the server: buildLastReaction
+        // keeps only { emoji, at, messageId, excerpt }. Reactions still
+        // create NO notification, push or unread change.
+        // A failure here must not break the whole list: log and carry on
+        // without previews.
+        const reactionByThread = new Map();
+        try {
+            const [reactionRows] = await pool.execute(`
+                SELECT r.id, r.emoji, r.created_at AS reacted_at, r.message_id, m.thread_id, m.body
+                FROM anon_message_reactions r
+                JOIN anon_messages m ON m.id = r.message_id
+                JOIN anon_threads t ON t.id = m.thread_id
+                WHERE (t.initiator_id = ? OR t.target_id = ?)
+                  AND r.user_id <> ?
+                  AND r.user_id IN (t.initiator_id, t.target_id)
+                  AND r.id = (
+                      SELECT r2.id
+                      FROM anon_message_reactions r2
+                      JOIN anon_messages m2 ON m2.id = r2.message_id
+                      WHERE m2.thread_id = m.thread_id
+                        AND r2.user_id <> ?
+                        AND r2.user_id IN (t.initiator_id, t.target_id)
+                      ORDER BY r2.id DESC
+                      LIMIT 1)
+            `, [userId, userId, userId, userId]);
+            reactionRows.forEach(row => reactionByThread.set(Number(row.thread_id), row));
+        } catch (reactionErr) {
+            console.error('[WIADOMOSCI] thread reaction preview failed:', reactionErr.message);
+        }
 
         res.json({
             threads: threads.map(t => ({
@@ -58,7 +95,12 @@ router.get('/api/wiadomosci/threads', requireAuth, async (req, res) => {
                 targetUserId: t.target_id,
                 lastBody: t.last_body,
                 lastAt: t.last_at,
-                unreadCount: Number(t.unread_count)
+                unreadCount: Number(t.unread_count),
+                // null unless the other side reacted AFTER the last message
+                lastReaction: buildLastReaction(
+                    reactionByThread.get(Number(t.id)) || null,
+                    { id: t.last_id, at: t.last_at }
+                )
             }))
         });
     } catch (err) {

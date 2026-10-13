@@ -99,6 +99,22 @@
             return div.innerHTML;
         }
 
+        // List preview line: the OTHER side's newest reaction when the
+        // server sent one (only if it is newer than the last message),
+        // otherwise the last message. The wording lives in
+        // notification-text.js (reactionPreview). Fails closed to the normal
+        // preview when the emoji is off the allowlist or a helper is missing.
+        // The result is plain text and is escaped by the caller.
+        function threadPreviewText(t) {
+            const r = t && t.lastReaction;
+            if (r && typeof reactionsApi.isAllowedReactionEmoji === 'function'
+                && reactionsApi.isAllowedReactionEmoji(r.emoji)
+                && typeof window.reactionPreview === 'function') {
+                return window.reactionPreview(r.emoji, r.excerpt);
+            }
+            return (t && t.lastBody) || '';
+        }
+
         function showToast(message, type) {
             const el = document.getElementById(`${type}Toast`);
             document.getElementById(`${type}ToastMessage`).textContent = message;
@@ -189,7 +205,7 @@
                                     <small style="color:#9ca3af !important;">${timeAgo(t.lastAt)}</small>
                                 </span>
                             </div>
-                            <div class="thread-last">${escapeHtml(t.lastBody || '')}</div>
+                            <div class="thread-last">${escapeHtml(threadPreviewText(t))}</div>
                         </div>
                     `).join('');
                     return threads;

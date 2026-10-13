@@ -6,6 +6,8 @@
 // reliably.
 //
 //   notificationText(type, data, actor, opts) -> HTML string (or plain text)
+//   reactionPreview(emoji, excerpt)           -> plain text for the chat
+//                                                conversation-list preview
 //
 // type:  recipient_added | present_added | present_reserved |
 //        present_unreserved | present_checked | present_unchecked |
@@ -103,8 +105,18 @@
         return opts.showActor === false ? body : `${actorOut} ${body}`;
     }
 
+    // Conversation-list preview when the OTHER side reacted to a message:
+    //   Zareagowano 👍 na „treść wiadomości…”
+    // Impersonal past form on purpose: no name, no gender. This is the ONE
+    // place that owns the wording - change the template here only.
+    // Plain text: callers escape it for their own context.
+    function reactionPreview(emoji, excerpt) {
+        const text = String(excerpt == null ? '' : excerpt);
+        return text ? `Zareagowano ${emoji} na „${text}”` : `Zareagowano ${emoji} na wiadomość`;
+    }
     root.notificationText = notificationText;
+    root.reactionPreview = reactionPreview;
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = { notificationText, escapeHtml };
+        module.exports = { notificationText, escapeHtml, reactionPreview };
     }
 })(typeof window !== 'undefined' ? window : globalThis);
