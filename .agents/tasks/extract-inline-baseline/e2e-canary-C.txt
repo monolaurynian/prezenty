@@ -1,0 +1,53 @@
+﻿
+> prezenty@1.0.0 test:e2e
+> playwright test smoke xss-usernames
+
+[e2e] demo server ready at http://127.0.0.1:56657 (pid 38540) in 2842ms
+[e2e] logged in, session stored at tests\.auth\demo.json
+
+Running 36 tests using 1 worker
+
+  ok  1 tests\e2e\smoke.spec.js:23:5 ÔÇ║ harness smoke ÔÇ║ health endpoint reports demo mode (127ms)
+  ok  2 tests\e2e\smoke.spec.js:31:5 ÔÇ║ harness smoke ÔÇ║ shared session is authenticated (66ms)
+  ok  3 tests\e2e\smoke.spec.js:39:5 ÔÇ║ harness smoke ÔÇ║ requireAuth still rejects an anonymous request (137ms)
+  ok  4 tests\e2e\smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: home (dashboard) (4.1s)
+  ok  5 tests\e2e\smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: recipients (2.6s)
+  ok  6 tests\e2e\smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: osoby (2.1s)
+  ok  7 tests\e2e\smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: activity (1.9s)
+  ok  8 tests\e2e\smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: leaderboard (2.4s)
+  ok  9 tests\e2e\smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: wiadomosci (chat) (2.1s)
+  ok 10 tests\e2e\smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: rezerwacje (1.9s)
+  ok 11 tests\e2e\smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: archiwum (1.5s)
+  ok 12 tests\e2e\smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: ustawienia (1.9s)
+  ok 13 tests\e2e\smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: formularz (2.3s)
+  ok 14 tests\e2e\xss-usernames.spec.js:141:5 ÔÇ║ escape-html.js (shared helper, no browser needed) ÔÇ║ escapeHtml entity-encodes all five dangerous characters (22ms)
+  ok 15 tests\e2e\xss-usernames.spec.js:156:5 ÔÇ║ escape-html.js (shared helper, no browser needed) ÔÇ║ escapeAttr matches escapeHtml - quotes are what attributes need (17ms)
+  ok 16 tests\e2e\xss-usernames.spec.js:162:5 ÔÇ║ escape-html.js (shared helper, no browser needed) ÔÇ║ jsStringAttr yields a JS string literal that survives HTML-attribute decoding (25ms)
+  ok 17 tests\e2e\xss-usernames.spec.js:177:5 ÔÇ║ escape-html.js (shared helper, no browser needed) ÔÇ║ safeImageSrc allows only same-origin paths and https, escaped (27ms)
+  ok 18 tests\e2e\xss-usernames.spec.js:210:5 ÔÇ║ XSS: leaderboard names ÔÇ║ the activity list renders every payload as literal text (4.1s)
+  ok 19 tests\e2e\xss-usernames.spec.js:225:5 ÔÇ║ XSS: leaderboard names ÔÇ║ the activity podium renders every payload as literal text (4.2s)
+  ok 20 tests\e2e\xss-usernames.spec.js:236:5 ÔÇ║ XSS: leaderboard names ÔÇ║ the total-presents podium renders every payload as literal text (4.0s)
+  ok 21 tests\e2e\xss-usernames.spec.js:249:5 ÔÇ║ XSS: leaderboard names ÔÇ║ the ranking list renders every payload as literal text (3.9s)
+  ok 22 tests\e2e\xss-usernames.spec.js:260:5 ÔÇ║ XSS: leaderboard names ÔÇ║ no clickable card carries an inline onclick, and the raw name survives in data-username (4.6s)
+  ok 23 tests\e2e\xss-usernames.spec.js:282:5 ÔÇ║ XSS: leaderboard names ÔÇ║ hovering a payload name fires nothing (4.4s)
+  ok 24 tests\e2e\xss-usernames.spec.js:295:5 ÔÇ║ XSS: leaderboard names ÔÇ║ clicking a payload card still navigates to that person (10.9s)
+  ok 25 tests\e2e\xss-usernames.spec.js:325:5 ÔÇ║ XSS: leaderboard names ÔÇ║ an untrusted profile_picture is allowlisted, a legitimate one still renders (3.7s)
+  ok 26 tests\e2e\xss-usernames.spec.js:361:5 ÔÇ║ XSS: intro page names ÔÇ║ the intro podium renders every payload as literal text (2.5s)
+  ok 27 tests\e2e\xss-usernames.spec.js:379:5 ÔÇ║ XSS: intro page names ÔÇ║ the intro 4-10 list renders an HTML-special name as literal text (2.2s)
+  ok 28 tests\e2e\xss-usernames.spec.js:398:5 ÔÇ║ XSS: leaderboard-leader notification ÔÇ║ /activity renders both leader names as literal text (3.0s)
+  ok 29 tests\e2e\xss-usernames.spec.js:442:9 ÔÇ║ XSS: dock notifications panel (tab-bar-functions.js) ÔÇ║ leaderboard: leader names and message labels render as literal text (3.6s)
+  ok 30 tests\e2e\xss-usernames.spec.js:478:9 ÔÇ║ XSS: dock notifications panel (tab-bar-functions.js) ÔÇ║ leaderboard: an apostrophe-only recipient name cannot break out of the present link's onclick (3.4s)
+  ok 31 tests\e2e\xss-usernames.spec.js:442:9 ÔÇ║ XSS: dock notifications panel (tab-bar-functions.js) ÔÇ║ recipients: leader names and message labels render as literal text (3.1s)
+  ok 32 tests\e2e\xss-usernames.spec.js:478:9 ÔÇ║ XSS: dock notifications panel (tab-bar-functions.js) ÔÇ║ recipients: an apostrophe-only recipient name cannot break out of the present link's onclick (3.0s)
+  ok 33 tests\e2e\xss-usernames.spec.js:521:5 ÔÇ║ XSS: inline handlers on /recipients ÔÇ║ a recipient name cannot break out of the identify / share / cancel handlers (3.0s)
+  ok 34 tests\e2e\xss-usernames.spec.js:575:5 ÔÇ║ XSS: inline handlers on /recipients ÔÇ║ jsStringAttr survives a real HTML parser for every payload (2.8s)
+  ok 35 tests\e2e\xss-usernames.spec.js:599:5 ÔÇ║ XSS: present titles on /osoby ÔÇ║ the delete button carries no title and the edit field round-trips it (3.4s)
+  ok 36 tests\e2e\xss-usernames.spec.js:632:5 ÔÇ║ XSS: present titles on /osoby ÔÇ║ deleting still confirms with the real title (2.7s)
+[e2e] demo server on port 56657 stopped
+
+  36 passed (1.8m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report tests\.report[39m
+[36m[39m

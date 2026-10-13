@@ -1,0 +1,7 @@
+{
+  "task_id": "task-css-consolidate",
+  "task_description": "Heavy, conservative CSS consolidation for the Prezenty PWA in worktree .worktrees/css-consolidate-1 (branch refactor/css-consolidate-1): Phase A audit with real Edge coverage, Phase B single source of truth + reproducible build:css + safelist/globs + leaderboard decision, Phase C strict dead/duplicate rule removal from hand-written CSS only, Phase D .container overflow-x hidden -> clip (separate revertable commit), then sw.js v127 + ?v bumps + verification report. Full design: P/.agents/tasks/css-plan.md",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005"],
+  "blocked_reason": null
+}

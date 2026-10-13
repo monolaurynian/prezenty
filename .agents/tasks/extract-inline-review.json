@@ -1,0 +1,12 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "severity": "non-blocking",
+      "confidence": "confirmed",
+      "label": "Artifact committed to branch",
+      "detail": "Commit 16afcb6 adds .agents/tasks/extract-inline-1-verification.md to the repo, contrary to the plan (artifacts are never committed; not in the allowed-edits list). The merge step should exclude it (revert that commit or squash without it) so it does not reach the main branch."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\matmamon\\OneDrive - amazon.com\\Documents\\Prezenty\\prezenty\\.agents\\tasks\\extract-inline-review-doc.md"
+}

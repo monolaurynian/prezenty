@@ -1,0 +1,85 @@
+{
+ "a": "before-1",
+ "b": "after-final",
+ "total": 0,
+ "report": {
+  "activity@1024x768": {
+   "diffs": []
+  },
+  "activity@375x812": {
+   "diffs": []
+  },
+  "archiwum@1024x768": {
+   "diffs": []
+  },
+  "archiwum@375x812": {
+   "diffs": []
+  },
+  "formularz@1024x768": {
+   "diffs": []
+  },
+  "formularz@375x812": {
+   "diffs": []
+  },
+  "home@1024x768": {
+   "diffs": []
+  },
+  "home@375x812": {
+   "diffs": []
+  },
+  "index@1024x768": {
+   "diffs": []
+  },
+  "index@375x812": {
+   "diffs": []
+  },
+  "intro@1024x768": {
+   "diffs": []
+  },
+  "intro@375x812": {
+   "diffs": []
+  },
+  "leaderboard@1024x768": {
+   "diffs": []
+  },
+  "leaderboard@375x812": {
+   "diffs": []
+  },
+  "osoby@1024x768": {
+   "diffs": []
+  },
+  "osoby@375x812": {
+   "diffs": []
+  },
+  "recipients@1024x768": {
+   "diffs": []
+  },
+  "recipients@375x812": {
+   "diffs": []
+  },
+  "rezerwacje@1024x768": {
+   "diffs": []
+  },
+  "rezerwacje@375x812": {
+   "diffs": []
+  },
+  "ustawienia@1024x768": {
+   "diffs": []
+  },
+  "ustawienia@375x812": {
+   "diffs": []
+  },
+  "wiadomosci-list@1024x768": {
+   "diffs": []
+  },
+  "wiadomosci-list@375x812": {
+   "diffs": []
+  },
+  "wiadomosci-thread@1024x768": {
+   "diffs": []
+  },
+  "wiadomosci-thread@375x812": {
+   "diffs": []
+  }
+ }
+}

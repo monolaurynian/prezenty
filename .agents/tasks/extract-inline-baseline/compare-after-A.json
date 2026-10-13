@@ -1,0 +1,31 @@
+{
+ "a": "before-1",
+ "b": "after-A",
+ "total": 0,
+ "report": {
+  "formularz@1024x768": {
+   "diffs": []
+  },
+  "formularz@375x812": {
+   "diffs": []
+  },
+  "home@1024x768": {
+   "diffs": []
+  },
+  "home@375x812": {
+   "diffs": []
+  },
+  "leaderboard@1024x768": {
+   "diffs": []
+  },
+  "leaderboard@375x812": {
+   "diffs": []
+  },
+  "recipients@1024x768": {
+   "diffs": []
+  },
+  "recipients@375x812": {
+   "diffs": []
+  }
+ }
+}

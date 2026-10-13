@@ -1,0 +1,7 @@
+{
+  "task_id": "task-harden-server-1",
+  "task_description": "Conservative security hardening of the Prezenty Express server after the server.js split: redact cookie/session/push-endpoint logging, 404 the debug notification endpoints in production, add DNS/redirect-aware SSRF protection to the link-preview fetch, add a startup warning + rotation docs for the committed fallback secrets (values unchanged), and mount the archive router before the error handler. Full plan: .agents/tasks/harden-server-1-plan.md",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}

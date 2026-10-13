@@ -1,0 +1,3409 @@
+{
+ "key": "recipients@1024x768",
+ "console": [
+  "log | PWA Debug Info: {isSecure: false, hasManifest: true, hasServiceWorker: true, isStandalone: false, userAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…dlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0}",
+  "log | [FastLoader] Initialized",
+  "log | Recipients.js loading... v7.0 - Reverted to separate API calls",
+  "log | Filters loading...",
+  "log | [ProfilePictureDebug] Starting diagnostics...",
+  "log | [ProfilePictureDebug] Diagnostics complete. Check console for details.",
+  "log | [Realtime] Started polling for updates",
+  "log | [FastLoad] No cache available, will load from server",
+  "log | Checking authentication...",
+  "warning | Service Worker registration blocked by Playwright",
+  "log | ServiceWorker registration successful",
+  "log | Auth response status: 200",
+  "log | Auth response data: {authenticated: true, user: Object}",
+  "log | Auth successful, currentUserId set to: 1",
+  "log | [FastLoad] No cache, loading data...",
+  "log | Loading recipients and presents...",
+  "log | [Badge] Updated with count: 4",
+  "log | Data loaded in Nms",
+  "log | [Cache] Data breakdown: {recipients: 5, presents: 9, totalSizeKB: 2.67, recipientsSizeKB: 0.56, presentsSizeKB: 1.97}",
+  "log | [Cache] Attempting to save NKB to localStorage",
+  "log | [Cache] Data saved successfully",
+  "log | displayRecipientsWithPresents called with: {recipients: Array(5), presents: Array(9), recipientsLength: 5, presentsLength: 9}",
+  "log | Processing recipient: {id: 2, name: Jan Nowak, identified_by: 1, currentUserId: 1, isIdentified: true}",
+  "log | Processing recipient: {id: 1, name: Anna Kowalska, identified_by: null, currentUserId: 1, isIdentified: false}",
+  "log | Processing recipient: {id: 4, name: Konstantynopolitańczykowianeczkaniezwykła, identified_by: null, currentUserId: 1, isIdentified: false}",
+  "log | Processing recipient: {id: 3, name: Maria Wiśniewska, identified_by: null, currentUserId: 1, isIdentified: false}",
+  "log | Processing recipient: {id: 5, name: Zuzia & \"Zuza\" <mała> 'Z', identified_by: null, currentUserId: 1, isIdentified: false}",
+  "log | [Search] Found recipient items: 5",
+  "log | [Search] Data updated: 5 recipients, 2 presents",
+  "log | [Filter] Populated person filter with 5 recipients",
+  "log | [Filter] Applying filters - Person: all Status: all",
+  "log | [Filter] Found recipient items: 5",
+  "log | [Filter] Recipient 2 has 2 presents",
+  "log | [Filter] Recipient 2 visible: true has visible presents: true",
+  "log | [Filter] Recipient 1 has 2 presents",
+  "log | [Filter] Recipient 1 visible: true has visible presents: true",
+  "log | [Filter] Recipient 4 has 2 presents",
+  "log | [Filter] Recipient 4 visible: true has visible presents: true",
+  "log | [Filter] Recipient 3 has 2 presents",
+  "log | [Filter] Recipient 3 visible: true has visible presents: true",
+  "log | [Filter] Recipient 5 has 1 presents",
+  "log | [Filter] Recipient 5 visible: true has visible presents: true",
+  "log | [Filter] Filtering complete",
+  "log | handleIdentificationLogic called with: {currentUserId: 1, recipients: Array(5), identificationStatus: Object}",
+  "log | Already identified check: {currentUserId: 1, alreadyIdentified: Object}",
+  "log | User is already identified as: Jan Nowak - skipping identification flow",
+  "log | [ProfilePictureDebug] Found 0 profile picture elements",
+  "log | Soft reloading recipients data...",
+  "log | Soft reload completed in Nms",
+  "log | [Cache] Data breakdown: {recipients: 5, presents: 10, totalSizeKB: 2.84, recipientsSizeKB: 0.56, presentsSizeKB: 2.14}",
+  "log | [Cache] Attempting to save NKB to localStorage",
+  "log | [Cache] Data saved successfully",
+  "log | [SmartUpdate] New present detected: 10",
+  "log | Loading recipients and presents...",
+  "log | Using memory cache (age: 1 seconds)",
+  "log | displayRecipientsWithPresents called with: {recipients: Array(5), presents: Array(10), recipientsLength: 5, presentsLength: 10}",
+  "log | Processing recipient: {id: 2, name: Jan Nowak, identified_by: 1, currentUserId: 1, isIdentified: true}",
+  "log | Processing recipient: {id: 1, name: Anna Kowalska, identified_by: null, currentUserId: 1, isIdentified: false}",
+  "log | Processing recipient: {id: 4, name: Konstantynopolitańczykowianeczkaniezwykła, identified_by: null, currentUserId: 1, isIdentified: false}",
+  "log | Processing recipient: {id: 3, name: Maria Wiśniewska, identified_by: null, currentUserId: 1, isIdentified: false}",
+  "log | Processing recipient: {id: 5, name: Zuzia & \"Zuza\" <mała> 'Z', identified_by: null, currentUserId: 1, isIdentified: false}",
+  "log | [Search] Found recipient items: 5",
+  "log | [Search] Data updated: 5 recipients, 3 presents",
+  "log | [Filter] Populated person filter with 5 recipients",
+  "log | [Filter] Applying filters - Person: all Status: all",
+  "log | [Filter] Found recipient items: 5",
+  "log | [Filter] Recipient 2 has 3 presents",
+  "log | [Filter] Recipient 2 visible: true has visible presents: true",
+  "log | [Filter] Recipient 1 has 2 presents",
+  "log | [Filter] Recipient 1 visible: true has visible presents: true",
+  "log | [Filter] Recipient 4 has 2 presents",
+  "log | [Filter] Recipient 4 visible: true has visible presents: true",
+  "log | [Filter] Recipient 3 has 2 presents",
+  "log | [Filter] Recipient 3 visible: true has visible presents: true",
+  "log | [Filter] Recipient 5 has 1 presents",
+  "log | [Filter] Recipient 5 visible: true has visible presents: true",
+  "log | [Filter] Filtering complete",
+  "log | Soft reloading recipients data...",
+  "log | Soft reload completed in Nms",
+  "log | [Cache] Data breakdown: {recipients: 5, presents: 10, totalSizeKB: 2.84, recipientsSizeKB: 0.56, presentsSizeKB: 2.14}",
+  "log | [Cache] Attempting to save NKB to localStorage",
+  "log | [Cache] Data saved successfully",
+  "log | Soft reloading recipients data...",
+  "log | Soft reload completed in Nms",
+  "log | [Cache] Data breakdown: {recipients: 5, presents: 10, totalSizeKB: 2.84, recipientsSizeKB: 0.56, presentsSizeKB: 2.13}",
+  "log | [Cache] Attempting to save NKB to localStorage",
+  "log | [Cache] Data saved successfully",
+  "log | Soft reloading recipients data...",
+  "log | Soft reload completed in Nms",
+  "log | [Cache] Data breakdown: {recipients: 5, presents: 10, totalSizeKB: 2.84, recipientsSizeKB: 0.56, presentsSizeKB: 2.14}",
+  "log | [Cache] Attempting to save NKB to localStorage",
+  "log | [Cache] Data saved successfully",
+  "log | Soft reloading recipients data...",
+  "log | Soft reload completed in Nms",
+  "log | [Cache] Data breakdown: {recipients: 5, presents: 10, totalSizeKB: 2.84, recipientsSizeKB: 0.56, presentsSizeKB: 2.14}",
+  "log | [Cache] Attempting to save NKB to localStorage",
+  "log | [Cache] Data saved successfully",
+  "log | [Filter] Applying filters - Person: 1 Status: all",
+  "log | [Filter] Found recipient items: 5",
+  "log | [Filter] Recipient 1 has 2 presents",
+  "log | [Filter] Recipient 1 visible: true has visible presents: true",
+  "log | [Filter] Filtering complete",
+  "log | [Filter] Applying filters - Person: all Status: all",
+  "log | [Filter] Found recipient items: 5",
+  "log | [Filter] Recipient 2 has 3 presents",
+  "log | [Filter] Recipient 2 visible: true has visible presents: true",
+  "log | [Filter] Recipient 1 has 2 presents",
+  "log | [Filter] Recipient 1 visible: true has visible presents: true",
+  "log | [Filter] Recipient 4 has 2 presents",
+  "log | [Filter] Recipient 4 visible: true has visible presents: true",
+  "log | [Filter] Recipient 3 has 2 presents",
+  "log | [Filter] Recipient 3 visible: true has visible presents: true",
+  "log | [Filter] Recipient 5 has 1 presents",
+  "log | [Filter] Recipient 5 visible: true has visible presents: true",
+  "log | [Filter] Filtering complete",
+  "log | [Filter] Applying filters - Person: all Status: reserved",
+  "log | [Filter] Found recipient items: 5",
+  "log | [Filter] Recipient 2 has 3 presents",
+  "log | [Filter] Present: Słuchawki bezprzewodowe Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: reserved",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Present: Kubek termiczny Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: reserved",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Present: Smoke prezent Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: reserved",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Recipient 2 visible: false has visible presents: false",
+  "log | [Filter] Recipient 1 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: reserved",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: reserved",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Recipient 1 visible: false has visible presents: false",
+  "log | [Filter] Recipient 4 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: reserved",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Present: unknown Reserved: true (classes: true false button: false) Checked: true (class: true button: false) Filter: reserved",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Recipient 4 visible: true has visible presents: true",
+  "log | [Filter] Recipient 3 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: reserved",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: reserved",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Recipient 3 visible: false has visible presents: false",
+  "log | [Filter] Recipient 5 has 1 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: reserved",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Recipient 5 visible: false has visible presents: false",
+  "log | [Filter] Filtering complete",
+  "log | [Filter] Applying filters - Person: all Status: unreserved",
+  "log | [Filter] Found recipient items: 5",
+  "log | [Filter] Recipient 2 has 3 presents",
+  "log | [Filter] Present: Słuchawki bezprzewodowe Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unreserved",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Present: Kubek termiczny Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unreserved",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Present: Smoke prezent Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unreserved",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Recipient 2 visible: true has visible presents: true",
+  "log | [Filter] Recipient 1 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unreserved",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unreserved",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Recipient 1 visible: true has visible presents: true",
+  "log | [Filter] Recipient 4 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unreserved",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Present: unknown Reserved: true (classes: true false button: false) Checked: true (class: true button: false) Filter: unreserved",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Recipient 4 visible: true has visible presents: true",
+  "log | [Filter] Recipient 3 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unreserved",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unreserved",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Recipient 3 visible: true has visible presents: true",
+  "log | [Filter] Recipient 5 has 1 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unreserved",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Recipient 5 visible: true has visible presents: true",
+  "log | [Filter] Filtering complete",
+  "log | [Filter] Applying filters - Person: all Status: checked",
+  "log | [Filter] Found recipient items: 5",
+  "log | [Filter] Recipient 2 has 3 presents",
+  "log | [Filter] Present: Słuchawki bezprzewodowe Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: checked",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Present: Kubek termiczny Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: checked",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Present: Smoke prezent Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: checked",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Recipient 2 visible: false has visible presents: false",
+  "log | [Filter] Recipient 1 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: checked",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: checked",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Recipient 1 visible: false has visible presents: false",
+  "log | [Filter] Recipient 4 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: checked",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Present: unknown Reserved: true (classes: true false button: false) Checked: true (class: true button: false) Filter: checked",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Recipient 4 visible: true has visible presents: true",
+  "log | [Filter] Recipient 3 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: checked",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: checked",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Recipient 3 visible: false has visible presents: false",
+  "log | [Filter] Recipient 5 has 1 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: checked",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Recipient 5 visible: false has visible presents: false",
+  "log | [Filter] Filtering complete",
+  "log | [Filter] Applying filters - Person: all Status: unchecked",
+  "log | [Filter] Found recipient items: 5",
+  "log | [Filter] Recipient 2 has 3 presents",
+  "log | [Filter] Present: Słuchawki bezprzewodowe Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unchecked",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Present: Kubek termiczny Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unchecked",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Present: Smoke prezent Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unchecked",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Recipient 2 visible: true has visible presents: true",
+  "log | [Filter] Recipient 1 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unchecked",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unchecked",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Recipient 1 visible: true has visible presents: true",
+  "log | [Filter] Recipient 4 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unchecked",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Present: unknown Reserved: true (classes: true false button: false) Checked: true (class: true button: false) Filter: unchecked",
+  "log | [Filter] Should show: false",
+  "log | [Filter] Recipient 4 visible: true has visible presents: true",
+  "log | [Filter] Recipient 3 has 2 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unchecked",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unchecked",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Recipient 3 visible: true has visible presents: true",
+  "log | [Filter] Recipient 5 has 1 presents",
+  "log | [Filter] Present: unknown Reserved: false (classes: false false button: false) Checked: false (class: false button: false) Filter: unchecked",
+  "log | [Filter] Should show: true",
+  "log | [Filter] Recipient 5 visible: true has visible presents: true",
+  "log | [Filter] Filtering complete",
+  "log | [Filter] Applying filters - Person: all Status: all",
+  "log | [Filter] Found recipient items: 5",
+  "log | [Filter] Recipient 2 has 3 presents",
+  "log | [Filter] Recipient 2 visible: true has visible presents: true",
+  "log | [Filter] Recipient 1 has 2 presents",
+  "log | [Filter] Recipient 1 visible: true has visible presents: true",
+  "log | [Filter] Recipient 4 has 2 presents",
+  "log | [Filter] Recipient 4 visible: true has visible presents: true",
+  "log | [Filter] Recipient 3 has 2 presents",
+  "log | [Filter] Recipient 3 visible: true has visible presents: true",
+  "log | [Filter] Recipient 5 has 1 presents",
+  "log | [Filter] Recipient 5 visible: true has visible presents: true",
+  "log | [Filter] Filtering complete"
+ ],
+ "pageerrors": [],
+ "requests": [
+  {
+   "url": "/desktop-nav.js?v=5",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/escape-html.js",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/fast-loader.js",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/filters.js?v=9",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/notification-text.js",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/pluralize-pl.js",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/profile-picture-debug.js",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/realtime-updates.js?v=2",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/recipients-page-notifbell.js?v=1",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/recipients-page-scroll.js?v=1",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/recipients-page.js?v=1",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/recipients.js?v=25&t=1111111111",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/tab-bar-functions.js?v=19",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/update-checker.js",
+   "status": 200,
+   "ct": "application/javascript"
+  }
+ ],
+ "badResponses": [],
+ "globals": {
+  "cookieStore": {
+   "t": "object",
+   "arr": false,
+   "n": 0
+  },
+  "ondevicemotion": {
+   "t": "object",
+   "v": null
+  },
+  "ondeviceorientation": {
+   "t": "object",
+   "v": null
+  },
+  "ondeviceorientationabsolute": {
+   "t": "object",
+   "v": null
+  },
+  "onpointerrawupdate": {
+   "t": "object",
+   "v": null
+  },
+  "caches": {
+   "t": "object",
+   "arr": false,
+   "n": 0
+  },
+  "documentPictureInPicture": {
+   "t": "object",
+   "arr": false,
+   "n": 0
+  },
+  "AbsoluteOrientationSensor": {
+   "t": "function",
+   "src": "6a309ffd:54"
+  },
+  "Accelerometer": {
+   "t": "function",
+   "src": "a5d94c51:42"
+  },
+  "AudioDecoder": {
+   "t": "function",
+   "src": "26a063c2:41"
+  },
+  "AudioEncoder": {
+   "t": "function",
+   "src": "d8d2a8e8:41"
+  },
+  "AudioWorklet": {
+   "t": "function",
+   "src": "4a77ec40:41"
+  },
+  "BatteryManager": {
+   "t": "function",
+   "src": "8b64ef54:43"
+  },
+  "Cache": {
+   "t": "function",
+   "src": "f1eff566:34"
+  },
+  "CacheStorage": {
+   "t": "function",
+   "src": "648cb2ff:41"
+  },
+  "Clipboard": {
+   "t": "function",
+   "src": "7d03dea6:38"
+  },
+  "ClipboardChangeEvent": {
+   "t": "function",
+   "src": "5f2f744c:49"
+  },
+  "ClipboardItem": {
+   "t": "function",
+   "src": "e2ad11d3:42"
+  },
+  "CookieChangeEvent": {
+   "t": "function",
+   "src": "204db804:46"
+  },
+  "CookieStore": {
+   "t": "function",
+   "src": "ac3c91d1:40"
+  },
+  "CookieStoreManager": {
+   "t": "function",
+   "src": "70234962:47"
+  },
+  "CreateMonitor": {
+   "t": "function",
+   "src": "39bf7042:42"
+  },
+  "Credential": {
+   "t": "function",
+   "src": "93514c01:39"
+  },
+  "CredentialsContainer": {
+   "t": "function",
+   "src": "6f430635:49"
+  },
+  "CryptoKey": {
+   "t": "function",
+   "src": "4802abe:38"
+  },
+  "DeviceMotionEvent": {
+   "t": "function",
+   "src": "cfa9bfe0:46"
+  },
+  "DeviceMotionEventAcceleration": {
+   "t": "function",
+   "src": "9f1ed8e2:58"
+  },
+  "DeviceMotionEventRotationRate": {
+   "t": "function",
+   "src": "16e80d56:58"
+  },
+  "DeviceOrientationEvent": {
+   "t": "function",
+   "src": "3190a228:51"
+  },
+  "FederatedCredential": {
+   "t": "function",
+   "src": "618db5e5:48"
+  },
+  "GPU": {
+   "t": "function",
+   "src": "acdedc88:32"
+  },
+  "GPUAdapter": {
+   "t": "function",
+   "src": "309089f:39"
+  },
+  "GPUAdapterInfo": {
+   "t": "function",
+   "src": "82f0c1d1:43"
+  },
+  "GPUBindGroup": {
+   "t": "function",
+   "src": "66b7fe56:41"
+  },
+  "GPUBindGroupLayout": {
+   "t": "function",
+   "src": "3fbbdfec:47"
+  },
+  "GPUBuffer": {
+   "t": "function",
+   "src": "4753d48:38"
+  },
+  "GPUBufferUsage": {
+   "t": "object",
+   "arr": false,
+   "n": 10
+  },
+  "GPUCanvasContext": {
+   "t": "function",
+   "src": "2a3dfc3f:45"
+  },
+  "GPUColorWrite": {
+   "t": "object",
+   "arr": false,
+   "n": 5
+  },
+  "GPUCommandBuffer": {
+   "t": "function",
+   "src": "84b50e2f:45"
+  },
+  "GPUCommandEncoder": {
+   "t": "function",
+   "src": "2a8dddbb:46"
+  },
+  "GPUCompilationInfo": {
+   "t": "function",
+   "src": "ac24986f:47"
+  },
+  "GPUCompilationMessage": {
+   "t": "function",
+   "src": "15334d0a:50"
+  },
+  "GPUComputePassEncoder": {
+   "t": "function",
+   "src": "632382f8:50"
+  },
+  "GPUComputePipeline": {
+   "t": "function",
+   "src": "2a5eaeff:47"
+  },
+  "GPUDevice": {
+   "t": "function",
+   "src": "54b6b090:38"
+  },
+  "GPUDeviceLostInfo": {
+   "t": "function",
+   "src": "4b1e66da:46"
+  },
+  "GPUError": {
+   "t": "function",
+   "src": "acdc04d0:37"
+  },
+  "GPUExternalTexture": {
+   "t": "function",
+   "src": "41f9224a:47"
+  },
+  "GPUInternalError": {
+   "t": "function",
+   "src": "60e0e817:45"
+  },
+  "GPUMapMode": {
+   "t": "object",
+   "arr": false,
+   "n": 2
+  },
+  "GPUOutOfMemoryError": {
+   "t": "function",
+   "src": "811b7b6:48"
+  },
+  "GPUPipelineError": {
+   "t": "function",
+   "src": "91e463b2:45"
+  },
+  "GPUPipelineLayout": {
+   "t": "function",
+   "src": "d9bdac10:46"
+  },
+  "GPUQuerySet": {
+   "t": "function",
+   "src": "4c11c180:40"
+  },
+  "GPUQueue": {
+   "t": "function",
+   "src": "e967d9b9:37"
+  },
+  "GPURenderBundle": {
+   "t": "function",
+   "src": "68035d36:44"
+  },
+  "GPURenderBundleEncoder": {
+   "t": "function",
+   "src": "5b435142:51"
+  },
+  "GPURenderPassEncoder": {
+   "t": "function",
+   "src": "fb353747:49"
+  },
+  "GPURenderPipeline": {
+   "t": "function",
+   "src": "28083860:46"
+  },
+  "GPUSampler": {
+   "t": "function",
+   "src": "5f9bc63c:39"
+  },
+  "GPUShaderModule": {
+   "t": "function",
+   "src": "e6425fdb:44"
+  },
+  "GPUShaderStage": {
+   "t": "object",
+   "arr": false,
+   "n": 3
+  },
+  "GPUSupportedFeatures": {
+   "t": "function",
+   "src": "f3acc521:49"
+  },
+  "GPUSupportedLimits": {
+   "t": "function",
+   "src": "37fdb9e0:47"
+  },
+  "GPUTexture": {
+   "t": "function",
+   "src": "7c834857:39"
+  },
+  "GPUTextureUsage": {
+   "t": "object",
+   "arr": false,
+   "n": 6
+  },
+  "GPUTextureView": {
+   "t": "function",
+   "src": "fb164e5a:43"
+  },
+  "GPUUncapturedErrorEvent": {
+   "t": "function",
+   "src": "6863a847:52"
+  },
+  "GPUValidationError": {
+   "t": "function",
+   "src": "ec13903b:47"
+  },
+  "GravitySensor": {
+   "t": "function",
+   "src": "eaad81ba:42"
+  },
+  "Gyroscope": {
+   "t": "function",
+   "src": "1228aa3:38"
+  },
+  "IdleDetector": {
+   "t": "function",
+   "src": "99ff46d4:41"
+  },
+  "ImageCapture": {
+   "t": "function",
+   "src": "657c4629:41"
+  },
+  "ImageDecoder": {
+   "t": "function",
+   "src": "eadb0df3:41"
+  },
+  "ImageTrack": {
+   "t": "function",
+   "src": "77aa1b62:39"
+  },
+  "ImageTrackList": {
+   "t": "function",
+   "src": "47388020:43"
+  },
+  "Keyboard": {
+   "t": "function",
+   "src": "7527c867:37"
+  },
+  "KeyboardLayoutMap": {
+   "t": "function",
+   "src": "2b5bf61:46"
+  },
+  "LinearAccelerationSensor": {
+   "t": "function",
+   "src": "a0e11083:53"
+  },
+  "MIDIAccess": {
+   "t": "function",
+   "src": "41941287:39"
+  },
+  "MIDIConnectionEvent": {
+   "t": "function",
+   "src": "9bee3d9:48"
+  },
+  "MIDIInput": {
+   "t": "function",
+   "src": "32b13535:38"
+  },
+  "MIDIInputMap": {
+   "t": "function",
+   "src": "e501b689:41"
+  },
+  "MIDIMessageEvent": {
+   "t": "function",
+   "src": "2215d04:45"
+  },
+  "MIDIOutput": {
+   "t": "function",
+   "src": "b1edbefc:39"
+  },
+  "MIDIOutputMap": {
+   "t": "function",
+   "src": "c3b5ba0:42"
+  },
+  "MIDIPort": {
+   "t": "function",
+   "src": "1f18153a:37"
+  },
+  "MediaDeviceInfo": {
+   "t": "function",
+   "src": "94b3f658:44"
+  },
+  "MediaDevices": {
+   "t": "function",
+   "src": "a507a05:41"
+  },
+  "MediaKeyMessageEvent": {
+   "t": "function",
+   "src": "83083f5e:49"
+  },
+  "MediaKeySession": {
+   "t": "function",
+   "src": "1afc01a7:44"
+  },
+  "MediaKeyStatusMap": {
+   "t": "function",
+   "src": "f2cf0cb1:46"
+  },
+  "MediaKeySystemAccess": {
+   "t": "function",
+   "src": "f82656d8:49"
+  },
+  "MediaKeys": {
+   "t": "function",
+   "src": "9fd6306a:38"
+  },
+  "NavigationPreloadManager": {
+   "t": "function",
+   "src": "7ae96f2:53"
+  },
+  "NavigatorManagedData": {
+   "t": "function",
+   "src": "ee8fab80:49"
+  },
+  "OrientationSensor": {
+   "t": "function",
+   "src": "4f9c542a:46"
+  },
+  "PasswordCredential": {
+   "t": "function",
+   "src": "935639be:47"
+  },
+  "ProtectedAudience": {
+   "t": "function",
+   "src": "e2521754:46"
+  },
+  "RelativeOrientationSensor": {
+   "t": "function",
+   "src": "ab33139e:54"
+  },
+  "ScreenDetailed": {
+   "t": "function",
+   "src": "c4dbcff6:43"
+  },
+  "ScreenDetails": {
+   "t": "function",
+   "src": "40b76d24:42"
+  },
+  "Sensor": {
+   "t": "function",
+   "src": "7e37055c:35"
+  },
+  "SensorErrorEvent": {
+   "t": "function",
+   "src": "79c57f68:45"
+  },
+  "ServiceWorkerRegistration": {
+   "t": "function",
+   "src": "8cb8b730:54"
+  },
+  "StorageManager": {
+   "t": "function",
+   "src": "c4c51740:43"
+  },
+  "SubtleCrypto": {
+   "t": "function",
+   "src": "a945ead0:41"
+  },
+  "VideoDecoder": {
+   "t": "function",
+   "src": "1cfc2425:41"
+  },
+  "VideoEncoder": {
+   "t": "function",
+   "src": "85714d8f:41"
+  },
+  "VirtualKeyboard": {
+   "t": "function",
+   "src": "19531006:44"
+  },
+  "WGSLLanguageFeatures": {
+   "t": "function",
+   "src": "121b0ed0:49"
+  },
+  "WebTransport": {
+   "t": "function",
+   "src": "fe1a6b59:41"
+  },
+  "WebTransportBidirectionalStream": {
+   "t": "function",
+   "src": "48708886:60"
+  },
+  "WebTransportDatagramDuplexStream": {
+   "t": "function",
+   "src": "cffdb9c:61"
+  },
+  "WebTransportError": {
+   "t": "function",
+   "src": "5236c5a1:46"
+  },
+  "Worklet": {
+   "t": "function",
+   "src": "bfed06f6:36"
+  },
+  "XRDOMOverlayState": {
+   "t": "function",
+   "src": "14abfe0b:46"
+  },
+  "XRLayer": {
+   "t": "function",
+   "src": "77f011c3:36"
+  },
+  "XRWebGLBinding": {
+   "t": "function",
+   "src": "aabbf9fa:43"
+  },
+  "AudioPlaybackStats": {
+   "t": "function",
+   "src": "ebf0e972:47"
+  },
+  "AuthenticatorAssertionResponse": {
+   "t": "function",
+   "src": "d2ef9b36:59"
+  },
+  "AuthenticatorAttestationResponse": {
+   "t": "function",
+   "src": "22bc4202:61"
+  },
+  "AuthenticatorResponse": {
+   "t": "function",
+   "src": "e34b239c:50"
+  },
+  "PublicKeyCredential": {
+   "t": "function",
+   "src": "2764c5b7:48"
+  },
+  "Bluetooth": {
+   "t": "function",
+   "src": "e590815c:38"
+  },
+  "BluetoothCharacteristicProperties": {
+   "t": "function",
+   "src": "5d501900:62"
+  },
+  "BluetoothDevice": {
+   "t": "function",
+   "src": "b3820644:44"
+  },
+  "BluetoothRemoteGATTCharacteristic": {
+   "t": "function",
+   "src": "574d53e3:62"
+  },
+  "BluetoothRemoteGATTDescriptor": {
+   "t": "function",
+   "src": "70eee3cd:58"
+  },
+  "BluetoothRemoteGATTServer": {
+   "t": "function",
+   "src": "177e065b:54"
+  },
+  "BluetoothRemoteGATTService": {
+   "t": "function",
+   "src": "27b8b9c3:55"
+  },
+  "CaptureController": {
+   "t": "function",
+   "src": "ab68c492:46"
+  },
+  "DevicePosture": {
+   "t": "function",
+   "src": "2c49ffe8:42"
+  },
+  "DigitalCredential": {
+   "t": "function",
+   "src": "20ee6edb:46"
+  },
+  "DocumentPictureInPicture": {
+   "t": "function",
+   "src": "943c3962:53"
+  },
+  "EyeDropper": {
+   "t": "function",
+   "src": "7106a35d:39"
+  },
+  "FetchLaterResult": {
+   "t": "function",
+   "src": "6c4afff1:45"
+  },
+  "FileSystemDirectoryHandle": {
+   "t": "function",
+   "src": "c536c6ea:54"
+  },
+  "FileSystemFileHandle": {
+   "t": "function",
+   "src": "72c70c5:49"
+  },
+  "FileSystemHandle": {
+   "t": "function",
+   "src": "ac99ad23:45"
+  },
+  "FileSystemWritableFileStream": {
+   "t": "function",
+   "src": "66b3c781:57"
+  },
+  "FileSystemObserver": {
+   "t": "function",
+   "src": "960027c1:47"
+  },
+  "FontData": {
+   "t": "function",
+   "src": "a5f1bf29:37"
+  },
+  "HID": {
+   "t": "function",
+   "src": "ae0a6faf:32"
+  },
+  "HIDConnectionEvent": {
+   "t": "function",
+   "src": "cacd33f5:47"
+  },
+  "HIDDevice": {
+   "t": "function",
+   "src": "172ddf77:38"
+  },
+  "HIDInputReportEvent": {
+   "t": "function",
+   "src": "5ad4dfbb:48"
+  },
+  "IdentityCredential": {
+   "t": "function",
+   "src": "cf5e3877:47"
+  },
+  "IdentityCredentialError": {
+   "t": "function",
+   "src": "e9587a0f:52"
+  },
+  "IdentityProvider": {
+   "t": "function",
+   "src": "2d826ddd:45"
+  },
+  "NavigatorLogin": {
+   "t": "function",
+   "src": "fc4f6816:43"
+  },
+  "LanguageDetector": {
+   "t": "function",
+   "src": "4d3263a2:45"
+  },
+  "Lock": {
+   "t": "function",
+   "src": "790522a1:33"
+  },
+  "LockManager": {
+   "t": "function",
+   "src": "e184d952:40"
+  },
+  "ServiceWorker": {
+   "t": "function",
+   "src": "75ca06e1:42"
+  },
+  "ServiceWorkerContainer": {
+   "t": "function",
+   "src": "621ab486:51"
+  },
+  "OTPCredential": {
+   "t": "function",
+   "src": "e01a782a:42"
+  },
+  "PaymentAddress": {
+   "t": "function",
+   "src": "e258f006:43"
+  },
+  "PaymentRequest": {
+   "t": "function",
+   "src": "84f5a081:43"
+  },
+  "PaymentRequestUpdateEvent": {
+   "t": "function",
+   "src": "c30429fc:54"
+  },
+  "PaymentResponse": {
+   "t": "function",
+   "src": "e8da0e53:44"
+  },
+  "PaymentManager": {
+   "t": "function",
+   "src": "34005883:43"
+  },
+  "PaymentMethodChangeEvent": {
+   "t": "function",
+   "src": "795ee165:53"
+  },
+  "Presentation": {
+   "t": "function",
+   "src": "3eb18fc:41"
+  },
+  "PresentationAvailability": {
+   "t": "function",
+   "src": "19a0fd4d:53"
+  },
+  "PresentationConnection": {
+   "t": "function",
+   "src": "84b34bea:51"
+  },
+  "PresentationConnectionAvailableEvent": {
+   "t": "function",
+   "src": "442ff55f:65"
+  },
+  "PresentationConnectionCloseEvent": {
+   "t": "function",
+   "src": "2463e9d0:61"
+  },
+  "PresentationConnectionList": {
+   "t": "function",
+   "src": "2e39aea8:55"
+  },
+  "PresentationReceiver": {
+   "t": "function",
+   "src": "915dcf65:49"
+  },
+  "PresentationRequest": {
+   "t": "function",
+   "src": "f9030c6d:48"
+  },
+  "PressureObserver": {
+   "t": "function",
+   "src": "5b90bf47:45"
+  },
+  "PressureRecord": {
+   "t": "function",
+   "src": "21af1342:43"
+  },
+  "Serial": {
+   "t": "function",
+   "src": "6262318a:35"
+  },
+  "SerialPort": {
+   "t": "function",
+   "src": "86f3d433:39"
+  },
+  "SpeechRecognitionPhrase": {
+   "t": "function",
+   "src": "59f79438:52"
+  },
+  "StorageBucket": {
+   "t": "function",
+   "src": "26a61f9d:42"
+  },
+  "StorageBucketManager": {
+   "t": "function",
+   "src": "cce5c2e:49"
+  },
+  "Summarizer": {
+   "t": "function",
+   "src": "cb135c3b:39"
+  },
+  "Translator": {
+   "t": "function",
+   "src": "e2a3b594:39"
+  },
+  "USB": {
+   "t": "function",
+   "src": "feaaa2ee:32"
+  },
+  "USBAlternateInterface": {
+   "t": "function",
+   "src": "a6f1f35b:50"
+  },
+  "USBConfiguration": {
+   "t": "function",
+   "src": "524eb47e:45"
+  },
+  "USBConnectionEvent": {
+   "t": "function",
+   "src": "16f81bd4:47"
+  },
+  "USBDevice": {
+   "t": "function",
+   "src": "bd248a36:38"
+  },
+  "USBEndpoint": {
+   "t": "function",
+   "src": "8ca5208d:40"
+  },
+  "USBInTransferResult": {
+   "t": "function",
+   "src": "bdd7122b:48"
+  },
+  "USBInterface": {
+   "t": "function",
+   "src": "20f6578b:41"
+  },
+  "USBIsochronousInTransferPacket": {
+   "t": "function",
+   "src": "9a4887ce:59"
+  },
+  "USBIsochronousInTransferResult": {
+   "t": "function",
+   "src": "ff2cfaaf:59"
+  },
+  "USBIsochronousOutTransferPacket": {
+   "t": "function",
+   "src": "9dd73c47:60"
+  },
+  "USBIsochronousOutTransferResult": {
+   "t": "function",
+   "src": "5a191966:60"
+  },
+  "USBOutTransferResult": {
+   "t": "function",
+   "src": "9307c162:49"
+  },
+  "WakeLock": {
+   "t": "function",
+   "src": "80e05fd9:37"
+  },
+  "WakeLockSentinel": {
+   "t": "function",
+   "src": "cddfccdb:45"
+  },
+  "XRAnchor": {
+   "t": "function",
+   "src": "f8466d79:37"
+  },
+  "XRAnchorSet": {
+   "t": "function",
+   "src": "86b3b75b:40"
+  },
+  "XRBoundedReferenceSpace": {
+   "t": "function",
+   "src": "cdf0745c:52"
+  },
+  "XRCPUDepthInformation": {
+   "t": "function",
+   "src": "3ba73527:50"
+  },
+  "XRCamera": {
+   "t": "function",
+   "src": "e460a519:37"
+  },
+  "XRDepthInformation": {
+   "t": "function",
+   "src": "37b16cc1:47"
+  },
+  "XRFrame": {
+   "t": "function",
+   "src": "5e9953d:36"
+  },
+  "XRHand": {
+   "t": "function",
+   "src": "aad2e83:35"
+  },
+  "XRHitTestResult": {
+   "t": "function",
+   "src": "5a21d96a:44"
+  },
+  "XRHitTestSource": {
+   "t": "function",
+   "src": "8b44573e:44"
+  },
+  "XRInputSource": {
+   "t": "function",
+   "src": "48238beb:42"
+  },
+  "XRInputSourceArray": {
+   "t": "function",
+   "src": "5d1850d2:47"
+  },
+  "XRInputSourceEvent": {
+   "t": "function",
+   "src": "f9c4f267:47"
+  },
+  "XRInputSourcesChangeEvent": {
+   "t": "function",
+   "src": "a4b26972:54"
+  },
+  "XRJointPose": {
+   "t": "function",
+   "src": "21d98c7f:40"
+  },
+  "XRJointSpace": {
+   "t": "function",
+   "src": "dde90cb2:41"
+  },
+  "XRLightEstimate": {
+   "t": "function",
+   "src": "b29405c8:44"
+  },
+  "XRLightProbe": {
+   "t": "function",
+   "src": "38571354:41"
+  },
+  "XRPose": {
+   "t": "function",
+   "src": "4c99d7e9:35"
+  },
+  "XRRay": {
+   "t": "function",
+   "src": "5f63a8aa:34"
+  },
+  "XRReferenceSpace": {
+   "t": "function",
+   "src": "c3c592ef:45"
+  },
+  "XRReferenceSpaceEvent": {
+   "t": "function",
+   "src": "15ffa2e3:50"
+  },
+  "XRRenderState": {
+   "t": "function",
+   "src": "c529bddd:42"
+  },
+  "XRRigidTransform": {
+   "t": "function",
+   "src": "4a1a089d:45"
+  },
+  "XRSession": {
+   "t": "function",
+   "src": "6118b23e:38"
+  },
+  "XRSessionEvent": {
+   "t": "function",
+   "src": "a2765552:43"
+  },
+  "XRSpace": {
+   "t": "function",
+   "src": "81d6aae4:36"
+  },
+  "XRSystem": {
+   "t": "function",
+   "src": "c0ae4f65:37"
+  },
+  "XRTransientInputHitTestResult": {
+   "t": "function",
+   "src": "ee0125f0:58"
+  },
+  "XRTransientInputHitTestSource": {
+   "t": "function",
+   "src": "a2c4a4:58"
+  },
+  "XRView": {
+   "t": "function",
+   "src": "3098766d:35"
+  },
+  "XRViewerPose": {
+   "t": "function",
+   "src": "d9f193d3:41"
+  },
+  "XRViewport": {
+   "t": "function",
+   "src": "9957d2b4:39"
+  },
+  "XRWebGLDepthInformation": {
+   "t": "function",
+   "src": "99c0a7fa:52"
+  },
+  "XRWebGLLayer": {
+   "t": "function",
+   "src": "c2cd9518:41"
+  },
+  "XRCompositionLayer": {
+   "t": "function",
+   "src": "59b8275b:47"
+  },
+  "XRProjectionLayer": {
+   "t": "function",
+   "src": "724ab27e:46"
+  },
+  "XRCubeLayer": {
+   "t": "function",
+   "src": "97e557f2:40"
+  },
+  "XRCylinderLayer": {
+   "t": "function",
+   "src": "99dd1ca1:44"
+  },
+  "XREquirectLayer": {
+   "t": "function",
+   "src": "1f25c98b:44"
+  },
+  "XRLayerEvent": {
+   "t": "function",
+   "src": "9e39a24f:41"
+  },
+  "XRQuadLayer": {
+   "t": "function",
+   "src": "4d1b3f82:40"
+  },
+  "XRSubImage": {
+   "t": "function",
+   "src": "83bc95c3:39"
+  },
+  "XRWebGLSubImage": {
+   "t": "function",
+   "src": "a22cf4f8:44"
+  },
+  "XRPlane": {
+   "t": "function",
+   "src": "c138fa56:36"
+  },
+  "XRPlaneSet": {
+   "t": "function",
+   "src": "334a0bd4:39"
+  },
+  "XRVisibilityMaskChangeEvent": {
+   "t": "function",
+   "src": "1419adf8:56"
+  },
+  "fetchLater": {
+   "t": "function",
+   "src": "4dae2f18:39"
+  },
+  "getDigitalGoodsService": {
+   "t": "function",
+   "src": "c6e1c62b:51"
+  },
+  "getScreenDetails": {
+   "t": "function",
+   "src": "c7a81652:45"
+  },
+  "queryLocalFonts": {
+   "t": "function",
+   "src": "47e2320d:44"
+  },
+  "showDirectoryPicker": {
+   "t": "function",
+   "src": "9df11e06:48"
+  },
+  "showOpenFilePicker": {
+   "t": "function",
+   "src": "b64022dd:47"
+  },
+  "showSaveFilePicker": {
+   "t": "function",
+   "src": "62236768:47"
+  },
+  "plForm": {
+   "t": "function",
+   "src": "5b4263b8:348"
+  },
+  "plPlural": {
+   "t": "function",
+   "src": "4326cf44:263"
+  },
+  "plCount": {
+   "t": "function",
+   "src": "dcf522ab:111"
+  },
+  "notificationText": {
+   "t": "function",
+   "src": "8f66dd61:2206"
+  },
+  "PrezentyEscape": {
+   "t": "object",
+   "arr": false,
+   "n": 4
+  },
+  "uidEvent": {
+   "t": "number",
+   "v": 5
+  },
+  "bootstrap": {
+   "t": "object",
+   "arr": false,
+   "n": 12
+  },
+  "showInstallInstructions": {
+   "t": "function",
+   "src": "dcb8c8a:1038"
+  },
+  "showManualInstallInstructions": {
+   "t": "function",
+   "src": "8c7a38fe:5704"
+  },
+  "toggleNotificationDropdown": {
+   "t": "function",
+   "src": "ac4ffa63:543"
+  },
+  "markAllNotificationsAsReadOnOpen": {
+   "t": "function",
+   "src": "ec6021d0:970"
+  },
+  "loadUnreadCount": {
+   "t": "function",
+   "src": "76a51092:365"
+  },
+  "updateBadgeCount": {
+   "t": "function",
+   "src": "13797281:395"
+  },
+  "loadRecentNotifications": {
+   "t": "function",
+   "src": "9def06b:1462"
+  },
+  "personLinkHtml": {
+   "t": "function",
+   "src": "54004aa7:264"
+  },
+  "notificationTextEscape": {
+   "t": "function",
+   "src": "509066ff:202"
+  },
+  "bellMessage": {
+   "t": "function",
+   "src": "85483a99:547"
+  },
+  "renderNotification": {
+   "t": "function",
+   "src": "b7844be4:1175"
+  },
+  "getNotificationConfig": {
+   "t": "function",
+   "src": "76386915:3100"
+  },
+  "getTimeAgo": {
+   "t": "function",
+   "src": "184e37ca:504"
+  },
+  "handleNotificationClick": {
+   "t": "function",
+   "src": "a22953e8:790"
+  },
+  "markNotificationAsRead": {
+   "t": "function",
+   "src": "a511c78f:98"
+  },
+  "markAllAsRead": {
+   "t": "function",
+   "src": "82fddf57:743"
+  },
+  "showNotificationBanner": {
+   "t": "function",
+   "src": "fbb7707c:428"
+  },
+  "dismissNotificationBanner": {
+   "t": "function",
+   "src": "8a70124c:165"
+  },
+  "requestNotificationPermission": {
+   "t": "function",
+   "src": "e522432a:2574"
+  },
+  "checkNotificationStatus": {
+   "t": "function",
+   "src": "341c2a4a:1074"
+  },
+  "subscribeToNotifications": {
+   "t": "function",
+   "src": "a9a29a76:3483"
+  },
+  "sendSubscriptionToServer": {
+   "t": "function",
+   "src": "8cfc5b9c:1073"
+  },
+  "urlBase64ToUint8Array": {
+   "t": "function",
+   "src": "51de815b:528"
+  },
+  "testNotification": {
+   "t": "function",
+   "src": "6f7fa6bb:1518"
+  },
+  "navigateToPresent": {
+   "t": "function",
+   "src": "2fa4842d:653"
+  },
+  "toggleSidebar": {
+   "t": "function",
+   "src": "bbb31411:272"
+  },
+  "openSettingsModal": {
+   "t": "function",
+   "src": "96dec1bd:119"
+  },
+  "updateBadge": {
+   "t": "function",
+   "src": "d8835802:390"
+  },
+  "fastLoader": {
+   "t": "object",
+   "arr": false,
+   "n": 5
+  },
+  "handleScrollToPresentFromNotification": {
+   "t": "function",
+   "src": "2cfb2738:447"
+  },
+  "scrollToPresentById": {
+   "t": "function",
+   "src": "9de4e605:2578"
+  },
+  "scrollAndHighlight": {
+   "t": "function",
+   "src": "d96befad:546"
+  },
+  "logout": {
+   "t": "function",
+   "src": "29d14c91:1653"
+  },
+  "initializeSearchAndFilter": {
+   "t": "function",
+   "src": "6c8f2452:3026"
+  },
+  "performSearch": {
+   "t": "function",
+   "src": "7ea917d5:2231"
+  },
+  "applyFilter": {
+   "t": "function",
+   "src": "f5ce721c:1503"
+  },
+  "showSearchDropdown": {
+   "t": "function",
+   "src": "93e3b413:2334"
+  },
+  "hideSearchDropdown": {
+   "t": "function",
+   "src": "54aea6c4:163"
+  },
+  "focusSearch": {
+   "t": "function",
+   "src": "92788317:490"
+  },
+  "highlightText": {
+   "t": "function",
+   "src": "61cb3489:211"
+  },
+  "escapeRegex": {
+   "t": "function",
+   "src": "a86047a:90"
+  },
+  "scrollToElement": {
+   "t": "function",
+   "src": "993ad4c:371"
+  },
+  "scrollToPresent": {
+   "t": "function",
+   "src": "ef4a3f7b:967"
+  },
+  "showNoResultsMessage": {
+   "t": "function",
+   "src": "706bfd63:525"
+  },
+  "hideNoResultsMessage": {
+   "t": "function",
+   "src": "d33c47d6:157"
+  },
+  "initializeFAB": {
+   "t": "function",
+   "src": "58c876e4:141"
+  },
+  "initializeAnimations": {
+   "t": "function",
+   "src": "968976f4:442"
+  },
+  "checkAuth": {
+   "t": "function",
+   "src": "4ed95508:1145"
+  },
+  "getSkeletonCardsHTML": {
+   "t": "function",
+   "src": "4db71a64:850"
+  },
+  "loadRecipientsWithPresents": {
+   "t": "function",
+   "src": "a849e618:5718"
+  },
+  "displayRecipientsWithPresents": {
+   "t": "function",
+   "src": "2d762065:454"
+  },
+  "setupPresentButtonListeners": {
+   "t": "function",
+   "src": "33567596:380"
+  },
+  "handlePresentButtonClick": {
+   "t": "function",
+   "src": "8fdea1b4:816"
+  },
+  "generateProfilePictureHTML": {
+   "t": "function",
+   "src": "cadacd0d:961"
+  },
+  "identifyAsRecipient": {
+   "t": "function",
+   "src": "a8b11926:654"
+  },
+  "confirmSelfIdentification": {
+   "t": "function",
+   "src": "16e710b1:960"
+  },
+  "deleteRecipientFromModal": {
+   "t": "function",
+   "src": "aa299d4e:1009"
+  },
+  "showRecipientSelectionModal": {
+   "t": "function",
+   "src": "a6a820a4:4005"
+  },
+  "deleteRecipientFromSelection": {
+   "t": "function",
+   "src": "3b843c0b:775"
+  },
+  "identifyAsRecipientFromSelection": {
+   "t": "function",
+   "src": "dfb1db55:1058"
+  },
+  "addNewRecipientAndIdentify": {
+   "t": "function",
+   "src": "451786b3:1490"
+  },
+  "cancelIdentification": {
+   "t": "function",
+   "src": "3e655bf0:319"
+  },
+  "confirmCancelIdentification": {
+   "t": "function",
+   "src": "12ba7a71:943"
+  },
+  "showErrorModal": {
+   "t": "function",
+   "src": "46bed259:204"
+  },
+  "showSuccessMessage": {
+   "t": "function",
+   "src": "7ebbeeef:686"
+  },
+  "openProfileModal": {
+   "t": "function",
+   "src": "a253e804:1625"
+  },
+  "previewImage": {
+   "t": "function",
+   "src": "75472d9a:881"
+  },
+  "compressImage": {
+   "t": "function",
+   "src": "4002544e:1506"
+  },
+  "saveProfilePicture": {
+   "t": "function",
+   "src": "7f15b3b7:1642"
+  },
+  "saveImageToServer": {
+   "t": "function",
+   "src": "e50a968c:1345"
+  },
+  "generatePresentsList": {
+   "t": "function",
+   "src": "53d71da1:4116"
+  },
+  "togglePresentFromRecipients": {
+   "t": "function",
+   "src": "6ba1dfca:874"
+  },
+  "updatePresentCheckStatus": {
+   "t": "function",
+   "src": "ec8c8e48:3538"
+  },
+  "updateProgressBar": {
+   "t": "function",
+   "src": "636da09c:1369"
+  },
+  "updateAccordionBoughtCount": {
+   "t": "function",
+   "src": "6a69ea05:337"
+  },
+  "animatePresentTransition": {
+   "t": "function",
+   "src": "9ffd5333:1622"
+  },
+  "calculateContainerHeight": {
+   "t": "function",
+   "src": "5361aaa3:515"
+  },
+  "generateReservationButton": {
+   "t": "function",
+   "src": "a8db71ee:2684"
+  },
+  "refreshPresentButtons": {
+   "t": "function",
+   "src": "96f73ed0:418"
+  },
+  "handleBoughtClick": {
+   "t": "function",
+   "src": "69a87053:1641"
+  },
+  "handleReserveClick": {
+   "t": "function",
+   "src": "576f150:1669"
+  },
+  "formatCommentsPreview": {
+   "t": "function",
+   "src": "e88dda1f:1685"
+  },
+  "convertUrlsToLinks": {
+   "t": "function",
+   "src": "4cc1ee57:1549"
+  },
+  "addRecipient": {
+   "t": "function",
+   "src": "db3c6b32:914"
+  },
+  "deleteRecipient": {
+   "t": "function",
+   "src": "d06f9139:540"
+  },
+  "deleteRecipientConfirmed": {
+   "t": "function",
+   "src": "8d8d6565:868"
+  },
+  "escapeHtml": {
+   "t": "function",
+   "src": "f9804bc5:130"
+  },
+  "escapeAttr": {
+   "t": "function",
+   "src": "2eb0f96b:233"
+  },
+  "recipientNameWithBadge": {
+   "t": "function",
+   "src": "9c479824:794"
+  },
+  "openAddPresentModal": {
+   "t": "function",
+   "src": "688b50bc:273"
+  },
+  "populateAddPresentModal": {
+   "t": "function",
+   "src": "b02d6f44:1221"
+  },
+  "addPresentFromModal": {
+   "t": "function",
+   "src": "ad097a44:2963"
+  },
+  "openReservedPresentsModal": {
+   "t": "function",
+   "src": "5480401f:662"
+  },
+  "displayReservedPresentsInModal": {
+   "t": "function",
+   "src": "d28ff0c5:6297"
+  },
+  "togglePresentFromModal": {
+   "t": "function",
+   "src": "a335a1be:918"
+  },
+  "updateModalPresentCheckStatus": {
+   "t": "function",
+   "src": "9839c7e9:3015"
+  },
+  "updateModalBadgeCounts": {
+   "t": "function",
+   "src": "1b4ca96e:824"
+  },
+  "animateModalPresentTransition": {
+   "t": "function",
+   "src": "bf7659e6:1623"
+  },
+  "cancelReservationFromModal": {
+   "t": "function",
+   "src": "d14e3966:747"
+  },
+  "openAddRecipientModal": {
+   "t": "function",
+   "src": "fcbb7a6f:542"
+  },
+  "addRecipientFromModal": {
+   "t": "function",
+   "src": "f016cd9:2084"
+  },
+  "returnToAddPresentModalWithNewRecipient": {
+   "t": "function",
+   "src": "50f952e3:2150"
+  },
+  "showModalMessage": {
+   "t": "function",
+   "src": "9f1e44a3:235"
+  },
+  "beginPresentOp": {
+   "t": "function",
+   "src": "5fe8386e:78"
+  },
+  "endPresentOp": {
+   "t": "function",
+   "src": "571074e2:219"
+  },
+  "fetchWithTimeout": {
+   "t": "function",
+   "src": "61a4e827:244"
+  },
+  "updateButtonOptimistically": {
+   "t": "function",
+   "src": "8323071f:532"
+  },
+  "updatePresentItemOptimistically": {
+   "t": "function",
+   "src": "92ce3b1a:284"
+  },
+  "updateCacheOptimistically": {
+   "t": "function",
+   "src": "5824fa10:516"
+  },
+  "rollbackOptimisticUpdate": {
+   "t": "function",
+   "src": "68169e7a:699"
+  },
+  "reservePresentFromRecipients": {
+   "t": "function",
+   "src": "cbe492d0:2261"
+  },
+  "cancelReservationFromRecipients": {
+   "t": "function",
+   "src": "1c061a05:2260"
+  },
+  "showReservedByOtherModal": {
+   "t": "function",
+   "src": "2fb4a04a:382"
+  },
+  "redirectIfAuthenticated": {
+   "t": "function",
+   "src": "243dfdfd:246"
+  },
+  "openRecipientDetailsModal": {
+   "t": "function",
+   "src": "404cd331:2463"
+  },
+  "showRecipientDetailsFromList": {
+   "t": "function",
+   "src": "ed4297df:509"
+  },
+  "openChangePictureModal": {
+   "t": "function",
+   "src": "8414691a:1651"
+  },
+  "saveNewProfilePicture": {
+   "t": "function",
+   "src": "197927b2:3479"
+  },
+  "openProfilePicturePreview": {
+   "t": "function",
+   "src": "d644aa60:1867"
+  },
+  "editPresent": {
+   "t": "function",
+   "src": "161ee55e:582"
+  },
+  "populateEditRecipientSelect": {
+   "t": "function",
+   "src": "dc8db5e2:806"
+  },
+  "saveEditedPresent": {
+   "t": "function",
+   "src": "10d08e85:2450"
+  },
+  "showEditPresentMessage": {
+   "t": "function",
+   "src": "d92a35b8:382"
+  },
+  "reorderPresentsList": {
+   "t": "function",
+   "src": "59929191:1403"
+  },
+  "reorderModalPresentsList": {
+   "t": "function",
+   "src": "30903c1:1694"
+  },
+  "getFullProfilePictureUrl": {
+   "t": "function",
+   "src": "9fa6b784:187"
+  },
+  "getEmojiAvatar": {
+   "t": "function",
+   "src": "4ce27958:561"
+  },
+  "saveToPersistentCache": {
+   "t": "function",
+   "src": "e1a2a601:3510"
+  },
+  "loadFromPersistentCache": {
+   "t": "function",
+   "src": "18cbebd2:679"
+  },
+  "clearPersistentCache": {
+   "t": "function",
+   "src": "291d2f1d:240"
+  },
+  "softReloadRecipients": {
+   "t": "function",
+   "src": "19a7bac3:2352"
+  },
+  "updateChangedElementsOnly": {
+   "t": "function",
+   "src": "c30b7472:1886"
+  },
+  "updatePresentReservationUI": {
+   "t": "function",
+   "src": "96a3ac72:2268"
+  },
+  "updatePresentCheckUI": {
+   "t": "function",
+   "src": "25dd22ea:457"
+  },
+  "updatePresentInDOM": {
+   "t": "function",
+   "src": "2d0558f5:1538"
+  },
+  "addPresentToDOM": {
+   "t": "function",
+   "src": "2317c0ce:2300"
+  },
+  "addPresentToIdentifiedUserAccordion": {
+   "t": "function",
+   "src": "fd8e2729:3986"
+  },
+  "generateSinglePresentHTML": {
+   "t": "function",
+   "src": "d7355b02:1426"
+  },
+  "showToast": {
+   "t": "function",
+   "src": "b503c93d:2244"
+  },
+  "shareFormularzLink": {
+   "t": "function",
+   "src": "f85ddef4:777"
+  },
+  "applyPresentState": {
+   "t": "function",
+   "src": "3015dc80:883"
+  },
+  "undoPresentAction": {
+   "t": "function",
+   "src": "f640b06d:662"
+  },
+  "undoReservation": {
+   "t": "function",
+   "src": "5cbb99f6:279"
+  },
+  "undoCancelReservation": {
+   "t": "function",
+   "src": "31d168ca:356"
+  },
+  "undoCheck": {
+   "t": "function",
+   "src": "3a5da434:367"
+  },
+  "showSuccessToast": {
+   "t": "function",
+   "src": "a642ef36:73"
+  },
+  "showErrorToast": {
+   "t": "function",
+   "src": "b2229376:69"
+  },
+  "showInfoToast": {
+   "t": "function",
+   "src": "dfd037f6:67"
+  },
+  "loadRecipients": {
+   "t": "function",
+   "src": "90a14c16:245"
+  },
+  "clearRecipientsCache": {
+   "t": "function",
+   "src": "c562d54f:216"
+  },
+  "displayRecipientsData": {
+   "t": "function",
+   "src": "2c359983:2008"
+  },
+  "handleIdentificationLogic": {
+   "t": "function",
+   "src": "3143f9b3:2119"
+  },
+  "refreshRecipientsCache": {
+   "t": "function",
+   "src": "72c6c02:460"
+  },
+  "filterRecipients": {
+   "t": "function",
+   "src": "d79e4be5:1435"
+  },
+  "deletePresent": {
+   "t": "function",
+   "src": "94633bc4:1549"
+  },
+  "scrollToRecipientFromLeaderboard": {
+   "t": "function",
+   "src": "4b9e698e:2210"
+  },
+  "populatePersonFilter": {
+   "t": "function",
+   "src": "26fde6b4:2075"
+  },
+  "syncPersonFilterToUrl": {
+   "t": "function",
+   "src": "18517c70:490"
+  },
+  "applyPersonFilter": {
+   "t": "function",
+   "src": "c83773fa:127"
+  },
+  "applyStatusFilter": {
+   "t": "function",
+   "src": "de19b4a3:402"
+  },
+  "getOwnRecipientId": {
+   "t": "function",
+   "src": "e139c793:915"
+  },
+  "applyAllFilters": {
+   "t": "function",
+   "src": "fee1e9e6:4952"
+  },
+  "initializeSearchAutocomplete": {
+   "t": "function",
+   "src": "c8763da:3351"
+  },
+  "updateSearchData": {
+   "t": "function",
+   "src": "62c91581:1983"
+  },
+  "performSearchWithAutocomplete": {
+   "t": "function",
+   "src": "89a34234:1517"
+  },
+  "applySearchFilter": {
+   "t": "function",
+   "src": "57e7d2ab:2228"
+  },
+  "positionDropdown": {
+   "t": "function",
+   "src": "b5e2728e:419"
+  },
+  "showAutocomplete": {
+   "t": "function",
+   "src": "fd379bf2:4049"
+  },
+  "hideAutocomplete": {
+   "t": "function",
+   "src": "1cb0c8f9:168"
+  },
+  "scrollToRecipient": {
+   "t": "function",
+   "src": "63cbd59a:543"
+  },
+  "toggleTabBarMenu": {
+   "t": "function",
+   "src": "d3690670:382"
+  },
+  "toggleNotificationsPanel": {
+   "t": "function",
+   "src": "4cf431a0:1852"
+  },
+  "closeAllPanels": {
+   "t": "function",
+   "src": "fc4feb96:395"
+  },
+  "displayNotifications": {
+   "t": "function",
+   "src": "6063435:4529"
+  },
+  "getNotificationMessage": {
+   "t": "function",
+   "src": "c4c3c90c:2797"
+  },
+  "escapeHtmlNotif": {
+   "t": "function",
+   "src": "16e9a068:163"
+  },
+  "highlightPresentItem": {
+   "t": "function",
+   "src": "b15540b0:818"
+  },
+  "scrollToPresentFromNotification": {
+   "t": "function",
+   "src": "30f5e1e9:1643"
+  },
+  "markNotificationsAsRead": {
+   "t": "function",
+   "src": "a22cb6cc:721"
+  },
+  "updateNotificationBadge": {
+   "t": "function",
+   "src": "d2490d0d:989"
+  },
+  "updateNotificationsForEditedPresent": {
+   "t": "function",
+   "src": "7fa43631:967"
+  },
+  "updateNotificationsForDeletedPresent": {
+   "t": "function",
+   "src": "dfb066ee:1388"
+  },
+  "updateMessagesBadge": {
+   "t": "function",
+   "src": "1612aaf3:559"
+  },
+  "updateChecker": {
+   "t": "object",
+   "arr": false,
+   "n": 3
+  },
+  "realtimeUpdates": {
+   "t": "object",
+   "arr": false,
+   "n": 4
+  },
+  "_currentUserId": {
+   "t": "number",
+   "v": 1
+  },
+  "_dataCache": {
+   "t": "object",
+   "arr": false,
+   "n": 3
+  },
+  "_dataCacheTimestamp": {
+   "t": "number",
+   "v": "<volatile>"
+  },
+  "_cachedRecipients": {
+   "t": "object",
+   "arr": true,
+   "n": 5
+  },
+  "_cachedIdentificationStatus": {
+   "t": "object",
+   "arr": false,
+   "n": 5
+  },
+  "_allRecipients": {
+   "t": "object",
+   "arr": true,
+   "n": 5
+  },
+  "_allPresentsByRecipient": {
+   "t": "object",
+   "arr": false,
+   "n": 5
+  }
+ },
+ "lex": {
+  "currentUserId": {
+   "t": "number",
+   "v": 1
+  },
+  "currentRecipientId": {
+   "t": "object",
+   "isNull": true
+  },
+  "pendingIdentificationRecipientId": {
+   "t": "object",
+   "isNull": true
+  },
+  "currentFilter": {
+   "t": "string",
+   "v": "all"
+  },
+  "searchTimeout": {
+   "t": "object",
+   "isNull": true
+  },
+  "VERIFIED_BADGE_SVG": {
+   "t": "string",
+   "v": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><polygon class=\"verified-badge-seal\" points=\"12 1.8 14.17 3.89 17.1 3.17 17.94 6.06 20.83 6.9 20.11 9.83 22.2 12 20.11 14.17 20.83 17.1 17.94 17.94 17.1 20.83 14.17 20.11 12 22.2 9.83 20.11 6.9 20.83 6.06 17.94 3.17 17.1 3.89 14.17 1.8 12 3.89 9.83 3.17 6.9 6.06 6.06 6.9 3.17 9.83 3.89\"/><path class=\"verified-badge-check\" d=\"M7.6 12.3l3 3 5.8-6.2\"/></svg>"
+  },
+  "_pendingPresentOps": {
+   "t": "number",
+   "v": 0
+  },
+  "_presentOpToken": {
+   "t": "number",
+   "v": 0
+  },
+  "_softReloadQueued": {
+   "t": "boolean",
+   "v": false
+  },
+  "oldDisplayRecipientsWithPresents": {
+   "t": "function",
+   "src": "6185c308:17978"
+  }
+ },
+ "globalNames": [
+  "AbsoluteOrientationSensor",
+  "Accelerometer",
+  "AudioDecoder",
+  "AudioEncoder",
+  "AudioPlaybackStats",
+  "AudioWorklet",
+  "AuthenticatorAssertionResponse",
+  "AuthenticatorAttestationResponse",
+  "AuthenticatorResponse",
+  "BatteryManager",
+  "Bluetooth",
+  "BluetoothCharacteristicProperties",
+  "BluetoothDevice",
+  "BluetoothRemoteGATTCharacteristic",
+  "BluetoothRemoteGATTDescriptor",
+  "BluetoothRemoteGATTServer",
+  "BluetoothRemoteGATTService",
+  "Cache",
+  "CacheStorage",
+  "CaptureController",
+  "Clipboard",
+  "ClipboardChangeEvent",
+  "ClipboardItem",
+  "CookieChangeEvent",
+  "CookieStore",
+  "CookieStoreManager",
+  "CreateMonitor",
+  "Credential",
+  "CredentialsContainer",
+  "CryptoKey",
+  "DeviceMotionEvent",
+  "DeviceMotionEventAcceleration",
+  "DeviceMotionEventRotationRate",
+  "DeviceOrientationEvent",
+  "DevicePosture",
+  "DigitalCredential",
+  "DocumentPictureInPicture",
+  "EyeDropper",
+  "FederatedCredential",
+  "FetchLaterResult",
+  "FileSystemDirectoryHandle",
+  "FileSystemFileHandle",
+  "FileSystemHandle",
+  "FileSystemObserver",
+  "FileSystemWritableFileStream",
+  "FontData",
+  "GPU",
+  "GPUAdapter",
+  "GPUAdapterInfo",
+  "GPUBindGroup",
+  "GPUBindGroupLayout",
+  "GPUBuffer",
+  "GPUBufferUsage",
+  "GPUCanvasContext",
+  "GPUColorWrite",
+  "GPUCommandBuffer",
+  "GPUCommandEncoder",
+  "GPUCompilationInfo",
+  "GPUCompilationMessage",
+  "GPUComputePassEncoder",
+  "GPUComputePipeline",
+  "GPUDevice",
+  "GPUDeviceLostInfo",
+  "GPUError",
+  "GPUExternalTexture",
+  "GPUInternalError",
+  "GPUMapMode",
+  "GPUOutOfMemoryError",
+  "GPUPipelineError",
+  "GPUPipelineLayout",
+  "GPUQuerySet",
+  "GPUQueue",
+  "GPURenderBundle",
+  "GPURenderBundleEncoder",
+  "GPURenderPassEncoder",
+  "GPURenderPipeline",
+  "GPUSampler",
+  "GPUShaderModule",
+  "GPUShaderStage",
+  "GPUSupportedFeatures",
+  "GPUSupportedLimits",
+  "GPUTexture",
+  "GPUTextureUsage",
+  "GPUTextureView",
+  "GPUUncapturedErrorEvent",
+  "GPUValidationError",
+  "GravitySensor",
+  "Gyroscope",
+  "HID",
+  "HIDConnectionEvent",
+  "HIDDevice",
+  "HIDInputReportEvent",
+  "IdentityCredential",
+  "IdentityCredentialError",
+  "IdentityProvider",
+  "IdleDetector",
+  "ImageCapture",
+  "ImageDecoder",
+  "ImageTrack",
+  "ImageTrackList",
+  "Keyboard",
+  "KeyboardLayoutMap",
+  "LanguageDetector",
+  "LinearAccelerationSensor",
+  "Lock",
+  "LockManager",
+  "MIDIAccess",
+  "MIDIConnectionEvent",
+  "MIDIInput",
+  "MIDIInputMap",
+  "MIDIMessageEvent",
+  "MIDIOutput",
+  "MIDIOutputMap",
+  "MIDIPort",
+  "MediaDeviceInfo",
+  "MediaDevices",
+  "MediaKeyMessageEvent",
+  "MediaKeySession",
+  "MediaKeyStatusMap",
+  "MediaKeySystemAccess",
+  "MediaKeys",
+  "NavigationPreloadManager",
+  "NavigatorLogin",
+  "NavigatorManagedData",
+  "OTPCredential",
+  "OrientationSensor",
+  "PasswordCredential",
+  "PaymentAddress",
+  "PaymentManager",
+  "PaymentMethodChangeEvent",
+  "PaymentRequest",
+  "PaymentRequestUpdateEvent",
+  "PaymentResponse",
+  "Presentation",
+  "PresentationAvailability",
+  "PresentationConnection",
+  "PresentationConnectionAvailableEvent",
+  "PresentationConnectionCloseEvent",
+  "PresentationConnectionList",
+  "PresentationReceiver",
+  "PresentationRequest",
+  "PressureObserver",
+  "PressureRecord",
+  "PrezentyEscape",
+  "ProtectedAudience",
+  "PublicKeyCredential",
+  "RelativeOrientationSensor",
+  "ScreenDetailed",
+  "ScreenDetails",
+  "Sensor",
+  "SensorErrorEvent",
+  "Serial",
+  "SerialPort",
+  "ServiceWorker",
+  "ServiceWorkerContainer",
+  "ServiceWorkerRegistration",
+  "SpeechRecognitionPhrase",
+  "StorageBucket",
+  "StorageBucketManager",
+  "StorageManager",
+  "SubtleCrypto",
+  "Summarizer",
+  "Translator",
+  "USB",
+  "USBAlternateInterface",
+  "USBConfiguration",
+  "USBConnectionEvent",
+  "USBDevice",
+  "USBEndpoint",
+  "USBInTransferResult",
+  "USBInterface",
+  "USBIsochronousInTransferPacket",
+  "USBIsochronousInTransferResult",
+  "USBIsochronousOutTransferPacket",
+  "USBIsochronousOutTransferResult",
+  "USBOutTransferResult",
+  "VideoDecoder",
+  "VideoEncoder",
+  "VirtualKeyboard",
+  "WGSLLanguageFeatures",
+  "WakeLock",
+  "WakeLockSentinel",
+  "WebTransport",
+  "WebTransportBidirectionalStream",
+  "WebTransportDatagramDuplexStream",
+  "WebTransportError",
+  "Worklet",
+  "XRAnchor",
+  "XRAnchorSet",
+  "XRBoundedReferenceSpace",
+  "XRCPUDepthInformation",
+  "XRCamera",
+  "XRCompositionLayer",
+  "XRCubeLayer",
+  "XRCylinderLayer",
+  "XRDOMOverlayState",
+  "XRDepthInformation",
+  "XREquirectLayer",
+  "XRFrame",
+  "XRHand",
+  "XRHitTestResult",
+  "XRHitTestSource",
+  "XRInputSource",
+  "XRInputSourceArray",
+  "XRInputSourceEvent",
+  "XRInputSourcesChangeEvent",
+  "XRJointPose",
+  "XRJointSpace",
+  "XRLayer",
+  "XRLayerEvent",
+  "XRLightEstimate",
+  "XRLightProbe",
+  "XRPlane",
+  "XRPlaneSet",
+  "XRPose",
+  "XRProjectionLayer",
+  "XRQuadLayer",
+  "XRRay",
+  "XRReferenceSpace",
+  "XRReferenceSpaceEvent",
+  "XRRenderState",
+  "XRRigidTransform",
+  "XRSession",
+  "XRSessionEvent",
+  "XRSpace",
+  "XRSubImage",
+  "XRSystem",
+  "XRTransientInputHitTestResult",
+  "XRTransientInputHitTestSource",
+  "XRView",
+  "XRViewerPose",
+  "XRViewport",
+  "XRVisibilityMaskChangeEvent",
+  "XRWebGLBinding",
+  "XRWebGLDepthInformation",
+  "XRWebGLLayer",
+  "XRWebGLSubImage",
+  "_allPresentsByRecipient",
+  "_allRecipients",
+  "_cachedIdentificationStatus",
+  "_cachedRecipients",
+  "_currentUserId",
+  "_dataCache",
+  "_dataCacheTimestamp",
+  "addNewRecipientAndIdentify",
+  "addPresentFromModal",
+  "addPresentToDOM",
+  "addPresentToIdentifiedUserAccordion",
+  "addRecipient",
+  "addRecipientFromModal",
+  "animateModalPresentTransition",
+  "animatePresentTransition",
+  "applyAllFilters",
+  "applyFilter",
+  "applyPersonFilter",
+  "applyPresentState",
+  "applySearchFilter",
+  "applyStatusFilter",
+  "beginPresentOp",
+  "bellMessage",
+  "bootstrap",
+  "caches",
+  "calculateContainerHeight",
+  "cancelIdentification",
+  "cancelReservationFromModal",
+  "cancelReservationFromRecipients",
+  "checkAuth",
+  "checkNotificationStatus",
+  "clearPersistentCache",
+  "clearRecipientsCache",
+  "closeAllPanels",
+  "compressImage",
+  "confirmCancelIdentification",
+  "confirmSelfIdentification",
+  "convertUrlsToLinks",
+  "cookieStore",
+  "deletePresent",
+  "deleteRecipient",
+  "deleteRecipientConfirmed",
+  "deleteRecipientFromModal",
+  "deleteRecipientFromSelection",
+  "dismissNotificationBanner",
+  "displayNotifications",
+  "displayRecipientsData",
+  "displayRecipientsWithPresents",
+  "displayReservedPresentsInModal",
+  "documentPictureInPicture",
+  "editPresent",
+  "endPresentOp",
+  "escapeAttr",
+  "escapeHtml",
+  "escapeHtmlNotif",
+  "escapeRegex",
+  "fastLoader",
+  "fetchLater",
+  "fetchWithTimeout",
+  "filterRecipients",
+  "focusSearch",
+  "formatCommentsPreview",
+  "generatePresentsList",
+  "generateProfilePictureHTML",
+  "generateReservationButton",
+  "generateSinglePresentHTML",
+  "getDigitalGoodsService",
+  "getEmojiAvatar",
+  "getFullProfilePictureUrl",
+  "getNotificationConfig",
+  "getNotificationMessage",
+  "getOwnRecipientId",
+  "getScreenDetails",
+  "getSkeletonCardsHTML",
+  "getTimeAgo",
+  "handleBoughtClick",
+  "handleIdentificationLogic",
+  "handleNotificationClick",
+  "handlePresentButtonClick",
+  "handleReserveClick",
+  "handleScrollToPresentFromNotification",
+  "hideAutocomplete",
+  "hideNoResultsMessage",
+  "hideSearchDropdown",
+  "highlightPresentItem",
+  "highlightText",
+  "identifyAsRecipient",
+  "identifyAsRecipientFromSelection",
+  "initializeAnimations",
+  "initializeFAB",
+  "initializeSearchAndFilter",
+  "initializeSearchAutocomplete",
+  "loadFromPersistentCache",
+  "loadRecentNotifications",
+  "loadRecipients",
+  "loadRecipientsWithPresents",
+  "loadUnreadCount",
+  "logout",
+  "markAllAsRead",
+  "markAllNotificationsAsReadOnOpen",
+  "markNotificationAsRead",
+  "markNotificationsAsRead",
+  "navigateToPresent",
+  "notificationText",
+  "notificationTextEscape",
+  "ondevicemotion",
+  "ondeviceorientation",
+  "ondeviceorientationabsolute",
+  "onpointerrawupdate",
+  "openAddPresentModal",
+  "openAddRecipientModal",
+  "openChangePictureModal",
+  "openProfileModal",
+  "openProfilePicturePreview",
+  "openRecipientDetailsModal",
+  "openReservedPresentsModal",
+  "openSettingsModal",
+  "performSearch",
+  "performSearchWithAutocomplete",
+  "personLinkHtml",
+  "plCount",
+  "plForm",
+  "plPlural",
+  "populateAddPresentModal",
+  "populateEditRecipientSelect",
+  "populatePersonFilter",
+  "positionDropdown",
+  "previewImage",
+  "queryLocalFonts",
+  "realtimeUpdates",
+  "recipientNameWithBadge",
+  "redirectIfAuthenticated",
+  "refreshPresentButtons",
+  "refreshRecipientsCache",
+  "renderNotification",
+  "reorderModalPresentsList",
+  "reorderPresentsList",
+  "requestNotificationPermission",
+  "reservePresentFromRecipients",
+  "returnToAddPresentModalWithNewRecipient",
+  "rollbackOptimisticUpdate",
+  "saveEditedPresent",
+  "saveImageToServer",
+  "saveNewProfilePicture",
+  "saveProfilePicture",
+  "saveToPersistentCache",
+  "scrollAndHighlight",
+  "scrollToElement",
+  "scrollToPresent",
+  "scrollToPresentById",
+  "scrollToPresentFromNotification",
+  "scrollToRecipient",
+  "scrollToRecipientFromLeaderboard",
+  "sendSubscriptionToServer",
+  "setupPresentButtonListeners",
+  "shareFormularzLink",
+  "showAutocomplete",
+  "showDirectoryPicker",
+  "showEditPresentMessage",
+  "showErrorModal",
+  "showErrorToast",
+  "showInfoToast",
+  "showInstallInstructions",
+  "showManualInstallInstructions",
+  "showModalMessage",
+  "showNoResultsMessage",
+  "showNotificationBanner",
+  "showOpenFilePicker",
+  "showRecipientDetailsFromList",
+  "showRecipientSelectionModal",
+  "showReservedByOtherModal",
+  "showSaveFilePicker",
+  "showSearchDropdown",
+  "showSuccessMessage",
+  "showSuccessToast",
+  "showToast",
+  "softReloadRecipients",
+  "subscribeToNotifications",
+  "syncPersonFilterToUrl",
+  "testNotification",
+  "toggleNotificationDropdown",
+  "toggleNotificationsPanel",
+  "togglePresentFromModal",
+  "togglePresentFromRecipients",
+  "toggleSidebar",
+  "toggleTabBarMenu",
+  "uidEvent",
+  "undoCancelReservation",
+  "undoCheck",
+  "undoPresentAction",
+  "undoReservation",
+  "updateAccordionBoughtCount",
+  "updateBadge",
+  "updateBadgeCount",
+  "updateButtonOptimistically",
+  "updateCacheOptimistically",
+  "updateChangedElementsOnly",
+  "updateChecker",
+  "updateMessagesBadge",
+  "updateModalBadgeCounts",
+  "updateModalPresentCheckStatus",
+  "updateNotificationBadge",
+  "updateNotificationsForDeletedPresent",
+  "updateNotificationsForEditedPresent",
+  "updatePresentCheckStatus",
+  "updatePresentCheckUI",
+  "updatePresentInDOM",
+  "updatePresentItemOptimistically",
+  "updatePresentReservationUI",
+  "updateProgressBar",
+  "updateSearchData",
+  "urlBase64ToUint8Array"
+ ],
+ "styles": {
+  "body": {
+   "count": 1,
+   "style": {
+    "display": "block",
+    "position": "static",
+    "width": "1024px",
+    "height": "1985.09px",
+    "color": "rgb(51, 51, 51)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "0px",
+    "padding-bottom": "24px",
+    "padding-left": "292px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "hidden",
+    "overflow-y": "auto",
+    "z-index": "auto",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    0,
+    0,
+    1024,
+    1985
+   ],
+   "cls": "recipients-page has-tab-bar has-desktop-nav"
+  },
+  "main": {
+   "count": 0
+  },
+  ".navbar": {
+   "count": 0
+  },
+  "header": {
+   "count": 0
+  },
+  ".container": {
+   "count": 2,
+   "style": {
+    "display": "block",
+    "position": "static",
+    "width": "100%",
+    "height": "auto",
+    "color": "rgb(51, 51, 51)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "auto",
+    "margin-right": "auto",
+    "padding-top": "16px",
+    "padding-bottom": "16px",
+    "padding-left": "16px",
+    "padding-right": "16px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "hidden",
+    "overflow-y": "auto",
+    "z-index": "auto",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "cls": "container"
+  },
+  ".accordion-item": {
+   "count": 2,
+   "style": {
+    "display": "block",
+    "position": "static",
+    "width": "398.5px",
+    "height": "72.375px",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgb(255, 255, 255)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "0px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "visible",
+    "overflow-y": "visible",
+    "z-index": "auto",
+    "border-top-width": "1px",
+    "border-radius": "6px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    573,
+    327,
+    399,
+    72
+   ],
+   "cls": "accordion-item"
+  },
+  ".accordion-button": {
+   "count": 2,
+   "style": {
+    "display": "flex",
+    "position": "relative",
+    "width": "396.5px",
+    "height": "70.375px",
+    "color": "rgb(8, 66, 152)",
+    "background-color": "rgb(207, 226, 255)",
+    "font-size": "16px",
+    "font-weight": "600",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "16px",
+    "padding-bottom": "16px",
+    "padding-left": "20px",
+    "padding-right": "20px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "visible",
+    "overflow-y": "visible",
+    "z-index": "auto",
+    "border-top-width": "0px",
+    "border-radius": "5px",
+    "flex-direction": "row",
+    "line-height": "19.2px"
+   },
+   "rect": [
+    574,
+    328,
+    397,
+    70
+   ],
+   "cls": "accordion-button collapsed accordion-button-identified"
+  },
+  ".present-name": {
+   "count": 2,
+   "style": {
+    "display": "block",
+    "position": "static",
+    "width": "auto",
+    "height": "auto",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "600",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "0px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "visible",
+    "overflow-y": "visible",
+    "z-index": "auto",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "cls": "fw-semibold present-name"
+  },
+  ".reserve-btn": {
+   "count": 7,
+   "style": {
+    "display": "flex",
+    "position": "relative",
+    "width": "124.016px",
+    "height": "37px",
+    "color": "rgb(255, 255, 255)",
+    "background-color": "rgb(245, 124, 0)",
+    "font-size": "14px",
+    "font-weight": "600",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "8px",
+    "padding-bottom": "8px",
+    "padding-left": "16px",
+    "padding-right": "16px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "hidden",
+    "overflow-y": "hidden",
+    "z-index": "2",
+    "border-top-width": "0px",
+    "border-radius": "6px",
+    "flex-direction": "row",
+    "line-height": "21px"
+   },
+   "rect": [
+    830,
+    582,
+    124,
+    37
+   ],
+   "cls": "btn btn-reserve btn-sm w-100 w-md-auto reserve-btn"
+  },
+  "#personFilter": {
+   "count": 1,
+   "style": {
+    "display": "block",
+    "position": "static",
+    "width": "324px",
+    "height": "39px",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgb(255, 255, 255)",
+    "font-size": "14px",
+    "font-weight": "400",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "8px",
+    "padding-bottom": "8px",
+    "padding-left": "16px",
+    "padding-right": "16px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "clip",
+    "overflow-y": "clip",
+    "z-index": "auto",
+    "border-top-width": "1px",
+    "border-radius": "8px",
+    "flex-direction": "row",
+    "line-height": "21px"
+   },
+   "rect": [
+    394,
+    111,
+    324,
+    39
+   ],
+   "cls": "form-select filter-select"
+  },
+  "#recipientSearch": {
+   "count": 0
+  },
+  ".modal": {
+   "count": 14,
+   "style": {
+    "display": "none",
+    "position": "fixed",
+    "width": "100%",
+    "height": "100%",
+    "color": "rgb(51, 51, 51)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "0px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "0",
+    "overflow-x": "hidden",
+    "overflow-y": "auto",
+    "z-index": "1060",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "cls": "modal fade"
+  },
+  "#editPresentModal": {
+   "count": 1,
+   "style": {
+    "display": "none",
+    "position": "fixed",
+    "width": "100%",
+    "height": "100%",
+    "color": "rgb(51, 51, 51)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "0px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "0",
+    "overflow-x": "hidden",
+    "overflow-y": "auto",
+    "z-index": "1060",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "cls": "modal fade"
+  },
+  ".fab": {
+   "count": 0
+  },
+  ".bottom-tab-bar": {
+   "count": 1,
+   "style": {
+    "display": "none",
+    "position": "fixed",
+    "width": "auto",
+    "height": "auto",
+    "color": "rgb(51, 51, 51)",
+    "background-color": "rgba(255, 255, 255, 0.88)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "auto",
+    "margin-right": "auto",
+    "padding-top": "6px",
+    "padding-bottom": "6px",
+    "padding-left": "0px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "visible",
+    "overflow-y": "visible",
+    "z-index": "1000",
+    "border-top-width": "2px",
+    "border-radius": "20px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "cls": "bottom-tab-bar"
+  },
+  "#availablePresentsList": {
+   "count": 0
+  },
+  ".present-actions": {
+   "count": 7,
+   "style": {
+    "display": "flex",
+    "position": "static",
+    "width": "124.016px",
+    "height": "37px",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "0px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "visible",
+    "overflow-y": "visible",
+    "z-index": "auto",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "column",
+    "line-height": "24px"
+   },
+   "rect": [
+    830,
+    582,
+    124,
+    37
+   ],
+   "cls": "present-actions d-flex flex-column"
+  },
+  ".btn-reserve": {
+   "count": 6,
+   "style": {
+    "display": "flex",
+    "position": "relative",
+    "width": "124.016px",
+    "height": "37px",
+    "color": "rgb(255, 255, 255)",
+    "background-color": "rgb(245, 124, 0)",
+    "font-size": "14px",
+    "font-weight": "600",
+    "font-family": "\"Amazon Ember\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "8px",
+    "padding-bottom": "8px",
+    "padding-left": "16px",
+    "padding-right": "16px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "hidden",
+    "overflow-y": "hidden",
+    "z-index": "2",
+    "border-top-width": "0px",
+    "border-radius": "6px",
+    "flex-direction": "row",
+    "line-height": "21px"
+   },
+   "rect": [
+    830,
+    582,
+    124,
+    37
+   ],
+   "cls": "btn btn-reserve btn-sm w-100 w-md-auto reserve-btn"
+  },
+  ".badge": {
+   "count": 0
+  },
+  "__counts": {
+   "all": 783,
+   "scripts": 16
+  }
+ },
+ "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (2) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+ "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (2) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+ "scriptSrcs": [
+  "pluralize-pl.js",
+  "notification-text.js",
+  "escape-html.js",
+  "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
+  "recipients-page.js?v=1",
+  "recipients-page-notifbell.js?v=1",
+  "fast-loader.js",
+  "recipients.js?v=25&t=1111111111",
+  "recipients-page-scroll.js?v=1",
+  "filters.js?v=9",
+  "profile-picture-debug.js",
+  "update-checker.js",
+  "realtime-updates.js?v=2",
+  "tab-bar-functions.js?v=19",
+  "desktop-nav.js?v=5"
+ ],
+ "smoke": {
+  "00-initial": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (2) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (2) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ]
+  },
+  "01-added": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (2) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (2) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ],
+   "added": {
+    "status": 200,
+    "id": 10,
+    "title": "Smoke prezent",
+    "apiHas": true,
+    "domHas": false
+   }
+  },
+  "01b-reloaded": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ],
+   "reloaded": "ok",
+   "domHas": true
+  },
+  "02-reserved": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Kupione Anuluj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Kupione Anuluj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [
+    "Cofnij"
+   ],
+   "reserveBtns": [
+    "handleBoughtClick(1, true) => Kupione",
+    "handleReserveClick(1, 'cancel') => Anuluj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ]
+  },
+  "03-bought": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 1/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Anuluj zakup https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 1/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Anuluj zakup https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [
+    "Cofnij"
+   ],
+   "reserveBtns": [
+    "handleBoughtClick(1, false) => Anuluj zakup",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ]
+  },
+  "04-unbought": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Kupione Anuluj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Kupione Anuluj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleBoughtClick(1, true) => Kupione",
+    "handleReserveClick(1, 'cancel') => Anuluj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ]
+  },
+  "05-cancelled": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [
+    "Cofnij"
+   ],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ]
+  },
+  "06-filter-person": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ],
+   "opts": [
+    "all|Wszystkie osoby",
+    "2|Jan Nowak",
+    "1|Anna Kowalska",
+    "4|Konstantynopolitańczykowianeczkaniezwykła",
+    "3|Maria Wiśniewska",
+    "5|Zuzia & \"Zuza\" <mała> 'Z'"
+   ]
+  },
+  "07-filter-reset": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ]
+  },
+  "08-status-reserved": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ]
+  },
+  "08-status-unreserved": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ]
+  },
+  "08-status-checked": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ]
+  },
+  "08-status-unchecked": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ]
+  },
+  "08-status-all": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ]
+  },
+  "09-performSearch-kubek": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (3) - kliknij, aby edytować Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ],
+   "srch": "threw: Cannot read properties of null (reading 'querySelector')"
+  },
+  "10-performSearch-empty": {
+   "text": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Filtry Osoba: Wszystkie osoby Jan Nowak Anna Kowalska Konstantynopolitańczykowianeczkaniezwykła Maria Wiśniewska Zuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "fullText": "Menu Strona główna Aktywność Ranking Dodaj prezent Edytuj moje prezenty Ustawienia Wyloguj Prezentownik v1.0 Masz nowe powiadomienia Zobacz wszystkie Filtry Osoba: Wszystkie osobyJan NowakAnna KowalskaKonstantynopolitańczykowianeczkaniezwykłaMaria WiśniewskaZuzia & \"Zuza\" <mała> 'Z' Status: Wszystkie Niezarezerwowane Zarezerwowane Kupione Niekupione 👨 Jan Nowak Udostępnij Jan Nowak To jest Twój profil Udostępnij Twoje prezenty (3) - kliknij, aby edytować 🎁 Niespodzianka! Nie możesz zobaczyć, które z Twoich prezentów zostały zarezerwowane albo zakupione. Chyba nie chcesz sobie zepsuć niespodzianki! Twoje dodane prezenty: Słuchawki bezprzewodowe Najlepiej Sony lub Bose Kubek termiczny Smoke prezent smoke komentarz 🎁 Anna Kowalska Prezenty: 0/2 zakupione Udostępnij Anna Kowalska Udostępnij Prezenty: 0/2 zakupione Książka o gotowaniu Coś o kuchni włoskiej 13.10.2026 Zarezerwuj https://www.sklep-z-prezentami.example.com/kata... 13.10.2026 Zarezerwuj 🔔 Konstantynopolitańczykowianeczkaniezwykła Prezenty: 1/2 zakupione Udostępnij Konstantynopolitańczykowianeczkaniezwykła Udostępnij Prezenty: 1/2 zakupione Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty 13.10.2026 Zarezerwuj Kupione (1) Puzzle 2000 elementów Widok górski 13.10.2026 Anuluj zakup 🔔 Maria Wiśniewska Prezenty: 0/2 zakupione Udostępnij Maria Wiśniewska Udostępnij Prezenty: 0/2 zakupione Roślina doniczkowa Monstera lub fikus 13.10.2026 Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa 13.10.2026 Zarezerwuj 🐱 Zuzia & \"Zuza\" <mała> 'Z' Prezenty: 0/1 zakupione Udostępnij Zuzia & \"Zuza\" <mała> 'Z' Udostępnij Prezenty: 0/1 zakupione Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku 13.10.2026 Zarezerwuj Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Zarezerwowane prezenty Ładowanie... Zamknij Dodaj nową osobę Imię i nazwisko Anuluj Dodaj osobę Dodaj zdjęcie profilowe Wybierz plik Wybierz plik obrazu (JPG, PNG, GIF) Lub wklej URL zdjęcia Alternatywnie wklej link do zdjęcia Podgląd: Anuluj Zapisz Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację jako ? Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba. Anuluj Tak, anuluj identyfikację Błąd Zamknij Potwierdź usunięcie Anuluj Usuń Prezent zarezerwowany Zamknij Zamknij Profil Zamknij Zmień zdjęcie profilowe Wybierz nowe zdjęcie: Podgląd: Anuluj Zapisz Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Główna 4 Aktywność Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+   "toasts": [],
+   "reserveBtns": [
+    "handleReserveClick(1, 'reserve') => Zarezerwuj",
+    "handleReserveClick(5, 'reserve') => Zarezerwuj",
+    "handleReserveClick(4, 'reserve') => Zarezerwuj",
+    "handleBoughtClick(9, false) => Anuluj zakup",
+    "handleReserveClick(3, 'reserve') => Zarezerwuj",
+    "handleReserveClick(6, 'reserve') => Zarezerwuj",
+    "handleReserveClick(8, 'reserve') => Zarezerwuj"
+   ],
+   "srch2": "ok"
+  },
+  "dialogs": []
+ }
+}

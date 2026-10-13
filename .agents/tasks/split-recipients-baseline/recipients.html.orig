@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Życzenia Prezentowe</title>
+
+    <!-- Cache Control Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#F44336">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Życzenia Prezentowe">
+    <meta name="description" content="Aplikacja do zarządzania pomysłami na prezenty świąteczne">
+
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png?v=1">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96.png?v=1">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
+    <link rel="apple-touch-icon" href="icon-180.png?v=4">
+
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="styles.deduped.min.css" rel="stylesheet">
+    <link href="aws-design.css?v=4" rel="stylesheet">
+    <link href="bottom-tab-bar.css?v=42" rel="stylesheet">
+    <link href="app-theme.css?v=14" rel="stylesheet">
+    <link href="filters.css?v=7" rel="stylesheet">
+    <style>
+        /* Critical styles for notifications panel */
+        .tab-bar-notifications-panel.show {
+            transform: translateY(0) !important;
+            visibility: visible !important;
+        }
+        .tab-bar-menu-overlay.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+    </style>
+    <link href="recipients-page.css?v=1" rel="stylesheet">
+    <script src="pluralize-pl.js"></script>
+    <script src="notification-text.js"></script>
+    <script src="escape-html.js"></script>
+</head>
+
+<body class="recipients-page has-tab-bar">
+    <div class="background-overlay"></div>
+
+    <!-- Fixed header bar removed - it painted a dark gradient over the
+         top of the content (leftover from the old hamburger/bell header) -->
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div class="sidebar-header">
+            <img src="seba_logo.png" alt="Logo" class="sidebar-logo">
+            <h5>Menu</h5>
+            <button class="sidebar-close" onclick="toggleSidebar()" aria-label="Zamknij">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="sidebar-content">
+            <a href="/" class="sidebar-item">
+                <i class="fas fa-home"></i>
+                <span>Strona główna</span>
+            </a>
+            <a href="/activity.html" class="sidebar-item">
+                <i class="fas fa-bell"></i>
+                <span>Aktywność</span>
+            </a>
+            <a href="/leaderboard.html" class="sidebar-item">
+                <i class="fas fa-trophy"></i>
+                <span>Ranking</span>
+            </a>
+            <a href="/formularz.html" class="sidebar-item">
+                <i class="fas fa-plus"></i>
+                <span>Dodaj prezent</span>
+            </a>
+            <a href="/formularz.html" class="sidebar-item" onclick="localStorage.setItem('openEditTab', 'true');">
+                <i class="fas fa-edit"></i>
+                <span>Edytuj moje prezenty</span>
+            </a>
+            <div class="sidebar-divider"></div>
+            <a href="#" class="sidebar-item" onclick="openSettingsModal(); return false;">
+                <i class="fas fa-cog"></i>
+                <span>Ustawienia</span>
+            </a>
+            <a href="#" class="sidebar-item" onclick="logout(); return false;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Wyloguj</span>
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <small class="text-muted">Prezentownik v1.0</small>
+        </div>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Navbar removed - the page opens straight with the filter panel
+         and person cards (desktop uses the sidebar, mobile the dock) -->
+
+    <!-- Notification Banner -->
+    <div id="notificationBanner" class="notification-banner" style="display: none;">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <i class="fas fa-bell me-3" style="font-size: 1.2rem;"></i>
+                    <div>
+                        <strong id="bannerTitle">Masz nowe powiadomienia</strong>
+                        <div id="bannerMessage" class="small"></div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-light" onclick="window.location.href='/activity.html'">
+                        <i class="fas fa-list me-1"></i>Zobacz wszystkie
+                    </button>
+                    <button class="btn btn-sm btn-outline-light" onclick="dismissNotificationBanner()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert"
+            aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span id="successToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="errorToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="infoToast" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span id="infoToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Action cards removed: adding presents lives in the formularz,
+             adding people in Ustawienia, reservations at /rezerwacje.
+             Keyboard shortcuts (Ctrl+K, Ctrl+P, Ctrl+B) still work. -->
+
+        <!-- AWS-Style Main Content (heading removed - the filter panel
+             and person cards speak for themselves) -->
+        <div class="card main-card aws-main-content">
+            <!-- Filter Panel - always open, frosted like the rest of the app -->
+            <div id="filterAccordion" style="margin-top: 0; margin-bottom: 16px;">
+                <div style="background: rgba(255, 255, 255, 0.78); backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);">
+                    <div style="background: rgba(108, 117, 125, 0.12); color: #2d3748; font-weight: 600; padding: 15px 20px;">
+                        <i class="fas fa-filter me-2" style="color: #6c757d;"></i>Filtry
+                    </div>
+                    <div id="filterCollapse">
+                        <div style="padding: 20px;">
+                            <div class="d-flex flex-wrap gap-3 align-items-center">
+                                <!-- Person Filter -->
+                                <div class="filter-group">
+                                    <label class="filter-label">
+                                        <i class="fas fa-user me-1"></i>Osoba:
+                                    </label>
+                                    <select class="form-select filter-select" id="personFilter" onchange="applyPersonFilter(this.value)">
+                                        <option value="all">Wszystkie osoby</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Status Filter -->
+                                <div class="filter-group">
+                                    <label class="filter-label">
+                                        <i class="fas fa-filter me-1"></i>Status:
+                                    </label>
+                                    <div class="filter-options">
+                                        <button class="filter-option active" data-filter="all" onclick="applyStatusFilter('all')">
+                                            <i class="fas fa-list me-1"></i>Wszystkie
+                                        </button>
+                                        <button class="filter-option" data-filter="unreserved" onclick="applyStatusFilter('unreserved')">
+                                            <i class="fas fa-gift me-1"></i>Niezarezerwowane
+                                        </button>
+                                        <button class="filter-option" data-filter="reserved" onclick="applyStatusFilter('reserved')">
+                                            <i class="fas fa-bookmark me-1"></i>Zarezerwowane
+                                        </button>
+                                        <button class="filter-option" data-filter="checked" onclick="applyStatusFilter('checked')">
+                                            <i class="fas fa-check-circle me-1"></i>Kupione
+                                        </button>
+                                        <button class="filter-option" data-filter="unchecked" onclick="applyStatusFilter('unchecked')">
+                                            <i class="fas fa-circle me-1"></i>Niekupione
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body aws-content-body">
+                <div id="recipientsList">
+                    <!-- Skeleton placeholders: mimic recipient cards while data loads,
+                         so the layout doesn't jump and the page feels instant -->
+                    <div class="skeleton-cards" aria-hidden="true">
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div class="skeleton-lines">
+                                <div class="skeleton skeleton-line" style="width: 40%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 70%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 55%;"></div>
+                            </div>
+                        </div>
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div class="skeleton-lines">
+                                <div class="skeleton skeleton-line" style="width: 50%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 65%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 45%;"></div>
+                            </div>
+                        </div>
+                        <div class="skeleton-card">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div class="skeleton-lines">
+                                <div class="skeleton skeleton-line" style="width: 35%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 75%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 60%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-center visually-hidden" role="status">Ładowanie danych...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Present modal retired - adding presents lives in the formularz
+         (openAddPresentModal() in recipients.js redirects there) -->
+
+    <!-- Edit Present Modal -->
+    <div class="modal fade" id="editPresentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content aws-modal">
+                <div class="modal-header aws-modal-header">
+                    <div class="aws-modal-title-section">
+                        <h5 class="modal-title">
+                            <i class="fas fa-edit me-2"></i>Edytuj prezent
+                        </h5>
+                        <p class="aws-modal-subtitle">Zmień informacje o prezencie</p>
+                    </div>
+                    <button type="button" class="btn-close aws-close-btn" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body aws-modal-body">
+                    <form id="editPresentForm" class="aws-form">
+                        <input type="hidden" id="editPresentId">
+                        <div class="aws-form-section">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="aws-form-group">
+                                        <label for="editPresentTitle" class="form-label aws-form-label">
+                                            <i class="fas fa-gift me-1"></i>Jaki prezent?
+                                        </label>
+                                        <input type="text" class="form-control aws-form-control" id="editPresentTitle"
+                                            placeholder="Wprowadź nazwę prezentu" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="aws-form-group">
+                                        <label for="editRecipientSelect" class="form-label aws-form-label">
+                                            <i class="fas fa-user me-1"></i>Dla kogo?
+                                        </label>
+                                        <select class="form-control aws-form-control" id="editRecipientSelect" required>
+                                            <option value="">Wybierz osobę</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="aws-form-section">
+                            <div class="aws-form-group">
+                                <label for="editPresentComments" class="form-label aws-form-label">
+                                    <i class="fas fa-comment me-1"></i>Dodatkowe informacje
+                                </label>
+                                <textarea class="form-control aws-form-control" id="editPresentComments" rows="3"
+                                    placeholder="Opis, linki, uwagi, gdzie kupić..."></textarea>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="editPresentMessage" class="alert aws-alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer aws-modal-footer">
+                    <button type="button" class="btn aws-btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Anuluj
+                    </button>
+                    <button type="button" class="btn aws-btn-primary" onclick="saveEditedPresent()">
+                        <i class="fas fa-save me-1"></i>Zapisz zmiany
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reserved Presents Modal -->
+    <div class="modal fade" id="reservedPresentsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-bookmark me-2"></i>Zarezerwowane prezenty
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="reservedPresentsList">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Ładowanie...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Recipient Modal -->
+    <div class="modal fade" id="addRecipientModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-plus me-2"></i>Dodaj nową osobę
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRecipientForm">
+                        <div class="mb-3">
+                            <label for="recipientName" class="form-label">Imię i nazwisko</label>
+                            <input type="text" class="form-control" id="recipientName"
+                                placeholder="Wprowadź imię i nazwisko" required>
+                        </div>
+                    </form>
+                    <div id="addRecipientMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-success" onclick="addRecipientFromModal()">
+                        <i class="fas fa-plus me-1"></i>Dodaj osobę
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Picture Modal -->
+    <div class="modal fade" id="profilePictureModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dodaj zdjęcie profilowe</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="profilePictureForm">
+                        <div class="mb-3">
+                            <label for="profilePictureFile" class="form-label">Wybierz plik</label>
+                            <input type="file" class="form-control" id="profilePictureFile" accept="image/*"
+                                onchange="previewImage(this)">
+                            <div class="form-text">Wybierz plik obrazu (JPG, PNG, GIF)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="profilePictureUrl" class="form-label">Lub wklej URL zdjęcia</label>
+                            <input type="url" class="form-control" id="profilePictureUrl"
+                                placeholder="https://example.com/photo.jpg">
+                            <div class="form-text">Alternatywnie wklej link do zdjęcia</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Podgląd:</label>
+                            <div class="text-center">
+                                <img id="profilePicturePreview" src="" alt="Podgląd"
+                                    style="max-width: 200px; max-height: 200px; display: none;"
+                                    class="img-fluid rounded">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-danger" onclick="saveProfilePicture()">Zapisz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Self Identification Modal -->
+    <div class="modal fade" id="selfIdentificationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-check me-2"></i>Potwierdź swoją tożsamość
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-user-circle fa-3x text-primary"></i>
+                        </div>
+                        <h6 class="text-muted mb-3">Czy to jesteś Ty?</h6>
+                        <p class="mb-0">Chcesz zidentyfikować się jako <strong id="identificationRecipientName"
+                                class="text-primary"></strong>?</p>
+                        <small class="text-muted d-block mt-2">Po identyfikacji możesz zarządzać swoimi
+                            prezentami.</small>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <div class="d-flex flex-column flex-md-row gap-3 w-100 justify-content-center align-items-center">
+                        <button type="button" class="btn btn-secondary btn-lg order-3 order-md-1"
+                            data-bs-dismiss="modal" style="min-width: 140px;">
+                            <i class="fas fa-times me-1"></i>Anuluj
+                        </button>
+                        <button type="button" class="btn btn-warning btn-lg order-2"
+                            onclick="showRecipientSelectionModal()"
+                            style="background: linear-gradient(135deg, #ffc107, #e0a800); border: 2px solid #ffc107; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3); min-width: 160px;">
+                            <i class="fas fa-search me-1"></i>Nie, to nie ja
+                        </button>
+                        <button type="button" class="btn btn-success btn-lg order-1 order-md-3"
+                            onclick="confirmSelfIdentification()"
+                            style="background: linear-gradient(135deg, #28a745, #1e7e34); border: 2px solid #28a745; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); min-width: 180px;">
+                            <i class="fas fa-check me-1"></i>Tak, to jestem ja
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipient Selection Modal -->
+    <div class="modal fade" id="recipientSelectionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-users me-2"></i>Wybierz swoje imię
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-user-plus fa-2x text-success"></i>
+                        </div>
+                        <h6 class="text-muted">Która osoba to Ty?</h6>
+                        <p class="text-muted mb-0">Wybierz swoje imię z listy lub dodaj nowe</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="mb-3">
+                            <i class="fas fa-list me-2"></i>Dostępne osoby:
+                        </h6>
+                        <div id="availableRecipientsList" class="list-group">
+                            <!-- Lista będzie generowana dynamicznie -->
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="mb-3">
+                        <h6 class="mb-3">
+                            <i class="fas fa-plus-circle me-2"></i>Dodaj nową osobę:
+                        </h6>
+                        <form id="newRecipientForm">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="newRecipientName"
+                                    placeholder="Wprowadź swoje imię i nazwisko" required
+                                    style="border: 2px solid #007bff; border-radius: 8px; padding: 12px; font-size: 16px;">
+                            </div>
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-success w-100"
+                                    onclick="addNewRecipientAndIdentify()">
+                                    <i class="fas fa-plus me-1"></i>Dodaj i zidentyfikuj
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">Jeśli nie widzisz swojego imienia, dodaj je
+                                tutaj</small>
+                        </form>
+                    </div>
+                    <div id="recipientSelectionMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Zamknij
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Identification Modal -->
+    <div class="modal fade" id="cancelIdentificationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Anuluj identyfikację</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Czy na pewno chcesz anulować identyfikację jako <strong
+                            id="cancelIdentificationRecipientName"></strong>?</p>
+                    <p class="text-muted">Po anulowaniu możesz ponownie zidentyfikować się jako ta osoba.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmCancelIdentification()">Tak, anuluj
+                        identyfikację</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Błąd
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorModalMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal potwierdzenia usunięcia osoby -->
+    <div class="modal fade" id="confirmDeleteRecipientModal" tabindex="-1"
+        aria-labelledby="confirmDeleteRecipientModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteRecipientModalLabel">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Potwierdź usunięcie
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="confirmDeleteRecipientModalBody">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Anuluj
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="deleteRecipientConfirmed()">
+                        <i class="fas fa-trash me-1"></i>Usuń
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reserved By Other Modal -->
+    <div class="modal fade" id="reservedByOtherModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered-mobile">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-warning">
+                        <i class="fas fa-bookmark me-2"></i>Prezent zarezerwowany
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="reservedByOtherMessage" class="mb-0"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipient Details Modal -->
+    <div class="modal fade" id="recipientDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user me-2"></i><span id="recipientDetailsName"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4">
+                            <img id="recipientDetailsImage" src="" alt="Zdjęcie profilowe"
+                                class="img-fluid rounded-circle mb-3" style="max-width: 200px; max-height: 200px;">
+                            <h6 id="recipientDetailsName2" class="text-primary"></h6>
+                        </div>
+                        <div class="col-md-8">
+                            <div id="recipientDetailsContent">
+                                <!-- Zawartość będzie generowana dynamicznie -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user me-2"></i>Profil
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="profileModalContent" class="text-center">
+                        <!-- Content will be generated dynamically -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Picture Modal -->
+    <div class="modal fade" id="changePictureModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-camera me-2"></i>Zmień zdjęcie profilowe
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changePictureForm">
+                        <div class="mb-3">
+                            <label for="newProfilePicture" class="form-label">Wybierz nowe zdjęcie:</label>
+                            <input type="file" class="form-control" id="newProfilePicture" name="profile_picture"
+                                accept="image/*" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Podgląd:</label>
+                            <div id="imagePreview" class="text-center" style="display: none;">
+                                <img id="previewImage" src="" alt="Podgląd" class="img-fluid rounded"
+                                    style="max-width: 200px; max-height: 200px;">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-primary" onclick="saveNewProfilePicture()">
+                        <i class="fas fa-save me-1"></i>Zapisz
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Picture Preview Modal -->
+    <div class="modal fade profile-preview-modal" id="profilePreviewModal" tabindex="-1"
+        aria-labelledby="profilePreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="profilePreviewModalLabel">Podgląd zdjęcia profilowego</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="profilePreviewImage" class="profile-preview-image" alt="Zdjęcie profilowe">
+                    <div id="profilePreviewEmoji"
+                         style="display: none; width: 160px; height: 160px; margin: 0 auto; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-size: 76px; line-height: 160px; text-align: center;"></div>
+                    <div id="profilePreviewName" class="profile-preview-name mt-3"></div>
+                    <a id="profilePreviewMessageLink" href="#" class="btn btn-sm fw-semibold mt-3"
+                       style="display: none; background: #7B1FA2; color: #ffffff !important; border-radius: 10px;">
+                        <i class="fas fa-user-secret me-1"></i>Wyślij anonimową wiadomość 🎅
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- PWA Install Script -->
+    <script src="recipients-page.js?v=1"></script>
+
+    <!-- Sidebar Menu Script -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebarMenu');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking on a link (except settings)
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            sidebarItems.forEach(item => {
+                if (!item.getAttribute('onclick')?.includes('openSettingsModal')) {
+                    item.addEventListener('click', function (e) {
+                        if (this.getAttribute('href') !== '#') {
+                            toggleSidebar();
+                        }
+                    });
+                }
+            });
+        });
+
+        function openSettingsModal() {
+            toggleSidebar();
+            window.location.href = '/ustawienia';
+        }
+    </script>
+
+    <!-- Notification Bell Script -->
+    <script src="recipients-page-notifbell.js?v=1"></script>
+
+    <!-- Fast loader (load first for instant cache access) -->
+    <script src="fast-loader.js"></script>
+
+    <!-- Main app (critical - load immediately) -->
+    <script src="recipients.js?v=25&t=1111111111"></script>
+
+    <!-- Scroll to recipient from leaderboard -->
+    <script src="recipients-page-scroll.js?v=1"></script>
+
+    <!-- Filters -->
+    <script src="filters.js?v=9"></script>
+
+    <!-- Debug script (temporary - remove after fixing) -->
+    <script src="profile-picture-debug.js"></script>
+
+    <!-- Non-critical scripts (defer to load after page is interactive) -->
+    <script src="update-checker.js" defer></script>
+    <script src="realtime-updates.js?v=2" defer></script>
+    
+    <!-- Tab bar functions (shared across pages) -->
+    <script src="tab-bar-functions.js?v=19"></script>
+
+    <!-- Bottom Tab Bar -->
+    <div class="bottom-tab-bar">
+        <!-- Main Navigation -->
+        <div class="tab-bar-container">
+            <!-- Home Tab -->
+            <a href="/" class="tab-item home-tab">
+                <i class="ri-home-line"></i>
+                <span>Główna</span>
+            </a>
+            
+            <!-- Activity Tab -->
+            <a href="#" class="tab-item activity-tab" onclick="toggleNotificationsPanel(); return false;">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-notification-3-line"></i>
+                    <span class="notification-badge" id="activityBadge" style="display: none;"></span>
+                </div>
+                <span>Aktywność</span>
+            </a>
+            
+            <!-- Spacer for FAB -->
+            <div class="tab-spacer"></div>
+            
+            <!-- Leaderboard Tab -->
+            <a href="wiadomosci.html" class="tab-item messages-tab">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-chat-private-line"></i>
+                    <span class="notification-badge" id="messagesBadge" style="display: none;"></span>
+                </div>
+                <span>Czat</span>
+            </a>
+            
+            <!-- Form Tab -->
+            <a href="formularz.html" class="tab-item form-tab">
+                <i class="ri-gift-line"></i>
+                <span>Dodaj</span>
+            </a>
+        </div>
+        
+        <!-- Floating Action Button (FAB) - Opens Hamburger Menu -->
+        <div class="tab-fab" onclick="toggleTabBarMenu()">
+            <i class="ri-menu-line"></i>
+        </div>
+    </div>
+
+    <!-- Overlay for menu and notifications -->
+    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;"></div>
+
+    <!-- Hamburger Menu Panel -->
+    <div class="tab-bar-menu-panel" id="tabBarMenuPanel">
+        <div class="tab-bar-menu-header">
+            <h5><i class="ri-menu-line me-2"></i>Menu</h5>
+            <button class="tab-bar-menu-close" onclick="toggleTabBarMenu()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-menu-content">
+            <!-- Primary actions - kept in easy thumb reach.
+                 Same items on every page so the menu is predictable -->
+            <a href="recipients.html" class="tab-bar-menu-item">
+                <i class="ri-gift-2-line"></i>
+                <span>Wszystkie prezenty</span>
+            </a>
+            <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
+                <i class="ri-bookmark-line"></i>
+                <span>Zarezerwowane prezenty</span>
+            </a>
+            <a href="leaderboard.html" class="tab-bar-menu-item">
+                <i class="ri-trophy-line"></i>
+                <span>Ranking</span>
+            </a>
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
+                <i class="ri-edit-line"></i>
+                <span>Edytuj moje prezenty</span>
+            </a>
+            <div class="tab-bar-menu-divider"></div>
+            <!-- Secondary quick actions: compact tiles, share-sheet style -->
+            <div class="tab-bar-menu-secondary">
+                <a href="ustawienia.html" class="tab-bar-menu-tile">
+                    <i class="ri-settings-3-line"></i>
+                    <span>Ustawienia</span>
+                </a>
+                <a href="archiwum.html" class="tab-bar-menu-tile">
+                    <i class="ri-archive-line"></i>
+                    <span>Archiwum</span>
+                </a>
+                <a href="#" class="tab-bar-menu-tile tile-logout" onclick="logout(); return false;">
+                    <i class="ri-logout-box-r-line"></i>
+                    <span>Wyloguj</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Panel -->
+    <div class="tab-bar-notifications-panel" id="notificationsPanel" style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="tab-bar-notifications-header" style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
+            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
+            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()" style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-notifications-content" id="notificationsContent" style="flex: 1; overflow-y: auto; background: #ffffff;">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Ładowanie...</span>
+                </div>
+            </div>
+        </div>
+        <div class="tab-bar-notifications-view-all" style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
+            <a href="activity.html" style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie powiadomienia</a>
+        </div>
+    </div>
+
+    <!-- Notification functions now loaded from tab-bar-functions.js -->
+    <script src="desktop-nav.js?v=5"></script>
+</body>
+
+</html>

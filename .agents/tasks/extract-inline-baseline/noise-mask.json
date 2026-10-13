@@ -1,0 +1,370 @@
+{
+ "cells": {
+  "activity@1024x768": [
+   "286:18"
+  ],
+  "activity@375x812": [
+   "286:18"
+  ],
+  "archiwum@1024x768": [],
+  "archiwum@375x812": [],
+  "formularz@1024x768": [
+   "377:18"
+  ],
+  "formularz@375x812": [
+   "377:18"
+  ],
+  "home@1024x768": [
+   "264:18"
+  ],
+  "home@375x812": [
+   "264:18"
+  ],
+  "index@1024x768": [
+   "5:17",
+   "5:18"
+  ],
+  "index@375x812": [
+   "5:17",
+   "5:18"
+  ],
+  "intro@1024x768": [],
+  "intro@375x812": [],
+  "leaderboard@1024x768": [
+   "57:18",
+   "102:18",
+   "505:18"
+  ],
+  "leaderboard@375x812": [
+   "57:18",
+   "102:18",
+   "505:18"
+  ],
+  "osoby@1024x768": [],
+  "osoby@375x812": [],
+  "recipients@1024x768": [
+   "173:17",
+   "228:17",
+   "290:17",
+   "345:17",
+   "701:18"
+  ],
+  "recipients@375x812": [
+   "189:17",
+   "244:17",
+   "306:17",
+   "361:17",
+   "701:18"
+  ],
+  "rezerwacje@1024x768": [],
+  "rezerwacje@375x812": [
+   "117:18"
+  ],
+  "ustawienia@1024x768": [],
+  "ustawienia@375x812": [
+   "155:18"
+  ],
+  "wiadomosci-list@1024x768": [
+   "143:18"
+  ],
+  "wiadomosci-list@375x812": [
+   "143:18"
+  ],
+  "wiadomosci-thread@1024x768": [
+   "205:18"
+  ],
+  "wiadomosci-thread@375x812": [
+   "205:18"
+  ]
+ },
+ "extra": {
+  "activity@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "activity@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "archiwum@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "archiwum@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "formularz@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "formularz@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "home@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "home@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "index@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "index@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "intro@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "intro@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "leaderboard@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "leaderboard@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "osoby@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "osoby@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "recipients@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "recipients@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "rezerwacje@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "rezerwacje@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "ustawienia@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "ustawienia@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "wiadomosci-list@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "wiadomosci-list@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "wiadomosci-thread@1024x768": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  },
+  "wiadomosci-thread@375x812": {
+   "sheets": false,
+   "globals": false,
+   "console": [],
+   "requests": []
+  }
+ },
+ "stats": {
+  "activity@1024x768": {
+   "masked": 1,
+   "total": 12395,
+   "pct": 0.008
+  },
+  "activity@375x812": {
+   "masked": 1,
+   "total": 12395,
+   "pct": 0.008
+  },
+  "archiwum@1024x768": {
+   "masked": 0,
+   "total": 3441,
+   "pct": 0
+  },
+  "archiwum@375x812": {
+   "masked": 0,
+   "total": 3441,
+   "pct": 0
+  },
+  "formularz@1024x768": {
+   "masked": 1,
+   "total": 15799,
+   "pct": 0.006
+  },
+  "formularz@375x812": {
+   "masked": 1,
+   "total": 15799,
+   "pct": 0.006
+  },
+  "home@1024x768": {
+   "masked": 1,
+   "total": 16132,
+   "pct": 0.006
+  },
+  "home@375x812": {
+   "masked": 1,
+   "total": 16132,
+   "pct": 0.006
+  },
+  "index@1024x768": {
+   "masked": 2,
+   "total": 2183,
+   "pct": 0.092
+  },
+  "index@375x812": {
+   "masked": 2,
+   "total": 2183,
+   "pct": 0.092
+  },
+  "intro@1024x768": {
+   "masked": 0,
+   "total": 2997,
+   "pct": 0
+  },
+  "intro@375x812": {
+   "masked": 0,
+   "total": 2997,
+   "pct": 0
+  },
+  "leaderboard@1024x768": {
+   "masked": 3,
+   "total": 20498,
+   "pct": 0.015
+  },
+  "leaderboard@375x812": {
+   "masked": 3,
+   "total": 20498,
+   "pct": 0.015
+  },
+  "osoby@1024x768": {
+   "masked": 0,
+   "total": 6845,
+   "pct": 0
+  },
+  "osoby@375x812": {
+   "masked": 0,
+   "total": 6845,
+   "pct": 0
+  },
+  "recipients@1024x768": {
+   "masked": 5,
+   "total": 27713,
+   "pct": 0.018
+  },
+  "recipients@375x812": {
+   "masked": 5,
+   "total": 27713,
+   "pct": 0.018
+  },
+  "rezerwacje@1024x768": {
+   "masked": 0,
+   "total": 6142,
+   "pct": 0
+  },
+  "rezerwacje@375x812": {
+   "masked": 1,
+   "total": 6142,
+   "pct": 0.016
+  },
+  "ustawienia@1024x768": {
+   "masked": 0,
+   "total": 7548,
+   "pct": 0
+  },
+  "ustawienia@375x812": {
+   "masked": 1,
+   "total": 7548,
+   "pct": 0.013
+  },
+  "wiadomosci-list@1024x768": {
+   "masked": 1,
+   "total": 7104,
+   "pct": 0.014
+  },
+  "wiadomosci-list@375x812": {
+   "masked": 1,
+   "total": 7104,
+   "pct": 0.014
+  },
+  "wiadomosci-thread@1024x768": {
+   "masked": 1,
+   "total": 9398,
+   "pct": 0.011
+  },
+  "wiadomosci-thread@375x812": {
+   "masked": 1,
+   "total": 9398,
+   "pct": 0.011
+  }
+ }
+}

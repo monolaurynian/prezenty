@@ -1,0 +1,31 @@
+{
+ "a": "before-1",
+ "b": "after-B",
+ "total": 0,
+ "report": {
+  "activity@1024x768": {
+   "diffs": []
+  },
+  "activity@375x812": {
+   "diffs": []
+  },
+  "ustawienia@1024x768": {
+   "diffs": []
+  },
+  "ustawienia@375x812": {
+   "diffs": []
+  },
+  "wiadomosci-list@1024x768": {
+   "diffs": []
+  },
+  "wiadomosci-list@375x812": {
+   "diffs": []
+  },
+  "wiadomosci-thread@1024x768": {
+   "diffs": []
+  },
+  "wiadomosci-thread@375x812": {
+   "diffs": []
+  }
+ }
+}

@@ -1,0 +1,134 @@
+﻿Listing tests:
+  a11y.spec.js:27:9 ÔÇ║ a11y smoke ÔÇ║ home: page content is reachable and announceable
+  a11y.spec.js:27:9 ÔÇ║ a11y smoke ÔÇ║ recipients: page content is reachable and announceable
+  a11y.spec.js:27:9 ÔÇ║ a11y smoke ÔÇ║ osoby: page content is reachable and announceable
+  a11y.spec.js:27:9 ÔÇ║ a11y smoke ÔÇ║ activity: page content is reachable and announceable
+  a11y.spec.js:27:9 ÔÇ║ a11y smoke ÔÇ║ leaderboard: page content is reachable and announceable
+  a11y.spec.js:27:9 ÔÇ║ a11y smoke ÔÇ║ wiadomosci-list: page content is reachable and announceable
+  a11y.spec.js:27:9 ÔÇ║ a11y smoke ÔÇ║ wiadomosci-thread: page content is reachable and announceable
+  a11y.spec.js:27:9 ÔÇ║ a11y smoke ÔÇ║ rezerwacje: page content is reachable and announceable
+  a11y.spec.js:27:9 ÔÇ║ a11y smoke ÔÇ║ archiwum: page content is reachable and announceable
+  a11y.spec.js:27:9 ÔÇ║ a11y smoke ÔÇ║ ustawienia: page content is reachable and announceable
+  a11y.spec.js:68:14 ÔÇ║ a11y smoke ÔÇ║ home: EVERY icon-only control including the dock has a name
+  a11y.spec.js:68:14 ÔÇ║ a11y smoke ÔÇ║ recipients: EVERY icon-only control including the dock has a name
+  a11y.spec.js:68:14 ÔÇ║ a11y smoke ÔÇ║ osoby: EVERY icon-only control including the dock has a name
+  a11y.spec.js:68:14 ÔÇ║ a11y smoke ÔÇ║ activity: EVERY icon-only control including the dock has a name
+  a11y.spec.js:68:14 ÔÇ║ a11y smoke ÔÇ║ leaderboard: EVERY icon-only control including the dock has a name
+  a11y.spec.js:68:14 ÔÇ║ a11y smoke ÔÇ║ wiadomosci-list: EVERY icon-only control including the dock has a name
+  a11y.spec.js:68:14 ÔÇ║ a11y smoke ÔÇ║ wiadomosci-thread: EVERY icon-only control including the dock has a name
+  a11y.spec.js:68:14 ÔÇ║ a11y smoke ÔÇ║ rezerwacje: EVERY icon-only control including the dock has a name
+  a11y.spec.js:68:14 ÔÇ║ a11y smoke ÔÇ║ archiwum: EVERY icon-only control including the dock has a name
+  a11y.spec.js:68:14 ÔÇ║ a11y smoke ÔÇ║ ustawienia: EVERY icon-only control including the dock has a name
+  chat-reactions.spec.js:48:5 ÔÇ║ chat reactions ÔÇ║ chips render in allowlist order with counts and Polish labels
+  chat-reactions.spec.js:91:5 ÔÇ║ chat reactions ÔÇ║ clicking a chip flips aria-pressed and the count, and the server agrees
+  chat-reactions.spec.js:124:5 ÔÇ║ chat reactions ÔÇ║ keyboard focus survives a toggle
+  chat-reactions.spec.js:147:5 ÔÇ║ chat reactions ÔÇ║ keyboard focus survives a poll that repaints the strips
+  chat-reactions.spec.js:166:5 ÔÇ║ chat reactions ÔÇ║ keyboard focus survives the real 8 second poll
+  chat-reactions.spec.js:183:5 ÔÇ║ chat reactions ÔÇ║ un-reacting the last holder removes the chip and moves focus to the add button
+  chat-reactions.spec.js:214:5 ÔÇ║ chat reactions ÔÇ║ pressed state is distinguishable without colour and does not change the box size
+  chat-reactions.spec.js:255:5 ÔÇ║ chat reactions ÔÇ║ chip text and border clear the WCAG contrast floors
+  chat-reactions.spec.js:274:5 ÔÇ║ chat reactions ÔÇ║ no response ever carries a reactor identity
+  chat-reactions.spec.js:320:5 ÔÇ║ chat reactions ÔÇ║ the picker opens on the add button, traps Tab, and Escape returns focus
+  chat-reactions.spec.js:354:5 ÔÇ║ chat reactions ÔÇ║ a six-chip strip does not push the message list sideways at 320px
+  composer-dock.spec.js:25:5 ÔÇ║ add-present composer ÔÇ║ entering add mode from a scroll-hidden dock does not move the composer
+  composer-dock.spec.js:59:5 ÔÇ║ add-present composer ÔÇ║ the composer and the dock hide as one unit, with no padding or scrollHeight churn
+  composer-dock.spec.js:91:5 ÔÇ║ add-present composer ÔÇ║ one downward tick after a flick up changes the dock state exactly once
+  composer-dock.spec.js:112:5 ÔÇ║ add-present composer ÔÇ║ hide-on-scroll is inert during add mode and recovers on exit from any scroll position
+  composer-dock.spec.js:166:5 ÔÇ║ add-present composer ÔÇ║ entering add mode does not move the scroll position, including at the very bottom
+  composer-dock.spec.js:181:5 ÔÇ║ add-present composer ÔÇ║ the last present and "Dodaj dla kogo┼ø innego" stay reachable with the dock shown and hidden
+  composer-dock.spec.js:224:5 ÔÇ║ add-present composer with reduced motion ÔÇ║ the composer and the dock change state instantly
+  composer-input.spec.js:22:5 ÔÇ║ add-present composer ÔÇ║ no exit path clears typed text, and the collapsed bar cannot submit it
+  composer-input.spec.js:59:5 ÔÇ║ add-present composer ÔÇ║ Enter and Ctrl+Enter add the present, then the composer blurs, collapses and the dock returns
+  composer-input.spec.js:100:5 ÔÇ║ add-present composer ÔÇ║ the dock's "Dodaj" tab opens the composer and focuses the name field
+  composer-layout.spec.js:24:5 ÔÇ║ add-present composer ÔÇ║ the edit sheet's "Dodatkowe informacje" box is tall by default here too
+  composer-layout.spec.js:34:5 ÔÇ║ add-present composer ÔÇ║ no horizontal overflow at 320px, collapsed or open
+  composer-layout.spec.js:52:5 ÔÇ║ add-present composer on desktop ÔÇ║ the inline card is unchanged: visible "+", no collapsed state, no dock
+  composer-shared-dock.spec.js:30:9 ÔÇ║ the shared dock on the other pages ÔÇ║ home: the shared dock behaves and nothing churns
+  composer-shared-dock.spec.js:30:9 ÔÇ║ the shared dock on the other pages ÔÇ║ recipients: the shared dock behaves and nothing churns
+  composer-states.spec.js:23:5 ÔÇ║ add-present composer ÔÇ║ the collapsed bar is [chevron] [full-width bordered input]: no submit, real controls unreachable
+  composer-states.spec.js:87:5 ÔÇ║ add-present composer ÔÇ║ entering and leaving add mode keeps the name field's left edge in place
+  composer-states.spec.js:130:5 ÔÇ║ add-present composer ÔÇ║ entering add mode swaps the decorative chevron for the real one without shifting the input's left edge or row
+  composer-states.spec.js:211:5 ÔÇ║ add-present composer ÔÇ║ a tap anywhere on the collapsed row opens the form and focuses the name field
+  composer-states.spec.js:236:5 ÔÇ║ add-present composer ÔÇ║ details open with the form, not on the first keystroke, and survive a manual collapse
+  composer-states.spec.js:263:5 ÔÇ║ add-present composer ÔÇ║ the scrim tones the list down behind the open form, and is inert
+  edit-sheet.spec.js:75:5 ÔÇ║ edit present bottom sheet ÔÇ║ on a phone it is pinned to the bottom edge and capped at ~90% height
+  edit-sheet.spec.js:114:5 ÔÇ║ edit present bottom sheet ÔÇ║ on a wide screen it is NOT bottom-pinned
+  edit-sheet.spec.js:134:5 ÔÇ║ edit present bottom sheet ÔÇ║ the "Dodatkowe informacje" textarea is tall by default and vertically resizable
+  edit-sheet.spec.js:158:5 ÔÇ║ edit present bottom sheet ÔÇ║ Tab stays inside the sheet and Escape closes it
+  edit-sheet.spec.js:179:10 ÔÇ║ edit present bottom sheet ÔÇ║ closing the sheet returns focus to its trigger
+  escaping.spec.js:39:5 ÔÇ║ escaping ÔÇ║ a present title containing markup renders as literal text
+  escaping.spec.js:50:5 ÔÇ║ escaping ÔÇ║ a recipient name containing markup renders as literal text
+  escaping.spec.js:59:5 ÔÇ║ escaping ÔÇ║ a chat message containing markup renders as literal text
+  escaping.spec.js:75:5 ÔÇ║ escaping ÔÇ║ a notification title containing markup renders as literal text
+  escaping.spec.js:103:5 ÔÇ║ escaping ÔÇ║ a leaderboard name containing markup renders as literal text
+  helpers.spec.js:32:5 ÔÇ║ helper self-test: overflow detector ÔÇ║ fires on an element wider than the viewport, and is clean after removal
+  helpers.spec.js:53:5 ÔÇ║ helper self-test: overflow detector ÔÇ║ fires on an overflowing ::after pseudo-element
+  helpers.spec.js:81:5 ÔÇ║ helper self-test: overflow detector ÔÇ║ fires on an inner scroll container that scrolls sideways
+  helpers.spec.js:103:5 ÔÇ║ helper self-test: overflow detector ÔÇ║ ignoreGuard really does neutralise html,body overflow-x:hidden
+  helpers.spec.js:134:5 ÔÇ║ helper self-test: line-break detector ÔÇ║ reports a mid-word break and accepts a space break
+  helpers.spec.js:166:5 ÔÇ║ helper self-test: non-colour cue ÔÇ║ two elements differing only in colour share a signature; a border change does not
+  helpers.spec.js:188:5 ÔÇ║ helper self-test: focus survival ÔÇ║ detects both a surviving and a destroyed focus
+  helpers.spec.js:217:5 ÔÇ║ helper self-test: a11y detectors ÔÇ║ finds an unnamed icon-only button and a focusable inside aria-hidden
+  no-horizontal-overflow.spec.js:22:9 ÔÇ║ no horizontal overflow ÔÇ║ home does not scroll sideways at any width
+  no-horizontal-overflow.spec.js:22:9 ÔÇ║ no horizontal overflow ÔÇ║ recipients does not scroll sideways at any width
+  no-horizontal-overflow.spec.js:22:9 ÔÇ║ no horizontal overflow ÔÇ║ osoby does not scroll sideways at any width
+  no-horizontal-overflow.spec.js:22:9 ÔÇ║ no horizontal overflow ÔÇ║ activity does not scroll sideways at any width
+  no-horizontal-overflow.spec.js:22:9 ÔÇ║ no horizontal overflow ÔÇ║ leaderboard does not scroll sideways at any width
+  no-horizontal-overflow.spec.js:22:9 ÔÇ║ no horizontal overflow ÔÇ║ wiadomosci-list does not scroll sideways at any width
+  no-horizontal-overflow.spec.js:22:9 ÔÇ║ no horizontal overflow ÔÇ║ wiadomosci-thread does not scroll sideways at any width
+  no-horizontal-overflow.spec.js:22:9 ÔÇ║ no horizontal overflow ÔÇ║ rezerwacje does not scroll sideways at any width
+  no-horizontal-overflow.spec.js:22:9 ÔÇ║ no horizontal overflow ÔÇ║ archiwum does not scroll sideways at any width
+  no-horizontal-overflow.spec.js:22:9 ÔÇ║ no horizontal overflow ÔÇ║ ustawienia does not scroll sideways at any width
+  pluralization.spec.js:20:5 ÔÇ║ pluralize-pl (shared helper, no browser needed) ÔÇ║ plForm picks the CLDR category at every boundary
+  pluralization.spec.js:31:5 ÔÇ║ pluralize-pl (shared helper, no browser needed) ÔÇ║ plCount renders the agreeing noun and adjective forms
+  pluralization.spec.js:73:5 ÔÇ║ notification-text (shared helper, no browser needed) ÔÇ║ every known type has its wording, and the default catches the rest
+  pluralization.spec.js:92:5 ÔÇ║ notification-text (shared helper, no browser needed) ÔÇ║ batch wording pluralises the count
+  pluralization.spec.js:102:5 ÔÇ║ notification-text (shared helper, no browser needed) ÔÇ║ actor fallback, dla: suppression, escaping and showActor:false
+  pluralization.spec.js:120:5 ÔÇ║ pluralization in the real UI ÔÇ║ leaderboard renders every bought/reserved boundary
+  pluralization.spec.js:158:5 ÔÇ║ pluralization in the real UI ÔÇ║ leaderboard total-presents counts pluralise in the ranking list
+  pluralization.spec.js:170:5 ÔÇ║ pluralization in the real UI ÔÇ║ the two leaderboard stats sit on separate lines on a phone and share one on a tablet
+  pluralization.spec.js:204:5 ÔÇ║ pluralization in the real UI ÔÇ║ the hidden agreeing noun costs no layout width
+  pluralization.spec.js:217:5 ÔÇ║ pluralization in the real UI ÔÇ║ activity feed pluralises the collapsed burst and the batch entries
+  smoke.spec.js:23:5 ÔÇ║ harness smoke ÔÇ║ health endpoint reports demo mode
+  smoke.spec.js:31:5 ÔÇ║ harness smoke ÔÇ║ shared session is authenticated
+  smoke.spec.js:39:5 ÔÇ║ harness smoke ÔÇ║ requireAuth still rejects an anonymous request
+  smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: home (dashboard)
+  smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: recipients
+  smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: osoby
+  smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: activity
+  smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: leaderboard
+  smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: wiadomosci (chat)
+  smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: rezerwacje
+  smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: archiwum
+  smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: ustawienia
+  smoke.spec.js:59:9 ÔÇ║ harness smoke ÔÇ║ page loads: formularz
+  wrapping.spec.js:29:5 ÔÇ║ Polish text wrapping at 320px ÔÇ║ a multi-word present title breaks only at spaces
+  wrapping.spec.js:42:5 ÔÇ║ Polish text wrapping at 320px ÔÇ║ a long Polish chat message breaks only at spaces
+  wrapping.spec.js:53:5 ÔÇ║ Polish text wrapping at 320px ÔÇ║ word-break stays normal on the text containers that hold Polish prose
+  wrapping.spec.js:73:5 ÔÇ║ Polish text wrapping at 320px ÔÇ║ a 64-character single-word title may wrap but must not overflow its card
+  wrapping.spec.js:96:5 ÔÇ║ Polish text wrapping at 320px ÔÇ║ a long URL title may break anywhere or ellipsize, but must not overflow
+  wrapping.spec.js:131:5 ÔÇ║ Polish text wrapping at 320px ÔÇ║ a long single-word chat message stays inside the message list
+  xss-usernames.spec.js:141:5 ÔÇ║ escape-html.js (shared helper, no browser needed) ÔÇ║ escapeHtml entity-encodes all five dangerous characters
+  xss-usernames.spec.js:156:5 ÔÇ║ escape-html.js (shared helper, no browser needed) ÔÇ║ escapeAttr matches escapeHtml - quotes are what attributes need
+  xss-usernames.spec.js:162:5 ÔÇ║ escape-html.js (shared helper, no browser needed) ÔÇ║ jsStringAttr yields a JS string literal that survives HTML-attribute decoding
+  xss-usernames.spec.js:177:5 ÔÇ║ escape-html.js (shared helper, no browser needed) ÔÇ║ safeImageSrc allows only same-origin paths and https, escaped
+  xss-usernames.spec.js:210:5 ÔÇ║ XSS: leaderboard names ÔÇ║ the activity list renders every payload as literal text
+  xss-usernames.spec.js:225:5 ÔÇ║ XSS: leaderboard names ÔÇ║ the activity podium renders every payload as literal text
+  xss-usernames.spec.js:236:5 ÔÇ║ XSS: leaderboard names ÔÇ║ the total-presents podium renders every payload as literal text
+  xss-usernames.spec.js:249:5 ÔÇ║ XSS: leaderboard names ÔÇ║ the ranking list renders every payload as literal text
+  xss-usernames.spec.js:260:5 ÔÇ║ XSS: leaderboard names ÔÇ║ no clickable card carries an inline onclick, and the raw name survives in data-username
+  xss-usernames.spec.js:282:5 ÔÇ║ XSS: leaderboard names ÔÇ║ hovering a payload name fires nothing
+  xss-usernames.spec.js:295:5 ÔÇ║ XSS: leaderboard names ÔÇ║ clicking a payload card still navigates to that person
+  xss-usernames.spec.js:325:5 ÔÇ║ XSS: leaderboard names ÔÇ║ an untrusted profile_picture is allowlisted, a legitimate one still renders
+  xss-usernames.spec.js:361:5 ÔÇ║ XSS: intro page names ÔÇ║ the intro podium renders every payload as literal text
+  xss-usernames.spec.js:379:5 ÔÇ║ XSS: intro page names ÔÇ║ the intro 4-10 list renders an HTML-special name as literal text
+  xss-usernames.spec.js:398:5 ÔÇ║ XSS: leaderboard-leader notification ÔÇ║ /activity renders both leader names as literal text
+  xss-usernames.spec.js:442:9 ÔÇ║ XSS: dock notifications panel (tab-bar-functions.js) ÔÇ║ leaderboard: leader names and message labels render as literal text
+  xss-usernames.spec.js:478:9 ÔÇ║ XSS: dock notifications panel (tab-bar-functions.js) ÔÇ║ leaderboard: an apostrophe-only recipient name cannot break out of the present link's onclick
+  xss-usernames.spec.js:442:9 ÔÇ║ XSS: dock notifications panel (tab-bar-functions.js) ÔÇ║ recipients: leader names and message labels render as literal text
+  xss-usernames.spec.js:478:9 ÔÇ║ XSS: dock notifications panel (tab-bar-functions.js) ÔÇ║ recipients: an apostrophe-only recipient name cannot break out of the present link's onclick
+  xss-usernames.spec.js:521:5 ÔÇ║ XSS: inline handlers on /recipients ÔÇ║ a recipient name cannot break out of the identify / share / cancel handlers
+  xss-usernames.spec.js:575:5 ÔÇ║ XSS: inline handlers on /recipients ÔÇ║ jsStringAttr survives a real HTML parser for every payload
+  xss-usernames.spec.js:599:5 ÔÇ║ XSS: present titles on /osoby ÔÇ║ the delete button carries no title and the edit field round-trips it
+  xss-usernames.spec.js:632:5 ÔÇ║ XSS: present titles on /osoby ÔÇ║ deleting still confirms with the real title
+Total: 132 tests in 15 files

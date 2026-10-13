@@ -1,0 +1,21 @@
+{
+  "verdict": "APPROVED",
+  "summary": "All five requirements are met and independently spot-checked. (1) No sessionID, cookie header, session.cookie, whole-session or push endpoint/key logging remains in server.js/routes/lib (grep: 0 leaking fields); user-id/username logs kept, endpoint reduced to push-service host only; the error-handler change logs only err.message for body-parser parse failures (so raw login bodies are not echoed). (2) debugOnly runs before requireAuth and uses next('route'), so both endpoints stay registered but fall through to the default 404 (also unauthenticated) only when !DEMO_MODE && NODE_ENV=production; one-line comment present; no wildcard/SPA catch-all or conflicting GET /api/notifications/:id route exists. (3) link-preview: http/https only, IP-literal forms (0x7f.0.0.1, 2130706433, 127.1, 0177.0.0.1, [::1], [::ffff:7f00:1]) rejected, localhost/*.localhost/single-label rejected; isBlockedAddress covers loopback/private/link-local/CGNAT/unspecified/multicast/reserved/IPv4-mapped/NAT64/6to4/ULA/link-local v6 (spot-checked 16 addresses); custom lookup resolves all addresses, rejects if ANY is blocked and returns only validated addresses so the socket is pinned; every redirect hop re-validated (max 3); 6 s overall timer and 300000-char cap kept; agent:false; isSafePreviewUrl keeps its first parameter with an optional second; route JSON shapes unchanged; no new dependencies. My local test: 127.0.0.1/localhost/DNS-name-to-loopback rejected, redirect to 169.254.169.254 rejected, normal fetch OK. (4) Secret values unchanged (diff touches none); one [SECURITY] warning with names only; DEPLOYMENT.md has 'Rotating secrets' with generation commands and consequences. (5) Archive router mounted before the error handler (error handler is now last layer); my own route walk gives 66 routes with 0 differences from server-split-routes-before.txt, last three are the archive routes. Also: node --check passes on all 26 files; no changes to public/, package.json or package-lock.json; no tmp-*.js left; no .agents files in the committed diff (only untracked .agents task files); nothing out of scope touched; verification report records Playwright 121 passed / 0 failed / 11 skipped as required (not re-run by me, 9-minute suite). Only minor observations, none blocking.",
+  "findings": [
+    {
+      "severity": "minor",
+      "file": "lib/link-preview.js",
+      "detail": "On a redirect, the previous hop's request is not explicitly destroyed (res.resume() only drains it); agent:false means the socket closes after drain, and the overall finish() only destroys the current request. Harmless in practice, optional tidy-up."
+    },
+    {
+      "severity": "minor",
+      "file": "lib/link-preview.js",
+      "detail": "isSafePreviewUrl now also rejects single-label hosts and *.localhost (route returns the existing 400 for them), a small behavior tightening beyond the old regex list; JSON shapes are unchanged and this fits the SSRF intent."
+    },
+    {
+      "severity": "minor",
+      "file": "lib/link-preview.js",
+      "detail": "The decoder is not flushed with a final textDecoder.decode() on end, so a trailing partial multi-byte sequence is dropped; the same limitation existed in the original reader loop, so no regression."
+    }
+  ]
+}

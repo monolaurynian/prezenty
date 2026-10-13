@@ -1,0 +1,37 @@
+{
+ "a": "before-1",
+ "b": "after-C",
+ "total": 0,
+ "report": {
+  "archiwum@1024x768": {
+   "diffs": []
+  },
+  "archiwum@375x812": {
+   "diffs": []
+  },
+  "index@1024x768": {
+   "diffs": []
+  },
+  "index@375x812": {
+   "diffs": []
+  },
+  "intro@1024x768": {
+   "diffs": []
+  },
+  "intro@375x812": {
+   "diffs": []
+  },
+  "osoby@1024x768": {
+   "diffs": []
+  },
+  "osoby@375x812": {
+   "diffs": []
+  },
+  "rezerwacje@1024x768": {
+   "diffs": []
+  },
+  "rezerwacje@375x812": {
+   "diffs": []
+  }
+ }
+}

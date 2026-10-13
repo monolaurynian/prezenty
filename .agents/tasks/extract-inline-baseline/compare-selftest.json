@@ -1,0 +1,46 @@
+{
+ "a": "before-1",
+ "b": "selftest",
+ "total": 23,
+ "report": {
+  "index@1024x768": {
+   "diffs": [
+    "styleSheets.length 3 -> 4",
+    "totalRules 321 -> 322",
+    "global __selftest: (none) -> function:c5b41789931b82e69bf7839857e8257e2e8b3bb9"
+   ]
+  },
+  "index@375x812": {
+   "diffs": [
+    "styleSheets.length 3 -> 4",
+    "totalRules 321 -> 322",
+    "global __selftest: (none) -> function:c5b41789931b82e69bf7839857e8257e2e8b3bb9"
+   ]
+  },
+  "recipients@1024x768": {
+   "diffs": [
+    "style row 1 <body#.recipients-page has-tab-bar has-desktop-nav> width: \"1024px\" -> \"1023.97px\"",
+    "style row 1 <body#.recipients-page has-tab-bar has-desktop-nav> margin: \"0px\" -> \"0px 0px 0px 0.0381105px\"",
+    "style row 1 <body#.recipients-page has-tab-bar has-desktop-nav> margin-left: \"0px\" -> \"0.0381105px\"",
+    "style row 67 <div#.container mt-4> width: \"732px\" -> \"731.969px\"",
+    "style row 68 <div#.card main-card aws-main-content> width: \"700px\" -> \"699.969px\"",
+    "style row 69 <div#filterAccordion.> width: \"700px\" -> \"699.969px\"",
+    "style row 70 <div#.> width: \"700px\" -> \"699.969px\"",
+    "style row 71 <div#.> width: \"698px\" -> \"697.969px\"",
+    "style row 73 <div#filterCollapse.> width: \"698px\" -> \"697.969px\"",
+    "style row 74 <div#.> width: \"698px\" -> \"697.969px\"",
+    "... 129 unmasked style cell differences in total",
+    "styleSheets.length 10 -> 11",
+    "totalRules 1151 -> 1152",
+    "global __selftest: (none) -> function:c5b41789931b82e69bf7839857e8257e2e8b3bb9"
+   ]
+  },
+  "recipients@375x812": {
+   "diffs": [
+    "styleSheets.length 10 -> 11",
+    "totalRules 1151 -> 1152",
+    "global __selftest: (none) -> function:c5b41789931b82e69bf7839857e8257e2e8b3bb9"
+   ]
+  }
+ }
+}

@@ -1,0 +1,59 @@
+{
+ "a": "before-1",
+ "b": "before-2",
+ "files": {
+  "home@1024x768.json": {
+   "diffCount": 0,
+   "consoleOrderSame": true,
+   "diffs": [],
+   "reqDiff": {
+    "onlyA": [],
+    "onlyB": []
+   },
+   "srcDiff": {
+    "onlyA": [],
+    "onlyB": []
+   }
+  },
+  "home@375x812.json": {
+   "diffCount": 0,
+   "consoleOrderSame": true,
+   "diffs": [],
+   "reqDiff": {
+    "onlyA": [],
+    "onlyB": []
+   },
+   "srcDiff": {
+    "onlyA": [],
+    "onlyB": []
+   }
+  },
+  "recipients@1024x768.json": {
+   "diffCount": 0,
+   "consoleOrderSame": false,
+   "diffs": [],
+   "reqDiff": {
+    "onlyA": [],
+    "onlyB": []
+   },
+   "srcDiff": {
+    "onlyA": [],
+    "onlyB": []
+   }
+  },
+  "recipients@375x812.json": {
+   "diffCount": 0,
+   "consoleOrderSame": true,
+   "diffs": [],
+   "reqDiff": {
+    "onlyA": [],
+    "onlyB": []
+   },
+   "srcDiff": {
+    "onlyA": [],
+    "onlyB": []
+   }
+  }
+ },
+ "ok": true
+}

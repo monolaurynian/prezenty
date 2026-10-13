@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formularz prezentów</title>
+
+    <!-- Cache Control Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.deduped.min.css">
+    <link href="bottom-tab-bar.css?v=42" rel="stylesheet">
+    <link href="app-theme.css?v=14" rel="stylesheet">
+    <style>
+        /* Critical styles for notifications panel */
+        .tab-bar-notifications-panel.show {
+            transform: translateY(0) !important;
+            visibility: visible !important;
+        }
+
+        .tab-bar-menu-overlay.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+    </style>
+    <style>
+        /* Match homepage: no dark overlay, the photo shows through and
+           frosted cards provide the contrast. The photo must be declared
+           here - styles.deduped.min.css resets body to transparent. */
+        body {
+            background-image: url('seba.jpg') !important;
+            background-attachment: fixed !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+        }
+
+        .background-overlay {
+            background: transparent !important;
+            backdrop-filter: none !important;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .navbar-nav .btn {
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Form styling */
+        .form-label {
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control,
+        .form-select {
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            outline: none;
+        }
+
+        .form-select option[value="__new__"] {
+            background-color: rgba(13, 110, 253, 0.1);
+            font-weight: 600;
+            color: #0d6efd;
+        }
+
+        /* Transparent blur header */
+        .card-header.bg-transparent-blur {
+            background: rgba(255, 255, 255, 0.2) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: white !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 4px 16px rgba(0, 0, 0, 0.8);
+            padding: 1.5rem;
+        }
+
+        .card-header.bg-transparent-blur .card-title {
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 4px 16px rgba(0, 0, 0, 0.8);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Secondary action on the light edit card ("Dodaj dla kogoś innego").
+           Solid white, dashed brand-red border ("add" affordance), red icon
+           badge. Stays visually below the green primary "Dodaj" button. */
+        #editTab .btn-secondary-light {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            min-height: 52px;
+            padding: 0.625rem 1.25rem;
+            background: #ffffff !important;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border: 2px dashed #d65663 !important;
+            border-radius: 16px;
+            color: #a3192a !important;
+            font-weight: 700;
+            font-size: 1.05rem;
+            line-height: 1.25;
+            text-shadow: none;
+            box-shadow: 0 2px 8px rgba(200, 32, 47, 0.1);
+            transition: background-color 0.18s ease, border-color 0.18s ease,
+                box-shadow 0.18s ease, transform 0.18s ease;
+        }
+
+        #editTab .btn-secondary-light .btn-icon-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(224, 60, 74, 0.12);
+            color: #c8202f;
+            font-size: 0.9rem;
+            transition: background-color 0.18s ease, color 0.18s ease;
+        }
+
+        #editTab .btn-secondary-light:hover {
+            background: #fff5f6 !important;
+            border-style: solid !important;
+            border-color: #c8202f !important;
+            color: #a3192a !important;
+            box-shadow: 0 6px 16px rgba(200, 32, 47, 0.18);
+            transform: translateY(-1px);
+        }
+
+        #editTab .btn-secondary-light:hover .btn-icon-badge {
+            background: #c8202f;
+            color: #ffffff;
+        }
+
+        #editTab .btn-secondary-light:focus {
+            box-shadow: 0 2px 8px rgba(200, 32, 47, 0.1);
+        }
+
+        #editTab .btn-secondary-light:focus-visible {
+            outline: 3px solid #1a56db;
+            outline-offset: 3px;
+            border-style: solid !important;
+            border-color: #c8202f !important;
+            box-shadow: 0 2px 8px rgba(200, 32, 47, 0.1);
+        }
+
+        #editTab .btn-secondary-light:active {
+            background: #fde8ea !important;
+            border-style: solid !important;
+            border-color: #a3192a !important;
+            color: #a3192a !important;
+            box-shadow: 0 1px 3px rgba(200, 32, 47, 0.15);
+            transform: translateY(0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #editTab .btn-secondary-light,
+            #editTab .btn-secondary-light .btn-icon-badge {
+                transition: none;
+            }
+
+            #editTab .btn-secondary-light:hover,
+            #editTab .btn-secondary-light:active {
+                transform: none;
+            }
+        }
+
+        /* Card body styling */
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Alert styling */
+        .alert-info {
+            background-color: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: #4a5568;
+            border-radius: 12px;
+            font-size: 0.875rem;
+        }
+
+        /* Top menu container - unified black-fade top bar (see app-theme.css) */
+        .top-menu-container {
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .top-menu-container .container {
+            overflow: hidden;
+        }
+
+        .top-menu-container h4 {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Menu home link */
+        .menu-home-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .menu-home-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Old sidebar elements - Hidden (replaced by tab bar) */
+        .hamburger-menu,
+        .sidebar-menu,
+        .sidebar-overlay,
+        .top-menu-container {
+            display: none !important;
+        }
+
+        /* Add top margin to content */
+        body {
+            padding-top: 40px !important;
+        }
+
+        .container {
+            margin-top: 20px !important;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            background: #F44336;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+
+        .sidebar-header h4,
+        .sidebar-header h5 {
+            color: white;
+            margin: 0;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .sidebar-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 8px;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .sidebar-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .sidebar-menu-items {
+            padding: 0;
+        }
+
+        .sidebar-menu-item {
+            padding: 15px 25px;
+            color: #2d3748;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            border: none;
+            border-left: 4px solid transparent;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .sidebar-menu-item:hover {
+            background: #f7fafc;
+            color: #667eea;
+            border-left-color: #667eea;
+        }
+
+        .sidebar-menu-item.active {
+            background: #edf2f7;
+            color: #667eea;
+            border-left-color: #667eea;
+            font-weight: 600;
+        }
+
+        .sidebar-menu-item i {
+            font-size: 20px;
+            width: 25px;
+            text-align: center;
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 15px 25px;
+        }
+
+        .sidebar-footer {
+            padding: 20px 25px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        /* Overlay for sidebar */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1030;
+            display: none;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* Red header for form */
+        .card-header.bg-red {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+            color: white !important;
+            border-bottom: 3px solid #bd2130;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .card-header.bg-red .card-title {
+            color: white !important;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0;
+            text-align: center;
+            display: block;
+            width: 100%;
+        }
+
+        .card-header.bg-red .card-title i {
+            color: white !important;
+        }
+
+        /* Green button */
+        .btn-green {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%) !important;
+            border: 2px solid #28a745 !important;
+            color: white !important;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 0.875rem 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-green:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%) !important;
+            border-color: #1e7e34 !important;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+        }
+
+        /* My presents list: high-contrast items on the frosted card */
+        #myPresentsList .my-present-item {
+            /* Near-opaque so the photo/blur behind the panel can't tint the text */
+            background: rgba(255, 255, 255, 0.97) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            border-left: 4px solid #FFC107 !important; /* yellow accent */
+            border-radius: 14px !important;
+            margin-bottom: 10px;
+            padding: 12px 12px 12px 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        #myPresentsList .my-present-item:hover {
+            background: #ffffff !important;
+        }
+        #myPresentsList .my-present-body { min-width: 0; }
+        #myPresentsList .my-present-title,
+        #myPresentsList .my-present-comments {
+            word-break: normal;
+            overflow-wrap: break-word;
+            hyphens: manual;
+        }
+        #myPresentsList .my-present-title {
+            color: #1a1a1a;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        #myPresentsList .my-present-comments {
+            color: #333333;
+            font-size: 15px;
+            line-height: 1.45;
+        }
+        #myPresentsList .my-present-date { color: #555555; font-size: 13px; }
+        #myPresentsList .my-present-link { color: #0D47A1 !important; font-weight: 500; }
+        #myPresentsList .my-present-actions { flex-shrink: 0; }
+        #myPresentsList .my-present-actions .btn { min-width: 40px; min-height: 40px; }
+        /* Keep the last item and the button clear of the floating tab bar + FAB */
+        @media (max-width: 991.98px) {
+            body.has-tab-bar {
+                padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+        }
+
+        /* Hide default navbar */
+        .navbar {
+            display: none;
+        }
+    </style>
+    <style>
+        /* ---- Edit tab: add form vs. "Moje prezenty" list ----
+           Desktop (>768px): the form is its own light-green bounded card at
+           the top, the list has a heading + count and a divider.
+           Mobile (<=768px): the form becomes a thumb-zone composer fixed
+           just above the bottom tab bar. Collapsed it is a single tappable
+           "Dodaj prezent…" row with a decorative cue; in add mode the
+           same row grows a title, a close button, the chevron that reveals
+           the optional description and the round add button.
+           formularz.js keeps --quick-add-bottom (where it sits) and
+           --quick-add-reserve (how much room the page keeps free for it) in
+           sync with the tab bar, the on-screen keyboard and the row's
+           height. */
+        .quick-add-section {
+            background: #f3faf4;
+            border: 1px solid rgba(30, 126, 52, 0.28);
+            border-left: 4px solid #28a745;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 28px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .quick-add-composer {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-areas:
+                "heading heading"
+                "name    name"
+                "desc    desc"
+                "msg     submit";
+            gap: 10px;
+            align-items: center;
+            margin: 0;
+        }
+
+        .quick-add-head {
+            grid-area: heading;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .quick-add-heading {
+            margin: 0;
+            color: #1b5e20;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .quick-add-toggle { display: none; }
+        /* Desktop: the form is a permanent inline card, so there is
+           nothing to close (the mobile rules switch it on), and there is no
+           collapsed state either - so the compact bar's decorative cue is
+           not rendered at all */
+        .quick-add-close { display: none; }
+        .quick-add-cue { display: none; }
+        .quick-add-name { grid-area: name; min-width: 0; }
+        .quick-add-desc { grid-area: desc; min-width: 0; }
+        .quick-add-desc textarea { resize: vertical; }
+
+        /* Short, motivating helper above the optional description */
+        .quick-add-hint {
+            margin: 0 0 6px;
+            color: #2f5d34;
+            font-size: 0.875rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        /* "+ Dodaj szczegóły" nudge on presents without a description */
+        #myPresentsList .my-present-add-details {
+            position: relative;
+            display: flex;
+            width: fit-content;
+            max-width: 100%;
+            align-items: center;
+            gap: 6px;
+            min-height: 32px;
+            margin: 4px 0 8px;
+            padding: 4px 12px;
+            border: 1.5px dashed #c99700;
+            border-radius: 999px;
+            background: #fff8e1;
+            color: #664d03;
+            font-size: 0.875rem;
+            font-weight: 600;
+            line-height: 1.2;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        /* Invisible hit area: 44px tall tap target around the 32px pill */
+        #myPresentsList .my-present-add-details::after {
+            content: "";
+            position: absolute;
+            inset: -6px -4px;
+        }
+
+        #myPresentsList .my-present-add-details i { font-size: 0.75rem; }
+
+        #myPresentsList .my-present-add-details:hover {
+            background: #ffefb3;
+            border-style: solid;
+        }
+
+        #myPresentsList .my-present-add-details:focus-visible {
+            outline: 3px solid #1a56db;
+            outline-offset: 2px;
+            border-style: solid;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #myPresentsList .my-present-add-details { transition: none; }
+        }
+
+        .quick-add-submit {
+            grid-area: submit;
+            justify-self: end;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            min-height: 48px;
+            min-width: 48px;
+            border-radius: 999px;
+            /* Darker than .btn-green so the white label clears 4.5:1 */
+            background: linear-gradient(135deg, #1e7e34 0%, #19692c 100%) !important;
+            border-color: #19692c !important;
+        }
+
+        .quick-add-message {
+            grid-area: msg;
+            margin: 0;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        /* Opaque status colours (the theme makes alerts translucent, which
+           is unreadable when the pill floats over the list on mobile) */
+        .quick-add-message.alert-success {
+            background: #d1e7dd !important;
+            border: 1px solid #a3cfbb !important;
+            color: #0a3622 !important;
+        }
+
+        .quick-add-message.alert-danger {
+            background: #f8d7da !important;
+            border: 1px solid #f1aeb5 !important;
+            color: #58151c !important;
+        }
+
+        .quick-add-toggle:focus-visible,
+        .quick-add-close:focus-visible,
+        .quick-add-submit:focus-visible {
+            outline: 3px solid #1a56db;
+            outline-offset: 2px;
+        }
+
+        .my-presents-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .my-presents-heading {
+            margin: 0;
+            color: #1a1a1a;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .my-presents-heading i { color: #c8202f; }
+
+        .my-presents-count {
+            flex: 0 0 auto;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #fff3cd;
+            border: 1px solid #ffda6a;
+            color: #664d03;
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Newly added present: brief yellow flash + green ring.
+           (The item background is !important, so the flash is an overlay.) */
+        #myPresentsList .my-present-item.is-new {
+            position: relative;
+            animation: myPresentNewRing 2.4s ease-out;
+        }
+
+        #myPresentsList .my-present-item.is-new::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: rgba(255, 193, 7, 0.28);
+            pointer-events: none;
+            animation: myPresentNewFlash 2.4s ease-out forwards;
+        }
+
+        @keyframes myPresentNewRing {
+            0%, 60% { box-shadow: 0 0 0 3px rgba(30, 126, 52, 0.7), 0 2px 8px rgba(0, 0, 0, 0.1); }
+            100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        }
+
+        @keyframes myPresentNewFlash {
+            0%, 50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* Desktop (>768px): no scrim. The add form is already a bounded
+           green card at the top of the page with nothing competing for
+           attention, and there is no keyboard or thumb-reach problem to
+           solve there - a full-page dim would only feel heavy-handed.
+           (The mobile rules below switch it on.) */
+        .quick-add-scrim {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            /* A backdrop-filter on the card would turn it into the containing
+               block for the fixed composer - drop it on mobile and make the
+               card a little more opaque instead. */
+            #editTab .main-card,
+            #editTab .main-card:hover {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                background: rgba(255, 255, 255, 0.94) !important;
+                /* Same reason: no hover lift transform / filter on mobile */
+                transform: none !important;
+                filter: none !important;
+                will-change: auto !important;
+            }
+
+            #editTab .card-body {
+                padding: 1.25rem 1rem;
+            }
+
+            .quick-add-section {
+                background: none;
+                border: 0;
+                padding: 0;
+                margin: 0;
+                box-shadow: none;
+            }
+
+            .quick-add-composer {
+                position: fixed;
+                left: 12px;
+                right: 12px;
+                bottom: var(--quick-add-bottom, calc(max(12px, env(safe-area-inset-bottom, 0px)) + 90px));
+                z-index: 999; /* under the tab bar (1000) and its menus */
+                grid-template-columns: 48px minmax(0, 1fr) 52px;
+                /* The head and desc rows are always there but collapse to
+                   0 height (row-gap 0; each open row adds its own margin) */
+                grid-template-areas:
+                    "head   head head"
+                    "toggle name submit"
+                    "desc   desc submit";
+                column-gap: 8px;
+                row-gap: 0;
+                padding: 8px;
+                background: rgba(255, 255, 255, 0.98);
+                border: 1px solid rgba(0, 0, 0, 0.08);
+                border-top: 3px solid #28a745;
+                border-radius: 20px;
+                box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+                /* `bottom` handles the add-mode / on-screen-keyboard moves;
+                   `transform` handles hide-on-scroll. Disjoint triggers, and
+                   the one overlap (entering add mode while the dock is
+                   scroll-hidden) is handled by the add-mode rule below.
+                   Nothing here animates the grid: the collapsed and the
+                   add-mode row use the SAME grid-template-columns (only the
+                   name field's column span differs, see below), so no
+                   engine-dependent column interpolation is involved. */
+                transition: bottom 0.25s ease,
+                    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            /* ---- Hide-on-scroll: the composer and the dock are ONE unit ----
+               Same flag (body.dock-hidden, written only by
+               initTabBarAutoHide in tab-bar-functions.js), same property
+               (transform), same distance (--dock-hide-shift, set by
+               formularz.js to exactly dockRestOffset() - dockFloor()), same
+               0.3s cubic-bezier as bottom-tab-bar.css. So the 28px between
+               the composer and the dock is preserved for the whole travel
+               and no gap can open between them. Nothing here changes the
+               page's reserved bottom padding, so document.scrollHeight
+               cannot move mid-gesture. */
+            body.dock-hidden:not(.quick-add-active) .quick-add-composer {
+                transform: translateY(var(--dock-hide-shift, 98px));
+            }
+
+            /* PRECEDENCE: add mode wins. formularz.js also removes
+               `dock-hidden` on entry, so this is a belt-and-braces guard
+               against a stale class; the composer must sit at its add-mode
+               `bottom` and nowhere else.
+               The two properties must UNWIND TOGETHER. Entering add mode
+               from a scroll-hidden dock changes both at once: `bottom` goes
+               110 -> 12 (which moves the box DOWN 98px) while the hide
+               `translateY(98px)` goes back to 0 (which moves it UP 98px).
+               They cancel exactly - the rendered bottom edge stays at 12px
+               for the whole 250ms - but only while both use the SAME
+               duration and the SAME easing. Dropping `transform` from this
+               list (or giving it a different curve) is what made the
+               composer snap ~98px up and glide back on every "scroll down
+               the list, tap the bar" entry. */
+            body.quick-add-active .quick-add-composer {
+                transform: none;
+                transition: bottom 0.25s ease, transform 0.25s ease;
+            }
+
+            /* The whole compact row is the "start adding" affordance */
+            body:not(.quick-add-active) .quick-add-composer {
+                cursor: pointer;
+            }
+
+            /* Collapsed: the name field takes the submit column too, so the
+               bordered input runs to the same 8px inset on the right as the
+               chevron circle has on the left (the submit button is
+               visibility:hidden here, and its column used to be left empty,
+               which made the bar look lopsided). Only the column span
+               changes - never the row - so the field's LEFT edge and its
+               vertical position are the same in both states; the right edge
+               moves in the instant the submit button comes back in add mode.
+               This is a plain grid placement, not a grid-template-columns
+               change, so there is nothing for WebKit to interpolate. */
+            body:not(.quick-add-active) .quick-add-name {
+                grid-column: 2 / 4;
+            }
+
+            body:not(.quick-add-active) .quick-add-composer:active {
+                background: #f4f8f5;
+            }
+
+            /* Heading stays for screen readers (aria-labelledby) */
+            .quick-add-heading,
+            .quick-add-submit-label {
+                position: absolute !important;
+                width: 1px !important;
+                height: 1px !important;
+                padding: 0 !important;
+                margin: -1px !important;
+                overflow: hidden !important;
+                clip: rect(0, 0, 0, 0) !important;
+                white-space: nowrap !important;
+                border: 0 !important;
+            }
+
+            /* Head row (title + close): collapsed to nothing in the compact
+               state so the bar keeps its slim height, revealed in add mode.
+               The heading itself stays visibility:visible throughout (only
+               clipped by the visually-hidden rule above) so the section's
+               aria-labelledby name never disappears. */
+            .quick-add-head {
+                grid-area: head;
+                max-height: 0;
+                margin-bottom: 0;
+                overflow: hidden;
+                transition: max-height 0.2s ease, margin-bottom 0.2s ease;
+            }
+
+            body.quick-add-active .quick-add-head {
+                max-height: 56px;
+                margin-bottom: 6px;
+            }
+
+            /* In add mode the title becomes visible - it is the same node,
+               so there is no duplicated string and no empty accname */
+            body.quick-add-active .quick-add-heading {
+                position: static !important;
+                width: auto !important;
+                height: auto !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                clip: auto !important;
+                white-space: normal !important;
+                font-size: 0.9rem;
+            }
+
+            /* Explicit close control. 44x44 and in the tab order, but only
+               while there is something to close: visibility:hidden (not just
+               the parent's overflow clip) keeps it out of the tab order and
+               the accessibility tree in the compact state. A rounded square
+               with an x - deliberately unlike the round chevron below it. */
+            .quick-add-close {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex: 0 0 auto;
+                width: 44px;
+                height: 44px;
+                padding: 0;
+                border: 1px solid #cbd2d9;
+                border-radius: 12px;
+                background: #eef1f4;
+                color: #44515e;
+                font-size: 1.1rem;
+                visibility: hidden;
+            }
+
+            body.quick-add-active .quick-add-close { visibility: visible; }
+
+            /* The chevron is a details toggle, so it exists only where there
+               are details to toggle: add mode. In the compact bar it would
+               be a control that, when pressed, first opens the form (which
+               opens the description) and then collapses the very row the
+               user was reaching for - and its label would still read
+               "Dodaj opis (opcjonalnie)" at that moment. visibility:hidden
+               (not just opacity) takes it out of the tab order AND the
+               accessibility tree, so that sequence is now unreachable
+               rather than merely discouraged. Its 48px grid column stays
+               reserved, so the name field's box does not move between the
+               two states; the decorative .quick-add-cue below takes over
+               the cell visually. */
+            .quick-add-toggle {
+                grid-area: toggle;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 48px;
+                height: 48px;
+                padding: 0;
+                border: 1px solid #cbd2d9;
+                border-radius: 50%;
+                background: #eef1f4;
+                color: #2d3748;
+                font-size: 1rem;
+                visibility: hidden;
+                pointer-events: none;
+            }
+
+            body.quick-add-active .quick-add-toggle {
+                visibility: visible;
+                pointer-events: auto;
+            }
+
+            .quick-add-toggle i { transition: transform 0.2s ease; }
+            .quick-add-toggle[aria-expanded="true"] { background: #e3f2e6; border-color: #28a745; color: #1b5e20; }
+            .quick-add-toggle[aria-expanded="true"] i { transform: rotate(180deg); }
+
+            /* ---- The compact bar's leading chevron ----
+               A purely visual twin of the real .quick-add-toggle above, in
+               its collapsed look: same cell, 48x48 box, 1px border, fill,
+               colour and icon size, with the same chevron-up icon. It is
+               decorative only (aria-hidden, pointer-events: none, no tab
+               stop, no accessible name): a tap on it falls through to the
+               row-level click handler that enters add mode. The real toggle
+               is visibility:hidden here and takes over this exact cell in
+               add mode, so the two never exist at the same time and the
+               keyboard/press races the real chevron had in the compact bar
+               stay unreachable. */
+            .quick-add-cue {
+                grid-area: toggle;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 48px;
+                height: 48px;
+                padding: 0;
+                border: 1px solid #cbd2d9;
+                border-radius: 50%;
+                background: #eef1f4;
+                color: #2d3748;
+                font-size: 1rem;
+                pointer-events: none;
+            }
+
+            body.quick-add-active .quick-add-cue { visibility: hidden; }
+
+            .quick-add-name .form-control {
+                height: 48px;
+                padding: 0.5rem 0.875rem;
+                border-radius: 14px;
+                font-size: 16px; /* >=16px: no iOS zoom on focus */
+            }
+
+            /* Collapsed: zero height, hidden from tab order / AT. Opens
+               upward (the composer is anchored at the bottom) with a short
+               height + fade transition. */
+            .quick-add-desc {
+                max-height: 0;
+                margin-top: 0;
+                opacity: 0;
+                overflow: hidden;
+                visibility: hidden;
+                transition: max-height 0.2s ease, margin-top 0.2s ease,
+                    opacity 0.15s ease, visibility 0s linear 0.2s;
+            }
+
+            .quick-add-composer.is-expanded .quick-add-desc {
+                max-height: calc(30vh + 40px);
+                margin-top: 8px;
+                opacity: 1;
+                visibility: visible;
+                transition: max-height 0.2s ease, margin-top 0.2s ease,
+                    opacity 0.15s ease 0.05s, visibility 0s;
+            }
+
+            .quick-add-hint {
+                margin: 0 4px 4px;
+                font-size: 0.8125rem;
+            }
+
+            .quick-add-desc .form-control {
+                font-size: 16px;
+                padding: 0.5rem 0.875rem;
+                border-radius: 14px;
+                max-height: 30vh;
+            }
+
+            /* The "+" is the real submit control, so it exists only where
+               there is something to submit: add mode. In the compact state
+               the row has no submit affordance at all - it was a second
+               green "add" button sitting ~44px above the dock's own green
+               "Dodaj" tab, and with an empty field it could not submit
+               anything. visibility:hidden takes it out of the tab order and
+               the accessibility tree, and its 52px grid column stays in the
+               template: while collapsed the name field spans that column
+               (see .quick-add-name above), in add mode it gives it back.
+               The field's left edge never moves, and nothing depends on an
+               engine interpolating grid-template-columns (WebKit/iOS does
+               not).
+               The explicit transition is required: .btn-green sets
+               `transition: all 0.3s ease`, and `visibility` is a
+               transitionable discrete property, so inheriting that would
+               delay the flip by ~150ms+. */
+            .quick-add-submit {
+                align-self: end;
+                width: 52px;
+                height: 52px;
+                min-height: 52px;
+                padding: 0;
+                margin-bottom: -2px;
+                font-size: 1.25rem;
+                visibility: hidden;
+                pointer-events: none;
+                transition: visibility 0s, background-color 0.18s ease,
+                    box-shadow 0.18s ease;
+            }
+
+            body.quick-add-active .quick-add-submit {
+                visibility: visible;
+                pointer-events: auto;
+            }
+
+            /* Collapsed, the name field stays a clearly visible, bordered
+               input (the user asked for the form to remain visible when the
+               bar is closed). It used to be painted transparent here. Only
+               colours are set, never width or size, so the box is identical
+               to add mode's height and nothing shifts vertically when add
+               mode starts; the row reads as [chevron] [ input ]. */
+            body:not(.quick-add-active) .quick-add-name .form-control {
+                background: #ffffff;
+                border-color: #8a96a3;
+            }
+
+            /* Status pill floats just above the composer */
+            .quick-add-message {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: calc(100% + 8px);
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+                border-radius: 12px;
+            }
+
+            /* Reserve room so the composer + tab bar never cover the last
+               present or the "Dodaj dla kogoś innego" button */
+            body.has-tab-bar.quick-add-docked {
+                /* --quick-add-reserve is where the composer sits plus how
+                   tall it is, as one number, written by formularz.js. One
+                   number and not a pair, because the page's scroll height
+                   depends on their SUM: while the form opens, the offset
+                   drops in one write and the height grows over 0.2s, so a
+                   live pair dips ~98px for a few frames and clamps a reader
+                   pinned to the bottom of the page. */
+                padding-bottom: calc(var(--quick-add-reserve, 172px) + 20px) !important;
+                /* Entering add mode grows this padding (the composer gets
+                   taller faster than it drops), which can never move the
+                   scroll position. Leaving shrinks it, and a reader pinned
+                   to the very bottom of the page then gets clamped upwards
+                   by the difference - matching the composer's own
+                   `bottom` transition spreads that over the same 0.25s, so
+                   it settles instead of snapping. */
+                transition: padding-bottom 0.25s ease;
+            }
+
+            /* ---- Attention scrim ----
+               While the composer is active (name/description focused or
+               being typed into) everything behind it is dimmed so the
+               bright composer is the obvious place to look. Decorative
+               only: aria-hidden, not focusable, no role="dialog", no focus
+               trap and no scroll lock - a tap dismisses it, a drag still
+               scrolls the list. No backdrop-filter: the page background is
+               a photo, so a blur here costs frames for a muddy result. */
+            .quick-add-scrim {
+                display: block;
+                position: fixed;
+                inset: 0;
+                /* Above all page content (header, list, "Dodaj dla kogoś
+                   innego"), below the composer (999) and the bottom tab
+                   bar (1000), so the bar stays bright and clickable */
+                z-index: 998;
+                background: rgba(0, 0, 0, 0.45);
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                -webkit-tap-highlight-color: transparent;
+                transition: opacity 0.18s ease, visibility 0s linear 0.18s;
+            }
+
+            body.quick-add-active .quick-add-scrim {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transition: opacity 0.18s ease, visibility 0s;
+            }
+
+            /* Lift the composer off the dimmed page: a deeper shadow and a
+               fully opaque surface (at 0.98 the dimmed list underneath
+               showed through just enough to be noticeable) */
+            body.quick-add-active .quick-add-composer {
+                background: #ffffff;
+                box-shadow: 0 10px 36px rgba(0, 0, 0, 0.45);
+            }
+
+            /* ---- Add mode owns the thumb zone ----
+               The dock (and the red FAB poking out of it) slide out while a
+               present is being typed, so the composer can sit at the very
+               bottom. visibility:hidden - not just a transform - so the bar
+               leaves the accessibility tree AND the tab order while hidden;
+               formularz.js additionally sets inert/aria-hidden on it. The
+               composer drops to the dock's own inset (see tabBarOffset in
+               formularz.js); the page's bottom padding is sized for the
+               dock-shown state and only ever changes with add mode, never
+               with scrolling, so nothing is clipped.
+               PRECEDENCE is enforced in JS, not by cascade order:
+               `quick-add-active` and `dock-hidden` are mutually exclusive -
+               entering add mode removes `dock-hidden` and the scroll
+               handler returns early while add mode is on, and leaving calls
+               window.resetDockAutoHide() to hand the dock back shown. This
+               rule is therefore the only one that ever touches visibility /
+               inert / aria-hidden on the dock; hide-on-scroll only ever
+               touches transform / opacity / pointer-events. */
+            body.quick-add-active .bottom-tab-bar {
+                /* +56px clears the FAB, which pokes ~18px above the bar's
+                   own box - so the whole dock ends up below the fold */
+                transform: translateY(calc(100% + 56px));
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.3s ease, visibility 0s linear 0.3s;
+            }
+        }
+
+
+
+        @media (prefers-reduced-motion: reduce) {
+            .quick-add-composer,
+            body.dock-hidden:not(.quick-add-active) .quick-add-composer,
+            body.quick-add-active .quick-add-composer,
+            .quick-add-toggle i,
+            .quick-add-desc,
+            .quick-add-composer.is-expanded .quick-add-desc,
+            .quick-add-scrim,
+            body.quick-add-active .quick-add-scrim,
+            .quick-add-head,
+            body.quick-add-active .quick-add-head,
+            body.has-tab-bar.quick-add-docked,
+            /* Both directions: the base slide-back transition lives in
+               bottom-tab-bar.css, which is shared, so it is neutralised
+               here (page-local, no cross-page cache churn) */
+            .bottom-tab-bar,
+            body.quick-add-active .bottom-tab-bar {
+                transition: none !important;
+            }
+
+            #myPresentsList .my-present-item.is-new {
+                animation: none;
+                box-shadow: 0 0 0 3px rgba(30, 126, 52, 0.7), 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            #myPresentsList .my-present-item.is-new::before {
+                animation: none;
+                opacity: 1;
+            }
+        }
+    </style>
+    <!-- Manifest (required for PWA install prompt) -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png?v=1">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96.png?v=1">
+
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
+
+    <link rel="apple-touch-icon" href="icon-180.png?v=4">
+    <script src="pluralize-pl.js"></script>
+    <script src="escape-html.js"></script>
+</head>
+
+<body class="has-tab-bar">
+    <div class="background-overlay"></div>
+
+    <!-- Top Menu Container -->
+    <div class="top-menu-container">
+        <button class="hamburger-menu" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div class="sidebar-header">
+            <img src="seba_logo.png" alt="Logo" class="sidebar-logo">
+            <h5>Menu</h5>
+            <button class="sidebar-close" onclick="toggleSidebar()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="sidebar-content">
+            <div class="sidebar-menu-items">
+                <a href="/" class="sidebar-menu-item">
+                    <i class="fas fa-home"></i>
+                    <span>Strona główna</span>
+                </a>
+                <a href="/activity.html" class="sidebar-menu-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Aktywność</span>
+                </a>
+                <a href="/leaderboard.html" class="sidebar-menu-item">
+                    <i class="fas fa-trophy"></i>
+                    <span>Ranking</span>
+                </a>
+                <a href="/formularz.html" class="sidebar-menu-item active">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Formularz</span>
+                </a>
+                <div class="sidebar-divider"></div>
+                <button class="sidebar-menu-item" onclick="switchTab('edit'); toggleSidebar();">
+                    <i class="fas fa-edit"></i>
+                    <span>Edytuj moje prezenty</span>
+                </button>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <small class="text-muted">Prezentownik v1.0</small>
+        </div>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- Add Present Tab -->
+        <div id="addTab" class="tab-content" style="display: none;">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-md-10">
+                    <div class="card main-card"
+                        style="background: rgba(255, 255, 255, 0.78); backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 20px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);">
+                        <div class="card-header bg-red">
+                            <h5 class="card-title">
+                                <i class="fas fa-gift me-2"></i>Dodaj swój prezent
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="backToEditLink" class="mb-3" style="display: none;">
+                                <a href="#" onclick="switchTab('edit'); return false;"
+                                   class="text-decoration-none fw-semibold"
+                                   style="color: #43A047; font-size: 14px;">
+                                    <i class="fas fa-arrow-left me-1"></i>Wróć do moich prezentów
+                                </a>
+                            </div>
+                            <div class="alert alert-info mb-4">
+                                <i class="fas fa-info-circle me-2"></i>
+                                🎄 Nadchodzą święta! 🎁 Dodaj swoje pomysły na prezenty, aby inni mogli zobaczyć, czego
+                                sobie życzysz.
+                            </div>
+
+                            <form id="presentForm">
+                                <div class="mb-3">
+                                    <label for="recipientSelect" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Imię i nazwisko
+                                    </label>
+                                    <select class="form-select" id="recipientSelect" required>
+                                        <option value="">Wybierz z listy...</option>
+                                        <option value="__new__" class="text-primary fw-bold">+ Dodaj nowe imię</option>
+                                    </select>
+                                    <div id="newNameInput" class="mt-2" style="display: none;">
+                                        <input type="text" class="form-control" id="recipientName"
+                                            placeholder="Dla kogo?">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="presentTitle" class="form-label">
+                                        <i class="fas fa-gift me-1"></i>Nazwa prezentu
+                                    </label>
+                                    <input type="text" class="form-control" id="presentTitle"
+                                        placeholder="Np. książka, słuchawki…" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="presentComments" class="form-label">
+                                        <i class="fas fa-comment me-1"></i>Dodatkowe informacje (opcjonalnie)
+                                    </label>
+                                    <textarea class="form-control" id="presentComments" rows="3"
+                                        placeholder="Opis, linki, uwagi, gdzie kupić..."></textarea>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-green btn-lg">
+                                        <i class="fas fa-plus me-2"></i>Dodaj prezent
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div id="formMessage" class="alert mt-3" style="display: none;"></div>
+
+                            <!-- Quiet secondary path to the edit view - shown
+                                 only for logged-in users, styled not to compete
+                                 with the primary Dodaj CTA -->
+                            <div class="text-center mt-3" id="editMyPresentsLink" style="display: none;">
+                                <a href="#" onclick="switchTab('edit'); return false;"
+                                   class="text-decoration-none fw-semibold" style="color: #1E88E5; font-size: 14px;">
+                                    <i class="fas fa-edit me-1"></i>Zobacz i edytuj moje prezenty
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Presents Tab (requires authentication) -->
+        <div id="editTab" class="tab-content" style="display: none;">
+            <div class="card main-card" style="background: rgba(255,255,255,0.9); backdrop-filter: blur(20px) saturate(110%); -webkit-backdrop-filter: blur(20px) saturate(110%); border: 1px solid rgba(255,255,255,0.6); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.18);">
+                <div class="card-header bg-red" style="text-align: center; border-radius: 20px 20px 0 0;">
+                    <h5 class="card-title" style="color: white !important;">
+                        <i class="fas fa-edit me-2" style="color: white;"></i>Dodaj i edytuj moje prezenty
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Quick add: create a new present for yourself without
+                         leaving the edit view. Desktop: a bounded card at the
+                         top. Mobile (<=768px): a thumb-zone composer fixed
+                         just above the bottom tab bar (see .quick-add-*). -->
+                    <section class="quick-add-section" aria-labelledby="quickAddHeading">
+                        <form id="quickAddForm" class="quick-add-composer" novalidate
+                              onsubmit="quickAddPresent(); return false;">
+                            <!-- Head row: the title plus the explicit close
+                                 control. Desktop shows the title only (the
+                                 form is a permanent card - nothing to close);
+                                 mobile reveals the whole row in add mode. -->
+                            <div class="quick-add-head">
+                                <h6 id="quickAddHeading" class="quick-add-heading">
+                                    <i class="fas fa-plus me-1" aria-hidden="true"></i>Dodaj nowy prezent
+                                </h6>
+                                <button type="button" class="quick-add-close" id="quickAddClose"
+                                        aria-label="Zamknij formularz dodawania">
+                                    <i class="fas fa-xmark" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <!-- Compact bar: a decorative copy of the chevron
+                                 below (aria-hidden, not focusable) because
+                                 the whole row is the tap target and
+                                 #quickAddTitle is its single tab stop. The
+                                 real #quickAddToggle takes over this grid
+                                 cell in add mode. -->
+                            <span class="quick-add-cue" aria-hidden="true"><i class="fas fa-chevron-up"></i></span>
+                            <button type="button" class="quick-add-toggle" id="quickAddToggle"
+                                    aria-expanded="false" aria-controls="quickAddDescWrap"
+                                    aria-label="Dodaj opis (opcjonalnie)">
+                                <i class="fas fa-chevron-up" aria-hidden="true"></i>
+                            </button>
+                            <div class="quick-add-name">
+                                <label class="visually-hidden" for="quickAddTitle">Nazwa prezentu</label>
+                                <input type="text" class="form-control" id="quickAddTitle"
+                                    placeholder="Nazwa prezentu…" autocomplete="off" enterkeyhint="send"
+                                    maxlength="255">
+                            </div>
+                            <div class="quick-add-desc" id="quickAddDescWrap">
+                                <label class="visually-hidden" for="quickAddComments">Opis (opcjonalnie)</label>
+                                <p class="quick-add-hint" id="quickAddHint">Szczegóły ułatwią zakupy <span aria-hidden="true">🎯</span></p>
+                                <textarea class="form-control" id="quickAddComments" rows="2"
+                                    aria-describedby="quickAddHint"
+                                    placeholder="Rozmiar, kolor, link do sklepu…"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-green quick-add-submit" id="quickAddBtn">
+                                <i class="fas fa-plus" aria-hidden="true"></i><span class="quick-add-submit-label">Dodaj</span>
+                            </button>
+                            <div id="quickAddMessage" class="alert quick-add-message" role="status"
+                                 aria-live="polite" style="display: none;"></div>
+                        </form>
+                    </section>
+                    <section class="my-presents-section" aria-labelledby="myPresentsHeading">
+                        <div class="my-presents-header">
+                            <!-- tabindex="-1": focus target when add mode exits -->
+                            <h6 id="myPresentsHeading" class="my-presents-heading" tabindex="-1">
+                                <i class="fas fa-gift me-2" aria-hidden="true"></i>Moje prezenty
+                            </h6>
+                            <span class="my-presents-count" id="myPresentsCount" hidden></span>
+                        </div>
+                    <div id="myPresentsList">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Ładowanie...</span>
+                            </div>
+                        </div>
+                    </div>
+                    </section>
+                    <div class="d-grid mt-3 mb-1 add-for-other-wrap">
+                        <button type="button" class="btn btn-secondary-light btn-lg"
+                                onclick="switchTab('add', true)">
+                            <span class="btn-icon-badge" aria-hidden="true"><i class="fas fa-user-plus"></i></span>Dodaj dla kogoś innego
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal (redirects to recipients) -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-sign-in-alt me-2"></i>Zaloguj się
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginModalForm">
+                        <div class="mb-3">
+                            <label for="loginModalUsername" class="form-label">Nazwa użytkownika</label>
+                            <input type="text" class="form-control" id="loginModalUsername" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="loginModalPassword" class="form-label">Hasło</label>
+                            <input type="password" class="form-control" id="loginModalPassword" required>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Zaloguj się
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <a href="/register" class="btn-link">
+                            <i class="fas fa-user-plus me-1"></i>Nie masz konta? Zarejestruj się
+                        </a>
+                    </div>
+
+                    <div id="loginModalMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Modal (for edit tab) -->
+    <div class="modal fade" id="authModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-lock me-2"></i>Wymagana autoryzacja
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-center mb-4">
+                        Aby edytować swoje prezenty, musisz się zalogować lub zarejestrować.
+                    </p>
+
+                    <!-- Login Form -->
+                    <div id="loginSection">
+                        <form id="modalLoginForm">
+                            <div class="mb-3">
+                                <label for="modalUsername" class="form-label">Nazwa użytkownika</label>
+                                <input type="text" class="form-control" id="modalUsername" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="modalPassword" class="form-label">Hasło</label>
+                                <input type="password" class="form-control" id="modalPassword" required>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Zaloguj się
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-3">
+                            <a href="#" class="btn-link" onclick="toggleAuthForm(event)"
+                                style="color: black; text-decoration: underline; cursor: pointer; text-shadow: none;">
+                                <i class="fas fa-user-plus me-1"></i>Nie masz konta? Zarejestruj się
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="registerSection" style="display: none;">
+                        <form id="modalRegisterForm">
+                            <div class="mb-3">
+                                <label for="modalRegUsername" class="form-label">Nazwa użytkownika</label>
+                                <input type="text" class="form-control" id="modalRegUsername" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="modalRegPassword" class="form-label">Hasło</label>
+                                <input type="password" class="form-control" id="modalRegPassword" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="modalConfirmPassword" class="form-label">Potwierdź hasło</label>
+                                <input type="password" class="form-control" id="modalConfirmPassword" required>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-user-plus me-2"></i>Zarejestruj się
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-3">
+                            <a href="#" class="btn-link" onclick="toggleAuthForm(event)"
+                                style="color: black; text-decoration: underline; cursor: pointer; text-shadow: none;">
+                                <i class="fas fa-sign-in-alt me-1"></i>Masz już konto? Zaloguj się
+                            </a>
+                        </div>
+                    </div>
+
+                    <div id="authMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Present Modal -->
+    <div class="modal fade" id="editPresentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Edytuj prezent
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPresentForm">
+                        <input type="hidden" id="editPresentId">
+                        <input type="hidden" id="editRecipientSelect">
+
+                        <div class="mb-3">
+                            <label for="editPresentTitle" class="form-label">Nazwa prezentu</label>
+                            <input type="text" class="form-control" id="editPresentTitle" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editPresentComments" class="form-label">Dodatkowe informacje</label>
+                            <textarea class="form-control" id="editPresentComments" rows="3"></textarea>
+                        </div>
+                    </form>
+                    <div id="editPresentMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-success" onclick="saveEditedPresent()">
+                        <i class="fas fa-save me-1"></i>Zapisz
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="formularz.js?v=22"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebarMenu');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+    </script>
+
+    <!-- Attention scrim for the mobile quick-add composer. Decorative
+         (aria-hidden, not focusable, never in the tab order): it only dims
+         the page behind the composer. formularz.js toggles
+         body.quick-add-active. -->
+    <div class="quick-add-scrim" id="quickAddScrim" aria-hidden="true"></div>
+
+    <!-- Bottom Tab Bar -->
+    <div class="bottom-tab-bar">
+        <div class="tab-bar-container">
+            <a href="/" class="tab-item home-tab">
+                <i class="ri-home-line"></i>
+                <span>Główna</span>
+            </a>
+            <a href="#" class="tab-item activity-tab" onclick="toggleNotificationsPanel(); return false;">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-notification-3-line"></i>
+                    <span class="notification-badge" id="activityBadge" style="display: none;"></span>
+                </div>
+                <span>Aktywność</span>
+            </a>
+            <div class="tab-spacer"></div>
+            <a href="wiadomosci.html" class="tab-item messages-tab">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-chat-private-line"></i>
+                    <span class="notification-badge" id="messagesBadge" style="display: none;"></span>
+                </div>
+                <span>Czat</span>
+            </a>
+            <a href="formularz.html" class="tab-item form-tab active">
+                <i class="ri-gift-fill"></i>
+                <span>Dodaj</span>
+            </a>
+        </div>
+        <div class="tab-fab" onclick="toggleTabBarMenu()">
+            <i class="ri-menu-line"></i>
+        </div>
+    </div>
+
+    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;">
+    </div>
+
+    <div class="tab-bar-menu-panel" id="tabBarMenuPanel">
+        <div class="tab-bar-menu-header">
+            <h5><i class="ri-menu-line me-2"></i>Menu</h5>
+            <button class="tab-bar-menu-close" onclick="toggleTabBarMenu()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-menu-content">
+            <!-- Primary actions - kept in easy thumb reach -->
+            <a href="recipients.html" class="tab-bar-menu-item">
+                <i class="ri-gift-2-line"></i>
+                <span>Wszystkie prezenty</span>
+            </a>
+            <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
+                <i class="ri-bookmark-line"></i>
+                <span>Zarezerwowane prezenty</span>
+            </a>
+            <a href="leaderboard.html" class="tab-bar-menu-item">
+                <i class="ri-trophy-line"></i>
+                <span>Ranking</span>
+            </a>
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item">
+                <i class="ri-edit-line"></i>
+                <span>Edytuj moje prezenty</span>
+            </a>
+            <div class="tab-bar-menu-divider"></div>
+            <!-- Secondary quick actions: compact tiles, share-sheet style -->
+            <div class="tab-bar-menu-secondary">
+                <a href="ustawienia.html" class="tab-bar-menu-tile">
+                    <i class="ri-settings-3-line"></i>
+                    <span>Ustawienia</span>
+                </a>
+                <a href="archiwum.html" class="tab-bar-menu-tile">
+                    <i class="ri-archive-line"></i>
+                    <span>Archiwum</span>
+                </a>
+                <a href="#" class="tab-bar-menu-tile tile-logout" onclick="logout(); return false;">
+                    <i class="ri-logout-box-r-line"></i>
+                    <span>Wyloguj</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-bar-notifications-panel" id="notificationsPanel"
+        style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="tab-bar-notifications-header"
+            style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
+            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i
+                    class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
+            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()"
+                style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-notifications-content" id="notificationsContent"
+            style="flex: 1; overflow-y: auto; background: #ffffff;">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Ładowanie...</span>
+                </div>
+            </div>
+        </div>
+        <div class="tab-bar-notifications-view-all"
+            style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
+            <a href="activity.html"
+                style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie
+                powiadomienia</a>
+        </div>
+    </div>
+
+    <script src="tab-bar-functions.js?v=19"></script>
+    
+    <script>
+        function logout() {
+            fetch('/api/logout', { method: 'POST' })
+                .then(() => {
+                    // Clear local storage
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = '/';
+                })
+                .catch(() => {
+                    // Even if logout fails, redirect to login
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = '/';
+                });
+        }
+    </script>
+    <script src="desktop-nav.js?v=4"></script>
+</body>
+
+</html>

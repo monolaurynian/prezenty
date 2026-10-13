@@ -1,0 +1,2793 @@
+{
+ "key": "home@1024x768",
+ "console": [
+  "log | [FastLoader] Initialized",
+  "log | Recipients.js loading... v7.0 - Reverted to separate API calls",
+  "log | [Realtime] Started polling for updates",
+  "log | [FastLoad] No cache available, will load from server",
+  "log | [Recipients.js] Skipping auto-initialization (SKIP_RECIPIENTS_INIT flag set)",
+  "warning | Service Worker registration blocked by Playwright",
+  "log | ServiceWorker registration successful",
+  "log | User authenticated, loading all data",
+  "log | [Badge] Updated with count: 4"
+ ],
+ "pageerrors": [],
+ "requests": [
+  {
+   "url": "/desktop-nav.js?v=5",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/escape-html.js",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/fast-loader.js",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/home-page-auth.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/home-page.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/notification-text.js",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
+   "status": 200,
+   "ct": "application/javascript"
+  },
+  {
+   "url": "/pluralize-pl.js",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/realtime-updates.js?v=2",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/recipients-core.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/recipients-edit.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/recipients-helpers.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/recipients-identify.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/recipients-list.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/recipients-modals.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/recipients-optimistic.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/recipients-present-actions.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/recipients-startup.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/recipients-sync.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/recipients-toast-undo.js?v=1",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/tab-bar-functions.js?v=19",
+   "status": 304,
+   "ct": ""
+  },
+  {
+   "url": "/update-checker.js",
+   "status": 304,
+   "ct": ""
+  }
+ ],
+ "badResponses": [],
+ "globals": {
+  "cookieStore": {
+   "t": "object",
+   "arr": false,
+   "n": 0
+  },
+  "ondevicemotion": {
+   "t": "object",
+   "v": null
+  },
+  "ondeviceorientation": {
+   "t": "object",
+   "v": null
+  },
+  "ondeviceorientationabsolute": {
+   "t": "object",
+   "v": null
+  },
+  "onpointerrawupdate": {
+   "t": "object",
+   "v": null
+  },
+  "caches": {
+   "t": "object",
+   "arr": false,
+   "n": 0
+  },
+  "documentPictureInPicture": {
+   "t": "object",
+   "arr": false,
+   "n": 0
+  },
+  "AbsoluteOrientationSensor": {
+   "t": "function",
+   "src": "6a309ffd:54"
+  },
+  "Accelerometer": {
+   "t": "function",
+   "src": "a5d94c51:42"
+  },
+  "AudioDecoder": {
+   "t": "function",
+   "src": "26a063c2:41"
+  },
+  "AudioEncoder": {
+   "t": "function",
+   "src": "d8d2a8e8:41"
+  },
+  "AudioWorklet": {
+   "t": "function",
+   "src": "4a77ec40:41"
+  },
+  "BatteryManager": {
+   "t": "function",
+   "src": "8b64ef54:43"
+  },
+  "Cache": {
+   "t": "function",
+   "src": "f1eff566:34"
+  },
+  "CacheStorage": {
+   "t": "function",
+   "src": "648cb2ff:41"
+  },
+  "Clipboard": {
+   "t": "function",
+   "src": "7d03dea6:38"
+  },
+  "ClipboardChangeEvent": {
+   "t": "function",
+   "src": "5f2f744c:49"
+  },
+  "ClipboardItem": {
+   "t": "function",
+   "src": "e2ad11d3:42"
+  },
+  "CookieChangeEvent": {
+   "t": "function",
+   "src": "204db804:46"
+  },
+  "CookieStore": {
+   "t": "function",
+   "src": "ac3c91d1:40"
+  },
+  "CookieStoreManager": {
+   "t": "function",
+   "src": "70234962:47"
+  },
+  "CreateMonitor": {
+   "t": "function",
+   "src": "39bf7042:42"
+  },
+  "Credential": {
+   "t": "function",
+   "src": "93514c01:39"
+  },
+  "CredentialsContainer": {
+   "t": "function",
+   "src": "6f430635:49"
+  },
+  "CryptoKey": {
+   "t": "function",
+   "src": "4802abe:38"
+  },
+  "DeviceMotionEvent": {
+   "t": "function",
+   "src": "cfa9bfe0:46"
+  },
+  "DeviceMotionEventAcceleration": {
+   "t": "function",
+   "src": "9f1ed8e2:58"
+  },
+  "DeviceMotionEventRotationRate": {
+   "t": "function",
+   "src": "16e80d56:58"
+  },
+  "DeviceOrientationEvent": {
+   "t": "function",
+   "src": "3190a228:51"
+  },
+  "FederatedCredential": {
+   "t": "function",
+   "src": "618db5e5:48"
+  },
+  "GPU": {
+   "t": "function",
+   "src": "acdedc88:32"
+  },
+  "GPUAdapter": {
+   "t": "function",
+   "src": "309089f:39"
+  },
+  "GPUAdapterInfo": {
+   "t": "function",
+   "src": "82f0c1d1:43"
+  },
+  "GPUBindGroup": {
+   "t": "function",
+   "src": "66b7fe56:41"
+  },
+  "GPUBindGroupLayout": {
+   "t": "function",
+   "src": "3fbbdfec:47"
+  },
+  "GPUBuffer": {
+   "t": "function",
+   "src": "4753d48:38"
+  },
+  "GPUBufferUsage": {
+   "t": "object",
+   "arr": false,
+   "n": 10
+  },
+  "GPUCanvasContext": {
+   "t": "function",
+   "src": "2a3dfc3f:45"
+  },
+  "GPUColorWrite": {
+   "t": "object",
+   "arr": false,
+   "n": 5
+  },
+  "GPUCommandBuffer": {
+   "t": "function",
+   "src": "84b50e2f:45"
+  },
+  "GPUCommandEncoder": {
+   "t": "function",
+   "src": "2a8dddbb:46"
+  },
+  "GPUCompilationInfo": {
+   "t": "function",
+   "src": "ac24986f:47"
+  },
+  "GPUCompilationMessage": {
+   "t": "function",
+   "src": "15334d0a:50"
+  },
+  "GPUComputePassEncoder": {
+   "t": "function",
+   "src": "632382f8:50"
+  },
+  "GPUComputePipeline": {
+   "t": "function",
+   "src": "2a5eaeff:47"
+  },
+  "GPUDevice": {
+   "t": "function",
+   "src": "54b6b090:38"
+  },
+  "GPUDeviceLostInfo": {
+   "t": "function",
+   "src": "4b1e66da:46"
+  },
+  "GPUError": {
+   "t": "function",
+   "src": "acdc04d0:37"
+  },
+  "GPUExternalTexture": {
+   "t": "function",
+   "src": "41f9224a:47"
+  },
+  "GPUInternalError": {
+   "t": "function",
+   "src": "60e0e817:45"
+  },
+  "GPUMapMode": {
+   "t": "object",
+   "arr": false,
+   "n": 2
+  },
+  "GPUOutOfMemoryError": {
+   "t": "function",
+   "src": "811b7b6:48"
+  },
+  "GPUPipelineError": {
+   "t": "function",
+   "src": "91e463b2:45"
+  },
+  "GPUPipelineLayout": {
+   "t": "function",
+   "src": "d9bdac10:46"
+  },
+  "GPUQuerySet": {
+   "t": "function",
+   "src": "4c11c180:40"
+  },
+  "GPUQueue": {
+   "t": "function",
+   "src": "e967d9b9:37"
+  },
+  "GPURenderBundle": {
+   "t": "function",
+   "src": "68035d36:44"
+  },
+  "GPURenderBundleEncoder": {
+   "t": "function",
+   "src": "5b435142:51"
+  },
+  "GPURenderPassEncoder": {
+   "t": "function",
+   "src": "fb353747:49"
+  },
+  "GPURenderPipeline": {
+   "t": "function",
+   "src": "28083860:46"
+  },
+  "GPUSampler": {
+   "t": "function",
+   "src": "5f9bc63c:39"
+  },
+  "GPUShaderModule": {
+   "t": "function",
+   "src": "e6425fdb:44"
+  },
+  "GPUShaderStage": {
+   "t": "object",
+   "arr": false,
+   "n": 3
+  },
+  "GPUSupportedFeatures": {
+   "t": "function",
+   "src": "f3acc521:49"
+  },
+  "GPUSupportedLimits": {
+   "t": "function",
+   "src": "37fdb9e0:47"
+  },
+  "GPUTexture": {
+   "t": "function",
+   "src": "7c834857:39"
+  },
+  "GPUTextureUsage": {
+   "t": "object",
+   "arr": false,
+   "n": 6
+  },
+  "GPUTextureView": {
+   "t": "function",
+   "src": "fb164e5a:43"
+  },
+  "GPUUncapturedErrorEvent": {
+   "t": "function",
+   "src": "6863a847:52"
+  },
+  "GPUValidationError": {
+   "t": "function",
+   "src": "ec13903b:47"
+  },
+  "GravitySensor": {
+   "t": "function",
+   "src": "eaad81ba:42"
+  },
+  "Gyroscope": {
+   "t": "function",
+   "src": "1228aa3:38"
+  },
+  "IdleDetector": {
+   "t": "function",
+   "src": "99ff46d4:41"
+  },
+  "ImageCapture": {
+   "t": "function",
+   "src": "657c4629:41"
+  },
+  "ImageDecoder": {
+   "t": "function",
+   "src": "eadb0df3:41"
+  },
+  "ImageTrack": {
+   "t": "function",
+   "src": "77aa1b62:39"
+  },
+  "ImageTrackList": {
+   "t": "function",
+   "src": "47388020:43"
+  },
+  "Keyboard": {
+   "t": "function",
+   "src": "7527c867:37"
+  },
+  "KeyboardLayoutMap": {
+   "t": "function",
+   "src": "2b5bf61:46"
+  },
+  "LinearAccelerationSensor": {
+   "t": "function",
+   "src": "a0e11083:53"
+  },
+  "MIDIAccess": {
+   "t": "function",
+   "src": "41941287:39"
+  },
+  "MIDIConnectionEvent": {
+   "t": "function",
+   "src": "9bee3d9:48"
+  },
+  "MIDIInput": {
+   "t": "function",
+   "src": "32b13535:38"
+  },
+  "MIDIInputMap": {
+   "t": "function",
+   "src": "e501b689:41"
+  },
+  "MIDIMessageEvent": {
+   "t": "function",
+   "src": "2215d04:45"
+  },
+  "MIDIOutput": {
+   "t": "function",
+   "src": "b1edbefc:39"
+  },
+  "MIDIOutputMap": {
+   "t": "function",
+   "src": "c3b5ba0:42"
+  },
+  "MIDIPort": {
+   "t": "function",
+   "src": "1f18153a:37"
+  },
+  "MediaDeviceInfo": {
+   "t": "function",
+   "src": "94b3f658:44"
+  },
+  "MediaDevices": {
+   "t": "function",
+   "src": "a507a05:41"
+  },
+  "MediaKeyMessageEvent": {
+   "t": "function",
+   "src": "83083f5e:49"
+  },
+  "MediaKeySession": {
+   "t": "function",
+   "src": "1afc01a7:44"
+  },
+  "MediaKeyStatusMap": {
+   "t": "function",
+   "src": "f2cf0cb1:46"
+  },
+  "MediaKeySystemAccess": {
+   "t": "function",
+   "src": "f82656d8:49"
+  },
+  "MediaKeys": {
+   "t": "function",
+   "src": "9fd6306a:38"
+  },
+  "NavigationPreloadManager": {
+   "t": "function",
+   "src": "7ae96f2:53"
+  },
+  "NavigatorManagedData": {
+   "t": "function",
+   "src": "ee8fab80:49"
+  },
+  "OrientationSensor": {
+   "t": "function",
+   "src": "4f9c542a:46"
+  },
+  "PasswordCredential": {
+   "t": "function",
+   "src": "935639be:47"
+  },
+  "ProtectedAudience": {
+   "t": "function",
+   "src": "e2521754:46"
+  },
+  "RelativeOrientationSensor": {
+   "t": "function",
+   "src": "ab33139e:54"
+  },
+  "ScreenDetailed": {
+   "t": "function",
+   "src": "c4dbcff6:43"
+  },
+  "ScreenDetails": {
+   "t": "function",
+   "src": "40b76d24:42"
+  },
+  "Sensor": {
+   "t": "function",
+   "src": "7e37055c:35"
+  },
+  "SensorErrorEvent": {
+   "t": "function",
+   "src": "79c57f68:45"
+  },
+  "ServiceWorkerRegistration": {
+   "t": "function",
+   "src": "8cb8b730:54"
+  },
+  "StorageManager": {
+   "t": "function",
+   "src": "c4c51740:43"
+  },
+  "SubtleCrypto": {
+   "t": "function",
+   "src": "a945ead0:41"
+  },
+  "VideoDecoder": {
+   "t": "function",
+   "src": "1cfc2425:41"
+  },
+  "VideoEncoder": {
+   "t": "function",
+   "src": "85714d8f:41"
+  },
+  "VirtualKeyboard": {
+   "t": "function",
+   "src": "19531006:44"
+  },
+  "WGSLLanguageFeatures": {
+   "t": "function",
+   "src": "121b0ed0:49"
+  },
+  "WebTransport": {
+   "t": "function",
+   "src": "fe1a6b59:41"
+  },
+  "WebTransportBidirectionalStream": {
+   "t": "function",
+   "src": "48708886:60"
+  },
+  "WebTransportDatagramDuplexStream": {
+   "t": "function",
+   "src": "cffdb9c:61"
+  },
+  "WebTransportError": {
+   "t": "function",
+   "src": "5236c5a1:46"
+  },
+  "Worklet": {
+   "t": "function",
+   "src": "bfed06f6:36"
+  },
+  "XRDOMOverlayState": {
+   "t": "function",
+   "src": "14abfe0b:46"
+  },
+  "XRLayer": {
+   "t": "function",
+   "src": "77f011c3:36"
+  },
+  "XRWebGLBinding": {
+   "t": "function",
+   "src": "aabbf9fa:43"
+  },
+  "AudioPlaybackStats": {
+   "t": "function",
+   "src": "ebf0e972:47"
+  },
+  "AuthenticatorAssertionResponse": {
+   "t": "function",
+   "src": "d2ef9b36:59"
+  },
+  "AuthenticatorAttestationResponse": {
+   "t": "function",
+   "src": "22bc4202:61"
+  },
+  "AuthenticatorResponse": {
+   "t": "function",
+   "src": "e34b239c:50"
+  },
+  "PublicKeyCredential": {
+   "t": "function",
+   "src": "2764c5b7:48"
+  },
+  "Bluetooth": {
+   "t": "function",
+   "src": "e590815c:38"
+  },
+  "BluetoothCharacteristicProperties": {
+   "t": "function",
+   "src": "5d501900:62"
+  },
+  "BluetoothDevice": {
+   "t": "function",
+   "src": "b3820644:44"
+  },
+  "BluetoothRemoteGATTCharacteristic": {
+   "t": "function",
+   "src": "574d53e3:62"
+  },
+  "BluetoothRemoteGATTDescriptor": {
+   "t": "function",
+   "src": "70eee3cd:58"
+  },
+  "BluetoothRemoteGATTServer": {
+   "t": "function",
+   "src": "177e065b:54"
+  },
+  "BluetoothRemoteGATTService": {
+   "t": "function",
+   "src": "27b8b9c3:55"
+  },
+  "CaptureController": {
+   "t": "function",
+   "src": "ab68c492:46"
+  },
+  "DevicePosture": {
+   "t": "function",
+   "src": "2c49ffe8:42"
+  },
+  "DigitalCredential": {
+   "t": "function",
+   "src": "20ee6edb:46"
+  },
+  "DocumentPictureInPicture": {
+   "t": "function",
+   "src": "943c3962:53"
+  },
+  "EyeDropper": {
+   "t": "function",
+   "src": "7106a35d:39"
+  },
+  "FetchLaterResult": {
+   "t": "function",
+   "src": "6c4afff1:45"
+  },
+  "FileSystemDirectoryHandle": {
+   "t": "function",
+   "src": "c536c6ea:54"
+  },
+  "FileSystemFileHandle": {
+   "t": "function",
+   "src": "72c70c5:49"
+  },
+  "FileSystemHandle": {
+   "t": "function",
+   "src": "ac99ad23:45"
+  },
+  "FileSystemWritableFileStream": {
+   "t": "function",
+   "src": "66b3c781:57"
+  },
+  "FileSystemObserver": {
+   "t": "function",
+   "src": "960027c1:47"
+  },
+  "FontData": {
+   "t": "function",
+   "src": "a5f1bf29:37"
+  },
+  "HID": {
+   "t": "function",
+   "src": "ae0a6faf:32"
+  },
+  "HIDConnectionEvent": {
+   "t": "function",
+   "src": "cacd33f5:47"
+  },
+  "HIDDevice": {
+   "t": "function",
+   "src": "172ddf77:38"
+  },
+  "HIDInputReportEvent": {
+   "t": "function",
+   "src": "5ad4dfbb:48"
+  },
+  "IdentityCredential": {
+   "t": "function",
+   "src": "cf5e3877:47"
+  },
+  "IdentityCredentialError": {
+   "t": "function",
+   "src": "e9587a0f:52"
+  },
+  "IdentityProvider": {
+   "t": "function",
+   "src": "2d826ddd:45"
+  },
+  "NavigatorLogin": {
+   "t": "function",
+   "src": "fc4f6816:43"
+  },
+  "LanguageDetector": {
+   "t": "function",
+   "src": "4d3263a2:45"
+  },
+  "Lock": {
+   "t": "function",
+   "src": "790522a1:33"
+  },
+  "LockManager": {
+   "t": "function",
+   "src": "e184d952:40"
+  },
+  "ServiceWorker": {
+   "t": "function",
+   "src": "75ca06e1:42"
+  },
+  "ServiceWorkerContainer": {
+   "t": "function",
+   "src": "621ab486:51"
+  },
+  "OTPCredential": {
+   "t": "function",
+   "src": "e01a782a:42"
+  },
+  "PaymentAddress": {
+   "t": "function",
+   "src": "e258f006:43"
+  },
+  "PaymentRequest": {
+   "t": "function",
+   "src": "84f5a081:43"
+  },
+  "PaymentRequestUpdateEvent": {
+   "t": "function",
+   "src": "c30429fc:54"
+  },
+  "PaymentResponse": {
+   "t": "function",
+   "src": "e8da0e53:44"
+  },
+  "PaymentManager": {
+   "t": "function",
+   "src": "34005883:43"
+  },
+  "PaymentMethodChangeEvent": {
+   "t": "function",
+   "src": "795ee165:53"
+  },
+  "Presentation": {
+   "t": "function",
+   "src": "3eb18fc:41"
+  },
+  "PresentationAvailability": {
+   "t": "function",
+   "src": "19a0fd4d:53"
+  },
+  "PresentationConnection": {
+   "t": "function",
+   "src": "84b34bea:51"
+  },
+  "PresentationConnectionAvailableEvent": {
+   "t": "function",
+   "src": "442ff55f:65"
+  },
+  "PresentationConnectionCloseEvent": {
+   "t": "function",
+   "src": "2463e9d0:61"
+  },
+  "PresentationConnectionList": {
+   "t": "function",
+   "src": "2e39aea8:55"
+  },
+  "PresentationReceiver": {
+   "t": "function",
+   "src": "915dcf65:49"
+  },
+  "PresentationRequest": {
+   "t": "function",
+   "src": "f9030c6d:48"
+  },
+  "PressureObserver": {
+   "t": "function",
+   "src": "5b90bf47:45"
+  },
+  "PressureRecord": {
+   "t": "function",
+   "src": "21af1342:43"
+  },
+  "Serial": {
+   "t": "function",
+   "src": "6262318a:35"
+  },
+  "SerialPort": {
+   "t": "function",
+   "src": "86f3d433:39"
+  },
+  "SpeechRecognitionPhrase": {
+   "t": "function",
+   "src": "59f79438:52"
+  },
+  "StorageBucket": {
+   "t": "function",
+   "src": "26a61f9d:42"
+  },
+  "StorageBucketManager": {
+   "t": "function",
+   "src": "cce5c2e:49"
+  },
+  "Summarizer": {
+   "t": "function",
+   "src": "cb135c3b:39"
+  },
+  "Translator": {
+   "t": "function",
+   "src": "e2a3b594:39"
+  },
+  "USB": {
+   "t": "function",
+   "src": "feaaa2ee:32"
+  },
+  "USBAlternateInterface": {
+   "t": "function",
+   "src": "a6f1f35b:50"
+  },
+  "USBConfiguration": {
+   "t": "function",
+   "src": "524eb47e:45"
+  },
+  "USBConnectionEvent": {
+   "t": "function",
+   "src": "16f81bd4:47"
+  },
+  "USBDevice": {
+   "t": "function",
+   "src": "bd248a36:38"
+  },
+  "USBEndpoint": {
+   "t": "function",
+   "src": "8ca5208d:40"
+  },
+  "USBInTransferResult": {
+   "t": "function",
+   "src": "bdd7122b:48"
+  },
+  "USBInterface": {
+   "t": "function",
+   "src": "20f6578b:41"
+  },
+  "USBIsochronousInTransferPacket": {
+   "t": "function",
+   "src": "9a4887ce:59"
+  },
+  "USBIsochronousInTransferResult": {
+   "t": "function",
+   "src": "ff2cfaaf:59"
+  },
+  "USBIsochronousOutTransferPacket": {
+   "t": "function",
+   "src": "9dd73c47:60"
+  },
+  "USBIsochronousOutTransferResult": {
+   "t": "function",
+   "src": "5a191966:60"
+  },
+  "USBOutTransferResult": {
+   "t": "function",
+   "src": "9307c162:49"
+  },
+  "WakeLock": {
+   "t": "function",
+   "src": "80e05fd9:37"
+  },
+  "WakeLockSentinel": {
+   "t": "function",
+   "src": "cddfccdb:45"
+  },
+  "XRAnchor": {
+   "t": "function",
+   "src": "f8466d79:37"
+  },
+  "XRAnchorSet": {
+   "t": "function",
+   "src": "86b3b75b:40"
+  },
+  "XRBoundedReferenceSpace": {
+   "t": "function",
+   "src": "cdf0745c:52"
+  },
+  "XRCPUDepthInformation": {
+   "t": "function",
+   "src": "3ba73527:50"
+  },
+  "XRCamera": {
+   "t": "function",
+   "src": "e460a519:37"
+  },
+  "XRDepthInformation": {
+   "t": "function",
+   "src": "37b16cc1:47"
+  },
+  "XRFrame": {
+   "t": "function",
+   "src": "5e9953d:36"
+  },
+  "XRHand": {
+   "t": "function",
+   "src": "aad2e83:35"
+  },
+  "XRHitTestResult": {
+   "t": "function",
+   "src": "5a21d96a:44"
+  },
+  "XRHitTestSource": {
+   "t": "function",
+   "src": "8b44573e:44"
+  },
+  "XRInputSource": {
+   "t": "function",
+   "src": "48238beb:42"
+  },
+  "XRInputSourceArray": {
+   "t": "function",
+   "src": "5d1850d2:47"
+  },
+  "XRInputSourceEvent": {
+   "t": "function",
+   "src": "f9c4f267:47"
+  },
+  "XRInputSourcesChangeEvent": {
+   "t": "function",
+   "src": "a4b26972:54"
+  },
+  "XRJointPose": {
+   "t": "function",
+   "src": "21d98c7f:40"
+  },
+  "XRJointSpace": {
+   "t": "function",
+   "src": "dde90cb2:41"
+  },
+  "XRLightEstimate": {
+   "t": "function",
+   "src": "b29405c8:44"
+  },
+  "XRLightProbe": {
+   "t": "function",
+   "src": "38571354:41"
+  },
+  "XRPose": {
+   "t": "function",
+   "src": "4c99d7e9:35"
+  },
+  "XRRay": {
+   "t": "function",
+   "src": "5f63a8aa:34"
+  },
+  "XRReferenceSpace": {
+   "t": "function",
+   "src": "c3c592ef:45"
+  },
+  "XRReferenceSpaceEvent": {
+   "t": "function",
+   "src": "15ffa2e3:50"
+  },
+  "XRRenderState": {
+   "t": "function",
+   "src": "c529bddd:42"
+  },
+  "XRRigidTransform": {
+   "t": "function",
+   "src": "4a1a089d:45"
+  },
+  "XRSession": {
+   "t": "function",
+   "src": "6118b23e:38"
+  },
+  "XRSessionEvent": {
+   "t": "function",
+   "src": "a2765552:43"
+  },
+  "XRSpace": {
+   "t": "function",
+   "src": "81d6aae4:36"
+  },
+  "XRSystem": {
+   "t": "function",
+   "src": "c0ae4f65:37"
+  },
+  "XRTransientInputHitTestResult": {
+   "t": "function",
+   "src": "ee0125f0:58"
+  },
+  "XRTransientInputHitTestSource": {
+   "t": "function",
+   "src": "a2c4a4:58"
+  },
+  "XRView": {
+   "t": "function",
+   "src": "3098766d:35"
+  },
+  "XRViewerPose": {
+   "t": "function",
+   "src": "d9f193d3:41"
+  },
+  "XRViewport": {
+   "t": "function",
+   "src": "9957d2b4:39"
+  },
+  "XRWebGLDepthInformation": {
+   "t": "function",
+   "src": "99c0a7fa:52"
+  },
+  "XRWebGLLayer": {
+   "t": "function",
+   "src": "c2cd9518:41"
+  },
+  "XRCompositionLayer": {
+   "t": "function",
+   "src": "59b8275b:47"
+  },
+  "XRProjectionLayer": {
+   "t": "function",
+   "src": "724ab27e:46"
+  },
+  "XRCubeLayer": {
+   "t": "function",
+   "src": "97e557f2:40"
+  },
+  "XRCylinderLayer": {
+   "t": "function",
+   "src": "99dd1ca1:44"
+  },
+  "XREquirectLayer": {
+   "t": "function",
+   "src": "1f25c98b:44"
+  },
+  "XRLayerEvent": {
+   "t": "function",
+   "src": "9e39a24f:41"
+  },
+  "XRQuadLayer": {
+   "t": "function",
+   "src": "4d1b3f82:40"
+  },
+  "XRSubImage": {
+   "t": "function",
+   "src": "83bc95c3:39"
+  },
+  "XRWebGLSubImage": {
+   "t": "function",
+   "src": "a22cf4f8:44"
+  },
+  "XRPlane": {
+   "t": "function",
+   "src": "c138fa56:36"
+  },
+  "XRPlaneSet": {
+   "t": "function",
+   "src": "334a0bd4:39"
+  },
+  "XRVisibilityMaskChangeEvent": {
+   "t": "function",
+   "src": "1419adf8:56"
+  },
+  "fetchLater": {
+   "t": "function",
+   "src": "4dae2f18:39"
+  },
+  "getDigitalGoodsService": {
+   "t": "function",
+   "src": "c6e1c62b:51"
+  },
+  "getScreenDetails": {
+   "t": "function",
+   "src": "c7a81652:45"
+  },
+  "queryLocalFonts": {
+   "t": "function",
+   "src": "47e2320d:44"
+  },
+  "showDirectoryPicker": {
+   "t": "function",
+   "src": "9df11e06:48"
+  },
+  "showOpenFilePicker": {
+   "t": "function",
+   "src": "b64022dd:47"
+  },
+  "showSaveFilePicker": {
+   "t": "function",
+   "src": "62236768:47"
+  },
+  "plForm": {
+   "t": "function",
+   "src": "5b4263b8:348"
+  },
+  "plPlural": {
+   "t": "function",
+   "src": "4326cf44:263"
+  },
+  "plCount": {
+   "t": "function",
+   "src": "dcf522ab:111"
+  },
+  "notificationText": {
+   "t": "function",
+   "src": "8f66dd61:2206"
+  },
+  "PrezentyEscape": {
+   "t": "object",
+   "arr": false,
+   "n": 4
+  },
+  "uidEvent": {
+   "t": "number",
+   "v": 5
+  },
+  "bootstrap": {
+   "t": "object",
+   "arr": false,
+   "n": 12
+  },
+  "fastLoader": {
+   "t": "object",
+   "arr": false,
+   "n": 5
+  },
+  "SKIP_RECIPIENTS_INIT": {
+   "t": "boolean",
+   "v": true
+  },
+  "_currentUserId": {
+   "t": "number",
+   "v": 1
+  },
+  "handleScrollToPresentFromNotification": {
+   "t": "function",
+   "src": "2cfb2738:447"
+  },
+  "scrollToPresentById": {
+   "t": "function",
+   "src": "9de4e605:2578"
+  },
+  "scrollAndHighlight": {
+   "t": "function",
+   "src": "d96befad:546"
+  },
+  "logout": {
+   "t": "function",
+   "src": "d2cbb72c:556"
+  },
+  "initializeSearchAndFilter": {
+   "t": "function",
+   "src": "6c8f2452:3026"
+  },
+  "performSearch": {
+   "t": "function",
+   "src": "7ea917d5:2231"
+  },
+  "applyFilter": {
+   "t": "function",
+   "src": "f5ce721c:1503"
+  },
+  "showSearchDropdown": {
+   "t": "function",
+   "src": "93e3b413:2334"
+  },
+  "hideSearchDropdown": {
+   "t": "function",
+   "src": "54aea6c4:163"
+  },
+  "focusSearch": {
+   "t": "function",
+   "src": "92788317:490"
+  },
+  "highlightText": {
+   "t": "function",
+   "src": "d39729a3:206"
+  },
+  "escapeRegex": {
+   "t": "function",
+   "src": "a86047a:90"
+  },
+  "scrollToElement": {
+   "t": "function",
+   "src": "993ad4c:371"
+  },
+  "scrollToPresent": {
+   "t": "function",
+   "src": "d12bf423:622"
+  },
+  "showNoResultsMessage": {
+   "t": "function",
+   "src": "706bfd63:525"
+  },
+  "hideNoResultsMessage": {
+   "t": "function",
+   "src": "d33c47d6:157"
+  },
+  "initializeFAB": {
+   "t": "function",
+   "src": "58c876e4:141"
+  },
+  "initializeAnimations": {
+   "t": "function",
+   "src": "968976f4:442"
+  },
+  "checkAuth": {
+   "t": "function",
+   "src": "f5507a4b:814"
+  },
+  "getSkeletonCardsHTML": {
+   "t": "function",
+   "src": "4db71a64:850"
+  },
+  "loadRecipientsWithPresents": {
+   "t": "function",
+   "src": "a849e618:5718"
+  },
+  "displayRecipientsWithPresents": {
+   "t": "function",
+   "src": "2d762065:454"
+  },
+  "setupPresentButtonListeners": {
+   "t": "function",
+   "src": "33567596:380"
+  },
+  "handlePresentButtonClick": {
+   "t": "function",
+   "src": "8fdea1b4:816"
+  },
+  "generateProfilePictureHTML": {
+   "t": "function",
+   "src": "cadacd0d:961"
+  },
+  "identifyAsRecipient": {
+   "t": "function",
+   "src": "a8b11926:654"
+  },
+  "confirmSelfIdentification": {
+   "t": "function",
+   "src": "16e710b1:960"
+  },
+  "deleteRecipientFromModal": {
+   "t": "function",
+   "src": "aa299d4e:1009"
+  },
+  "showRecipientSelectionModal": {
+   "t": "function",
+   "src": "a6a820a4:4005"
+  },
+  "deleteRecipientFromSelection": {
+   "t": "function",
+   "src": "3b843c0b:775"
+  },
+  "identifyAsRecipientFromSelection": {
+   "t": "function",
+   "src": "dfb1db55:1058"
+  },
+  "addNewRecipientAndIdentify": {
+   "t": "function",
+   "src": "451786b3:1490"
+  },
+  "cancelIdentification": {
+   "t": "function",
+   "src": "3e655bf0:319"
+  },
+  "confirmCancelIdentification": {
+   "t": "function",
+   "src": "12ba7a71:943"
+  },
+  "showErrorModal": {
+   "t": "function",
+   "src": "46bed259:204"
+  },
+  "showSuccessMessage": {
+   "t": "function",
+   "src": "7ebbeeef:686"
+  },
+  "openProfileModal": {
+   "t": "function",
+   "src": "a253e804:1625"
+  },
+  "previewImage": {
+   "t": "function",
+   "src": "75472d9a:881"
+  },
+  "compressImage": {
+   "t": "function",
+   "src": "4002544e:1506"
+  },
+  "saveProfilePicture": {
+   "t": "function",
+   "src": "7f15b3b7:1642"
+  },
+  "saveImageToServer": {
+   "t": "function",
+   "src": "e50a968c:1345"
+  },
+  "generatePresentsList": {
+   "t": "function",
+   "src": "53d71da1:4116"
+  },
+  "togglePresentFromRecipients": {
+   "t": "function",
+   "src": "6ba1dfca:874"
+  },
+  "updatePresentCheckStatus": {
+   "t": "function",
+   "src": "ec8c8e48:3538"
+  },
+  "updateProgressBar": {
+   "t": "function",
+   "src": "636da09c:1369"
+  },
+  "updateAccordionBoughtCount": {
+   "t": "function",
+   "src": "6a69ea05:337"
+  },
+  "animatePresentTransition": {
+   "t": "function",
+   "src": "9ffd5333:1622"
+  },
+  "calculateContainerHeight": {
+   "t": "function",
+   "src": "5361aaa3:515"
+  },
+  "generateReservationButton": {
+   "t": "function",
+   "src": "a8db71ee:2684"
+  },
+  "refreshPresentButtons": {
+   "t": "function",
+   "src": "96f73ed0:418"
+  },
+  "handleBoughtClick": {
+   "t": "function",
+   "src": "69a87053:1641"
+  },
+  "handleReserveClick": {
+   "t": "function",
+   "src": "576f150:1669"
+  },
+  "formatCommentsPreview": {
+   "t": "function",
+   "src": "e88dda1f:1685"
+  },
+  "convertUrlsToLinks": {
+   "t": "function",
+   "src": "4cc1ee57:1549"
+  },
+  "addRecipient": {
+   "t": "function",
+   "src": "db3c6b32:914"
+  },
+  "deleteRecipient": {
+   "t": "function",
+   "src": "d06f9139:540"
+  },
+  "deleteRecipientConfirmed": {
+   "t": "function",
+   "src": "8d8d6565:868"
+  },
+  "escapeHtml": {
+   "t": "function",
+   "src": "8da0d1c5:162"
+  },
+  "escapeAttr": {
+   "t": "function",
+   "src": "2eb0f96b:233"
+  },
+  "recipientNameWithBadge": {
+   "t": "function",
+   "src": "9c479824:794"
+  },
+  "openAddPresentModal": {
+   "t": "function",
+   "src": "688b50bc:273"
+  },
+  "populateAddPresentModal": {
+   "t": "function",
+   "src": "b02d6f44:1221"
+  },
+  "addPresentFromModal": {
+   "t": "function",
+   "src": "ad097a44:2963"
+  },
+  "openReservedPresentsModal": {
+   "t": "function",
+   "src": "5480401f:662"
+  },
+  "displayReservedPresentsInModal": {
+   "t": "function",
+   "src": "d28ff0c5:6297"
+  },
+  "togglePresentFromModal": {
+   "t": "function",
+   "src": "a335a1be:918"
+  },
+  "updateModalPresentCheckStatus": {
+   "t": "function",
+   "src": "9839c7e9:3015"
+  },
+  "updateModalBadgeCounts": {
+   "t": "function",
+   "src": "1b4ca96e:824"
+  },
+  "animateModalPresentTransition": {
+   "t": "function",
+   "src": "bf7659e6:1623"
+  },
+  "cancelReservationFromModal": {
+   "t": "function",
+   "src": "d14e3966:747"
+  },
+  "openAddRecipientModal": {
+   "t": "function",
+   "src": "fcbb7a6f:542"
+  },
+  "addRecipientFromModal": {
+   "t": "function",
+   "src": "f016cd9:2084"
+  },
+  "returnToAddPresentModalWithNewRecipient": {
+   "t": "function",
+   "src": "50f952e3:2150"
+  },
+  "showModalMessage": {
+   "t": "function",
+   "src": "9f1e44a3:235"
+  },
+  "beginPresentOp": {
+   "t": "function",
+   "src": "5fe8386e:78"
+  },
+  "endPresentOp": {
+   "t": "function",
+   "src": "571074e2:219"
+  },
+  "fetchWithTimeout": {
+   "t": "function",
+   "src": "61a4e827:244"
+  },
+  "updateButtonOptimistically": {
+   "t": "function",
+   "src": "8323071f:532"
+  },
+  "updatePresentItemOptimistically": {
+   "t": "function",
+   "src": "92ce3b1a:284"
+  },
+  "updateCacheOptimistically": {
+   "t": "function",
+   "src": "5824fa10:516"
+  },
+  "rollbackOptimisticUpdate": {
+   "t": "function",
+   "src": "68169e7a:699"
+  },
+  "reservePresentFromRecipients": {
+   "t": "function",
+   "src": "cbe492d0:2261"
+  },
+  "cancelReservationFromRecipients": {
+   "t": "function",
+   "src": "1c061a05:2260"
+  },
+  "showReservedByOtherModal": {
+   "t": "function",
+   "src": "2fb4a04a:382"
+  },
+  "redirectIfAuthenticated": {
+   "t": "function",
+   "src": "243dfdfd:246"
+  },
+  "openRecipientDetailsModal": {
+   "t": "function",
+   "src": "404cd331:2463"
+  },
+  "showRecipientDetailsFromList": {
+   "t": "function",
+   "src": "ed4297df:509"
+  },
+  "openChangePictureModal": {
+   "t": "function",
+   "src": "8414691a:1651"
+  },
+  "saveNewProfilePicture": {
+   "t": "function",
+   "src": "197927b2:3479"
+  },
+  "openProfilePicturePreview": {
+   "t": "function",
+   "src": "b32f99d5:2134"
+  },
+  "editPresent": {
+   "t": "function",
+   "src": "161ee55e:582"
+  },
+  "populateEditRecipientSelect": {
+   "t": "function",
+   "src": "dc8db5e2:806"
+  },
+  "saveEditedPresent": {
+   "t": "function",
+   "src": "10d08e85:2450"
+  },
+  "showEditPresentMessage": {
+   "t": "function",
+   "src": "d92a35b8:382"
+  },
+  "reorderPresentsList": {
+   "t": "function",
+   "src": "59929191:1403"
+  },
+  "reorderModalPresentsList": {
+   "t": "function",
+   "src": "30903c1:1694"
+  },
+  "getFullProfilePictureUrl": {
+   "t": "function",
+   "src": "9fa6b784:187"
+  },
+  "getEmojiAvatar": {
+   "t": "function",
+   "src": "7a4472d2:393"
+  },
+  "deletePresent": {
+   "t": "function",
+   "src": "94633bc4:1549"
+  },
+  "saveToPersistentCache": {
+   "t": "function",
+   "src": "e1a2a601:3510"
+  },
+  "loadFromPersistentCache": {
+   "t": "function",
+   "src": "18cbebd2:679"
+  },
+  "clearPersistentCache": {
+   "t": "function",
+   "src": "291d2f1d:240"
+  },
+  "softReloadRecipients": {
+   "t": "function",
+   "src": "19a7bac3:2352"
+  },
+  "updateChangedElementsOnly": {
+   "t": "function",
+   "src": "c30b7472:1886"
+  },
+  "updatePresentReservationUI": {
+   "t": "function",
+   "src": "96a3ac72:2268"
+  },
+  "updatePresentCheckUI": {
+   "t": "function",
+   "src": "25dd22ea:457"
+  },
+  "updatePresentInDOM": {
+   "t": "function",
+   "src": "2d0558f5:1538"
+  },
+  "addPresentToDOM": {
+   "t": "function",
+   "src": "2317c0ce:2300"
+  },
+  "addPresentToIdentifiedUserAccordion": {
+   "t": "function",
+   "src": "fd8e2729:3986"
+  },
+  "generateSinglePresentHTML": {
+   "t": "function",
+   "src": "d7355b02:1426"
+  },
+  "showToast": {
+   "t": "function",
+   "src": "b503c93d:2244"
+  },
+  "shareFormularzLink": {
+   "t": "function",
+   "src": "f85ddef4:777"
+  },
+  "applyPresentState": {
+   "t": "function",
+   "src": "3015dc80:883"
+  },
+  "undoPresentAction": {
+   "t": "function",
+   "src": "f640b06d:662"
+  },
+  "undoReservation": {
+   "t": "function",
+   "src": "5cbb99f6:279"
+  },
+  "undoCancelReservation": {
+   "t": "function",
+   "src": "31d168ca:356"
+  },
+  "undoCheck": {
+   "t": "function",
+   "src": "3a5da434:367"
+  },
+  "showSuccessToast": {
+   "t": "function",
+   "src": "a642ef36:73"
+  },
+  "showErrorToast": {
+   "t": "function",
+   "src": "b2229376:69"
+  },
+  "showInfoToast": {
+   "t": "function",
+   "src": "dfd037f6:67"
+  },
+  "loadRecipients": {
+   "t": "function",
+   "src": "90a14c16:245"
+  },
+  "clearRecipientsCache": {
+   "t": "function",
+   "src": "c562d54f:216"
+  },
+  "displayRecipientsData": {
+   "t": "function",
+   "src": "2c359983:2008"
+  },
+  "handleIdentificationLogic": {
+   "t": "function",
+   "src": "3143f9b3:2119"
+  },
+  "refreshRecipientsCache": {
+   "t": "function",
+   "src": "72c6c02:460"
+  },
+  "filterRecipients": {
+   "t": "function",
+   "src": "d79e4be5:1435"
+  },
+  "loadAllData": {
+   "t": "function",
+   "src": "bbc66eba:1595"
+  },
+  "checkIdentificationStatus": {
+   "t": "function",
+   "src": "88eb80ee:1887"
+  },
+  "loadStats": {
+   "t": "function",
+   "src": "42398b33:529"
+  },
+  "updateCumulativeProgress": {
+   "t": "function",
+   "src": "35e65f16:887"
+  },
+  "loadMyProfileWithData": {
+   "t": "function",
+   "src": "ad6b5465:1279"
+  },
+  "loadAvailablePresents": {
+   "t": "function",
+   "src": "e95783c5:614"
+  },
+  "loadAvailablePresentsWithData": {
+   "t": "function",
+   "src": "1e37f5a6:538"
+  },
+  "renderAvailablePresents": {
+   "t": "function",
+   "src": "8f5b2f16:5592"
+  },
+  "makeLinksClickable": {
+   "t": "function",
+   "src": "c093ae18:1726"
+  },
+  "loadMyReservations": {
+   "t": "function",
+   "src": "d349d9f6:612"
+  },
+  "loadMyReservationsWithData": {
+   "t": "function",
+   "src": "4dabac5:543"
+  },
+  "loadBoughtPresents": {
+   "t": "function",
+   "src": "7c3ecaa6:615"
+  },
+  "loadBoughtPresentsWithData": {
+   "t": "function",
+   "src": "cea0d2c1:397"
+  },
+  "renderPresentsList": {
+   "t": "function",
+   "src": "3a356d9f:6543"
+  },
+  "rerenderHomeSections": {
+   "t": "function",
+   "src": "c5cdea78:384"
+  },
+  "optimisticUpdatePresent": {
+   "t": "function",
+   "src": "bab72766:417"
+  },
+  "rollbackPresent": {
+   "t": "function",
+   "src": "30fdab98:273"
+  },
+  "refreshStatsCounters": {
+   "t": "function",
+   "src": "8dc5f751:272"
+  },
+  "beginOp": {
+   "t": "function",
+   "src": "1fac4510:36"
+  },
+  "endOp": {
+   "t": "function",
+   "src": "be91336c:139"
+  },
+  "reconcileWithServer": {
+   "t": "function",
+   "src": "d42628b2:758"
+  },
+  "reservePresent": {
+   "t": "function",
+   "src": "40b367c9:1414"
+  },
+  "unreservePresent": {
+   "t": "function",
+   "src": "72508ff8:1220"
+  },
+  "reReservePresent": {
+   "t": "function",
+   "src": "e2e14b40:1034"
+  },
+  "markAsBought": {
+   "t": "function",
+   "src": "f942cbba:1362"
+  },
+  "markAsUnbought": {
+   "t": "function",
+   "src": "37e43a70:1223"
+  },
+  "toggleTabBarMenu": {
+   "t": "function",
+   "src": "d3690670:382"
+  },
+  "toggleNotificationsPanel": {
+   "t": "function",
+   "src": "4cf431a0:1852"
+  },
+  "closeAllPanels": {
+   "t": "function",
+   "src": "fc4feb96:395"
+  },
+  "loadRecentNotifications": {
+   "t": "function",
+   "src": "9def06b:1462"
+  },
+  "displayNotifications": {
+   "t": "function",
+   "src": "6063435:4529"
+  },
+  "getNotificationMessage": {
+   "t": "function",
+   "src": "c4c3c90c:2797"
+  },
+  "escapeHtmlNotif": {
+   "t": "function",
+   "src": "16e9a068:163"
+  },
+  "highlightPresentItem": {
+   "t": "function",
+   "src": "b15540b0:818"
+  },
+  "scrollToPresentFromNotification": {
+   "t": "function",
+   "src": "30f5e1e9:1643"
+  },
+  "getTimeAgo": {
+   "t": "function",
+   "src": "184e37ca:504"
+  },
+  "markNotificationAsRead": {
+   "t": "function",
+   "src": "a511c78f:98"
+  },
+  "markNotificationsAsRead": {
+   "t": "function",
+   "src": "a22cb6cc:721"
+  },
+  "updateNotificationBadge": {
+   "t": "function",
+   "src": "d2490d0d:989"
+  },
+  "updateNotificationsForEditedPresent": {
+   "t": "function",
+   "src": "7fa43631:967"
+  },
+  "updateNotificationsForDeletedPresent": {
+   "t": "function",
+   "src": "dfb066ee:1388"
+  },
+  "updateMessagesBadge": {
+   "t": "function",
+   "src": "1612aaf3:559"
+  },
+  "resetDockAutoHide": {
+   "t": "function",
+   "src": "1367fc60:106"
+  },
+  "updateChecker": {
+   "t": "object",
+   "arr": false,
+   "n": 3
+  },
+  "realtimeUpdates": {
+   "t": "object",
+   "arr": false,
+   "n": 4
+  },
+  "_cachedRecipients": {
+   "t": "object",
+   "arr": true,
+   "n": 5
+  },
+  "_homeData": {
+   "t": "object",
+   "arr": false,
+   "n": 3
+  }
+ },
+ "lex": {
+  "currentUserId": {
+   "t": "object",
+   "isNull": true
+  },
+  "currentRecipientId": {
+   "t": "object",
+   "isNull": true
+  },
+  "pendingIdentificationRecipientId": {
+   "t": "object",
+   "isNull": true
+  },
+  "currentFilter": {
+   "t": "string",
+   "v": "all"
+  },
+  "searchTimeout": {
+   "t": "object",
+   "isNull": true
+  },
+  "VERIFIED_BADGE_SVG": {
+   "t": "string",
+   "v": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><polygon class=\"verified-badge-seal\" points=\"12 1.8 14.17 3.89 17.1 3.17 17.94 6.06 20.83 6.9 20.11 9.83 22.2 12 20.11 14.17 20.83 17.1 17.94 17.94 17.1 20.83 14.17 20.11 12 22.2 9.83 20.11 6.9 20.83 6.06 17.94 3.17 17.1 3.89 14.17 1.8 12 3.89 9.83 3.17 6.9 6.06 6.06 6.9 3.17 9.83 3.89\"/><path class=\"verified-badge-check\" d=\"M7.6 12.3l3 3 5.8-6.2\"/></svg>"
+  },
+  "_pendingPresentOps": {
+   "t": "number",
+   "v": 0
+  },
+  "_presentOpToken": {
+   "t": "number",
+   "v": 0
+  },
+  "_softReloadQueued": {
+   "t": "boolean",
+   "v": false
+  },
+  "oldDisplayRecipientsWithPresents": {
+   "t": "function",
+   "src": "6185c308:17978"
+  }
+ },
+ "globalNames": [
+  "AbsoluteOrientationSensor",
+  "Accelerometer",
+  "AudioDecoder",
+  "AudioEncoder",
+  "AudioPlaybackStats",
+  "AudioWorklet",
+  "AuthenticatorAssertionResponse",
+  "AuthenticatorAttestationResponse",
+  "AuthenticatorResponse",
+  "BatteryManager",
+  "Bluetooth",
+  "BluetoothCharacteristicProperties",
+  "BluetoothDevice",
+  "BluetoothRemoteGATTCharacteristic",
+  "BluetoothRemoteGATTDescriptor",
+  "BluetoothRemoteGATTServer",
+  "BluetoothRemoteGATTService",
+  "Cache",
+  "CacheStorage",
+  "CaptureController",
+  "Clipboard",
+  "ClipboardChangeEvent",
+  "ClipboardItem",
+  "CookieChangeEvent",
+  "CookieStore",
+  "CookieStoreManager",
+  "CreateMonitor",
+  "Credential",
+  "CredentialsContainer",
+  "CryptoKey",
+  "DeviceMotionEvent",
+  "DeviceMotionEventAcceleration",
+  "DeviceMotionEventRotationRate",
+  "DeviceOrientationEvent",
+  "DevicePosture",
+  "DigitalCredential",
+  "DocumentPictureInPicture",
+  "EyeDropper",
+  "FederatedCredential",
+  "FetchLaterResult",
+  "FileSystemDirectoryHandle",
+  "FileSystemFileHandle",
+  "FileSystemHandle",
+  "FileSystemObserver",
+  "FileSystemWritableFileStream",
+  "FontData",
+  "GPU",
+  "GPUAdapter",
+  "GPUAdapterInfo",
+  "GPUBindGroup",
+  "GPUBindGroupLayout",
+  "GPUBuffer",
+  "GPUBufferUsage",
+  "GPUCanvasContext",
+  "GPUColorWrite",
+  "GPUCommandBuffer",
+  "GPUCommandEncoder",
+  "GPUCompilationInfo",
+  "GPUCompilationMessage",
+  "GPUComputePassEncoder",
+  "GPUComputePipeline",
+  "GPUDevice",
+  "GPUDeviceLostInfo",
+  "GPUError",
+  "GPUExternalTexture",
+  "GPUInternalError",
+  "GPUMapMode",
+  "GPUOutOfMemoryError",
+  "GPUPipelineError",
+  "GPUPipelineLayout",
+  "GPUQuerySet",
+  "GPUQueue",
+  "GPURenderBundle",
+  "GPURenderBundleEncoder",
+  "GPURenderPassEncoder",
+  "GPURenderPipeline",
+  "GPUSampler",
+  "GPUShaderModule",
+  "GPUShaderStage",
+  "GPUSupportedFeatures",
+  "GPUSupportedLimits",
+  "GPUTexture",
+  "GPUTextureUsage",
+  "GPUTextureView",
+  "GPUUncapturedErrorEvent",
+  "GPUValidationError",
+  "GravitySensor",
+  "Gyroscope",
+  "HID",
+  "HIDConnectionEvent",
+  "HIDDevice",
+  "HIDInputReportEvent",
+  "IdentityCredential",
+  "IdentityCredentialError",
+  "IdentityProvider",
+  "IdleDetector",
+  "ImageCapture",
+  "ImageDecoder",
+  "ImageTrack",
+  "ImageTrackList",
+  "Keyboard",
+  "KeyboardLayoutMap",
+  "LanguageDetector",
+  "LinearAccelerationSensor",
+  "Lock",
+  "LockManager",
+  "MIDIAccess",
+  "MIDIConnectionEvent",
+  "MIDIInput",
+  "MIDIInputMap",
+  "MIDIMessageEvent",
+  "MIDIOutput",
+  "MIDIOutputMap",
+  "MIDIPort",
+  "MediaDeviceInfo",
+  "MediaDevices",
+  "MediaKeyMessageEvent",
+  "MediaKeySession",
+  "MediaKeyStatusMap",
+  "MediaKeySystemAccess",
+  "MediaKeys",
+  "NavigationPreloadManager",
+  "NavigatorLogin",
+  "NavigatorManagedData",
+  "OTPCredential",
+  "OrientationSensor",
+  "PasswordCredential",
+  "PaymentAddress",
+  "PaymentManager",
+  "PaymentMethodChangeEvent",
+  "PaymentRequest",
+  "PaymentRequestUpdateEvent",
+  "PaymentResponse",
+  "Presentation",
+  "PresentationAvailability",
+  "PresentationConnection",
+  "PresentationConnectionAvailableEvent",
+  "PresentationConnectionCloseEvent",
+  "PresentationConnectionList",
+  "PresentationReceiver",
+  "PresentationRequest",
+  "PressureObserver",
+  "PressureRecord",
+  "PrezentyEscape",
+  "ProtectedAudience",
+  "PublicKeyCredential",
+  "RelativeOrientationSensor",
+  "SKIP_RECIPIENTS_INIT",
+  "ScreenDetailed",
+  "ScreenDetails",
+  "Sensor",
+  "SensorErrorEvent",
+  "Serial",
+  "SerialPort",
+  "ServiceWorker",
+  "ServiceWorkerContainer",
+  "ServiceWorkerRegistration",
+  "SpeechRecognitionPhrase",
+  "StorageBucket",
+  "StorageBucketManager",
+  "StorageManager",
+  "SubtleCrypto",
+  "Summarizer",
+  "Translator",
+  "USB",
+  "USBAlternateInterface",
+  "USBConfiguration",
+  "USBConnectionEvent",
+  "USBDevice",
+  "USBEndpoint",
+  "USBInTransferResult",
+  "USBInterface",
+  "USBIsochronousInTransferPacket",
+  "USBIsochronousInTransferResult",
+  "USBIsochronousOutTransferPacket",
+  "USBIsochronousOutTransferResult",
+  "USBOutTransferResult",
+  "VideoDecoder",
+  "VideoEncoder",
+  "VirtualKeyboard",
+  "WGSLLanguageFeatures",
+  "WakeLock",
+  "WakeLockSentinel",
+  "WebTransport",
+  "WebTransportBidirectionalStream",
+  "WebTransportDatagramDuplexStream",
+  "WebTransportError",
+  "Worklet",
+  "XRAnchor",
+  "XRAnchorSet",
+  "XRBoundedReferenceSpace",
+  "XRCPUDepthInformation",
+  "XRCamera",
+  "XRCompositionLayer",
+  "XRCubeLayer",
+  "XRCylinderLayer",
+  "XRDOMOverlayState",
+  "XRDepthInformation",
+  "XREquirectLayer",
+  "XRFrame",
+  "XRHand",
+  "XRHitTestResult",
+  "XRHitTestSource",
+  "XRInputSource",
+  "XRInputSourceArray",
+  "XRInputSourceEvent",
+  "XRInputSourcesChangeEvent",
+  "XRJointPose",
+  "XRJointSpace",
+  "XRLayer",
+  "XRLayerEvent",
+  "XRLightEstimate",
+  "XRLightProbe",
+  "XRPlane",
+  "XRPlaneSet",
+  "XRPose",
+  "XRProjectionLayer",
+  "XRQuadLayer",
+  "XRRay",
+  "XRReferenceSpace",
+  "XRReferenceSpaceEvent",
+  "XRRenderState",
+  "XRRigidTransform",
+  "XRSession",
+  "XRSessionEvent",
+  "XRSpace",
+  "XRSubImage",
+  "XRSystem",
+  "XRTransientInputHitTestResult",
+  "XRTransientInputHitTestSource",
+  "XRView",
+  "XRViewerPose",
+  "XRViewport",
+  "XRVisibilityMaskChangeEvent",
+  "XRWebGLBinding",
+  "XRWebGLDepthInformation",
+  "XRWebGLLayer",
+  "XRWebGLSubImage",
+  "_cachedRecipients",
+  "_currentUserId",
+  "_homeData",
+  "addNewRecipientAndIdentify",
+  "addPresentFromModal",
+  "addPresentToDOM",
+  "addPresentToIdentifiedUserAccordion",
+  "addRecipient",
+  "addRecipientFromModal",
+  "animateModalPresentTransition",
+  "animatePresentTransition",
+  "applyFilter",
+  "applyPresentState",
+  "beginOp",
+  "beginPresentOp",
+  "bootstrap",
+  "caches",
+  "calculateContainerHeight",
+  "cancelIdentification",
+  "cancelReservationFromModal",
+  "cancelReservationFromRecipients",
+  "checkAuth",
+  "checkIdentificationStatus",
+  "clearPersistentCache",
+  "clearRecipientsCache",
+  "closeAllPanels",
+  "compressImage",
+  "confirmCancelIdentification",
+  "confirmSelfIdentification",
+  "convertUrlsToLinks",
+  "cookieStore",
+  "deletePresent",
+  "deleteRecipient",
+  "deleteRecipientConfirmed",
+  "deleteRecipientFromModal",
+  "deleteRecipientFromSelection",
+  "displayNotifications",
+  "displayRecipientsData",
+  "displayRecipientsWithPresents",
+  "displayReservedPresentsInModal",
+  "documentPictureInPicture",
+  "editPresent",
+  "endOp",
+  "endPresentOp",
+  "escapeAttr",
+  "escapeHtml",
+  "escapeHtmlNotif",
+  "escapeRegex",
+  "fastLoader",
+  "fetchLater",
+  "fetchWithTimeout",
+  "filterRecipients",
+  "focusSearch",
+  "formatCommentsPreview",
+  "generatePresentsList",
+  "generateProfilePictureHTML",
+  "generateReservationButton",
+  "generateSinglePresentHTML",
+  "getDigitalGoodsService",
+  "getEmojiAvatar",
+  "getFullProfilePictureUrl",
+  "getNotificationMessage",
+  "getScreenDetails",
+  "getSkeletonCardsHTML",
+  "getTimeAgo",
+  "handleBoughtClick",
+  "handleIdentificationLogic",
+  "handlePresentButtonClick",
+  "handleReserveClick",
+  "handleScrollToPresentFromNotification",
+  "hideNoResultsMessage",
+  "hideSearchDropdown",
+  "highlightPresentItem",
+  "highlightText",
+  "identifyAsRecipient",
+  "identifyAsRecipientFromSelection",
+  "initializeAnimations",
+  "initializeFAB",
+  "initializeSearchAndFilter",
+  "loadAllData",
+  "loadAvailablePresents",
+  "loadAvailablePresentsWithData",
+  "loadBoughtPresents",
+  "loadBoughtPresentsWithData",
+  "loadFromPersistentCache",
+  "loadMyProfileWithData",
+  "loadMyReservations",
+  "loadMyReservationsWithData",
+  "loadRecentNotifications",
+  "loadRecipients",
+  "loadRecipientsWithPresents",
+  "loadStats",
+  "logout",
+  "makeLinksClickable",
+  "markAsBought",
+  "markAsUnbought",
+  "markNotificationAsRead",
+  "markNotificationsAsRead",
+  "notificationText",
+  "ondevicemotion",
+  "ondeviceorientation",
+  "ondeviceorientationabsolute",
+  "onpointerrawupdate",
+  "openAddPresentModal",
+  "openAddRecipientModal",
+  "openChangePictureModal",
+  "openProfileModal",
+  "openProfilePicturePreview",
+  "openRecipientDetailsModal",
+  "openReservedPresentsModal",
+  "optimisticUpdatePresent",
+  "performSearch",
+  "plCount",
+  "plForm",
+  "plPlural",
+  "populateAddPresentModal",
+  "populateEditRecipientSelect",
+  "previewImage",
+  "queryLocalFonts",
+  "reReservePresent",
+  "realtimeUpdates",
+  "recipientNameWithBadge",
+  "reconcileWithServer",
+  "redirectIfAuthenticated",
+  "refreshPresentButtons",
+  "refreshRecipientsCache",
+  "refreshStatsCounters",
+  "renderAvailablePresents",
+  "renderPresentsList",
+  "reorderModalPresentsList",
+  "reorderPresentsList",
+  "rerenderHomeSections",
+  "reservePresent",
+  "reservePresentFromRecipients",
+  "resetDockAutoHide",
+  "returnToAddPresentModalWithNewRecipient",
+  "rollbackOptimisticUpdate",
+  "rollbackPresent",
+  "saveEditedPresent",
+  "saveImageToServer",
+  "saveNewProfilePicture",
+  "saveProfilePicture",
+  "saveToPersistentCache",
+  "scrollAndHighlight",
+  "scrollToElement",
+  "scrollToPresent",
+  "scrollToPresentById",
+  "scrollToPresentFromNotification",
+  "setupPresentButtonListeners",
+  "shareFormularzLink",
+  "showDirectoryPicker",
+  "showEditPresentMessage",
+  "showErrorModal",
+  "showErrorToast",
+  "showInfoToast",
+  "showModalMessage",
+  "showNoResultsMessage",
+  "showOpenFilePicker",
+  "showRecipientDetailsFromList",
+  "showRecipientSelectionModal",
+  "showReservedByOtherModal",
+  "showSaveFilePicker",
+  "showSearchDropdown",
+  "showSuccessMessage",
+  "showSuccessToast",
+  "showToast",
+  "softReloadRecipients",
+  "toggleNotificationsPanel",
+  "togglePresentFromModal",
+  "togglePresentFromRecipients",
+  "toggleTabBarMenu",
+  "uidEvent",
+  "undoCancelReservation",
+  "undoCheck",
+  "undoPresentAction",
+  "undoReservation",
+  "unreservePresent",
+  "updateAccordionBoughtCount",
+  "updateButtonOptimistically",
+  "updateCacheOptimistically",
+  "updateChangedElementsOnly",
+  "updateChecker",
+  "updateCumulativeProgress",
+  "updateMessagesBadge",
+  "updateModalBadgeCounts",
+  "updateModalPresentCheckStatus",
+  "updateNotificationBadge",
+  "updateNotificationsForDeletedPresent",
+  "updateNotificationsForEditedPresent",
+  "updatePresentCheckStatus",
+  "updatePresentCheckUI",
+  "updatePresentInDOM",
+  "updatePresentItemOptimistically",
+  "updatePresentReservationUI",
+  "updateProgressBar"
+ ],
+ "styles": {
+  "body": {
+   "count": 1,
+   "style": {
+    "display": "block",
+    "position": "static",
+    "width": "1024px",
+    "height": "2579.92px",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "0px",
+    "padding-bottom": "24px",
+    "padding-left": "292px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "visible",
+    "overflow-y": "visible",
+    "z-index": "auto",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    0,
+    0,
+    1024,
+    2580
+   ],
+   "cls": "has-tab-bar has-desktop-nav"
+  },
+  "main": {
+   "count": 0
+  },
+  ".navbar": {
+   "count": 1,
+   "style": {
+    "display": "none",
+    "position": "relative",
+    "width": "100%",
+    "height": "auto",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "32px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "16px",
+    "padding-bottom": "16px",
+    "padding-left": "0px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "visible",
+    "overflow-y": "visible",
+    "z-index": "auto",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "cls": "navbar navbar-expand-lg navbar-dark stats-navbar"
+  },
+  "header": {
+   "count": 0
+  },
+  ".container": {
+   "count": 1,
+   "style": {
+    "display": "block",
+    "position": "static",
+    "width": "732px",
+    "height": "2555.92px",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "24px",
+    "padding-right": "24px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "hidden",
+    "overflow-y": "auto",
+    "z-index": "auto",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    292,
+    0,
+    732,
+    2556
+   ],
+   "cls": "container"
+  },
+  ".accordion-item": {
+   "count": 3,
+   "style": {
+    "display": "block",
+    "position": "static",
+    "width": "602px",
+    "height": "1349.73px",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgb(255, 255, 255)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "0px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "visible",
+    "overflow-y": "visible",
+    "z-index": "auto",
+    "border-top-width": "1px",
+    "border-radius": "6px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    357,
+    313,
+    602,
+    1350
+   ],
+   "cls": "accordion-item"
+  },
+  ".accordion-button": {
+   "count": 3,
+   "style": {
+    "display": "flex",
+    "position": "relative",
+    "width": "600px",
+    "height": "52px",
+    "color": "rgb(255, 255, 255)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "600",
+    "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "16px",
+    "padding-bottom": "16px",
+    "padding-left": "20px",
+    "padding-right": "20px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "visible",
+    "overflow-y": "visible",
+    "z-index": "auto",
+    "border-top-width": "0px",
+    "border-radius": "5px 5px 0px 0px",
+    "flex-direction": "row",
+    "line-height": "19.2px"
+   },
+   "rect": [
+    358,
+    314,
+    600,
+    52
+   ],
+   "cls": "accordion-button"
+  },
+  ".present-name": {
+   "count": 0
+  },
+  ".reserve-btn": {
+   "count": 0
+  },
+  "#personFilter": {
+   "count": 0
+  },
+  "#recipientSearch": {
+   "count": 0
+  },
+  ".modal": {
+   "count": 5,
+   "style": {
+    "display": "none",
+    "position": "fixed",
+    "width": "100%",
+    "height": "100%",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "0px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "0",
+    "overflow-x": "hidden",
+    "overflow-y": "auto",
+    "z-index": "1055",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "cls": "modal fade"
+  },
+  "#editPresentModal": {
+   "count": 1,
+   "style": {
+    "display": "none",
+    "position": "fixed",
+    "width": "100%",
+    "height": "100%",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "0px",
+    "padding-bottom": "0px",
+    "padding-left": "0px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "0",
+    "overflow-x": "hidden",
+    "overflow-y": "auto",
+    "z-index": "1055",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "cls": "modal fade"
+  },
+  ".fab": {
+   "count": 0
+  },
+  ".bottom-tab-bar": {
+   "count": 1,
+   "style": {
+    "display": "none",
+    "position": "fixed",
+    "width": "auto",
+    "height": "auto",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgba(255, 255, 255, 0.88)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "auto",
+    "margin-right": "auto",
+    "padding-top": "6px",
+    "padding-bottom": "6px",
+    "padding-left": "0px",
+    "padding-right": "0px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "visible",
+    "overflow-y": "visible",
+    "z-index": "1000",
+    "border-top-width": "2px",
+    "border-radius": "20px",
+    "flex-direction": "row",
+    "line-height": "24px"
+   },
+   "rect": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "cls": "bottom-tab-bar"
+  },
+  "#availablePresentsList": {
+   "count": 1,
+   "style": {
+    "display": "flex",
+    "position": "static",
+    "width": "600px",
+    "height": "1295.73px",
+    "color": "rgb(33, 37, 41)",
+    "background-color": "rgba(0, 0, 0, 0)",
+    "font-size": "16px",
+    "font-weight": "400",
+    "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "14px",
+    "padding-bottom": "14px",
+    "padding-left": "14px",
+    "padding-right": "14px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "visible",
+    "overflow-y": "visible",
+    "z-index": "auto",
+    "border-top-width": "0px",
+    "border-radius": "0px",
+    "flex-direction": "column",
+    "line-height": "24px"
+   },
+   "rect": [
+    358,
+    366,
+    600,
+    1296
+   ],
+   "cls": ""
+  },
+  ".present-actions": {
+   "count": 0
+  },
+  ".btn-reserve": {
+   "count": 7,
+   "style": {
+    "display": "inline-flex",
+    "position": "relative",
+    "width": "118.828px",
+    "height": "48px",
+    "color": "rgb(255, 255, 255)",
+    "background-color": "rgb(245, 124, 0)",
+    "font-size": "13px",
+    "font-weight": "600",
+    "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+    "margin-top": "0px",
+    "margin-bottom": "0px",
+    "margin-left": "0px",
+    "margin-right": "0px",
+    "padding-top": "6px",
+    "padding-bottom": "6px",
+    "padding-left": "16px",
+    "padding-right": "16px",
+    "visibility": "visible",
+    "opacity": "1",
+    "overflow-x": "hidden",
+    "overflow-y": "hidden",
+    "z-index": "2",
+    "border-top-width": "0px",
+    "border-radius": "16px",
+    "flex-direction": "row",
+    "line-height": "19.5px"
+   },
+   "rect": [
+    792,
+    468,
+    119,
+    48
+   ],
+   "cls": "btn btn-sm btn-reserve"
+  },
+  ".badge": {
+   "count": 0
+  },
+  "__counts": {
+   "all": 469,
+   "scripts": 24
+  }
+ },
+ "text": "Ogólny postęp Kupione prezenty 55/156 Zarezerwowane prezenty 41/156 Dostępne prezenty 😸 Anna Kowalska 2 prezenty Książka o gotowaniu Coś o kuchni włoskiej Zarezerwuj 🔗 https://www.sklep-z-prezentami.example.com/katalog/zabawk... Zarezerwuj 🐶 Jan Nowak 1 prezent Kubek termiczny Zarezerwuj 🐶 Maria Wiśniewska 2 prezenty Roślina doniczkowa Monstera lub fikus Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa Zarezerwuj 🐮 Konstantynopolitańczykowianeczkaniezwykła 1 prezent Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty Zarezerwuj 😎 Zuzia & \"Zuza\" <mała> 'Z' 1 prezent Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku Zarezerwuj Moje rezerwacje Brak zarezerwowanych prezentów Kupione 🐶 Jan Nowak 1 prezent Słuchawki bezprzewodowe Najlepiej Sony lub Bose Anuluj zakup 🐮 Konstantynopolitańczykowianeczkaniezwykła 1 prezent Puzzle 2000 elementów Widok górski Anuluj zakup Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+ "fullText": "Strona główna Ogólny postęp Kupione prezenty 55/156 Zarezerwowane prezenty 41/156 Dostępne prezenty 😸 Anna Kowalska 2 prezenty Książka o gotowaniu Coś o kuchni włoskiej Zarezerwuj 🔗https://www.sklep-z-prezentami.example.com/katalog/zabawk... Zarezerwuj 🐶 Jan Nowak 1 prezent Kubek termiczny Zarezerwuj 🐶 Maria Wiśniewska 2 prezenty Roślina doniczkowa Monstera lub fikus Zarezerwuj Ciepły wełniany szalik w kolorze butelkowej zieleni dla Murphy Najlepiej z merynosa Zarezerwuj 🐮 Konstantynopolitańczykowianeczkaniezwykła 1 prezent Niezwyklenieprawdopodobnieskomplikowanazabawkaedukacyjnadladzieci Bardzo długie jednowyrazowe tytuły nie mogą rozpychać karty Zarezerwuj 😎 Zuzia & \"Zuza\" <mała> 'Z' 1 prezent Zestaw <script>alert(1)</script> & \"mega\" 'mini' Opis z & < > \" ' w środku Zarezerwuj Moje rezerwacje Brak zarezerwowanych prezentów Kupione 🐶 Jan Nowak 1 prezent Słuchawki bezprzewodowe Najlepiej Sony lub Bose Anuluj zakup 🐮 Konstantynopolitańczykowianeczkaniezwykła 1 prezent Puzzle 2000 elementów Widok górski Anuluj zakup Główna 4 Aktywność 2 Czat Dodaj Menu Wszystkie prezenty Zarezerwowane prezenty Ranking Edytuj moje prezenty Ustawienia Archiwum Wyloguj Powiadomienia Ładowanie... Zobacz wszystkie powiadomienia Potwierdź swoją tożsamość Czy to jesteś Ty? Chcesz zidentyfikować się jako ? Po identyfikacji możesz zarządzać swoimi prezentami. Anuluj Nie, to nie ja Tak, to jestem ja Wybierz swoje imię Która osoba to Ty? Wybierz swoje imię z listy lub dodaj nowe Dostępne osoby: Dodaj nową osobę: Dodaj i zidentyfikuj Jeśli nie widzisz swojego imienia, dodaj je tutaj Zamknij Anuluj identyfikację Czy na pewno chcesz anulować identyfikację? Identyfikacja jako zostanie anulowana. Możesz ponownie się zidentyfikować w każdej chwili. Nie, zostaw Tak, anuluj Podgląd zdjęcia profilowego Wyślij anonimową wiadomość 🎅 Edytuj prezent Zmień informacje o prezencie Jaki prezent? Dla kogo? Wybierz osobę Dodatkowe informacje Anuluj Zapisz zmiany Prezenty e2e Strona główna Aktywność 4 Wszystkie prezenty Ranking Dodaj prezent Zarezerwowane Anonimowe wiadomości 2 Edytuj moje prezenty Archiwum Ustawienia Wyloguj",
+ "scriptSrcs": [
+  "pluralize-pl.js",
+  "notification-text.js",
+  "escape-html.js",
+  "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
+  "fast-loader.js",
+  "recipients-core.js?v=1",
+  "recipients-startup.js?v=1",
+  "recipients-list.js?v=1",
+  "recipients-identify.js?v=1",
+  "recipients-present-actions.js?v=1",
+  "recipients-helpers.js?v=1",
+  "recipients-modals.js?v=1",
+  "recipients-optimistic.js?v=1",
+  "recipients-edit.js?v=1",
+  "recipients-sync.js?v=1",
+  "recipients-toast-undo.js?v=1",
+  "update-checker.js",
+  "realtime-updates.js?v=2",
+  "home-page-auth.js?v=1",
+  "home-page.js?v=1",
+  "tab-bar-functions.js?v=19",
+  "desktop-nav.js?v=5"
+ ]
+}

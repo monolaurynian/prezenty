@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strona główna - Prezentownik</title>
+
+    <!-- Force cache refresh for users with old version -->
+    <script>
+        (function () {
+            const PAGE_VERSION = '3.0.0'; // Increment this when making breaking changes
+            const storedVersion = localStorage.getItem('homePageVersion');
+
+            if (storedVersion !== PAGE_VERSION) {
+                console.log('New version detected, clearing cache and service worker...');
+                localStorage.setItem('homePageVersion', PAGE_VERSION);
+
+                // Clear service worker cache
+                if ('caches' in window) {
+                    caches.keys().then(function (names) {
+                        for (let name of names) {
+                            caches.delete(name);
+                        }
+                    });
+                }
+
+                // Unregister service worker to force fresh install
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                        for (let registration of registrations) {
+                            registration.unregister();
+                        }
+                    });
+                }
+
+                // Only reload once to prevent infinite loop
+                if (!sessionStorage.getItem('homePageReloaded')) {
+                    sessionStorage.setItem('homePageReloaded', 'true');
+                    setTimeout(() => {
+                        window.location.reload(true);
+                    }, 500);
+                }
+            }
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.deduped.min.css">
+    <link href="bottom-tab-bar.css?v=42" rel="stylesheet">
+    <link href="app-theme.css?v=14" rel="stylesheet">
+    <link href="home-page.css?v=1" rel="stylesheet">
+    <!-- Manifest (required for PWA install prompt) -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png?v=1">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96.png?v=1">
+
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
+
+    <link rel="apple-touch-icon" href="icon-180.png?v=4">
+    <script src="pluralize-pl.js"></script>
+    <script src="notification-text.js"></script>
+    <script src="escape-html.js"></script>
+</head>
+
+<body class="has-tab-bar">
+    <div class="background-overlay"></div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark stats-navbar">
+        <div class="container-fluid">
+            <div class="navbar-brand">
+                <div class="brand-container" style="display: flex; align-items: center; gap: 15px;">
+                    <span class="brand-text">
+                        <i class="fas fa-home me-2"></i>Strona główna
+                    </span>
+                </div>
+            </div>
+            <!-- User avatar - filled in by JS, links to settings -->
+            <a href="/ustawienia" id="userAvatarLink" title="Twój profil i ustawienia"
+                style="position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+                       width: 42px; height: 42px; border-radius: 50%; overflow: hidden;
+                       border: 2px solid rgba(255, 255, 255, 0.7); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+                       display: none; align-items: center; justify-content: center;
+                       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                       color: white; font-size: 20px; text-decoration: none;">
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Cumulative Progress Bars -->
+        <div id="cumulativeProgressSection" class="stats-container">
+            <h5 style="color: #2d3748; font-weight: 700; margin-bottom: 16px; text-align: center; font-size: 1rem;">
+                <i class="fas fa-chart-line me-2"></i>Ogólny postęp
+            </h5>
+            <!-- Buying Progress -->
+            <div style="margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
+                        <i class="fas fa-shopping-bag" style="color: #43A047; margin-right: 8px;"></i>Kupione prezenty
+                    </label>
+                    <span id="boughtStats" style="font-weight: 600; color: #43A047; font-size: 16px;">0/0</span>
+                </div>
+                <div style="background: #e4e6e9; border-radius: 10px; height: 14px; overflow: hidden;">
+                    <div id="boughtProgressBar"
+                        style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.5s ease;">
+                    </div>
+                </div>
+            </div>
+            <!-- Reserved vs Available Progress -->
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <label style="font-weight: 600; color: #2d3748; margin: 0; font-size: 16px;">
+                        <i class="fas fa-bookmark" style="color: #EF6C00; margin-right: 8px;"></i>Zarezerwowane prezenty
+                    </label>
+                    <span id="reservedStats" style="font-weight: 600; color: #EF6C00; font-size: 16px;">0/0</span>
+                </div>
+                <div style="background: #e4e6e9; border-radius: 10px; height: 14px; overflow: hidden; display: flex;">
+                    <div id="reservedProgressBar"
+                        style="background: linear-gradient(90deg, #FF9800, #F57C00); height: 100%; width: 0%; transition: width 0.5s ease;">
+                    </div>
+                    <div id="availableProgressBar" style="background: transparent; height: 100%; flex: 1;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Profile card removed - profile lives in Ustawienia,
+             own presents editing lives in the formularz edit tab -->
+
+        <!-- Available Presents List -->
+        <div id="availablePresentsSection" class="stats-container">
+            <div class="accordion" id="accordionAvailable">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseAvailable" aria-expanded="true"
+                            style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; font-weight: 600;">
+                            <i class="fas fa-gifts me-2"></i>Dostępne prezenty
+                        </button>
+                    </h2>
+                    <div id="collapseAvailable" class="accordion-collapse collapse show"
+                        data-bs-parent="#accordionAvailable">
+                        <div class="accordion-body" style="padding: 0;">
+                            <div id="availablePresentsList">
+                                <div class="skeleton-cards" aria-hidden="true" style="padding: 14px;">
+                                    <div class="skeleton-card">
+                                        <div class="skeleton skeleton-avatar"></div>
+                                        <div class="skeleton-lines">
+                                            <div class="skeleton skeleton-line" style="width: 45%;"></div>
+                                            <div class="skeleton skeleton-line" style="width: 70%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="skeleton-card">
+                                        <div class="skeleton skeleton-avatar"></div>
+                                        <div class="skeleton-lines">
+                                            <div class="skeleton skeleton-line" style="width: 55%;"></div>
+                                            <div class="skeleton skeleton-line" style="width: 65%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="visually-hidden" role="status">Ładowanie...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Reservations -->
+        <div id="myReservationsSection" class="stats-container">
+            <div class="accordion" id="accordionReservations">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseReservations" aria-expanded="true"
+                            style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; font-weight: 600;">
+                            <i class="fas fa-bookmark me-2"></i>Moje rezerwacje
+                        </button>
+                    </h2>
+                    <div id="collapseReservations" class="accordion-collapse collapse show"
+                        data-bs-parent="#accordionReservations">
+                        <div class="accordion-body" style="padding: 0;">
+                            <div id="myReservationsList">
+                                <div class="skeleton-cards" aria-hidden="true" style="padding: 14px;">
+                                    <div class="skeleton-card">
+                                        <div class="skeleton skeleton-avatar"></div>
+                                        <div class="skeleton-lines">
+                                            <div class="skeleton skeleton-line" style="width: 50%;"></div>
+                                            <div class="skeleton skeleton-line" style="width: 68%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="visually-hidden" role="status">Ładowanie...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bought Presents -->
+        <div id="boughtPresentsSection" class="stats-container">
+            <div class="accordion" id="accordionBought">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapseBought" aria-expanded="true"
+                            style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; font-weight: 600;">
+                            <i class="fas fa-check-circle me-2"></i>Kupione
+                        </button>
+                    </h2>
+                    <div id="collapseBought" class="accordion-collapse collapse show" data-bs-parent="#accordionBought">
+                        <div class="accordion-body" style="padding: 0;">
+                            <div id="boughtPresentsList">
+                                <div class="skeleton-cards" aria-hidden="true" style="padding: 14px;">
+                                    <div class="skeleton-card">
+                                        <div class="skeleton skeleton-avatar"></div>
+                                        <div class="skeleton-lines">
+                                            <div class="skeleton skeleton-line" style="width: 40%;"></div>
+                                            <div class="skeleton skeleton-line" style="width: 72%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="visually-hidden" role="status">Ładowanie...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Fast loader (load first for instant cache access) -->
+    <script src="fast-loader.js"></script>
+
+    <script>
+        // Flag to prevent recipients.js from auto-initializing
+        window.SKIP_RECIPIENTS_INIT = true;
+
+        // Set current user ID for recipients.js functions
+        window._currentUserId = null;
+    </script>
+
+    <!-- Load recipients.js for shared functions (but don't auto-init) -->
+    <script src="recipients.js?v=25&t=1111111111"></script>
+
+    <!-- Non-critical scripts (defer to load after page is interactive) -->
+    <script src="update-checker.js" defer></script>
+    <script src="realtime-updates.js?v=2" defer></script>
+
+    <script src="home-page-auth.js?v=1"></script>
+
+    <script src="home-page.js?v=1"></script>
+
+    <!-- Toast container (showToast from recipients.js targets these) -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span id="successToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="errorToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="infoToast" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span id="infoToastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Tab Bar -->
+    <div class="bottom-tab-bar">
+        <div class="tab-bar-container">
+            <a href="/" class="tab-item home-tab active">
+                <i class="ri-home-fill"></i>
+                <span>Główna</span>
+            </a>
+            <a href="#" class="tab-item activity-tab" onclick="toggleNotificationsPanel(); return false;">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-notification-3-line"></i>
+                    <span class="notification-badge" id="activityBadge" style="display: none;"></span>
+                </div>
+                <span>Aktywność</span>
+            </a>
+            <div class="tab-spacer"></div>
+            <a href="wiadomosci.html" class="tab-item messages-tab">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-chat-private-line"></i>
+                    <span class="notification-badge" id="messagesBadge" style="display: none;"></span>
+                </div>
+                <span>Czat</span>
+            </a>
+            <a href="formularz.html" class="tab-item form-tab">
+                <i class="ri-gift-line"></i>
+                <span>Dodaj</span>
+            </a>
+        </div>
+        <div class="tab-fab" onclick="toggleTabBarMenu()">
+            <i class="ri-menu-line"></i>
+        </div>
+    </div>
+
+    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;">
+    </div>
+
+    <div class="tab-bar-menu-panel" id="tabBarMenuPanel">
+        <div class="tab-bar-menu-header">
+            <h5><i class="ri-menu-line me-2"></i>Menu</h5>
+            <button class="tab-bar-menu-close" onclick="toggleTabBarMenu()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-menu-content">
+            <!-- Primary actions - kept in easy thumb reach -->
+            <a href="recipients.html" class="tab-bar-menu-item">
+                <i class="ri-gift-2-line"></i>
+                <span>Wszystkie prezenty</span>
+            </a>
+            <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
+                <i class="ri-bookmark-line"></i>
+                <span>Zarezerwowane prezenty</span>
+            </a>
+            <a href="leaderboard.html" class="tab-bar-menu-item">
+                <i class="ri-trophy-line"></i>
+                <span>Ranking</span>
+            </a>
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item"
+                onclick="localStorage.setItem('openEditTab', 'true');">
+                <i class="ri-edit-line"></i>
+                <span>Edytuj moje prezenty</span>
+            </a>
+            <div class="tab-bar-menu-divider"></div>
+            <!-- Secondary quick actions: compact tiles, share-sheet style -->
+            <div class="tab-bar-menu-secondary">
+                <a href="ustawienia.html" class="tab-bar-menu-tile">
+                    <i class="ri-settings-3-line"></i>
+                    <span>Ustawienia</span>
+                </a>
+                <a href="archiwum.html" class="tab-bar-menu-tile">
+                    <i class="ri-archive-line"></i>
+                    <span>Archiwum</span>
+                </a>
+                <a href="#" class="tab-bar-menu-tile tile-logout" onclick="logout(); return false;">
+                    <i class="ri-logout-box-r-line"></i>
+                    <span>Wyloguj</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-bar-notifications-panel" id="notificationsPanel"
+        style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="tab-bar-notifications-header"
+            style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
+            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i
+                    class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
+            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()"
+                style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-notifications-content" id="notificationsContent"
+            style="flex: 1; overflow-y: auto; background: #ffffff;">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Ładowanie...</span>
+                </div>
+            </div>
+        </div>
+        <div class="tab-bar-notifications-view-all"
+            style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
+            <a href="activity.html"
+                style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie
+                powiadomienia</a>
+        </div>
+    </div>
+
+    <!-- Self Identification Modal -->
+    <div class="modal fade" id="selfIdentificationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-check me-2"></i>Potwierdź swoją tożsamość
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-user-circle fa-3x text-primary"></i>
+                        </div>
+                        <h6 class="text-muted mb-3">Czy to jesteś Ty?</h6>
+                        <p class="mb-0">Chcesz zidentyfikować się jako <strong id="identificationRecipientName"
+                                class="text-primary"></strong>?</p>
+                        <small class="text-muted d-block mt-2">Po identyfikacji możesz zarządzać swoimi
+                            prezentami.</small>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <div class="d-flex flex-column flex-md-row gap-3 w-100 justify-content-center align-items-center">
+                        <button type="button" class="btn btn-secondary btn-lg order-3 order-md-1"
+                            data-bs-dismiss="modal" style="min-width: 140px;">
+                            <i class="fas fa-times me-1"></i>Anuluj
+                        </button>
+                        <button type="button" class="btn btn-warning btn-lg order-2"
+                            onclick="showRecipientSelectionModal()"
+                            style="background: linear-gradient(135deg, #ffc107, #e0a800); border: 2px solid #ffc107; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3); min-width: 160px;">
+                            <i class="fas fa-search me-1"></i>Nie, to nie ja
+                        </button>
+                        <button type="button" class="btn btn-success btn-lg order-1 order-md-3"
+                            onclick="confirmSelfIdentification()"
+                            style="background: linear-gradient(135deg, #28a745, #1e7e34); border: 2px solid #28a745; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); min-width: 180px;">
+                            <i class="fas fa-check me-1"></i>Tak, to jestem ja
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipient Selection Modal -->
+    <div class="modal fade" id="recipientSelectionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-users me-2"></i>Wybierz swoje imię
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-user-plus fa-2x text-success"></i>
+                        </div>
+                        <h6 class="text-muted">Która osoba to Ty?</h6>
+                        <p class="text-muted mb-0">Wybierz swoje imię z listy lub dodaj nowe</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="mb-3">
+                            <i class="fas fa-list me-2"></i>Dostępne osoby:
+                        </h6>
+                        <div id="availableRecipientsList" class="list-group">
+                            <!-- Lista będzie generowana dynamicznie -->
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="mb-3">
+                        <h6 class="mb-3">
+                            <i class="fas fa-plus-circle me-2"></i>Dodaj nową osobę:
+                        </h6>
+                        <form id="newRecipientForm">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="newRecipientName"
+                                    placeholder="Wprowadź swoje imię i nazwisko" required
+                                    style="border: 2px solid #007bff; border-radius: 8px; padding: 12px; font-size: 16px;">
+                            </div>
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-success w-100"
+                                    onclick="addNewRecipientAndIdentify()">
+                                    <i class="fas fa-plus me-1"></i>Dodaj i zidentyfikuj
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">Jeśli nie widzisz swojego imienia, dodaj je
+                                tutaj</small>
+                        </form>
+                    </div>
+                    <div id="recipientSelectionMessage" class="alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Zamknij
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Identification Modal -->
+    <div class="modal fade" id="cancelIdentificationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-times me-2"></i>Anuluj identyfikację
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+                        </div>
+                        <h6 class="text-muted mb-3">Czy na pewno chcesz anulować identyfikację?</h6>
+                        <p class="mb-0">Identyfikacja jako <strong
+                                id="cancelIdentificationRecipientName" class="text-primary"></strong> zostanie anulowana.</p>
+                        <small class="text-muted d-block mt-2">Możesz ponownie się zidentyfikować w każdej
+                            chwili.</small>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Nie, zostaw
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="confirmCancelIdentification()">
+                        <i class="fas fa-check me-1"></i>Tak, anuluj
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Picture Preview Modal -->
+    <div class="modal fade profile-preview-modal" id="profilePreviewModal" tabindex="-1"
+        aria-labelledby="profilePreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="profilePreviewModalLabel">Podgląd zdjęcia profilowego</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="profilePreviewImage" class="profile-preview-image" alt="Zdjęcie profilowe">
+                    <div id="profilePreviewEmoji"
+                         style="display: none; width: 160px; height: 160px; margin: 0 auto; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-size: 76px; line-height: 160px; text-align: center;"></div>
+                    <div id="profilePreviewName" class="profile-preview-name mt-3"></div>
+                    <a id="profilePreviewMessageLink" href="#" class="btn btn-sm fw-semibold mt-3"
+                       style="display: none; background: #7B1FA2; color: #ffffff !important; border-radius: 10px;">
+                        <i class="fas fa-user-secret me-1"></i>Wyślij anonimową wiadomość 🎅
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Present Modal -->
+    <div class="modal fade" id="editPresentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content aws-modal">
+                <div class="modal-header aws-modal-header">
+                    <div class="aws-modal-title-section">
+                        <h5 class="modal-title">
+                            <i class="fas fa-edit me-2"></i>Edytuj prezent
+                        </h5>
+                        <p class="aws-modal-subtitle">Zmień informacje o prezencie</p>
+                    </div>
+                    <button type="button" class="btn-close aws-close-btn" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body aws-modal-body">
+                    <form id="editPresentForm" class="aws-form">
+                        <input type="hidden" id="editPresentId">
+                        <div class="aws-form-section">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="aws-form-group">
+                                        <label for="editPresentTitle" class="form-label aws-form-label">
+                                            <i class="fas fa-gift me-1"></i>Jaki prezent?
+                                        </label>
+                                        <input type="text" class="form-control aws-form-control" id="editPresentTitle"
+                                            placeholder="Wprowadź nazwę prezentu" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="aws-form-group">
+                                        <label for="editRecipientSelect" class="form-label aws-form-label">
+                                            <i class="fas fa-user me-1"></i>Dla kogo?
+                                        </label>
+                                        <select class="form-control aws-form-control" id="editRecipientSelect" required>
+                                            <option value="">Wybierz osobę</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="aws-form-section">
+                            <div class="aws-form-group">
+                                <label for="editPresentComments" class="form-label aws-form-label">
+                                    <i class="fas fa-comment me-1"></i>Dodatkowe informacje
+                                </label>
+                                <textarea class="form-control aws-form-control" id="editPresentComments" rows="3"
+                                    placeholder="Opis, linki, uwagi, gdzie kupić..."></textarea>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="editPresentMessage" class="alert aws-alert mt-3" style="display: none;"></div>
+                </div>
+                <div class="modal-footer aws-modal-footer">
+                    <button type="button" class="btn aws-btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Anuluj
+                    </button>
+                    <button type="button" class="btn aws-btn-primary" onclick="saveEditedPresent()">
+                        <i class="fas fa-save me-1"></i>Zapisz zmiany
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="tab-bar-functions.js?v=19"></script>
+    <script src="desktop-nav.js?v=5"></script>
+</body>
+
+</html>

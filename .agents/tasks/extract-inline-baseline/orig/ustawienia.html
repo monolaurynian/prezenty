@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ustawienia - Życzenia Prezentowe</title>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="theme-color" content="#F44336">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png?v=1">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96.png?v=1">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
+    <link rel="apple-touch-icon" href="icon-180.png?v=4">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="styles.deduped.min.css" rel="stylesheet">
+    <link href="bottom-tab-bar.css?v=42" rel="stylesheet">
+    <link href="app-theme.css?v=14" rel="stylesheet">
+    <style>
+        html, body { overflow-x: hidden; max-width: 100vw; }
+        body {
+            background-image: url('seba.jpg') !important;
+            background-attachment: fixed !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+        }
+        .background-overlay {
+            position: fixed; inset: 0;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            z-index: -1;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(16px) saturate(160%);
+            -webkit-backdrop-filter: blur(16px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+            border-radius: 20px;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+        .glass-card * { color: #2d3748; }
+        .glass-card .form-control, .glass-card .form-select {
+            color: #212529;
+            background: #ffffff;
+        }
+        .section-title {
+            font-weight: 700; font-size: 17px;
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 4px;
+        }
+        .section-desc { font-size: 14px; opacity: 0.85; margin-bottom: 14px; }
+        .profile-pic {
+            width: 96px; height: 96px; border-radius: 50%;
+            object-fit: cover; border: 3px solid rgba(0,0,0,0.1);
+            background: #eef0f2;
+            font-size: 44px; display: flex; align-items: center; justify-content: center;
+        }
+        .toast-container { z-index: 9999; }
+        #successToast, #errorToast, #successToast *, #errorToast * { text-shadow: none; }
+    </style>
+    <!-- Manifest (required for PWA install prompt) -->
+    <link rel="manifest" href="manifest.json">
+    <script src="pluralize-pl.js"></script>
+    <script src="notification-text.js"></script>
+</head>
+<body class="has-tab-bar">
+    <div class="background-overlay"></div>
+
+    <div class="container mt-4 mb-5" style="max-width: 640px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="/" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Powrót
+            </a>
+            <h5 class="mb-0 text-white" style="text-shadow: 0 2px 6px rgba(0,0,0,0.7);">
+                <i class="fas fa-cog me-2"></i>Ustawienia
+            </h5>
+        </div>
+
+        <!-- My profile -->
+        <div class="glass-card p-4" id="profileSection">
+            <div class="section-title"><i class="fas fa-user-circle"></i>Mój profil</div>
+            <div class="section-desc">Powiedz aplikacji, kim jesteś na liście osób. Dzięki temu nie zobaczysz spoilerów o swoich prezentach.</div>
+            <div id="profileContent">
+                <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-light"></div></div>
+            </div>
+        </div>
+
+        <!-- Manage people (includes adding new people) -->
+        <div class="glass-card p-4" id="dodaj-osobe">
+            <div class="section-title"><i class="fas fa-users-gear"></i>Zarządzanie osobami</div>
+            <div class="section-desc">Dodawaj nowe osoby, edytuj lub usuwaj prezenty niezidentyfikowanych osób, albo usuń całe osoby z listy.</div>
+            <a href="/osoby" class="btn btn-light fw-semibold" style="color:#212529;">
+                <i class="fas fa-arrow-right me-1"></i>Otwórz zarządzanie
+            </a>
+        </div>
+
+        <!-- Notifications -->
+        <div class="glass-card p-4">
+            <div class="section-title"><i class="fas fa-bell"></i>Powiadomienia</div>
+            <div class="section-desc">Dostawaj powiadomienia o nowych prezentach i rezerwacjach.</div>
+            <div id="notifContent">
+                <button class="btn btn-light fw-semibold" style="color:#212529;" id="enableNotifBtn" onclick="enableNotifications()">
+                    <i class="fas fa-bell me-1"></i>Włącz powiadomienia
+                </button>
+            </div>
+        </div>
+
+        <!-- Install PWA -->
+        <div class="glass-card p-4" id="installSection">
+            <div class="section-title"><i class="fas fa-download"></i>Zainstaluj aplikację</div>
+            <div class="section-desc">Dodaj Prezenty do ekranu głównego, żeby korzystać z nich jak z natywnej aplikacji - szybciej i bez paska przeglądarki.</div>
+            <div id="installContent">
+                <p class="mb-0" style="font-size:14px; opacity:0.85;">Sprawdzanie możliwości instalacji...</p>
+            </div>
+        </div>
+
+        <!-- Account -->
+        <div class="glass-card p-4">
+            <div class="section-title"><i class="fas fa-id-badge"></i>Konto</div>
+            <div class="section-desc">Zalogowano jako: <strong id="accountUsername">...</strong></div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-light btn-sm fw-semibold" style="color:#212529;" onclick="toggleRename()">
+                    <i class="fas fa-pen me-1"></i>Zmień nazwę użytkownika
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
+                </button>
+            </div>
+
+            <div id="renameSection" class="mt-3" style="display: none;">
+                <label class="form-label" for="newUsername" style="font-size: 14px;">Nowa nazwa użytkownika:</label>
+                <input type="text" class="form-control mb-2" id="newUsername"
+                    autocomplete="username" maxlength="30" style="max-width: 280px;">
+                <label class="form-label" for="renamePassword" style="font-size: 14px;">Potwierdź hasłem:</label>
+                <div class="d-flex gap-2 flex-wrap">
+                    <input type="password" class="form-control" id="renamePassword"
+                        autocomplete="current-password" style="max-width: 240px;">
+                    <button class="btn btn-success fw-semibold" id="renameBtn" onclick="changeUsername()">
+                        <i class="fas fa-check me-1"></i>Zapisz
+                    </button>
+                    <button class="btn btn-light fw-semibold" style="color:#212529;" onclick="toggleRename()">
+                        Anuluj
+                    </button>
+                </div>
+            </div>
+
+            <hr style="opacity: 0.15; margin: 18px 0 14px;">
+            <div id="deleteAccountSection">
+                <button class="btn btn-outline-danger btn-sm" onclick="showDeleteAccount()">
+                    <i class="fas fa-user-xmark me-1"></i>Usuń konto
+                </button>
+                <div id="deleteAccountConfirm" class="mt-3" style="display: none;">
+                    <div class="alert alert-danger py-2 px-3" style="font-size: 13px;">
+                        <i class="fas fa-triangle-exclamation me-1"></i>
+                        <strong>To jest nieodwracalne.</strong> Twoje konto, powiadomienia
+                        i anonimowe rozmowy zostaną usunięte, a Twoje rezerwacje zwolnione.
+                        Lista osób i prezenty rodziny pozostaną bez zmian.
+                    </div>
+                    <label class="form-label" for="deletePassword" style="font-size: 14px;">
+                        Potwierdź hasłem:
+                    </label>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <input type="password" class="form-control" id="deletePassword"
+                            autocomplete="current-password" style="max-width: 240px;">
+                        <button class="btn btn-danger fw-semibold" id="deleteAccountBtn" onclick="deleteAccount()">
+                            <i class="fas fa-trash me-1"></i>Usuń na zawsze
+                        </button>
+                        <button class="btn btn-light fw-semibold" style="color:#212529;" onclick="hideDeleteAccount()">
+                            Anuluj
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body"><i class="fas fa-check-circle me-2"></i><span id="successToastMessage"></span></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body"><i class="fas fa-exclamation-circle me-2"></i><span id="errorToastMessage"></span></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let myIdentification = null;
+
+        // Register service worker (needed for push notifications)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+
+        // ===== PWA install =====
+        // Capture the install prompt early - the browser fires it once,
+        // often before DOMContentLoaded.
+        let deferredInstallPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            renderInstallSection();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            renderInstallSection();
+            showToast('Aplikacja zainstalowana!', 'success');
+        });
+
+        function isStandalone() {
+            return window.matchMedia('(display-mode: standalone)').matches
+                || window.navigator.standalone === true;
+        }
+
+        function isIosDevice() {
+            // iPadOS 13+ reports itself as MacIntel with touch support
+            return /iphone|ipad|ipod/i.test(navigator.userAgent)
+                || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        }
+
+        function isIosSafari() {
+            // Chrome/Firefox/Edge on iOS and in-app webviews can't reliably
+            // add to home screen - it has to be real Safari
+            const ua = navigator.userAgent;
+            return isIosDevice() && !/CriOS|FxiOS|EdgiOS|OPiOS|mercury|FBAN|FBAV|Instagram/i.test(ua);
+        }
+
+        function iosInstructionsHTML() {
+            const notSafariHint = !isIosSafari()
+                ? `<div class="alert alert-warning py-2 px-3 mb-2" style="font-size:13px;">
+                       <i class="fas fa-triangle-exclamation me-1"></i>
+                       Najpierw otwórz tę stronę w <strong>Safari</strong> - tylko Safari
+                       pozwala dodać aplikację do ekranu początkowego.
+                   </div>` : '';
+            return `
+                ${notSafariHint}
+                <p class="mb-2" style="font-size:14px;">Na iPhonie instaluje się tak:</p>
+                <ol class="mb-0 ps-3" style="font-size:14px;">
+                    <li class="mb-2">Stuknij przycisk <strong>Udostępnij</strong>
+                        <i class="fas fa-arrow-up-from-bracket mx-1" style="color:#1E88E5;"></i>
+                        na dolnym pasku Safari</li>
+                    <li class="mb-2">Przewiń w dół i wybierz
+                        <strong>"Dodaj do ekranu początkowego"</strong>
+                        <i class="fas fa-plus-square ms-1" style="color:#43A047;"></i></li>
+                    <li>Potwierdź - ikona Prezentów pojawi się na ekranie 🎁</li>
+                </ol>`;
+        }
+
+        function renderInstallSection() {
+            const content = document.getElementById('installContent');
+            if (!content) return;
+
+            if (isStandalone()) {
+                content.innerHTML = '<p class="mb-0" style="font-size:14px;"><i class="fas fa-check-circle me-1" style="color:#43A047;"></i>Aplikacja jest już zainstalowana na tym urządzeniu.</p>';
+                return;
+            }
+
+            // iOS has NO install prompt API - a button pretending to install
+            // would always dead-end. Show the honest step-by-step guide
+            // right away instead.
+            if (isIosDevice()) {
+                content.innerHTML = iosInstructionsHTML();
+                return;
+            }
+
+            // Android/desktop: button-first. With the native prompt captured
+            // it installs in one tap; otherwise the click reveals instructions.
+            content.innerHTML = `
+                <button class="btn btn-success fw-semibold" onclick="installApp()">
+                    <i class="fas fa-download me-1"></i>Zainstaluj na tym urządzeniu
+                </button>
+                <div id="installInstructions" class="mt-3" style="display: none; font-size: 14px;"></div>`;
+        }
+
+        function triggerNativeInstall() {
+            deferredInstallPrompt.prompt();
+            deferredInstallPrompt.userChoice.then(choice => {
+                if (choice.outcome === 'accepted') {
+                    showToast('Instalowanie aplikacji...', 'success');
+                }
+                deferredInstallPrompt = null;
+                renderInstallSection();
+            });
+        }
+
+        function showInstallInstructions() {
+            const box = document.getElementById('installInstructions');
+            if (!box) return;
+            box.innerHTML = isIosDevice()
+                ? iosInstructionsHTML()
+                : 'Otwórz menu przeglądarki (⋮) i wybierz <strong>"Zainstaluj aplikację"</strong> lub <strong>"Dodaj do ekranu głównego"</strong>.';
+            box.style.display = 'block';
+        }
+
+        function installApp() {
+            if (deferredInstallPrompt) {
+                triggerNativeInstall();
+                return;
+            }
+
+            // The browser fires beforeinstallprompt asynchronously, often
+            // a moment after load - wait briefly for it before falling
+            // back to the manual instructions
+            const box = document.getElementById('installInstructions');
+            if (box) {
+                box.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Przygotowywanie instalacji...';
+                box.style.display = 'block';
+            }
+            let waited = 0;
+            const waiter = setInterval(() => {
+                waited += 250;
+                if (deferredInstallPrompt) {
+                    clearInterval(waiter);
+                    if (box) box.style.display = 'none';
+                    triggerNativeInstall();
+                } else if (waited >= 2000) {
+                    clearInterval(waiter);
+                    showInstallInstructions();
+                }
+            }, 250);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // The install shortcut has no dependency on auth - render it
+            // right away instead of leaving "Sprawdzanie..." on screen
+            // while the (possibly cold-starting) server answers /api/auth
+            renderInstallSection();
+
+            fetch('/api/auth')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.authenticated) { window.location.href = '/'; return; }
+                    document.getElementById('accountUsername').textContent = data.user.username;
+                    loadProfile();
+                    updateNotifSection();
+                })
+                .catch(() => { window.location.href = '/'; });
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : String(text);
+            return div.innerHTML;
+        }
+
+        function showToast(message, type) {
+            const el = document.getElementById(`${type}Toast`);
+            document.getElementById(`${type}ToastMessage`).textContent = message;
+            new bootstrap.Toast(el, { autohide: true, delay: type === 'error' ? 5000 : 3000 }).show();
+        }
+
+        // ===== My profile =====
+        function loadProfile() {
+            Promise.all([
+                fetch('/api/user/identification').then(r => r.json()),
+                fetch('/api/recipients').then(r => r.json())
+            ])
+                .then(([ident, recipients]) => {
+                    myIdentification = ident;
+                    renderProfile(ident, Array.isArray(recipients) ? recipients : (recipients.recipients || []));
+                })
+                .catch(() => {
+                    document.getElementById('profileContent').innerHTML =
+                        '<p class="mb-0">Nie udało się załadować profilu. <a href="#" onclick="loadProfile(); return false;" style="color:white;">Spróbuj ponownie</a></p>';
+                });
+        }
+
+        function renderProfile(ident, recipients) {
+            const content = document.getElementById('profileContent');
+
+            if (ident.isIdentified && ident.identifiedRecipient) {
+                const rec = ident.identifiedRecipient;
+                content.innerHTML = `
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="profile-pic" id="profilePicBox">
+                            <img src="/api/recipients/${rec.id}/profile-picture" alt=""
+                                 style="width:100%; height:100%; border-radius:50%; object-fit:cover;"
+                                 onerror="this.style.display='none'; this.parentElement.textContent='🎅';">
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold" style="font-size:18px;">${escapeHtml(rec.name)}</div>
+                            <div style="font-size:13px; opacity:0.85;">
+                                <i class="fas fa-eye-slash me-1"></i>Twoje prezenty są przed Tobą ukryte 🙈
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap mt-3">
+                        <label class="btn btn-light btn-sm fw-semibold" style="color:#212529;">
+                            <i class="fas fa-camera me-1"></i>Zmień zdjęcie
+                            <input type="file" accept="image/*" hidden onchange="uploadPicture(this, ${rec.id})">
+                        </label>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="cancelIdentification(${rec.id})">
+                            <i class="fas fa-user-slash me-1"></i>To nie ja - anuluj
+                        </button>
+                    </div>`;
+                return;
+            }
+
+            // Not identified - offer the unclaimed recipients
+            const free = recipients.filter(r => !r.identified_by);
+            content.innerHTML = `
+                <p style="font-size:14px;">Nie wybrano jeszcze Twojej osoby. Wybierz siebie z listy:</p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <select id="identifySelect" class="form-select" style="max-width: 320px;">
+                        <option value="">Wybierz osobę...</option>
+                        ${free.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('')}
+                    </select>
+                    <button class="btn btn-light fw-semibold" style="color:#212529;" onclick="identifySelf()">
+                        <i class="fas fa-user-check me-1"></i>To jestem ja
+                    </button>
+                </div>
+                ${free.length === 0 ? '<p class="mt-2 mb-0" style="font-size:13px; opacity:0.85;">Brak wolnych osób - dodaj siebie na stronie <a href="/osoby">Zarządzanie osobami</a>.</p>' : ''}`;
+        }
+
+        function identifySelf() {
+            const id = document.getElementById('identifySelect').value;
+            if (!id) { showToast('Wybierz osobę z listy', 'error'); return; }
+            fetch(`/api/recipients/${id}/identify`, { method: 'POST' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        showToast('Zidentyfikowano! Twoje prezenty będą przed Tobą ukryte.', 'success');
+                        try { localStorage.removeItem('recipientsCache'); } catch (e) {}
+                        loadProfile();
+                    } else {
+                        showToast(d.error || 'Nie udało się zidentyfikować', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+        }
+
+        function cancelIdentification(id) {
+            fetch(`/api/recipients/${id}/identify`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        showToast('Identyfikacja anulowana', 'success');
+                        try { localStorage.removeItem('recipientsCache'); } catch (e) {}
+                        loadProfile();
+                    } else {
+                        showToast(d.error || 'Nie udało się anulować', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+        }
+
+        function uploadPicture(input, recipientId) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { showToast('Wybierz plik graficzny', 'error'); return; }
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                fetch(`/api/recipients/${recipientId}/profile-picture`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ profile_picture: reader.result })
+                })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.success) {
+                            showToast('Zdjęcie zaktualizowane!', 'success');
+                            try { localStorage.removeItem('recipientsCache'); } catch (e) {}
+                            loadProfile();
+                        } else {
+                            showToast(d.error || 'Nie udało się zapisać zdjęcia', 'error');
+                        }
+                    })
+                    .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ===== Notifications =====
+        function updateNotifSection() {
+            const content = document.getElementById('notifContent');
+            if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+                content.innerHTML = '<p class="mb-0" style="font-size:14px;">Ta przeglądarka nie obsługuje powiadomień.</p>';
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                // Don't just trust the browser permission - confirm the
+                // subscription is actually registered with the server
+                content.innerHTML = '<p class="mb-0" style="font-size:14px;"><i class="fas fa-spinner fa-spin me-1"></i>Sprawdzanie subskrypcji...</p>';
+                subscribeToPush().then(ok => {
+                    content.innerHTML = ok
+                        ? '<p class="mb-0" style="font-size:14px;"><i class="fas fa-check-circle me-1" style="color:#43A047;"></i>Powiadomienia są włączone i zarejestrowane na tym urządzeniu.</p>'
+                        : '<p class="mb-2" style="font-size:14px;"><i class="fas fa-triangle-exclamation me-1" style="color:#EF6C00;"></i>Zgoda jest udzielona, ale rejestracja powiadomień nie powiodła się.</p>' +
+                          '<button class="btn btn-light btn-sm fw-semibold" style="color:#212529;" onclick="updateNotifSection()"><i class="fas fa-rotate-right me-1"></i>Spróbuj ponownie</button>';
+                });
+            } else if (Notification.permission === 'denied') {
+                content.innerHTML = '<p class="mb-0" style="font-size:14px;"><i class="fas fa-bell-slash me-1"></i>Powiadomienia są zablokowane. Zmień to w ustawieniach przeglądarki.</p>';
+            }
+            // 'default' - leave the enable button as-is
+        }
+
+        function enableNotifications() {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    showToast('Powiadomienia włączone!', 'success');
+                    subscribeToPush();
+                }
+                updateNotifSection();
+            });
+        }
+
+        // True when the existing subscription was created with the same
+        // VAPID key the server currently uses. Subscriptions made against
+        // an older/broken key LOOK fine locally but every send fails.
+        function subscriptionKeyMatches(sub, keyBytes) {
+            try {
+                const current = new Uint8Array(sub.options.applicationServerKey);
+                if (current.length !== keyBytes.length) return false;
+                for (let i = 0; i < keyBytes.length; i++) {
+                    if (current[i] !== keyBytes[i]) return false;
+                }
+                return true;
+            } catch (e) {
+                return true; // can't inspect - assume it's fine
+            }
+        }
+
+        function subscribeToPush() {
+            return fetch('/api/vapid-public-key')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.webPushAvailable) throw new Error('push unavailable');
+                    const keyBytes = urlBase64ToUint8Array(data.publicKey);
+                    return navigator.serviceWorker.ready.then(reg =>
+                        reg.pushManager.getSubscription().then(existing => {
+                            if (existing && !subscriptionKeyMatches(existing, keyBytes)) {
+                                // Stale subscription from an old VAPID key -
+                                // replace it or pushes never arrive
+                                console.log('[Push] Re-subscribing (VAPID key changed)');
+                                return existing.unsubscribe().then(() =>
+                                    reg.pushManager.subscribe({
+                                        userVisibleOnly: true,
+                                        applicationServerKey: keyBytes
+                                    }));
+                            }
+                            return existing || reg.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: keyBytes
+                            });
+                        })
+                    );
+                })
+                .then(subscription => fetch('/api/notifications/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(subscription)
+                }).then(r => r.json()))
+                .then(d => {
+                    if (!d || !d.success) throw new Error('server did not save subscription');
+                    return true;
+                })
+                .catch(err => {
+                    console.warn('Push subscription failed:', err.message);
+                    return false;
+                });
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+            return outputArray;
+        }
+
+        // ===== Account =====
+        function logout() {
+            fetch('/api/logout', { method: 'POST' })
+                .finally(() => { window.location.href = '/'; });
+        }
+
+        function toggleRename() {
+            const box = document.getElementById('renameSection');
+            const open = box.style.display !== 'none';
+            box.style.display = open ? 'none' : 'block';
+            if (!open) {
+                document.getElementById('newUsername').value =
+                    document.getElementById('accountUsername').textContent.trim();
+                document.getElementById('renamePassword').value = '';
+                document.getElementById('newUsername').focus();
+            }
+        }
+
+        function changeUsername() {
+            const newUsername = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('renamePassword').value;
+
+            if (!newUsername) { showToast('Wpisz nową nazwę użytkownika', 'error'); return; }
+            if (!password) { showToast('Potwierdź zmianę hasłem', 'error'); return; }
+
+            const btn = document.getElementById('renameBtn');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Zapisywanie...';
+            btn.disabled = true;
+
+            fetch('/api/account/username', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newUsername, password })
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        document.getElementById('accountUsername').textContent = d.username;
+                        toggleRename();
+                        showToast('Nazwa użytkownika zmieniona!', 'success');
+                    } else {
+                        showToast(d.error || 'Nie udało się zmienić nazwy', 'error');
+                    }
+                })
+                .catch(() => showToast('Błąd połączenia', 'error'))
+                .finally(() => { btn.innerHTML = original; btn.disabled = false; });
+        }
+
+        function showDeleteAccount() {
+            document.getElementById('deleteAccountConfirm').style.display = 'block';
+        }
+
+        function hideDeleteAccount() {
+            document.getElementById('deleteAccountConfirm').style.display = 'none';
+            document.getElementById('deletePassword').value = '';
+        }
+
+        function deleteAccount() {
+            const password = document.getElementById('deletePassword').value;
+            if (!password) {
+                showToast('Podaj hasło, aby potwierdzić', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('deleteAccountBtn');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Usuwanie...';
+            btn.disabled = true;
+
+            fetch('/api/account', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+                        alert('Twoje konto zostało usunięte. Do zobaczenia! 👋');
+                        window.location.href = '/';
+                    } else {
+                        showToast(d.error || 'Nie udało się usunąć konta', 'error');
+                        btn.innerHTML = original;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(() => {
+                    showToast('Błąd połączenia', 'error');
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                });
+        }
+    </script>
+
+    <!-- Bottom Tab Bar -->
+    <div class="bottom-tab-bar">
+        <div class="tab-bar-container">
+            <a href="/" class="tab-item home-tab">
+                <i class="ri-home-line"></i>
+                <span>Główna</span>
+            </a>
+            <a href="#" class="tab-item activity-tab" onclick="toggleNotificationsPanel(); return false;">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-notification-3-line"></i>
+                    <span class="notification-badge" id="activityBadge" style="display: none;"></span>
+                </div>
+                <span>Aktywność</span>
+            </a>
+            <div class="tab-spacer"></div>
+            <a href="wiadomosci.html" class="tab-item messages-tab">
+                <div class="tab-icon-wrapper">
+                    <i class="ri-chat-private-line"></i>
+                    <span class="notification-badge" id="messagesBadge" style="display: none;"></span>
+                <span>Czat</span>
+                <span>Wiadomości</span>
+            </a>
+            <a href="formularz.html" class="tab-item form-tab">
+                <i class="ri-gift-line"></i>
+                <span>Dodaj</span>
+            </a>
+        </div>
+        <div class="tab-fab" onclick="toggleTabBarMenu()">
+            <i class="ri-menu-line"></i>
+        </div>
+    </div>
+
+    <div class="tab-bar-menu-overlay" id="tabBarOverlay" onclick="closeAllPanels()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; pointer-events: none;"></div>
+
+    <div class="tab-bar-menu-panel" id="tabBarMenuPanel">
+        <div class="tab-bar-menu-header">
+            <h5><i class="ri-menu-line me-2"></i>Menu</h5>
+            <button class="tab-bar-menu-close" onclick="toggleTabBarMenu()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-menu-content">
+            <!-- Primary actions - kept in easy thumb reach -->
+            <a href="recipients.html" class="tab-bar-menu-item">
+                <i class="ri-gift-2-line"></i>
+                <span>Wszystkie prezenty</span>
+            </a>
+            <a href="rezerwacje.html" class="tab-bar-menu-item reserved-item">
+                <i class="ri-bookmark-line"></i>
+                <span>Zarezerwowane prezenty</span>
+            </a>
+            <a href="leaderboard.html" class="tab-bar-menu-item">
+                <i class="ri-trophy-line"></i>
+                <span>Ranking</span>
+            </a>
+            <a href="formularz.html" class="tab-bar-menu-item edit-presents-item" onclick="localStorage.setItem('openEditTab', 'true');">
+                <i class="ri-edit-line"></i>
+                <span>Edytuj moje prezenty</span>
+            </a>
+            <div class="tab-bar-menu-divider"></div>
+            <!-- Secondary quick actions: compact tiles, share-sheet style -->
+            <div class="tab-bar-menu-secondary">
+                <a href="ustawienia.html" class="tab-bar-menu-tile">
+                    <i class="ri-settings-3-line"></i>
+                    <span>Ustawienia</span>
+                </a>
+                <a href="archiwum.html" class="tab-bar-menu-tile">
+                    <i class="ri-archive-line"></i>
+                    <span>Archiwum</span>
+                </a>
+                <a href="#" class="tab-bar-menu-tile tile-logout" onclick="logout(); return false;">
+                    <i class="ri-logout-box-r-line"></i>
+                    <span>Wyloguj</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-bar-notifications-panel" id="notificationsPanel" style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: #ffffff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; min-height: 300px; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="tab-bar-notifications-header" style="padding: 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
+            <h5 style="margin: 0; color: #2d3748; font-weight: 600; font-size: 18px;"><i class="ri-notification-3-line me-2"></i>Powiadomienia</h5>
+            <button class="tab-bar-notifications-close" onclick="toggleNotificationsPanel()" style="background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #2d3748;">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="tab-bar-notifications-content" id="notificationsContent" style="flex: 1; overflow-y: auto; background: #ffffff;">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Ładowanie...</span>
+                </div>
+            </div>
+        </div>
+        <div class="tab-bar-notifications-view-all" style="padding: 16px 20px; text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; flex-shrink: 0;">
+            <a href="activity.html" style="color: #2196F3; text-decoration: none; font-weight: 600; font-size: 14px;">Zobacz wszystkie powiadomienia</a>
+        </div>
+    </div>
+
+    <script src="tab-bar-functions.js?v=19"></script>
+    <script src="desktop-nav.js?v=5"></script>
+</body>
+</html>
