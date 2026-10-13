@@ -6,8 +6,7 @@
  * often happens and self-corrects within a few frames, which is exactly what
  * the user sees as "jumpy". Sampling at 0/60/150/300/450 ms catches it.
  *
- * Kept here for the composer/dock work that is still in flight (see
- * tests/e2e/composer.placeholder.spec.js); no shipped spec depends on it yet.
+ * Used by tests/e2e/composer-dock.spec.js.
  */
 
 const START = function (marks) {

@@ -7,6 +7,39 @@
  * once real data is on screen - a web-first wait, no sleeps.
  */
 
+// ---------------------------------------------------------------------------
+// HOW TO ADD A PAGE
+//
+// Append one object to PAGES below. Fields:
+//   path        URL path (plus query) passed to page.goto. Relative to baseURL.
+//   name        Short unique label. It becomes part of the TEST TITLE in every
+//               spec that loops over PAGES (e.g. "ustawienia: page content is
+//               reachable and announceable"), so renaming one renames tests.
+//   ready       CSS selector that only exists once real data is on screen.
+//               openPage waits for its first match to be attached, then for
+//               fonts and for layout to stop moving. Pick something rendered
+//               by the page's own fetch, never a static shell element.
+//   reloadsOnce Optional. Set it only for a page that reloads itself once per
+//               fresh profile (home.html does); openPage then navigates twice.
+//
+// Specs that consume PAGES (a new entry is automatically enlisted in all of them):
+//   tests/e2e/a11y.spec.js                    two tests per page: page content
+//                                             is reachable (runs) and every
+//                                             icon-only control has a name (a
+//                                             test.fixme today, so each page
+//                                             adds one more known fixme)
+//   tests/e2e/no-horizontal-overflow.spec.js  one test per page, at every width
+//                                             in VIEWPORTS
+//   tests/e2e/composer-shared-dock.spec.js    looks up 'home' and 'recipients'
+//                                             by name via PAGES.find - do not
+//                                             rename those two
+//
+// NOT driven by PAGES (they keep their own lists on purpose): smoke.spec.js
+// (path + name only, and it also visits /formularz), the single-page specs
+// (chat-reactions, edit-sheet, escaping, pluralization, wrapping,
+// xss-usernames) and /intro.html, which is deliberately not here because
+// listing it would enlist it in the a11y and overflow matrices.
+// ---------------------------------------------------------------------------
 const PAGES = [
     // home.html runs a one-shot cache-busting reload (home.html:12-43): on a
     // profile where localStorage has no `homePageVersion` it sets the flag and
