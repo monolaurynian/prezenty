@@ -8,6 +8,8 @@
     "dev": "nodemon server.js",
     "offline": "node tests/helpers/start-demo-server.js --foreground",
     "build": "echo 'No build step required'",
+    "build:css": "node scripts/build-css.js --out build/css/styles.deduped.min.css",
+    "build:css:check": "node scripts/build-css.js --report",
     "test": "npm run test:e2e",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
