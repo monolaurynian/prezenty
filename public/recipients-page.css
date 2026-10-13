@@ -570,9 +570,6 @@
         }
 
         /* Fixed header bar retired (dark gradient overlay over content) */
-        .fixed-header-bar {
-            display: none !important;
-        }
         
         /* Hamburger Menu Button - fixed positioning for floating */
         .hamburger-menu-btn {
@@ -730,13 +727,6 @@
         }
 
         /* Notification Bell - fixed positioning */
-        .notification-bell-floating {
-            position: fixed !important;
-            top: 10px !important;
-            left: 10px !important;
-            z-index: 1040 !important;
-            pointer-events: auto;
-        }
         
         .recipients-page .notification-bell-btn {
             background: rgba(244, 67, 54, 0.3) !important;
@@ -757,15 +747,6 @@
             border-radius: 50%;
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 60%);
             pointer-events: none;
-        }
-        
-        .notification-dropdown {
-            position: absolute !important;
-            top: 60px !important;
-            left: 0 !important;
-            right: auto !important;
-            z-index: 1039 !important;
-            width: 320px !important;
         }
 
         /* Mobile adjustments */
