@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v125';
+const CACHE_NAME = 'prezenty-v126';
 const urlsToCache = [
   '/manifest.json',
   '/pluralize-pl.js',
@@ -14,6 +14,17 @@ const urlsToCache = [
   '/recipients-page.js?v=1',
   '/recipients-page-notifbell.js?v=1',
   '/recipients-page-scroll.js?v=1',
+  '/recipients-core.js?v=1',
+  '/recipients-startup.js?v=1',
+  '/recipients-list.js?v=1',
+  '/recipients-identify.js?v=1',
+  '/recipients-present-actions.js?v=1',
+  '/recipients-helpers.js?v=1',
+  '/recipients-modals.js?v=1',
+  '/recipients-optimistic.js?v=1',
+  '/recipients-edit.js?v=1',
+  '/recipients-sync.js?v=1',
+  '/recipients-toast-undo.js?v=1',
   '/home-page.css?v=1',
   '/home-page-auth.js?v=1',
   '/home-page.js?v=1',
