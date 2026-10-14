@@ -1,0 +1,97 @@
+PASS  320x640 (1) Available cards/rows computed-style diff = 0 (excluding w/h)
+PASS  320x640 (1) Available list display/gap/padding unchanged
+PASS  320x640 (1) Available offsets unchanged  {"firstCardLeftFromListContent":0,"firstCardTopFromListContent":0,"firstCardLeftFromItemEdge":7,"firstCardTopFromCollapseEdge":10,"lastCardBottomToItemBottom":31,"cardRightFromItemEdge":7,"betweenCards":32}
+PASS  320x640 (2) card padding identical across buckets  14px 12px 14px 12px
+PASS  320x640 (2) card radius identical across buckets  20px
+PASS  320x640 (2) row padding identical across buckets
+PASS  320x640 (2) list padding+gap+display identical across buckets  10px 6px 10px 6px gap 12px
+PASS  320x640 (2) offsets (inset/between) identical across buckets
+PASS  320x640 cards of reservations: computed style unchanged vs before (only position moves)
+PASS  320x640 cards of bought: computed style unchanged vs before (only position moves)
+PASS  320x640 (3) available frame radius = card R(20) + inset(6) + border(1)  item 27px header 26px collapse-bottom 27px
+PASS  320x640 (3) reservations frame radius = card R(20) + inset(6) + border(1)  item 27px header 26px collapse-bottom 27px
+PASS  320x640 (3) bought frame radius = card R(20) + inset(6) + border(1)  item 27px header 26px collapse-bottom 27px
+PASS  320x640 (4) clipping ancestors unchanged  [".container hidden/auto"]
+PASS  320x640 (5) no horizontal overflow, populated  320/320
+PASS  320x640 (5) no horizontal overflow, very long titles/names  {"scrollWidth":320,"innerWidth":320,"noOverflow":true,"maxCardRight":288,"minItemRight":295,"rowsWithInnerOverflow":0,"cardCount":9}
+PASS  320x640 (7) focus ring not clipped (all buckets)
+PASS  320x640 empty states: list padding identical across buckets  10px 6px 10px 6px
+PASS  320x640 empty box unchanged (padding/size)
+PASS  320x640 skeleton: Available identical to before
+PASS  320x640 skeleton: all buckets identical  {"listPadding":"10px 6px","listGap":"12px","listDisplay":"flex","skelPadding":"14px","skelCardPadding":"18px","skelCardRadius":"14px","skelCardLeftFromList":20}
+PASS  375x812 (1) Available cards/rows computed-style diff = 0 (excluding w/h)
+PASS  375x812 (1) Available list display/gap/padding unchanged
+PASS  375x812 (1) Available offsets unchanged  {"firstCardLeftFromListContent":0,"firstCardTopFromListContent":0,"firstCardLeftFromItemEdge":7,"firstCardTopFromCollapseEdge":10,"lastCardBottomToItemBottom":31,"cardRightFromItemEdge":7,"betweenCards":32}
+PASS  375x812 (2) card padding identical across buckets  14px 12px 14px 12px
+PASS  375x812 (2) card radius identical across buckets  20px
+PASS  375x812 (2) row padding identical across buckets
+PASS  375x812 (2) list padding+gap+display identical across buckets  10px 6px 10px 6px gap 12px
+PASS  375x812 (2) offsets (inset/between) identical across buckets
+PASS  375x812 cards of reservations: computed style unchanged vs before (only position moves)
+PASS  375x812 cards of bought: computed style unchanged vs before (only position moves)
+PASS  375x812 (3) available frame radius = card R(20) + inset(6) + border(1)  item 27px header 26px collapse-bottom 27px
+PASS  375x812 (3) reservations frame radius = card R(20) + inset(6) + border(1)  item 27px header 26px collapse-bottom 27px
+PASS  375x812 (3) bought frame radius = card R(20) + inset(6) + border(1)  item 27px header 26px collapse-bottom 27px
+PASS  375x812 (4) clipping ancestors unchanged  [".container hidden/auto"]
+PASS  375x812 (5) no horizontal overflow, populated  375/375
+PASS  375x812 (5) no horizontal overflow, very long titles/names  {"scrollWidth":375,"innerWidth":375,"noOverflow":true,"maxCardRight":343,"minItemRight":350,"rowsWithInnerOverflow":0,"cardCount":9}
+PASS  375x812 (7) focus ring not clipped (all buckets)
+PASS  375x812 empty states: list padding identical across buckets  10px 6px 10px 6px
+PASS  375x812 empty box unchanged (padding/size)
+PASS  375x812 skeleton: Available identical to before
+PASS  375x812 skeleton: all buckets identical  {"listPadding":"10px 6px","listGap":"12px","listDisplay":"flex","skelPadding":"14px","skelCardPadding":"18px","skelCardRadius":"14px","skelCardLeftFromList":20}
+PASS  768x1024 (1) Available cards/rows computed-style diff = 0 (excluding w/h)
+PASS  768x1024 (1) Available list display/gap/padding unchanged
+PASS  768x1024 (1) Available offsets unchanged  {"firstCardLeftFromListContent":0,"firstCardTopFromListContent":0,"firstCardLeftFromItemEdge":15,"firstCardTopFromCollapseEdge":14,"lastCardBottomToItemBottom":35,"cardRightFromItemEdge":15,"betweenCards":32}
+PASS  768x1024 (2) card padding identical across buckets  20px 20px 20px 20px
+PASS  768x1024 (2) card radius identical across buckets  20px
+PASS  768x1024 (2) row padding identical across buckets
+PASS  768x1024 (2) list padding+gap+display identical across buckets  14px 14px 14px 14px gap 12px
+PASS  768x1024 (2) offsets (inset/between) identical across buckets
+PASS  768x1024 cards of reservations: computed style unchanged vs before (only position moves)
+PASS  768x1024 cards of bought: computed style unchanged vs before (only position moves)
+PASS  768x1024 (3) available frame radius = card R(20) + inset(14) + border(1)  item 35px header 34px collapse-bottom 35px
+PASS  768x1024 (3) reservations frame radius = card R(20) + inset(14) + border(1)  item 35px header 34px collapse-bottom 35px
+PASS  768x1024 (3) bought frame radius = card R(20) + inset(14) + border(1)  item 35px header 34px collapse-bottom 35px
+PASS  768x1024 (4) clipping ancestors unchanged  [".container hidden/auto"]
+PASS  768x1024 (5) no horizontal overflow, populated  768/768
+PASS  768x1024 (5) no horizontal overflow, very long titles/names  {"scrollWidth":768,"innerWidth":768,"noOverflow":true,"maxCardRight":708,"minItemRight":723,"rowsWithInnerOverflow":0,"cardCount":9}
+PASS  768x1024 (7) focus ring not clipped (all buckets)
+PASS  768x1024 empty states: list padding identical across buckets  14px 14px 14px 14px
+PASS  768x1024 empty box unchanged (padding/size)
+PASS  768x1024 skeleton: Available identical to before
+PASS  768x1024 skeleton: all buckets identical  {"listPadding":"14px","listGap":"12px","listDisplay":"flex","skelPadding":"14px","skelCardPadding":"18px","skelCardRadius":"14px","skelCardLeftFromList":28}
+PASS  1024x768 (1) Available cards/rows computed-style diff = 0 (excluding w/h)
+PASS  1024x768 (1) Available list display/gap/padding unchanged
+PASS  1024x768 (1) Available offsets unchanged  {"firstCardLeftFromListContent":0,"firstCardTopFromListContent":0,"firstCardLeftFromItemEdge":15,"firstCardTopFromCollapseEdge":14,"lastCardBottomToItemBottom":35,"cardRightFromItemEdge":15,"betweenCards":32}
+PASS  1024x768 (2) card padding identical across buckets  20px 20px 20px 20px
+PASS  1024x768 (2) card radius identical across buckets  20px
+PASS  1024x768 (2) row padding identical across buckets
+PASS  1024x768 (2) list padding+gap+display identical across buckets  14px 14px 14px 14px gap 12px
+PASS  1024x768 (2) offsets (inset/between) identical across buckets
+PASS  1024x768 cards of reservations: computed style unchanged vs before (only position moves)
+PASS  1024x768 cards of bought: computed style unchanged vs before (only position moves)
+PASS  1024x768 (3) available frame radius = card R(20) + inset(14) + border(1)  item 35px header 34px collapse-bottom 35px
+PASS  1024x768 (3) reservations frame radius = card R(20) + inset(14) + border(1)  item 35px header 34px collapse-bottom 35px
+PASS  1024x768 (3) bought frame radius = card R(20) + inset(14) + border(1)  item 35px header 34px collapse-bottom 35px
+PASS  1024x768 (4) clipping ancestors unchanged  [".container hidden/auto"]
+PASS  1024x768 (5) no horizontal overflow, populated  1024/1024
+PASS  1024x768 (5) no horizontal overflow, very long titles/names  {"scrollWidth":1024,"innerWidth":1024,"noOverflow":true,"maxCardRight":944,"minItemRight":959,"rowsWithInnerOverflow":0,"cardCount":9}
+PASS  1024x768 (7) focus ring not clipped (all buckets)
+PASS  1024x768 empty states: list padding identical across buckets  14px 14px 14px 14px
+PASS  1024x768 empty box unchanged (padding/size)
+PASS  1024x768 skeleton: Available identical to before
+PASS  1024x768 skeleton: all buckets identical  {"listPadding":"14px","listGap":"12px","listDisplay":"flex","skelPadding":"14px","skelCardPadding":"18px","skelCardRadius":"14px","skelCardLeftFromList":28}
+PASS  (6) other page recipients@375: 770 elements, computed-style diff = 0
+PASS  (6) other page activity@375: 332 elements, computed-style diff = 0
+PASS  (6) other page rezerwacje@375: 215 elements, computed-style diff = 0
+PASS  (6) other page leaderboard@375: 552 elements, computed-style diff = 0
+PASS  (6) other page formularz@375: 425 elements, computed-style diff = 0
+PASS  (6) other page wiadomosci@375: 190 elements, computed-style diff = 0
+PASS  (6) other page recipients@1024: 770 elements, computed-style diff = 0
+PASS  (6) other page activity@1024: 332 elements, computed-style diff = 0
+PASS  (6) other page rezerwacje@1024: 215 elements, computed-style diff = 0
+PASS  (6) other page leaderboard@1024: 552 elements, computed-style diff = 0
+PASS  (6) other page formularz@1024: 425 elements, computed-style diff = 0
+PASS  (6) other page wiadomosci@1024: 190 elements, computed-style diff = 0
+ALL CHECKS PASSED
