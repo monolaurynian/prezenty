@@ -1,11 +1,11 @@
-const CACHE_NAME = 'prezenty-v133';
+const CACHE_NAME = 'prezenty-v134';
 const urlsToCache = [
   '/manifest.json',
   '/pluralize-pl.js',
   '/notification-text.js',
   '/escape-html.js',
   '/chat-reactions.css?v=4',
-  '/chat-reactions.js?v=4',
+  '/chat-reactions.js?v=5',
   '/emoji-data.js?v=1',
   '/emoji-picker.js?v=1',
   '/favicon.svg',

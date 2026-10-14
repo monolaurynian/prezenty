@@ -522,6 +522,37 @@
         return CHAT_QUICK_REACTIONS.length + 1;
     }
 
+    // Quick tiles = 3 fixed (first three legacy) + 2 "recent" slots. The
+    // recent slots hold the last two other emoji the user reacted with
+    // (this device, localStorage); until then they show the legacy 4th/5th.
+    const FIXED_QUICK = 3;
+    const RECENT_KEY = 'prezenty-recent-reactions';
+
+    function readRecents() {
+        try {
+            const raw = JSON.parse(root.localStorage.getItem(RECENT_KEY) || '[]');
+            if (!Array.isArray(raw)) return [];
+            return raw.filter(e => typeof e === 'string' && isAllowedReactionEmoji(e)).slice(0, 2);
+        } catch (err) { return []; }
+    }
+
+    function rememberRecent(emoji) {
+        if (CHAT_QUICK_REACTIONS.slice(0, FIXED_QUICK).some(r => r.emoji === emoji)) return;
+        const next = [emoji].concat(readRecents().filter(e => e !== emoji)).slice(0, 2);
+        try { root.localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch (err) { /* storage off */ }
+    }
+
+    function quickTiles() {
+        const fixed = CHAT_QUICK_REACTIONS.slice(0, FIXED_QUICK);
+        const fixedSet = new Set(fixed.map(r => r.emoji));
+        const slots = readRecents().filter(e => !fixedSet.has(e));
+        // Fill any empty slot with the legacy defaults not already shown
+        CHAT_QUICK_REACTIONS.slice(FIXED_QUICK).forEach(r => {
+            if (slots.length < 2 && slots.indexOf(r.emoji) === -1) slots.push(r.emoji);
+        });
+        return fixed.concat(slots.slice(0, 2).map(e => ({ emoji: e, name: EMOJI_NAME.get(e) || e })));
+    }
+
     function quickTileHtml(r) {
         return '<button type="button" class="reaction-sheet-btn"'
             + ' data-emoji="' + escAttr(r.emoji) + '"'
@@ -549,14 +580,17 @@
         const grid = sheetEls().grid;
         if (!grid || sheetMessageId === null) return;
         const list = state.get(sheetMessageId) || [];
-        if (grid.childElementCount !== quickTileCount()) {
+        const tiles = quickTiles();
+        const tilesKey = tiles.map(r => r.emoji).join('|');
+        if (grid.childElementCount !== quickTileCount() || grid.getAttribute('data-tiles') !== tilesKey) {
             const more = hasFullPicker()
                 ? '<button type="button" class="reaction-sheet-btn reaction-sheet-more"'
                     + ' aria-label="Więcej emoji">'
                     + '<span aria-hidden="true">+</span>'
                     + '</button>'
                 : quickTileHtml(CHAT_REACTIONS[CHAT_QUICK_REACTIONS.length]);
-            grid.innerHTML = CHAT_QUICK_REACTIONS.map(quickTileHtml).join('') + more;
+            grid.innerHTML = tiles.map(quickTileHtml).join('') + more;
+            grid.setAttribute('data-tiles', tilesKey);
         }
         grid.querySelectorAll('.reaction-sheet-btn[data-emoji]').forEach(button => {
             const item = list.find(x => x.emoji === button.getAttribute('data-emoji'));
@@ -589,6 +623,7 @@
             picker = root.EmojiPicker.create(els.pickerRoot, {
                 onSelect: function (emoji) {
                     if (sheetMessageId === null) return;
+                    if (!isMine(sheetMessageId, emoji)) rememberRecent(emoji);
                     toggle(sheetMessageId, emoji);
                     closeSheet();
                 },
@@ -696,7 +731,9 @@
             const btn = e.target.closest('.reaction-sheet-btn');
             if (!btn || sheetMessageId === null) return;
             if (btn.classList.contains('reaction-sheet-more')) { showAll(); return; }
-            toggle(sheetMessageId, btn.getAttribute('data-emoji'));
+            const picked = btn.getAttribute('data-emoji');
+            if (!isMine(sheetMessageId, picked)) rememberRecent(picked);
+            toggle(sheetMessageId, picked);
             closeSheet();
         });
 

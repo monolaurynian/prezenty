@@ -287,6 +287,20 @@ test.describe('full emoji picker', () => {
         await expect(page.locator('#reactionSheetTitle')).toHaveText('Wybierz reakcję');
     });
 
+    test('last two quick slots rotate to the most recent picks; first three stay fixed', async ({ page }) => {
+        await openPage(page, THREAD);
+        await setViewport(page, 375);
+        await page.evaluate(() => localStorage.removeItem('prezenty-recent-reactions'));
+        await page.evaluate(() => localStorage.setItem('prezenty-recent-reactions', JSON.stringify(['🎉', '🔥'])));
+        await openSheet(page, BARE_MESSAGE);
+
+        const tiles = page.locator('#reactionSheetGrid .reaction-sheet-btn[data-emoji]');
+        const emoji = await tiles.evaluateAll(list => list.map(el => el.getAttribute('data-emoji')));
+        expect(emoji.slice(0, 3)).toEqual(QUICK_EMOJI.slice(0, 3));
+        expect(emoji.slice(3)).toEqual(['🎉', '🔥']);
+        await page.evaluate(() => localStorage.removeItem('prezenty-recent-reactions'));
+    });
+
     test('"+" opens full mode with 9 tabs and focus inside the grid', async ({ page }) => {
         await openPage(page, THREAD);
         await setViewport(page, 375);
@@ -612,14 +626,14 @@ test.describe('full emoji picker', () => {
     test('sw.js and wiadomosci.html agree on the versioned URLs and cache name', async ({ request }) => {
         const sw = await (await request.get('/sw.js')).text();
         const html = await (await request.get('/wiadomosci.html')).text();
-        expect(sw).toContain("'prezenty-v133'");
-        ['/chat-reactions.css?v=4', '/chat-reactions.js?v=4', '/emoji-data.js?v=1', '/emoji-picker.js?v=1']
+        expect(sw).toContain("'prezenty-v134'");
+        ['/chat-reactions.css?v=4', '/chat-reactions.js?v=5', '/emoji-data.js?v=1', '/emoji-picker.js?v=1']
             .forEach(url => {
                 expect(sw, `sw.js precache entry ${url}`).toContain(`'${url}'`);
                 expect(html, `wiadomosci.html reference ${url}`).toContain(url.slice(1));
             });
         // The dataset must load before chat-reactions.js, the picker after it
-        const order = ['emoji-data.js?v=1', 'chat-reactions.js?v=4', 'emoji-picker.js?v=1']
+        const order = ['emoji-data.js?v=1', 'chat-reactions.js?v=5', 'emoji-picker.js?v=1']
             .map(name => html.indexOf(`src="${name}"`));
         expect(order.every(i => i > -1), JSON.stringify(order)).toBe(true);
         expect(order).toEqual(order.slice().sort((a, b) => a - b));
