@@ -86,24 +86,6 @@
             filter: brightness(0) invert(1);
         }
 
-        /* Accordion buttons (colored headers) - square corners */
-        .accordion-button {
-            border-radius: 0 !important;
-        }
-
-        /* Override Bootstrap accordion item rounding */
-        .accordion-item {
-            border-radius: 0 !important;
-        }
-
-        .accordion-item:first-child .accordion-button {
-            border-radius: 0 !important;
-        }
-
-        .accordion-item:last-child .accordion-button {
-            border-radius: 0 !important;
-        }
-
         @media (max-width: 768px) {
             .stats-container {
                 padding: 20px;
