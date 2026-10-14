@@ -98,38 +98,14 @@
         #accordionAvailable,
         #accordionReservations,
         #accordionBought {
-            /* = border-radius of .home-recipient-card (inline in home-page.js) */
-            --home-card-radius: 20px;
-            /* gap between the frame edge and the cards (smallest side) */
-            --home-bucket-inset: 14px;
-            /* Nested radius: outer = inner + gap (+1px frame border) */
-            --bs-accordion-border-radius: calc(var(--home-card-radius) + var(--home-bucket-inset) + 1px);
-            --bs-accordion-inner-border-radius: calc(var(--home-card-radius) + var(--home-bucket-inset));
-        }
-
-        /* Colored bucket headers keep Bootstrap's original slight rounding
-           (0.375rem) on the top corners. The nested radius above is for the
-           bottom, where the cards sit. Bootstrap rounds the top of BOTH the
-           frame (.accordion-item) and the header (.accordion-button) via
-           :first-of-type, so both are set here. The ID selectors out-rank
-           Bootstrap, no !important needed. */
-        #accordionAvailable,
-        #accordionReservations,
-        #accordionBought {
-            --home-header-radius: 0.375rem;
-        }
-        #accordionAvailable .accordion-item,
-        #accordionReservations .accordion-item,
-        #accordionBought .accordion-item {
-            border-top-left-radius: var(--home-header-radius);
-            border-top-right-radius: var(--home-header-radius);
-        }
-        #accordionAvailable .accordion-button,
-        #accordionReservations .accordion-button,
-        #accordionBought .accordion-button {
-            /* 1px less than the frame: sits inside its border */
-            border-top-left-radius: calc(var(--home-header-radius) - 1px);
-            border-top-right-radius: calc(var(--home-header-radius) - 1px);
+            /* One slight radius for the whole panel, top and bottom
+               (Bootstrap's own 0.375rem). Bootstrap reads these two
+               variables for every corner of the frame (.accordion-item) and
+               the header (.accordion-button), so overriding the variables
+               is enough: no per-corner rules. The inner radius is 1px less
+               because it sits inside the 1px frame border. */
+            --bs-accordion-border-radius: 0.375rem;
+            --bs-accordion-inner-border-radius: calc(0.375rem - 1px);
         }
 
         #availablePresentsList,
@@ -166,11 +142,6 @@
             /* Less nested horizontal padding so the text gets the width */
             .stats-container {
                 padding: 16px 12px;
-            }
-            #accordionAvailable,
-            #accordionReservations,
-            #accordionBought {
-                --home-bucket-inset: 6px;
             }
             #availablePresentsList,
             #myReservationsList,
