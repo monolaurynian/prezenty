@@ -113,8 +113,10 @@ async function initializeDatabase() {
         // Emoji reactions on chat messages. emoji uses COLLATE utf8mb4_bin
         // because the *_ci collations compare many emoji as EQUAL, which
         // would break both the unique key (one reaction per user per
-        // message) and GROUP BY emoji. user_id is stored for the toggle
-        // only - no endpoint ever exposes it.
+        // message) and GROUP BY emoji. VARCHAR(16) counts code points and
+        // fits the longest sequence in public/emoji-data.js (8; the build
+        // script asserts <= 16). user_id is stored for the toggle only - no
+        // endpoint ever exposes it.
         await connection.execute(`CREATE TABLE IF NOT EXISTS anon_message_reactions (
             id INT AUTO_INCREMENT PRIMARY KEY,
             message_id INT NOT NULL,

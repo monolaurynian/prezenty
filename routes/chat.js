@@ -354,7 +354,8 @@ router.post('/api/wiadomosci/messages/:messageId/reactions', requireAuth, async 
     if (messageId === null) return badRequest(res, 'Nieprawidłowa wiadomość');
 
     // Allowlist is the ONLY source of storable values - anything else is
-    // rejected before it can reach the database
+    // rejected before it can reach the database. Membership spans the full
+    // bundled emoji dataset (public/emoji-data.js) plus the legacy six.
     const emoji = req.body ? req.body.emoji : null;
     if (!isAllowedReactionEmoji(emoji)) return badRequest(res, 'Nieprawidłowa reakcja');
 

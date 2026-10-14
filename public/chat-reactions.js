@@ -27,10 +27,11 @@
     // Pure logic (shared with server.js)
     // ===============================================================
 
-    // Fixed reaction set. The ORDER here is the render order for chips and
-    // for the picker, so chip order is stable across clients. Nothing
-    // outside this list can ever be stored - server.js validates against
-    // it and answers 400 for anything else.
+    // Legacy reaction set (the quick reactions). Its ORDER is the render
+    // order of the first six chips and of the quick grid. These six are
+    // always allowed; the full allowlist is this set PLUS every emoji in
+    // the bundled dataset (emoji-data.js, see ALLOWED below). server.js
+    // validates against that allowlist and answers 400 for anything else.
     // Names are the gender-neutral Polish labels used in aria-labels.
     const CHAT_REACTIONS = [
         { emoji: '❤️', name: 'serce' },
@@ -41,11 +42,52 @@
         { emoji: '🙏', name: 'podziękowanie' }
     ];
     const CHAT_REACTION_EMOJI = CHAT_REACTIONS.map(r => r.emoji);
-    const EMOJI_ORDER = new Map(CHAT_REACTIONS.map((r, i) => [r.emoji, i]));
+    // The first five are the quick tiles in the reaction sheet.
+    const CHAT_QUICK_REACTIONS = CHAT_REACTIONS.slice(0, 5);
     const EMOJI_NAME = new Map(CHAT_REACTIONS.map(r => [r.emoji, r.name]));
 
+    // Bundled dataset: require() on the server, window.EmojiData in the
+    // browser. If it is missing (stale cache) the allowlist FAILS CLOSED to
+    // the legacy six - never open.
+    let emojiData = null;
+    try {
+        if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+            emojiData = require('./emoji-data');
+        } else if (root && root.EmojiData) {
+            emojiData = root.EmojiData;
+        }
+    } catch (error) {
+        emojiData = (root && root.EmojiData) || null;
+    }
+
+    // ORDER: legacy six keep indices 0-5, every other emoji sorts after
+    // them in dataset order (100 + index) - a total order, so chip order is
+    // identical on every client and the server.
+    const ALLOWED = new Set(CHAT_REACTION_EMOJI);
+    const EMOJI_ORDER = new Map(CHAT_REACTIONS.map((r, i) => [r.emoji, i]));
+    (function indexDataset() {
+        if (!emojiData || !Array.isArray(emojiData.categories)) return;
+        let index = 0;
+        emojiData.categories.forEach(category => {
+            String(category.emoji || '').split(' ').forEach(emoji => {
+                if (!emoji) return;
+                ALLOWED.add(emoji);
+                if (!EMOJI_ORDER.has(emoji)) EMOJI_ORDER.set(emoji, 100 + index);
+                index++;
+            });
+        });
+    })();
+
+    // Exact membership (not a regex): the server accepts precisely what the
+    // picker can send. HTML, control characters and multi-emoji strings are
+    // rejected by construction.
     function isAllowedReactionEmoji(emoji) {
-        return typeof emoji === 'string' && EMOJI_ORDER.has(emoji);
+        return typeof emoji === 'string' && emoji.length <= 32 && ALLOWED.has(emoji);
+    }
+    // Sort key for any allowed emoji; unknown values sort last (never NaN).
+    function orderOf(emoji) {
+        const order = EMOJI_ORDER.get(emoji);
+        return typeof order === 'number' ? order : Number.MAX_SAFE_INTEGER;
     }
 
     // Strict: only a plain positive integer passes, so "7abc" or "-1"
@@ -58,7 +100,10 @@
     }
 
     function sortByAllowlist(list) {
-        return list.slice().sort((a, b) => EMOJI_ORDER.get(a.emoji) - EMOJI_ORDER.get(b.emoji));
+        return list.slice().sort((a, b) => {
+            const diff = orderOf(a.emoji) - orderOf(b.emoji);
+            return diff !== 0 ? diff : (a.emoji < b.emoji ? -1 : (a.emoji > b.emoji ? 1 : 0));
+        });
     }
 
     // Shapes the API response from grouped DB rows
@@ -155,7 +200,9 @@
     const core = {
         CHAT_REACTIONS: CHAT_REACTIONS,
         CHAT_REACTION_EMOJI: CHAT_REACTION_EMOJI,
+        CHAT_QUICK_REACTIONS: CHAT_QUICK_REACTIONS,
         isAllowedReactionEmoji: isAllowedReactionEmoji,
+        orderOf: orderOf,
         parseMessageId: parseMessageId,
         buildReactionList: buildReactionList,
         groupReactionsByMessage: groupReactionsByMessage,
@@ -202,18 +249,31 @@
             : String(count);
     }
 
+    // Quote-safe escaper for ATTRIBUTE values (esc() above is for text
+    // nodes and does not escape quotes on this page).
+    function escAttr(value) {
+        return String(value === null || value === undefined ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function chipLabel(item) {
-        const name = EMOJI_NAME.get(item.emoji) || 'reakcja';
+        // Unnamed emoji: the glyph itself is announced natively by the
+        // screen reader, so "Reakcja <emoji>" instead of a generic word.
+        const name = EMOJI_NAME.get(item.emoji) || item.emoji;
         return 'Reakcja ' + name + ': ' + peopleLabel(item.count) + '. '
             + (item.mine ? 'Usuń swoją reakcję' : 'Dodaj swoją reakcję');
     }
 
     function chipHtml(messageId, item) {
         return '<button type="button" class="chat-reaction-chip"'
-            + ' data-message-id="' + esc(messageId) + '"'
-            + ' data-emoji="' + esc(item.emoji) + '"'
+            + ' data-message-id="' + escAttr(messageId) + '"'
+            + ' data-emoji="' + escAttr(item.emoji) + '"'
             + ' aria-pressed="' + (item.mine ? 'true' : 'false') + '"'
-            + ' aria-label="' + esc(chipLabel(item)) + '">'
+            + ' aria-label="' + escAttr(chipLabel(item)) + '">'
             + '<span class="chat-reaction-emoji" aria-hidden="true">' + esc(item.emoji) + '</span>'
             + '<span class="chat-reaction-count">' + esc(item.count) + '</span>'
             + '</button>';
@@ -221,7 +281,7 @@
 
     function addButtonHtml(messageId) {
         return '<button type="button" class="chat-reaction-add"'
-            + ' data-message-id="' + esc(messageId) + '"'
+            + ' data-message-id="' + escAttr(messageId) + '"'
             + ' aria-label="Dodaj reakcję do wiadomości">'
             + '<i class="ri-emotion-line" aria-hidden="true"></i>'
             + '</button>';
@@ -306,11 +366,10 @@
     // First chip in the strip that sorts AFTER `emoji`, so a new chip can
     // be inserted in allowlist order without moving any existing chip.
     function nextChipAfter(container, emoji) {
-        const order = EMOJI_ORDER.get(emoji);
+        const order = orderOf(emoji);
         const chips = container.querySelectorAll('.chat-reaction-chip');
         for (let i = 0; i < chips.length; i++) {
-            const other = EMOJI_ORDER.get(chips[i].getAttribute('data-emoji'));
-            if (typeof other === 'number' && other > order) return chips[i];
+            if (orderOf(chips[i].getAttribute('data-emoji')) > order) return chips[i];
         }
         return null;
     }
@@ -599,7 +658,9 @@
         EMOJI: CHAT_REACTIONS,
         CHAT_REACTIONS: CHAT_REACTIONS,
         CHAT_REACTION_EMOJI: CHAT_REACTION_EMOJI,
+        CHAT_QUICK_REACTIONS: CHAT_QUICK_REACTIONS,
         isAllowedReactionEmoji: isAllowedReactionEmoji,
+        orderOf: orderOf,
         parseMessageId: parseMessageId,
         buildReactionList: buildReactionList,
         groupReactionsByMessage: groupReactionsByMessage,
