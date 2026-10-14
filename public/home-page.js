@@ -125,7 +125,7 @@
                        </div>`;
 
                 html += `
-                    <div class="home-recipient-card" style="margin-bottom: 20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); border: 1px solid rgba(255,255,255,0.55); border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.13);">
+                    <div class="home-recipient-card" style="margin-bottom: 20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); border: 1px solid rgba(255,255,255,0.55); padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.13);">
                         <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             ${avatarHTML}
                             ${escapeHtml(recipient.name)}
@@ -285,7 +285,7 @@
                        </div>`;
 
                 html += `
-                    <div class="home-recipient-card" style="margin-bottom: 20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); border: 1px solid rgba(255,255,255,0.55); border-radius: 20px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.13);">
+                    <div class="home-recipient-card" style="margin-bottom: 20px; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); border: 1px solid rgba(255,255,255,0.55); padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.13);">
                         <h5 style="color: #2d3748; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             ${avatarHTML}
                             ${escapeHtml(recipient.name)}
