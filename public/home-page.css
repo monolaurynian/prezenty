@@ -116,11 +116,6 @@
             padding: 14px;
         }
 
-        /* Present cards: square top, rounded bottom to sit flush with bucket frame */
-        .home-recipient-card {
-            border-radius: 0 0 20px 20px !important;
-        }
-
         /* Present rows (Dostępne / Zarezerwowane / Kupione): titles wrap
            at spaces only, never letter by letter next to the nowrap
            action buttons. Long URLs stay on one line with an ellipsis. */
