@@ -1,0 +1,7 @@
+{
+  "task_id": "task-chat-emoji-picker-1",
+  "task_description": "Replace the 6th (🙏) quick-reaction tile in the Prezenty chat reaction sheet with a '+' (Więcej emoji) tile that opens a full, offline, self-contained emoji picker (bundled static dataset, category tabs, scrollable grid). Server accepts any emoji from the same dataset. Full plan: c:\\Users\\matmamon\\OneDrive - amazon.com\\Documents\\Prezenty\\prezenty\\.agents\\tasks\\chat-emoji-picker-1-plan.md",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}
