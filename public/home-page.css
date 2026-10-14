@@ -93,7 +93,23 @@
             }
         }
 
-        #availablePresentsList {
+        /* Home buckets (Dostępne / Moje rezerwacje / Kupione) share one look.
+           Tokens are local: app-theme.css has no radius/spacing tokens. */
+        #accordionAvailable,
+        #accordionReservations,
+        #accordionBought {
+            /* = border-radius of .home-recipient-card (inline in home-page.js) */
+            --home-card-radius: 20px;
+            /* gap between the frame edge and the cards (smallest side) */
+            --home-bucket-inset: 14px;
+            /* Nested radius: outer = inner + gap (+1px frame border) */
+            --bs-accordion-border-radius: calc(var(--home-card-radius) + var(--home-bucket-inset) + 1px);
+            --bs-accordion-inner-border-radius: calc(var(--home-card-radius) + var(--home-bucket-inset));
+        }
+
+        #availablePresentsList,
+        #myReservationsList,
+        #boughtPresentsList {
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -126,7 +142,14 @@
             .stats-container {
                 padding: 16px 12px;
             }
-            #availablePresentsList {
+            #accordionAvailable,
+            #accordionReservations,
+            #accordionBought {
+                --home-bucket-inset: 6px;
+            }
+            #availablePresentsList,
+            #myReservationsList,
+            #boughtPresentsList {
                 padding: 10px 6px;
             }
             .home-recipient-card {
