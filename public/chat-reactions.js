@@ -229,6 +229,7 @@
     let sheetBound = false;
     let sheetMessageId = null;
     let focusBeforeSheet = null;
+    let picker = null; // full emoji picker, created lazily on first "+" tap
 
     // The chat page already has these; local fallbacks keep the strip
     // rendering even if a stale cache serves this file on its own.
@@ -502,8 +503,42 @@
         return {
             overlay: document.getElementById('reactionSheetOverlay'),
             sheet: document.getElementById('reactionSheet'),
-            grid: document.getElementById('reactionSheetGrid')
+            grid: document.getElementById('reactionSheetGrid'),
+            title: document.getElementById('reactionSheetTitle'),
+            back: document.getElementById('reactionSheetBack'),
+            pickerRoot: document.getElementById('emojiPickerRoot')
         };
+    }
+
+    // The full picker needs both the dataset and the picker script. If a
+    // stale cache served the page without them, the 6th tile falls back to
+    // the old folded-hands reaction so the sheet never loses a control.
+    function hasFullPicker() {
+        return !!(root.EmojiData && root.EmojiPicker);
+    }
+
+    // 5 quick emoji + one more tile ("+", or the legacy 6th emoji).
+    function quickTileCount() {
+        return CHAT_QUICK_REACTIONS.length + 1;
+    }
+
+    function quickTileHtml(r) {
+        return '<button type="button" class="reaction-sheet-btn"'
+            + ' data-emoji="' + escAttr(r.emoji) + '"'
+            + ' aria-pressed="false"'
+            + ' aria-label="' + escAttr('Reakcja ' + r.name) + '">'
+            + '<span aria-hidden="true">' + esc(r.emoji) + '</span>'
+            + '</button>';
+    }
+
+    function isMine(messageId, emoji) {
+        const list = state.get(messageId) || [];
+        return list.some(x => x.emoji === emoji && x.mine);
+    }
+
+    function inFullMode() {
+        const sheet = sheetEls().sheet;
+        return !!(sheet && sheet.classList.contains('is-all'));
     }
 
     // The picker shows a fixed set of buttons, so they are built once and
@@ -514,28 +549,73 @@
         const grid = sheetEls().grid;
         if (!grid || sheetMessageId === null) return;
         const list = state.get(sheetMessageId) || [];
-        if (grid.childElementCount !== CHAT_REACTIONS.length) {
-            grid.innerHTML = CHAT_REACTIONS.map(r =>
-                '<button type="button" class="reaction-sheet-btn"'
-                + ' data-emoji="' + esc(r.emoji) + '"'
-                + ' aria-pressed="false"'
-                + ' aria-label="' + esc('Reakcja ' + r.name) + '">'
-                + '<span aria-hidden="true">' + esc(r.emoji) + '</span>'
-                + '</button>'
-            ).join('');
+        if (grid.childElementCount !== quickTileCount()) {
+            const more = hasFullPicker()
+                ? '<button type="button" class="reaction-sheet-btn reaction-sheet-more"'
+                    + ' aria-label="Więcej emoji">'
+                    + '<span aria-hidden="true">+</span>'
+                    + '</button>'
+                : quickTileHtml(CHAT_REACTIONS[CHAT_QUICK_REACTIONS.length]);
+            grid.innerHTML = CHAT_QUICK_REACTIONS.map(quickTileHtml).join('') + more;
         }
-        grid.querySelectorAll('.reaction-sheet-btn').forEach(button => {
+        grid.querySelectorAll('.reaction-sheet-btn[data-emoji]').forEach(button => {
             const item = list.find(x => x.emoji === button.getAttribute('data-emoji'));
             button.setAttribute('aria-pressed', item && item.mine ? 'true' : 'false');
         });
+        // Full mode: only flips aria-pressed, never rebuilds or moves focus
+        if (picker && inFullMode()) picker.refreshSelected();
     }
 
+    // Quick view: the five quick emoji + "+". Optionally focuses the "+".
+    function showQuick(focusMore) {
+        const els = sheetEls();
+        if (!els.sheet) return;
+        els.sheet.classList.remove('is-all');
+        if (els.grid) els.grid.hidden = false;
+        if (els.pickerRoot) els.pickerRoot.hidden = true;
+        if (els.back) els.back.hidden = true;
+        if (els.title) els.title.textContent = 'Wybierz reakcję';
+        if (focusMore && els.grid) {
+            const more = els.grid.querySelector('.reaction-sheet-more');
+            if (more) more.focus();
+        }
+    }
+
+    // Full view: category tabs + every emoji, in the same dialog.
+    function showAll() {
+        const els = sheetEls();
+        if (!els.sheet || !els.pickerRoot || !hasFullPicker()) return;
+        if (!picker) {
+            picker = root.EmojiPicker.create(els.pickerRoot, {
+                onSelect: function (emoji) {
+                    if (sheetMessageId === null) return;
+                    toggle(sheetMessageId, emoji);
+                    closeSheet();
+                },
+                isSelected: function (emoji) {
+                    return sheetMessageId !== null && isMine(sheetMessageId, emoji);
+                }
+            });
+        }
+        if (!picker) return;
+        els.sheet.classList.add('is-all');
+        if (els.grid) els.grid.hidden = true;
+        els.pickerRoot.hidden = false;
+        if (els.back) els.back.hidden = false;
+        if (els.title) els.title.textContent = 'Wszystkie emoji';
+        picker.show();
+        picker.focusFirst();
+    }
+
+    // Visible, enabled buttons that are a tab stop. Roving-tabindex members
+    // (tabindex="-1") and anything inside a [hidden] pane are skipped, so
+    // Tab cycles: back/close, selected tab, the grid's one stop.
     function focusables() {
         const sheet = sheetEls().sheet;
         if (!sheet) return [];
         return Array.prototype.slice.call(
-            sheet.querySelectorAll('button:not([disabled])')
-        );
+            sheet.querySelectorAll("button:not([disabled]):not([tabindex='-1'])")
+        ).filter(button => !button.closest('[hidden]'));
     }
 
     function openSheet(messageId) {
@@ -544,6 +624,7 @@
         if (id === null || !els.sheet || !els.overlay) return;
         sheetMessageId = id;
         focusBeforeSheet = document.activeElement;
+        showQuick(false); // the sheet always opens on the quick view
         paintSheet();
         els.sheet.removeAttribute('aria-hidden');
         els.sheet.removeAttribute('inert');
@@ -565,6 +646,9 @@
             els.sheet.setAttribute('aria-hidden', 'true');
             els.sheet.setAttribute('inert', '');
         }
+        // Next open starts on the quick view. The sheet is already
+        // visibility:hidden here, so the swap is never seen.
+        showQuick(false);
         // The add button may have been re-rendered while the sheet was
         // open, so fall back to looking it up by message id.
         let target = focusBeforeSheet;
@@ -611,12 +695,16 @@
             if (!(e.target instanceof Element)) return;
             const btn = e.target.closest('.reaction-sheet-btn');
             if (!btn || sheetMessageId === null) return;
+            if (btn.classList.contains('reaction-sheet-more')) { showAll(); return; }
             toggle(sheetMessageId, btn.getAttribute('data-emoji'));
             closeSheet();
         });
 
         const closeBtn = document.getElementById('reactionSheetClose');
         if (closeBtn) closeBtn.addEventListener('click', () => closeSheet());
+
+        // Back from the full view to the quick view (focus returns to "+")
+        if (els.back) els.back.addEventListener('click', () => showQuick(true));
 
         // Escape closes; Tab is trapped inside the sheet while it is open.
         els.sheet.addEventListener('keydown', (e) => {

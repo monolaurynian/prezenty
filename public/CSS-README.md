@@ -17,7 +17,7 @@ stylesheet that is served must be committed. Files are one of three kinds:
 | `bottom-tab-bar.css?v=43` | Source | activity, formularz, home, leaderboard, recipients, rezerwacje, ustawienia, wiadomosci |
 | `app-theme.css?v=14` | Source | every page above except index and register |
 | `filters.css?v=8` | Source | recipients |
-| `chat-reactions.css?v=3` | Source | wiadomosci |
+| `chat-reactions.css?v=4` | Source | wiadomosci |
 | `<page>-page.css?v=N`, `formularz-page-edit.css?v=1` | Source (extracted from inline `<style>`). N is 2 for activity, formularz, leaderboard and recipients, 1 for the others. | their own page, always last |
 | `intro-page.css?v=1` | Source | intro (the only sheet on that page) |
 
@@ -78,9 +78,8 @@ for the service worker, which is cache-first for non-HTML requests keyed by the 
 
 - When the bytes of a linked stylesheet change, bump its `?v=` in every page that links it.
 - Bump `CACHE_NAME` in `public/sw.js` once per change set and keep `urlsToCache` consistent with the URLs the
-  pages request. Known gaps, not fixed: `aws-design.css?v=5` (recipients) vs the precached `/aws-design.css`,
-  `chat-reactions.css?v=3` vs `/chat-reactions.css`; `bottom-tab-bar.css`, `app-theme.css` and `filters.css`
-  are not precached.
+  pages request. Known gaps, not fixed: `aws-design.css?v=5` (recipients) vs the precached `/aws-design.css`;
+  `bottom-tab-bar.css`, `app-theme.css` and `filters.css` are not precached.
 
 ## Removing dead rules
 

@@ -39,6 +39,7 @@ The browser is the **Edge already installed on the machine**
 One line each, alphabetical. All live in `tests/e2e/`.
 
 - `a11y` - a11y smoke over `PAGES`; holds 10 of the 11 fixmes
+- `chat-emoji-picker`
 - `chat-reactions`
 - `composer-dock` - dock hide-on-scroll, entering add mode from a hidden dock,
   scroll position, reduced motion

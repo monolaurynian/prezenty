@@ -22,14 +22,16 @@
     <link href="styles.deduped.min.css" rel="stylesheet">
     <link href="bottom-tab-bar.css?v=43" rel="stylesheet">
     <link href="app-theme.css?v=14" rel="stylesheet">
-    <link href="chat-reactions.css?v=3" rel="stylesheet">
+    <link href="chat-reactions.css?v=4" rel="stylesheet">
     <link href="wiadomosci-page.css?v=1" rel="stylesheet">
     <script src="pluralize-pl.js"></script>
     <script src="notification-text.js?v=2"></script>
     <!-- Loaded in <head> (not at the end of <body>) so window.ChatReactions
          exists by the time the page's own inline script runs. It defers its
          DOM wiring to DOMContentLoaded. -->
-    <script src="chat-reactions.js?v=3"></script>
+    <script src="emoji-data.js?v=1"></script>
+    <script src="chat-reactions.js?v=4"></script>
+    <script src="emoji-picker.js?v=1"></script>
 </head>
 <body class="has-tab-bar">
     <div class="background-overlay"></div>
@@ -109,12 +111,16 @@
     <div id="reactionSheet" role="dialog" aria-modal="true"
         aria-labelledby="reactionSheetTitle" aria-hidden="true" inert>
         <div class="reaction-sheet-header">
+            <button type="button" id="reactionSheetBack" aria-label="Wróć do szybkich reakcji" hidden>
+                <span aria-hidden="true">←</span>
+            </button>
             <h2 id="reactionSheetTitle">Wybierz reakcję</h2>
             <button type="button" id="reactionSheetClose" aria-label="Zamknij">
                 <i class="ri-close-line" aria-hidden="true"></i>
             </button>
         </div>
         <div class="reaction-sheet-grid" id="reactionSheetGrid"></div>
+        <div id="emojiPickerRoot" hidden></div>
     </div>
 
     <!-- Toasts -->

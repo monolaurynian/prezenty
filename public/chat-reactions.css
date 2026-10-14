@@ -416,3 +416,198 @@
         transform: translate(-50%, -50%);
     }
 }
+
+/* ============================================================
+   Full emoji picker
+   The "+" tile in the quick grid switches the SAME #reactionSheet
+   dialog into this mode (#reactionSheet.is-all): back button, a row of
+   category tabs and a scrollable emoji grid (emoji-picker.js). Plain text
+   glyphs only (+, arrow, emoji) - no icon font - so it also works offline
+   and with the CDN blocked. Palette as above: purple #7B1FA2, text
+   #2d3748, focus #1E88E5.
+   ============================================================ */
+
+/* display:grid / flex on these beats the UA [hidden] rule, so restore it */
+.reaction-sheet-grid[hidden],
+#emojiPickerRoot[hidden],
+#reactionSheetBack[hidden] {
+    display: none;
+}
+
+/* The "+" tile is text, not an emoji, so it is drawn a little larger */
+.reaction-sheet-more {
+    font-size: 30px;
+    line-height: 1;
+    color: #2d3748;
+}
+
+/* Same 44x44 round button as #reactionSheetClose */
+#reactionSheetBack {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: #2d3748;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+#reactionSheetBack:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Full mode header: back | title | close */
+#reactionSheet.is-all .reaction-sheet-header h2 {
+    flex: 1;
+    min-width: 0;
+    margin: 0 8px;
+}
+
+/* Full mode sizing. A fixed height (not content height) keeps the sheet from
+   jumping when the category changes the number of rows; the grid scrolls. */
+#reactionSheet.is-all {
+    height: 78vh;
+    height: min(78dvh, 560px);
+}
+
+#emojiPickerRoot {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Category tabs: the ONE intentional horizontal scroller (9 x 44px is wider
+   than a 320px screen). Scrollbar hidden; the row is reachable by swipe,
+   arrow keys and Home/End. */
+.emoji-picker-tabs {
+    position: relative;
+    display: flex;
+    flex: none;
+    gap: 4px;
+    padding: 0 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    border-bottom: 1px solid #e2e6ea;
+    -webkit-overflow-scrolling: touch;
+}
+
+.emoji-picker-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+/* Selected tab = 3px purple underline (+ aria-selected): a non-colour-only
+   cue as well, since it is a shape the unselected tabs do not have. */
+.emoji-picker-tab {
+    box-sizing: border-box;
+    flex: none;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 8px;
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.emoji-picker-tab:hover {
+    background: #f1f3f5;
+}
+
+.emoji-picker-tab[aria-selected="true"] {
+    border-bottom-color: #7B1FA2;
+}
+
+/* Active category. contain stops scroll chaining into the chat page behind
+   the overlay. */
+.emoji-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+    gap: 2px;
+    padding: 8px 12px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    min-height: 0;
+    align-content: start;
+}
+
+.emoji-picker-btn {
+    box-sizing: border-box;
+    min-width: 44px;
+    min-height: 44px;
+    height: 44px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.emoji-picker-btn:hover {
+    background: #f1f3f5;
+}
+
+/* Already reacted: same cue as .reaction-sheet-btn[aria-pressed=true] -
+   purple fill, 2px purple border (the transparent 2px border above means no
+   reflow) and an inner white ring. */
+.emoji-picker-btn[aria-pressed="true"] {
+    background: #F3E5F5;
+    border-color: #7B1FA2;
+    box-shadow: inset 0 0 0 1px #ffffff;
+}
+
+.emoji-picker-btn[aria-pressed="true"]:hover {
+    background: #E1BEE7;
+}
+
+/* Focus ring. Inside the two scrollers it is drawn INSIDE the box
+   (negative offset) so overflow:auto cannot clip it. */
+.emoji-picker-btn:focus-visible,
+.emoji-picker-tab:focus-visible {
+    outline: 2px solid #1E88E5;
+    outline-offset: -2px;
+}
+
+#reactionSheetBack:focus-visible {
+    outline: 2px solid #1E88E5;
+    outline-offset: 2px;
+}
+
+/* Desktop: a wider card so the grid shows several columns */
+@media (min-width: 769px) {
+    #reactionSheet.is-all {
+        width: 360px;
+        max-width: calc(100vw - 32px);
+        height: min(70vh, 480px);
+        height: min(70dvh, 480px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .emoji-picker-tabs,
+    .emoji-picker-grid {
+        scroll-behavior: auto;
+    }
+
+    #reactionSheetBack,
+    .emoji-picker-tab,
+    .emoji-picker-btn {
+        transition: none;
+    }
+}
