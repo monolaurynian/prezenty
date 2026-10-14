@@ -107,6 +107,22 @@
             --bs-accordion-inner-border-radius: calc(var(--home-card-radius) + var(--home-bucket-inset));
         }
 
+        /* Colored bucket headers have a flat top edge. The top rounding comes
+           from Bootstrap's :first-of-type rules on BOTH the frame
+           (.accordion-item) and the header (.accordion-button), so both are
+           flattened here. The ID selectors out-rank Bootstrap, no !important
+           needed. Bottom corners stay rounded (frame, and the header when
+           the bucket is collapsed). */
+        #accordionAvailable .accordion-item,
+        #accordionReservations .accordion-item,
+        #accordionBought .accordion-item,
+        #accordionAvailable .accordion-button,
+        #accordionReservations .accordion-button,
+        #accordionBought .accordion-button {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+
         #availablePresentsList,
         #myReservationsList,
         #boughtPresentsList {
