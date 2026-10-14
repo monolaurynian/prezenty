@@ -3,18 +3,27 @@
 ## Change Summary
 Updated `.home-recipient-card` border-radius from full rounded (20px) to flat-top + rounded-bottom (0 0 20px 20px).
 
-**File Modified:** `public/home-page.css`
+**Files Modified:** 
+- `public/home-page.css` — Added CSS rule
+- `public/home-page.js` — Removed inline `border-radius: 20px;`
 
-**Commit:** `162ab98` — `style(home): Square top corners on present cards`
+**Commits:** 
+1. `162ab98` — `style(home): Square top corners on present cards`
+2. `a8a01af` — `style(home): Remove inline border-radius to let CSS rule apply`
 
-## CSS Change Applied
+## CSS Changes Applied
 
+**In `public/home-page.css`:**
 ```css
 /* Present cards: square top, rounded bottom to sit flush with bucket frame */
 .home-recipient-card {
     border-radius: 0 0 20px 20px !important;
 }
 ```
+
+**In `public/home-page.js`:**
+- Removed `border-radius: 20px;` from inline styles (2 occurrences)
+- CSS class rule now takes precedence
 
 ## Verification Method
 
