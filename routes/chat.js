@@ -12,9 +12,10 @@ const {
 const { DEMO_MODE, pool } = require('../lib/db');
 const { handleDbError, notFound, forbidden, badRequest } = require('../lib/http-errors');
 const { requireAuth } = require('../lib/auth');
-const { ensureAnonMessageTables, notifyAnonMessage, reactionRateAllows } = require('../lib/chat');
+const { ensureAnonMessageTables, notifyAnonMessage, reactionRateAllows, getGroupChatUnreadCount } = require('../lib/chat');
 const { linkPreviewCache, LINK_PREVIEW_TTL, isSafePreviewUrl, extractMeta, fetchPreview } = require('../lib/link-preview');
 const { demoChat, demoThreadMessages, demoIsParticipant, demoOtherLabel, demoThreadList, demoUnreadCount, demoReactionRows, demoThreadReactionRows, demoReactionToggle } = require('../lib/demo-data');
+const { sendNotificationToUsers } = require('../lib/push');
 
 // Users the current user can message (everyone but themselves)
 router.get('/api/wiadomosci/users', requireAuth, async (req, res) => {
@@ -84,25 +85,42 @@ router.get('/api/wiadomosci/threads', requireAuth, async (req, res) => {
             console.error('[WIADOMOSCI] thread reaction preview failed:', reactionErr.message);
         }
 
-        res.json({
-            threads: threads.map(t => ({
-                id: t.id,
-                role: t.initiator_id === userId ? 'initiator' : 'target',
-                // Target sees "Święty Mikołaj"; initiator sees who they wrote to
-                otherLabel: t.initiator_id === userId ? t.target_username : 'Święty Mikołaj 🎅',
-                // The target's id is never a secret (they're the known
-                // party) - lets ?do= deep links find an existing thread
-                targetUserId: t.target_id,
-                lastBody: t.last_body,
-                lastAt: t.last_at,
-                unreadCount: Number(t.unread_count),
-                // null unless the other side reacted AFTER the last message
-                lastReaction: buildLastReaction(
-                    reactionByThread.get(Number(t.id)) || null,
-                    { id: t.last_id, at: t.last_at }
-                )
-            }))
-        });
+        // Build the group chat synthetic thread and prepend it
+        const [lastGroupMsg] = await pool.execute(
+            'SELECT id, body, created_at FROM group_chat_messages ORDER BY id DESC LIMIT 1'
+        );
+        const lastMessage = lastGroupMsg[0] || null;
+        const groupUnread = await getGroupChatUnreadCount(userId);
+        const groupThread = {
+            id: 'group',
+            otherLabel: '👥 Czat grupowy',
+            lastBody: lastMessage ? lastMessage.body : 'Napisz pierwszą wiadomość...',
+            lastAt: lastMessage ? lastMessage.created_at : null,
+            unreadCount: groupUnread,
+            pinned: true,
+            isGroup: true
+        };
+
+        const mappedThreads = threads.map(t => ({
+            id: t.id,
+            role: t.initiator_id === userId ? 'initiator' : 'target',
+            // Target sees "Święty Mikołaj"; initiator sees who they wrote to
+            otherLabel: t.initiator_id === userId ? t.target_username : 'Święty Mikołaj 🎅',
+            // The target's id is never a secret (they're the known
+            // party) - lets ?do= deep links find an existing thread
+            targetUserId: t.target_id,
+            lastBody: t.last_body,
+            lastAt: t.last_at,
+            unreadCount: Number(t.unread_count),
+            // null unless the other side reacted AFTER the last message
+            lastReaction: buildLastReaction(
+                reactionByThread.get(Number(t.id)) || null,
+                { id: t.last_id, at: t.last_at }
+            )
+        }));
+
+        mappedThreads.unshift(groupThread);
+        res.json({ threads: mappedThreads });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas pobierania wiadomości');
     }
@@ -120,7 +138,8 @@ router.get('/api/wiadomosci/unread-count', requireAuth, async (req, res) => {
             WHERE (t.initiator_id = ? OR t.target_id = ?)
               AND m.sender_id != ? AND m.is_read = 0
         `, [userId, userId, userId]);
-        res.json({ count: Number(rows[0].count) });
+        const groupUnread = await getGroupChatUnreadCount(userId);
+        res.json({ count: Number(rows[0].count) + groupUnread });
     } catch (err) {
         return handleDbError(err, res, 'Błąd');
     }
@@ -434,6 +453,74 @@ router.post('/api/wiadomosci/messages/:messageId/reactions', requireAuth, async 
         });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas zapisywania reakcji');
+    }
+});
+
+// ---- Group chat (anonymous, shared room for everyone) ----
+
+// GET /api/wiadomosci/group - fetch last 50 messages, mark as read
+router.get('/api/wiadomosci/group', requireAuth, async (req, res) => {
+    if (DEMO_MODE) {
+        return res.json({
+            messages: [
+                { id: 3, body: 'Jakie macie pomysły na prezenty? 🎁', created_at: new Date(Date.now() - 5e5), isOwn: false },
+                { id: 2, body: 'Witajcie! Cieszę się, że tu jesteście 😊', created_at: new Date(Date.now() - 1e6), isOwn: false },
+                { id: 1, body: 'Witajcie! To jest anonimowy czat grupowy.', created_at: new Date(Date.now() - 2e6), isOwn: true }
+            ]
+        });
+    }
+    const userId = req.session.userId;
+    try {
+        await ensureAnonMessageTables();
+        const [rows] = await pool.execute(
+            'SELECT id, body, created_at, sender_user_id FROM group_chat_messages ORDER BY created_at DESC, id DESC LIMIT 50',
+            []
+        );
+        const messages = rows.map(row => ({
+            id: row.id,
+            body: row.body,
+            created_at: row.created_at,
+            isOwn: row.sender_user_id === userId
+        }));
+        // Upsert read pointer to max id seen
+        if (messages.length > 0) {
+            const maxId = Math.max(...messages.map(m => m.id));
+            await pool.execute(
+                'INSERT INTO group_chat_read (user_id, last_read_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE last_read_id = GREATEST(last_read_id, VALUES(last_read_id))',
+                [userId, maxId]
+            );
+        }
+        res.json({ messages });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas pobierania czatu grupowego');
+    }
+});
+
+// POST /api/wiadomosci/group - send a message to the group chat
+router.post('/api/wiadomosci/group', requireAuth, async (req, res) => {
+    if (DEMO_MODE) return res.json({ ok: true, id: 99 });
+    const userId = req.session.userId;
+    const body = req.body && req.body.body;
+    if (!body || !String(body).trim()) return badRequest(res, 'Wpisz wiadomość');
+    if (String(body).trim().length > 2000) return badRequest(res, 'Wiadomość jest za długa (max 2000 znaków)');
+    try {
+        await ensureAnonMessageTables();
+        const [result] = await pool.execute(
+            'INSERT INTO group_chat_messages (sender_user_id, body) VALUES (?, ?)',
+            [userId, String(body).trim()]
+        );
+        const insertId = result.insertId;
+        // Update sender's own read pointer so the message doesn't count as unread for them
+        await pool.execute(
+            'INSERT INTO group_chat_read (user_id, last_read_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE last_read_id = GREATEST(last_read_id, VALUES(last_read_id))',
+            [userId, insertId]
+        );
+        // Push notification to all other users
+        const preview = String(body).trim().slice(0, 100);
+        sendNotificationToUsers(userId, '👥 Czat grupowy', preview, { url: '/wiadomosci.html', isGroup: true }).catch(() => {});
+        res.json({ ok: true, id: insertId });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas wysyłania wiadomości');
     }
 });
 

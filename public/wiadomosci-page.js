@@ -27,7 +27,14 @@
 
                         // Deep link: ?rozmowa=<id> opens the conversation
                         const rozmowa = params.get('rozmowa');
-                        if (rozmowa) { openThread(parseInt(rozmowa, 10), false); return; }
+                        if (rozmowa) {
+                            if (rozmowa === 'group') {
+                                openThread('group', false);
+                            } else {
+                                openThread(parseInt(rozmowa, 10), false);
+                            }
+                            return;
+                        }
 
                         // Deep link: ?do=<userId> (profile modals) - open
                         // the existing thread with that person, or a fresh
@@ -66,8 +73,13 @@
             if (navigator.serviceWorker) {
                 navigator.serviceWorker.addEventListener('message', (e) => {
                     const d = e.data && e.data.type === 'push' ? e.data.data : null;
-                    if (!d || !d.threadId) return;
-                    if (currentThreadId && Number(d.threadId) === Number(currentThreadId)) {
+                    if (!d) return;
+                    if (d.isGroup) {
+                        if (currentThreadId === 'group') loadGroupMessages();
+                        else loadThreads();
+                    } else if (!d.threadId) {
+                        // no-op
+                    } else if (currentThreadId && Number(d.threadId) === Number(currentThreadId)) {
                         loadThreadMessages();
                     } else if (!currentThreadId) {
                         loadThreads();
@@ -196,7 +208,22 @@
                             </div>`;
                         return threads;
                     }
-                    list.innerHTML = threads.map(t => `
+                    list.innerHTML = threads.map(t => {
+                        if (t.isGroup || t.id === 'group') {
+                            return `
+                        <div class="thread-row thread-row--pinned" onclick="openThread('group')">
+                            <div class="thread-pin-badge">📌 Przypięty</div>
+                            <div class="d-flex justify-content-between align-items-center gap-2">
+                                <span class="thread-who">👥 Czat grupowy</span>
+                                <span class="d-flex align-items-center gap-2">
+                                    ${t.unreadCount > 0 ? `<span class="thread-unread">${t.unreadCount}</span>` : ''}
+                                    <small style="color:#9ca3af !important;">${timeAgo(t.lastAt)}</small>
+                                </span>
+                            </div>
+                            <div class="thread-last">${escapeHtml(t.lastBody || '')}</div>
+                        </div>`;
+                        }
+                        return `
                         <div class="thread-row" onclick="openThread(${t.id})">
                             <div class="d-flex justify-content-between align-items-center gap-2">
                                 <span class="thread-who">${escapeHtml(t.otherLabel)}</span>
@@ -206,8 +233,8 @@
                                 </span>
                             </div>
                             <div class="thread-last">${escapeHtml(threadPreviewText(t))}</div>
-                        </div>
-                    `).join('');
+                        </div>`;
+                    }).join('');
                     return threads;
                 })
                 .catch(() => {
@@ -231,9 +258,15 @@
             document.getElementById('chatView').style.display = 'block';
             document.getElementById('chatMessages').innerHTML =
                 '<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>';
+            // Hide delete button for group chat (it can't be deleted)
+            document.getElementById('deleteThreadBtn').style.display = 'none';
             // Clear the app icon badge — user is reading the conversation
             if ('clearAppBadge' in navigator) {
                 navigator.clearAppBadge().catch(() => {});
+            }
+            if (threadId === 'group') {
+                document.getElementById('chatTitle').innerHTML =
+                    `<i class="fas fa-comment-dots" style="color:#7B1FA2;"></i>👥 Czat grupowy`;
             }
             loadThreadMessages();
         }
@@ -345,8 +378,40 @@
                 .catch(() => previewCache.set(url, null));
         }
 
+        function loadGroupMessages() {
+            fetch('/api/wiadomosci/group')
+                .then(r => r.json())
+                .then(d => {
+                    if (currentThreadId !== 'group') return;
+                    const box = document.getElementById('chatMessages');
+                    const msgs = d.messages || [];
+                    // API returns newest-first; reverse for display
+                    const ordered = msgs.slice().reverse();
+                    const sig = 'group:' + ordered.length + ':' + (ordered.length ? ordered[ordered.length - 1].id : 0);
+                    if (sig === lastChatSignature) return;
+                    lastChatSignature = sig;
+                    box.innerHTML = ordered.map(m => `
+                        <div class="chat-msg-row ${m.isOwn ? 'from-me' : 'from-them'}">
+                            <div class="chat-bubble ${m.isOwn ? 'from-me' : 'from-them'}">
+                                ${renderMessageBody(m.body)}
+                                <div id="lp-g${m.id}"></div>
+                                <div class="chat-time">${timeAgo(m.created_at)}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    box.scrollTop = box.scrollHeight;
+                    ordered.forEach(m => {
+                        const url = firstUrlIn(m.body);
+                        if (url) loadLinkPreview(url, 'lp-g' + m.id);
+                    });
+                    if (typeof updateMessagesBadge === 'function') updateMessagesBadge();
+                })
+                .catch(() => showToast('Nie udało się załadować czatu grupowego', 'error'));
+        }
+
         function loadThreadMessages() {
             if (!currentThreadId) return;
+            if (currentThreadId === 'group') { loadGroupMessages(); return; }
             fetch(`/api/wiadomosci/threads/${currentThreadId}`)
                 .then(r => r.json())
                 .then(d => {
@@ -410,6 +475,28 @@
 
             const btn = document.getElementById('replyBtn');
             btn.disabled = true;
+
+            // Group chat branch
+            if (currentThreadId === 'group') {
+                fetch('/api/wiadomosci/group', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ body })
+                })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.ok) {
+                            input.value = '';
+                            lastChatSignature = null; // force re-render
+                            loadGroupMessages();
+                        } else {
+                            showToast(d.error || 'Nie udało się wysłać', 'error');
+                        }
+                    })
+                    .catch(() => showToast('Błąd połączenia', 'error'))
+                    .finally(() => { btn.disabled = false; });
+                return;
+            }
 
             // New-chat mode: the first message creates the thread
             const isNew = !currentThreadId && newChatTargetId;
