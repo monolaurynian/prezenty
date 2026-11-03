@@ -1,14 +1,11 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "server.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxDuration": 30
-      }
+  "functions": {
+    "server.js": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 30
     }
-  ],
+  },
   "routes": [
     {
       "src": "/(.*)",
@@ -16,7 +13,6 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "DATABASE_URL": "<your_postgres_connection_string>"
+    "NODE_ENV": "production"
   }
 }

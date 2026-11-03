@@ -64,6 +64,11 @@ router.post('/api/notifications/subscribe', requireAuth, async (req, res) => {
             subscription.keys.auth
         ]);
 
+        // Remember which endpoint this session is on, so notifications
+        // triggered from this session skip only this device rather than
+        // all devices belonging to the same user account.
+        req.session.pushEndpoint = subscription.endpoint;
+
         // Get total subscription count for this user
         const [countResult] = await pool.execute(
             'SELECT COUNT(*) as count FROM push_subscriptions WHERE user_id = ?',

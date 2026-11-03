@@ -175,7 +175,7 @@ router.post('/api/formularz/present', async (req, res) => {
                 presentTitle: presentTitle.trim(),
                 recipientId: recipientId,
                 recipientName: notificationRecipientName
-            }).catch(err => {
+            }, req.session.pushEndpoint || null).catch(err => {
                 // Log error but don't fail the present creation
                 console.error('❌ [FORMULARZ] Failed to send notification (present was created successfully):', err);
             });

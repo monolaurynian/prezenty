@@ -322,7 +322,7 @@ router.post('/api/presents', requireAuth, async (req, res) => {
             presentTitle: title.trim(),
             recipientId: recipient_id || null,
             recipientName: recipientName
-        }).catch(err => {
+        }, req.session.pushEndpoint || null).catch(err => {
             // Log error but don't fail the present creation
             console.error('❌ [PRESENT] Failed to send notification (present was created successfully):', err);
         });
