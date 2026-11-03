@@ -36,10 +36,15 @@
         const lists = categories.map(category =>
             String(category.emoji || '').split(' ').filter(Boolean));
 
+        const allEmoji = lists.reduce(function(acc, list) { return acc.concat(list); }, []);
+
         let active = 0;        // index of the active category (kept in memory)
         let rove = 0;          // index of the grid button that holds tabindex=0
+        let searchQuery = '';  // current search string
         let buttons = [];      // emoji buttons of the active category
         const tabEls = [];
+
+        const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         const tablist = document.createElement('div');
         tablist.className = 'emoji-picker-tabs';
@@ -65,7 +70,18 @@
             tablist.appendChild(tab);
         });
 
+        const searchInput = document.createElement('input');
+        searchInput.type = 'search';
+        searchInput.className = 'emoji-picker-search';
+        searchInput.placeholder = 'Szukaj emoji...';
+        searchInput.setAttribute('aria-label', 'Szukaj emoji');
+        searchInput.setAttribute('autocomplete', 'off');
+        searchInput.setAttribute('autocorrect', 'off');
+        searchInput.setAttribute('autocapitalize', 'off');
+        searchInput.setAttribute('spellcheck', 'false');
+
         container.textContent = '';
+        container.appendChild(searchInput);
         container.appendChild(tablist);
         container.appendChild(grid);
 
@@ -90,9 +106,18 @@
         }
 
         function paintGrid() {
-            grid.setAttribute('aria-labelledby', tabEls[active].id);
+            const emojiList = searchQuery.length > 0 ? allEmoji : lists[active];
+            if (searchQuery.length > 0) {
+                grid.removeAttribute('aria-labelledby');
+                grid.setAttribute('aria-label', 'Wyniki wyszukiwania');
+                grid.setAttribute('data-search-active', 'true');
+            } else {
+                grid.setAttribute('aria-labelledby', tabEls[active].id);
+                grid.removeAttribute('aria-label');
+                grid.removeAttribute('data-search-active');
+            }
             const fragment = document.createDocumentFragment();
-            lists[active].forEach((emoji, index) => {
+            emojiList.forEach((emoji, index) => {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'emoji-picker-btn';
@@ -106,6 +131,11 @@
             grid.appendChild(fragment);
             grid.scrollTop = 0;
             buttons = Array.prototype.slice.call(grid.children);
+        }
+
+        function setSearchMode(on) {
+            tablist.hidden = on;
+            paintGrid();
         }
 
         function selectCategory(index, moveFocus) {
@@ -189,6 +219,56 @@
             moveTo(next);
         });
 
+        searchInput.addEventListener('input', function () {
+            searchQuery = searchInput.value.trim();
+            rove = 0;
+            setSearchMode(searchQuery.length > 0);
+        });
+
+        var touchStartX = 0;
+        var touchStartY = 0;
+
+        grid.addEventListener('touchstart', function (e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        grid.addEventListener('touchend', function (e) {
+            // Ignore swipe when search is active (flat list has no categories)
+            if (searchQuery.length > 0) return;
+            var dx = e.changedTouches[0].clientX - touchStartX;
+            var dy = e.changedTouches[0].clientY - touchStartY;
+            // Must be horizontal-dominant and > 40px
+            if (Math.abs(dx) < 40 || Math.abs(dx) <= Math.abs(dy)) return;
+            var next = dx < 0
+                ? Math.min(active + 1, categories.length - 1)  // swipe left => next
+                : Math.max(active - 1, 0);                      // swipe right => prev
+            if (next === active) return;
+            if (prefersReducedMotion) {
+                selectCategory(next, false);
+                return;
+            }
+            // Animate: slide in from direction of swipe
+            var fromX = dx < 0 ? 20 : -20;
+            grid.style.transform = 'translateX(' + fromX + 'px)';
+            grid.style.opacity = '0';
+            grid.style.transition = 'none';
+            selectCategory(next, false);
+            // Force a reflow then animate in
+            grid.getBoundingClientRect();
+            grid.style.transition = 'transform 150ms ease, opacity 150ms ease';
+            grid.style.transform = 'translateX(0)';
+            grid.style.opacity = '1';
+            // Clean up inline styles after animation
+            var cleanup = function () {
+                grid.style.transform = '';
+                grid.style.opacity = '';
+                grid.style.transition = '';
+                grid.removeEventListener('transitionend', cleanup);
+            };
+            grid.addEventListener('transitionend', cleanup);
+        }, { passive: true });
+
         paintTabs();
         paintGrid();
 
@@ -199,6 +279,7 @@
                 if (buttons.length === 0) paintGrid();
                 this.refreshSelected();
                 revealTab(tabEls[active]);
+                searchInput.focus();
             },
             // Only flips aria-pressed - never rebuilds nodes or moves focus,
             // so a poll-driven repaint cannot steal the user's place.
@@ -214,6 +295,9 @@
             },
             // Back to the first category, scrolled to the top.
             reset: function () {
+                searchQuery = '';
+                searchInput.value = '';
+                tablist.hidden = false;
                 selectCategory(0, false);
                 tablist.scrollLeft = 0;
             }

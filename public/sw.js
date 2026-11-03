@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v135';
+const CACHE_NAME = 'prezenty-v136';
 const urlsToCache = [
   '/manifest.json',
   '/pluralize-pl.js',
