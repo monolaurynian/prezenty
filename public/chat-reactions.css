@@ -659,6 +659,23 @@
     /* No visual change needed — just a hook for potential future styling */
 }
 
+/* ============================================================
+   Emoji picker — section headings (sticky, one per category)
+   ============================================================ */
+.emoji-picker-section-heading {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 4px 4px;
+    z-index: 1;
+    grid-column: 1 / -1;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .emoji-picker-search {
         transition: none;
