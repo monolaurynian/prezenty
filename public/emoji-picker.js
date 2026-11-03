@@ -423,6 +423,18 @@
         return {
             // Makes sure tabs and grid reflect the current selection state.
             show: function () {
+                // Always clear any leftover search state so the picker
+                // opens clean if the user previously searched and closed it
+                if (searchQuery) {
+                    searchQuery = '';
+                    searchInput.value = '';
+                    tablist.hidden = false;
+                    paintFullView();
+                    active = 0;
+                    paintTabs();
+                    tablist.scrollLeft = 0;
+                    grid.scrollTop = 0;
+                }
                 paintTabs();
                 this.refreshSelected();
                 revealTab(tabEls[active]);
