@@ -280,6 +280,28 @@ function pickerState(page) {
     });
 }
 
+/** Where the page scrollbar (track + thumb) is, in page coordinates. */
+function pagerGeometry(page) {
+    return page.evaluate(() => {
+        const track = document.querySelector('#emojiPickerRoot .emoji-picker-pager');
+        const thumb = track.querySelector('.emoji-picker-pager-thumb');
+        const grid = document.getElementById('emojiPickerPanel');
+        const trackBox = track.getBoundingClientRect();
+        const thumbBox = thumb.getBoundingClientRect();
+        return {
+            trackWidth: trackBox.width,
+            trackHeight: trackBox.height,
+            trackTop: trackBox.top,
+            trackLeftPage: trackBox.left,
+            thumbWidth: thumbBox.width,
+            thumbLeft: thumbBox.left - trackBox.left,
+            width: grid.clientWidth,
+            barHeight: getComputedStyle(track, '::before').height,
+            thumbColor: getComputedStyle(thumb, '::after').backgroundColor
+        };
+    });
+}
+
 /** Waits until the grid stopped scrolling (snap + smooth scroll finished). */
 async function settled(page) {
     let last = -1;
@@ -341,15 +363,11 @@ test.describe('emoji picker: highlighted tab and card are the same page', () => 
 
     test('a visible scrollbar runs along the bottom of the cards', async ({ page }) => {
         await openFullPicker(page);
-        // Headless Chromium launches with --hide-scrollbars, so the bar's
-        // thickness cannot be measured here; assert the rules that draw it.
-        // (Checked by eye with scrollbars enabled - see the task notes.)
+        // The bar is drawn by the picker itself (a native one is hidden or
+        // frozen on many phones), so it is measurable in headless too.
         const bar = await page.locator('#emojiPickerPanel').evaluate(el => ({
             overflowX: getComputedStyle(el).overflowX,
             snap: getComputedStyle(el).scrollSnapType,
-            scrollbarWidthProp: getComputedStyle(el).scrollbarWidth,
-            barHeight: getComputedStyle(el, '::-webkit-scrollbar').height,
-            thumb: getComputedStyle(el, '::-webkit-scrollbar-thumb').backgroundColor,
             pages: el.querySelectorAll('.emoji-picker-section').length,
             scrollable: el.scrollWidth > el.clientWidth
         }));
@@ -357,10 +375,82 @@ test.describe('emoji picker: highlighted tab and card are the same page', () => 
         expect(bar.snap).toMatch(/x\s+mandatory/);
         expect(bar.scrollable).toBe(true);
         expect(bar.pages).toBe(9);
-        // Not hidden: no `scrollbar-width: none` / `display: none` on the bar
-        expect(bar.scrollbarWidthProp, JSON.stringify(bar)).not.toBe('none');
-        expect(bar.barHeight, JSON.stringify(bar)).toBe('10px');
-        expect(bar.thumb, JSON.stringify(bar)).toBe('rgb(123, 31, 162)');
+
+        const geometry = await pagerGeometry(page);
+        expect(geometry.trackHeight, JSON.stringify(geometry)).toBeGreaterThanOrEqual(24);
+        expect(geometry.barHeight, JSON.stringify(geometry)).toBe('10px');
+        expect(geometry.thumbColor, JSON.stringify(geometry)).toBe('rgb(123, 31, 162)');
+        // One card wide out of nine
+        expect(geometry.thumbWidth / geometry.trackWidth, JSON.stringify(geometry)).toBeCloseTo(1 / 9, 1);
+        // At the first card the thumb sits at the left end
+        expect(geometry.thumbLeft, JSON.stringify(geometry)).toBeLessThanOrEqual(1);
+    });
+
+    test('the bar follows the cards: swiping moves the thumb, to the far end on the last card', async ({ page }) => {
+        await openFullPicker(page);
+        let previous = (await pagerGeometry(page)).thumbLeft;
+        for (const target of [2, 5, 8]) {
+            await page.evaluate(i => {
+                const grid = document.getElementById('emojiPickerPanel');
+                grid.scrollTo({ left: i * grid.clientWidth, behavior: 'auto' });
+            }, target);
+            await settled(page);
+            const now = await pagerGeometry(page);
+            expect(now.thumbLeft, JSON.stringify(now)).toBeGreaterThan(previous);
+            previous = now.thumbLeft;
+        }
+        const end = await pagerGeometry(page);
+        // Last card: the thumb touches the right end of the track
+        expect(Math.abs(end.trackWidth - (end.thumbLeft + end.thumbWidth)), JSON.stringify(end)).toBeLessThanOrEqual(1.5);
+        // ...and comes back to the left end
+        await page.evaluate(() => document.getElementById('emojiPickerPanel').scrollTo({ left: 0, behavior: 'auto' }));
+        await settled(page);
+        expect((await pagerGeometry(page)).thumbLeft).toBeLessThanOrEqual(1);
+    });
+
+    test('dragging the bar moves the cards, and letting go settles on a whole card', async ({ page }) => {
+        await openFullPicker(page);
+        const g = await pagerGeometry(page);
+        const y = g.trackTop + g.trackHeight / 2;
+        const startX = g.trackLeftPage + g.thumbWidth / 2;
+        // Drag the thumb about 40% of the way along the track
+        const endX = startX + (g.trackWidth - g.thumbWidth) * 0.4;
+        await page.mouse.move(startX, y);
+        await page.mouse.down();
+        await page.mouse.move((startX + endX) / 2, y, { steps: 5 });
+        await page.mouse.move(endX, y, { steps: 5 });
+        const during = await pickerState(page);
+        expect(during.scrollLeft, JSON.stringify(during)).toBeGreaterThan(g.width);
+        await page.mouse.up();
+        await settled(page);
+        const after = await pickerState(page);
+        expect(after.cardOffset, JSON.stringify(after)).toBeLessThanOrEqual(1);
+        expect(after.selectedTab, JSON.stringify(after)).toBe(after.visiblePage);
+        expect(after.visiblePage, JSON.stringify(after)).toBeGreaterThanOrEqual(3);
+        expect(after.visiblePage, JSON.stringify(after)).toBeLessThanOrEqual(4);
+    });
+
+    test('tapping the bar jumps to the card under the finger', async ({ page }) => {
+        await openFullPicker(page);
+        const g = await pagerGeometry(page);
+        // Middle of the 7th ninth of the track (card index 6)
+        const x = g.trackLeftPage + g.trackWidth * (6.5 / 9);
+        await page.mouse.click(x, g.trackTop + g.trackHeight / 2);
+        await settled(page);
+        const state = await pickerState(page);
+        expect(state.visiblePage, JSON.stringify(state)).toBe(6);
+        expect(state.selectedTab, JSON.stringify(state)).toBe(6);
+        expect(state.cardOffset, JSON.stringify(state)).toBeLessThanOrEqual(1);
+    });
+
+    test('the bar is hidden while searching and back afterwards', async ({ page }) => {
+        await openFullPicker(page);
+        const pager = page.locator('#emojiPickerRoot .emoji-picker-pager');
+        await expect(pager).toBeVisible();
+        await page.locator('#emojiPickerRoot .emoji-picker-search').fill('kot');
+        await expect(pager).toBeHidden();
+        await page.locator('#emojiPickerRoot .emoji-picker-search').fill('');
+        await expect(pager).toBeVisible();
     });
 
     test('closing and reopening keeps tab and card together', async ({ page }) => {

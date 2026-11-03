@@ -6,6 +6,7 @@ const router = express.Router();
 const { DEMO_MODE, isMaintenanceMode } = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { updateTracker } = require('../lib/update-tracker');
+const { latestRelease } = require('../lib/release-notes');
 
 // Routes
 router.get('/health', (req, res) => {
@@ -40,7 +41,10 @@ router.get('/api/version', (req, res) => {
     res.json({
         version: packageJson.version,
         timestamp: Date.now(),
-        cacheVersion: serviceWorkerCacheName || 'unknown'
+        cacheVersion: serviceWorkerCacheName || 'unknown',
+        // What's new for users, or null: the banner only appears when a
+        // release has something worth announcing (see lib/release-notes.js)
+        release: latestRelease()
     });
 });
 

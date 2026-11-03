@@ -828,7 +828,83 @@
             rove = buttons.indexOf(first);
         }
 
+        /* ---- Page scrollbar (drawn by us, not the browser) ----
+           A native horizontal scrollbar is unreliable on phones: iOS Safari
+           ignores the custom styling and Android overlays hide or freeze
+           it. This track + thumb is plain DOM that follows grid.scrollLeft
+           on every browser, can be dragged, and a tap on the track jumps
+           to that card. Swiping the cards still works natively. It is
+           decorative for assistive tech (aria-hidden): the category tabs
+           and the arrow keys are the accessible way to change card. */
+        const pager = document.createElement('div');
+        pager.className = 'emoji-picker-pager';
+        pager.setAttribute('aria-hidden', 'true');
+        const thumb = document.createElement('div');
+        thumb.className = 'emoji-picker-pager-thumb';
+        pager.appendChild(thumb);
+
+        function paintPager() {
+            const max = grid.scrollWidth - grid.clientWidth;
+            const trackWidth = pager.clientWidth;
+            if (!trackWidth || max <= 0) {
+                thumb.style.width = '0px';
+                return;
+            }
+            const thumbWidth = Math.max(36, trackWidth * grid.clientWidth / grid.scrollWidth);
+            const offset = Math.max(0, Math.min(1, grid.scrollLeft / max)) * (trackWidth - thumbWidth);
+            thumb.style.width = thumbWidth + 'px';
+            thumb.style.transform = 'translateX(' + offset + 'px)';
+        }
+
+        let drag = null;
+        function endDrag() {
+            if (!drag) return;
+            drag = null;
+            grid.classList.remove('emoji-picker-grid--dragging');
+            // Let go between two cards: settle on the nearest one
+            jumpToCategory(pageAt(grid.scrollLeft));
+        }
+
+        thumb.addEventListener('pointerdown', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof thumb.setPointerCapture === 'function') {
+                try { thumb.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+            }
+            jumpTarget = null;
+            drag = { startX: e.clientX, startScroll: grid.scrollLeft };
+            // Snapping off while dragging, so the cards follow the thumb
+            // smoothly instead of hopping from card to card
+            grid.classList.add('emoji-picker-grid--dragging');
+        });
+        thumb.addEventListener('pointermove', function (e) {
+            if (!drag) return;
+            const max = grid.scrollWidth - grid.clientWidth;
+            const range = pager.clientWidth - thumb.offsetWidth;
+            if (range <= 0 || max <= 0) return;
+            grid.scrollLeft = drag.startScroll + (e.clientX - drag.startX) / range * max;
+        });
+        thumb.addEventListener('pointerup', endDrag);
+        thumb.addEventListener('pointercancel', endDrag);
+        thumb.addEventListener('lostpointercapture', endDrag);
+
+        // Tap on the bare track: jump to the card under the finger
+        pager.addEventListener('pointerdown', function (e) {
+            if (e.target !== pager || !sectionEls.length) return;
+            e.preventDefault();
+            const box = pager.getBoundingClientRect();
+            const ratio = box.width ? (e.clientX - box.left) / box.width : 0;
+            const index = Math.max(0, Math.min(sectionEls.length - 1, Math.floor(ratio * sectionEls.length)));
+            jumpToCategory(index);
+        });
+
+        window.addEventListener('resize', paintPager);
+        if (typeof ResizeObserver === 'function') {
+            new ResizeObserver(paintPager).observe(grid);
+        }
+
         grid.addEventListener('scroll', function () {
+            paintPager();
             if (grid.classList.contains('emoji-picker-grid--search')) return;
             if (jumpTarget !== null) {
                 // Arrived (or as close as snapping lets us get)
@@ -848,6 +924,7 @@
         container.appendChild(searchInput);
         container.appendChild(tablist);
         container.appendChild(grid);
+        container.appendChild(pager);
 
         /* ---- Paint helpers ---- */
         function paintTabs() {
@@ -1137,6 +1214,7 @@
                 // names so the two can never disagree after a reopen.
                 jumpTarget = null;
                 syncScrollToActive();
+                paintPager();
                 retargetTabStop();
                 searchInput.focus();
             },

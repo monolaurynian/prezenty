@@ -544,30 +544,76 @@
     -webkit-overflow-scrolling: touch;
     flex: 1;
     min-height: 0;
+    /* The browser's own scrollbar is hidden: it is not reliable on phones.
+       .emoji-picker-pager below is the scrollbar people see. */
+    scrollbar-width: none;
 }
 
-/* WebKit/Blink (Chrome, Edge, Safari, Android): a custom scrollbar is
-   always drawn, even where the default one is an auto-hiding overlay */
 .emoji-picker-grid::-webkit-scrollbar {
+    display: none;
+}
+
+/* Dragging the pager thumb: snapping off so the cards follow smoothly */
+.emoji-picker-grid.emoji-picker-grid--dragging {
+    scroll-snap-type: none;
+}
+
+/* Page scrollbar under the cards: a 24px-tall touch target that draws a
+   10px bar. The thumb is one card wide and is moved by emoji-picker.js. */
+.emoji-picker-pager {
+    position: relative;
+    flex: none;
+    height: 24px;
+    margin: 4px 4px 0;
+    touch-action: none;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.emoji-picker-pager::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
     height: 10px;
-}
-
-.emoji-picker-grid::-webkit-scrollbar-track {
+    transform: translateY(-50%);
+    border-radius: 5px;
     background: #e9ecef;
-    border-radius: 5px;
+    pointer-events: none;
 }
 
-.emoji-picker-grid::-webkit-scrollbar-thumb {
+.emoji-picker-pager-thumb {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    touch-action: none;
+    cursor: grab;
+    will-change: transform;
+}
+
+.emoji-picker-pager-thumb::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 10px;
+    transform: translateY(-50%);
+    border-radius: 5px;
     background: #7B1FA2;
-    border-radius: 5px;
 }
 
-/* Firefox */
-@supports (-moz-appearance: none) {
-    .emoji-picker-grid {
-        scrollbar-width: thin;
-        scrollbar-color: #7B1FA2 #e9ecef;
-    }
+.emoji-picker-grid--dragging ~ .emoji-picker-pager .emoji-picker-pager-thumb {
+    cursor: grabbing;
+}
+
+/* Search results are one vertical list, so there are no cards to scroll */
+.emoji-picker-grid--search ~ .emoji-picker-pager {
+    display: none;
 }
 
 .emoji-picker-btn {
