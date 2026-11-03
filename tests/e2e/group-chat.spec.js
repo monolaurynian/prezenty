@@ -1,0 +1,414 @@
+'use strict';
+/**
+ * Group chat ("Czat grupowy") and the emoji picker's page/tab alignment.
+ *
+ * Group chat decisions locked in here:
+ *  - it is NOT pinned: an ordinary row in the conversation list, ordered by
+ *    its last message, drawn as a solid (non-transparent) card with the
+ *    purple strip on its left side;
+ *  - it is a choice in the "Do kogo?" dropdown; sending from there posts to
+ *    the shared room and does NOT create a private thread;
+ *  - its messages take emoji reactions with the same privacy contract as the
+ *    private threads (aggregate only: { emoji, count, mine }).
+ *
+ * The demo group room is shared, in-memory state: tests only add their own
+ * reactions and take them back, and compare counts relative to a baseline.
+ */
+const { test, expect } = require('../fixtures');
+const { openPage, setViewport } = require('../helpers/pages');
+const { activeDescription, describeFocus } = require('../helpers/focus');
+
+const LIST = { path: '/wiadomosci', name: 'chat list', ready: '.thread-row' };
+const GROUP = { path: '/wiadomosci?rozmowa=group', name: 'group chat', ready: '.chat-bubble' };
+const THREAD = { path: '/wiadomosci?rozmowa=1', name: 'chat thread', ready: '.chat-bubble' };
+
+// Group message 3 is seeded without reactions (see demoGroup in lib/demo-data.js)
+const BARE_GROUP_MESSAGE = 3;
+const HEART = '\u2764\uFE0F';
+const PARTY = '\u{1F389}';
+
+const strip = (page, id) => page.locator(`.chat-reactions[data-reactions-for="${id}"]`);
+const chip = (page, id, emoji) => strip(page, id).locator(`.chat-reaction-chip[data-emoji="${emoji}"]`);
+
+/** POST a group reaction from inside the page (same session cookie as the app). */
+async function postGroupReaction(page, messageId, body) {
+    return page.evaluate(async ([id, payload]) => {
+        const options = { method: 'POST' };
+        if (payload !== undefined) {
+            options.headers = { 'Content-Type': 'application/json' };
+            options.body = JSON.stringify(payload);
+        }
+        const response = await fetch(`/api/wiadomosci/group/messages/${id}/reactions`, options);
+        let json = null;
+        try { json = await response.json(); } catch (error) { json = null; }
+        return { status: response.status, json };
+    }, [messageId, body]);
+}
+
+test.describe('group chat: list row', () => {
+    test('is a normal row: not pinned, solid background, purple strip on the left', async ({ page }) => {
+        await openPage(page, LIST);
+        const row = page.locator('.thread-row', { hasText: 'Czat grupowy' });
+        await expect(row).toHaveCount(1);
+
+        await expect(page.locator('.thread-pin-badge')).toHaveCount(0);
+        await expect(page.locator('.thread-row--pinned')).toHaveCount(0);
+        await expect(row).not.toContainText('Przypięty');
+
+        const style = await row.evaluate(el => {
+            const css = getComputedStyle(el);
+            return { background: css.backgroundColor, left: css.borderLeftWidth, leftColor: css.borderLeftColor };
+        });
+        // Fully opaque: rgb(...) has no alpha channel, rgba(..., <1) would be see-through
+        expect(style.background, JSON.stringify(style)).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+        expect(style.left).toBe('3px');
+        expect(style.leftColor).toBe('rgb(123, 31, 162)');
+    });
+
+    test('is ordered by its last activity like every other conversation', async ({ page }) => {
+        await openPage(page, LIST);
+        const order = await page.evaluate(async () => {
+            const { threads } = await fetch('/api/wiadomosci/threads').then(r => r.json());
+            return threads.map(t => ({ id: t.id, at: new Date(t.lastAt).getTime(), pinned: !!t.pinned }));
+        });
+        expect(order.some(t => t.id === 'group')).toBe(true);
+        expect(order.some(t => t.pinned)).toBe(false);
+        const times = order.map(t => t.at);
+        expect(times).toEqual(times.slice().sort((a, b) => b - a));
+    });
+});
+
+test.describe('group chat: compose dropdown', () => {
+    test('offers "Czat grupowy" and sends into the shared room without creating a thread', async ({ page }) => {
+        await openPage(page, LIST);
+        const select = page.locator('#targetSelect');
+        await expect(select.locator('option[value="group"]')).toHaveText('👥 Czat grupowy');
+
+        const hint = page.locator('#composeGroupHint');
+        await expect(hint).toBeHidden();
+        await select.selectOption('group');
+        await expect(hint).toBeVisible();
+
+        const threadsBefore = await page.evaluate(async () =>
+            (await fetch('/api/wiadomosci/threads').then(r => r.json())).threads.filter(t => t.id !== 'group').length);
+
+        const text = 'Wiadomość z listy rozwijanej ' + Date.now();
+        await page.locator('#composeBody').fill(text);
+        await page.locator('#composeBtn').click();
+
+        // The group conversation opens with the message in it
+        await expect(page.locator('#chatView')).toBeVisible();
+        await expect(page.locator('#chatTitle')).toContainText('Czat grupowy');
+        await expect(page.locator('.chat-bubble.from-me', { hasText: text })).toBeVisible();
+        await expect(page).toHaveURL(/rozmowa=group/);
+
+        // ...and no private thread was created by it
+        const threadsAfter = await page.evaluate(async () =>
+            (await fetch('/api/wiadomosci/threads').then(r => r.json())).threads.filter(t => t.id !== 'group').length);
+        expect(threadsAfter).toBe(threadsBefore);
+    });
+
+    test('choosing a person still creates a normal thread request (group option does not leak)', async ({ page }) => {
+        await openPage(page, LIST);
+        await page.locator('#targetSelect').selectOption({ index: 2 });
+        await expect(page.locator('#composeGroupHint')).toBeHidden();
+    });
+});
+
+test.describe('group chat: reactions', () => {
+    test.afterEach(async ({ page }) => {
+        if (!/^https?:/.test(page.url())) return;
+        await page.unrouteAll({ behavior: 'ignoreErrors' });
+        // Take back anything this test left on the bare message
+        await page.evaluate(async (id) => {
+            const { messages } = await fetch('/api/wiadomosci/group').then(r => r.json());
+            const message = messages.find(m => m.id === id);
+            for (const reaction of (message ? message.reactions.filter(r => r.mine) : [])) {
+                await fetch(`/api/wiadomosci/group/messages/${id}/reactions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ emoji: reaction.emoji })
+                });
+            }
+        }, BARE_GROUP_MESSAGE);
+    });
+
+    test('every group message has a reaction strip, and seeded reactions render', async ({ page }) => {
+        await openPage(page, GROUP);
+        const bubbles = await page.locator('.chat-bubble').count();
+        await expect(page.locator('.chat-reactions')).toHaveCount(bubbles);
+        // Seeded: message 2 carries two emoji
+        await expect(strip(page, 2).locator('.chat-reaction-chip')).toHaveCount(2);
+        await expect(chip(page, 2, '\u{1F602}').locator('.chat-reaction-count')).toHaveText('2');
+        await expect(chip(page, 2, '\u{1F602}')).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    test('tap a quick emoji to react, tap the chip to take it back', async ({ page }) => {
+        await openPage(page, GROUP);
+        await setViewport(page, 375);
+
+        await strip(page, BARE_GROUP_MESSAGE).locator('.chat-reaction-add').focus();
+        await page.keyboard.press('Enter');
+        await expect(page.locator('#reactionSheet')).toHaveClass(/is-open/);
+
+        const added = page.waitForResponse(r =>
+            r.url().includes(`/api/wiadomosci/group/messages/${BARE_GROUP_MESSAGE}/reactions`) && r.request().method() === 'POST');
+        await page.locator(`#reactionSheetGrid .reaction-sheet-btn[data-emoji="${HEART}"]`).click();
+        const addedJson = await (await added).json();
+        expect(addedJson.action).toBe('added');
+        addedJson.reactions.forEach(r => expect(Object.keys(r).sort()).toEqual(['count', 'emoji', 'mine']));
+
+        const reaction = chip(page, BARE_GROUP_MESSAGE, HEART);
+        await expect(reaction).toHaveAttribute('aria-pressed', 'true');
+        await expect(reaction.locator('.chat-reaction-count')).toHaveText('1');
+        const returned = await activeDescription(page);
+        expect(returned.cls, describeFocus('focus after reacting', returned)).toContain('chat-reaction-add');
+
+        // Survives the page's own refresh (server round trip)
+        await page.evaluate(() => window.loadThreadMessages());
+        await expect(reaction).toHaveAttribute('aria-pressed', 'true');
+
+        const removed = page.waitForResponse(r =>
+            r.url().includes(`/api/wiadomosci/group/messages/${BARE_GROUP_MESSAGE}/reactions`) && r.request().method() === 'POST');
+        await reaction.click();
+        expect((await (await removed).json()).action).toBe('removed');
+        await expect(reaction).toHaveCount(0);
+    });
+
+    test('any emoji from the full picker works in the group chat too', async ({ page }) => {
+        await openPage(page, GROUP);
+        await setViewport(page, 375);
+        await strip(page, BARE_GROUP_MESSAGE).locator('.chat-reaction-add').focus();
+        await page.keyboard.press('Enter');
+        await page.locator('#reactionSheet .reaction-sheet-more').click();
+        await page.locator('#emojiPickerTab-activities').click();
+        const added = page.waitForResponse(r =>
+            r.url().includes(`/api/wiadomosci/group/messages/${BARE_GROUP_MESSAGE}/reactions`) && r.request().method() === 'POST');
+        await page.locator(`#emojiPickerRoot .emoji-picker-btn[data-emoji="${PARTY}"]`).click();
+        expect((await (await added).json()).action).toBe('added');
+        await expect(chip(page, BARE_GROUP_MESSAGE, PARTY)).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    test('API: junk is rejected, unknown message is 404, response carries no identity', async ({ page }) => {
+        await openPage(page, GROUP);
+        for (const emoji of ['', 'a', '<img src=x onerror=alert(1)>', PARTY + PARTY, 5, null]) {
+            const result = await postGroupReaction(page, BARE_GROUP_MESSAGE, { emoji });
+            expect(result.status, JSON.stringify(emoji)).toBe(400);
+            expect(result.json.error).toBe('Nieprawidłowa reakcja');
+        }
+        expect((await postGroupReaction(page, 'abc', { emoji: HEART })).status).toBe(400);
+        expect((await postGroupReaction(page, 9999, { emoji: HEART })).status).toBe(404);
+
+        const ok = await postGroupReaction(page, BARE_GROUP_MESSAGE, { emoji: HEART });
+        expect(ok.status).toBe(200);
+        expect(Object.keys(ok.json).sort()).toEqual(['action', 'emoji', 'messageId', 'reactions', 'success']);
+        const listed = await page.evaluate(async () => (await fetch('/api/wiadomosci/group').then(r => r.json())));
+        expect(JSON.stringify(listed)).not.toMatch(/user|sender/i);
+    });
+
+    test('group and private message ids do not mix: a group reaction never shows up in a thread', async ({ page }) => {
+        await openPage(page, GROUP);
+        // Group message 3 and private message 3 share the number but not the room
+        const result = await postGroupReaction(page, BARE_GROUP_MESSAGE, { emoji: PARTY });
+        expect(result.json.action).toBe('added');
+        const thread = await page.evaluate(async () => (await fetch('/api/wiadomosci/threads/1').then(r => r.json())));
+        const privateMessage = thread.messages.find(m => m.id === BARE_GROUP_MESSAGE);
+        expect(privateMessage.reactions.map(r => r.emoji)).not.toContain(PARTY);
+    });
+
+    test('opening a private thread after the group chat reacts against the private endpoint', async ({ page }) => {
+        await openPage(page, GROUP);
+        await page.evaluate(() => window.openThread(1));
+        await expect(page.locator('#chatTitle')).not.toContainText('Czat grupowy');
+        await expect(strip(page, 4).locator('.chat-reaction-add')).toBeVisible();
+        const requested = page.waitForRequest(r => /\/api\/wiadomosci\/messages\/4\/reactions$/.test(r.url()));
+        await page.evaluate(() => window.ChatReactions.toggle(4, '\u2764\uFE0F'));
+        await requested;
+        // take it back
+        await page.evaluate(() => window.ChatReactions.toggle(4, '\u2764\uFE0F'));
+        await expect(chip(page, 4, HEART)).toHaveCount(0);
+    });
+});
+
+test.describe('group chat: unread and refresh', () => {
+    test('service worker precaches the assets the page references', async ({ request }) => {
+        const sw = await (await request.get('/sw.js')).text();
+        const version = await (await request.get('/api/version')).json();
+        const cacheName = sw.match(/const CACHE_NAME = '([^']+)'/)[1];
+        // /api/version names the SW's cache generation, so a bump of CACHE_NAME
+        // is enough to make open clients show the "new version" banner
+        expect(version.cacheVersion).toBe(cacheName);
+    });
+});
+
+// ===========================================================================
+// Emoji picker: tab highlight, cards and scrollbar agree
+// ===========================================================================
+
+const SHEET = '#reactionSheet';
+const tabEl = (page, id) => page.locator(`#emojiPickerTab-${id}`);
+
+async function openFullPicker(page) {
+    await page.locator('.chat-reactions .chat-reaction-add').first().focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator(SHEET)).toHaveClass(/is-open/);
+    await page.locator(`${SHEET} .reaction-sheet-more`).click();
+    await expect(page.locator(SHEET)).toHaveClass(/is-all/);
+}
+
+/**
+ * What the user actually sees: the page index the grid is scrolled to, the
+ * index of the highlighted tab, and how far the visible card's left edge is
+ * from the grid's left edge (0 = card sits exactly in the frame).
+ */
+function pickerState(page) {
+    return page.evaluate(() => {
+        const grid = document.getElementById('emojiPickerPanel');
+        const tabs = Array.prototype.slice.call(document.querySelectorAll('#emojiPickerRoot [role="tab"]'));
+        const sections = Array.prototype.slice.call(grid.querySelectorAll('.emoji-picker-section'));
+        const gridLeft = grid.getBoundingClientRect().left;
+        const visible = sections.map((s, i) => ({ i, off: Math.abs(s.getBoundingClientRect().left - gridLeft) }))
+            .sort((a, b) => a.off - b.off)[0];
+        return {
+            selectedTab: tabs.findIndex(t => t.getAttribute('aria-selected') === 'true'),
+            visiblePage: visible.i,
+            cardOffset: Math.round(visible.off),
+            scrollLeft: Math.round(grid.scrollLeft),
+            width: grid.clientWidth,
+            labelledBy: grid.getAttribute('aria-labelledby')
+        };
+    });
+}
+
+/** Waits until the grid stopped scrolling (snap + smooth scroll finished). */
+async function settled(page) {
+    let last = -1;
+    await expect.poll(async () => {
+        const now = (await pickerState(page)).scrollLeft;
+        const stable = now === last;
+        last = now;
+        return stable;
+    }, { timeout: 5000, intervals: [150, 150, 150, 150] }).toBe(true);
+}
+
+test.describe('emoji picker: highlighted tab and card are the same page', () => {
+    test.beforeEach(async ({ page }) => {
+        await openPage(page, THREAD);
+        await setViewport(page, 375);
+    });
+
+    test('tapping each tab shows exactly that card, snapped flush, with the tab highlighted', async ({ page }) => {
+        await openFullPicker(page);
+        const ids = await page.locator('#emojiPickerRoot [role="tab"]').evaluateAll(list =>
+            list.map(t => t.id.replace('emojiPickerTab-', '')));
+        for (let index = 0; index < ids.length; index++) {
+            await tabEl(page, ids[index]).click();
+            await settled(page);
+            const state = await pickerState(page);
+            expect(state.selectedTab, `tab ${ids[index]}: ${JSON.stringify(state)}`).toBe(index);
+            expect(state.visiblePage, `tab ${ids[index]}: ${JSON.stringify(state)}`).toBe(index);
+            // Flush with the frame (the old bug left it a padding off)
+            expect(state.cardOffset, `tab ${ids[index]}: ${JSON.stringify(state)}`).toBeLessThanOrEqual(1);
+            expect(state.labelledBy).toBe(`emojiPickerTab-${ids[index]}`);
+        }
+    });
+
+    test('swiping (scrolling) the cards moves the highlight to the card in view', async ({ page }) => {
+        await openFullPicker(page);
+        for (const target of [3, 1, 6, 0, 8]) {
+            await page.evaluate(i => {
+                const grid = document.getElementById('emojiPickerPanel');
+                grid.scrollTo({ left: i * grid.clientWidth, behavior: 'auto' });
+            }, target);
+            await settled(page);
+            const state = await pickerState(page);
+            expect(state.selectedTab, JSON.stringify(state)).toBe(target);
+            expect(state.visiblePage, JSON.stringify(state)).toBe(target);
+        }
+    });
+
+    test('a half-way drag snaps to a whole card and the highlight follows', async ({ page }) => {
+        await openFullPicker(page);
+        await page.evaluate(() => {
+            const grid = document.getElementById('emojiPickerPanel');
+            grid.scrollTo({ left: grid.clientWidth * 2.4, behavior: 'auto' });
+        });
+        await settled(page);
+        const state = await pickerState(page);
+        expect(state.cardOffset, JSON.stringify(state)).toBeLessThanOrEqual(1);
+        expect(state.selectedTab, JSON.stringify(state)).toBe(state.visiblePage);
+    });
+
+    test('a visible scrollbar runs along the bottom of the cards', async ({ page }) => {
+        await openFullPicker(page);
+        // Headless Chromium launches with --hide-scrollbars, so the bar's
+        // thickness cannot be measured here; assert the rules that draw it.
+        // (Checked by eye with scrollbars enabled - see the task notes.)
+        const bar = await page.locator('#emojiPickerPanel').evaluate(el => ({
+            overflowX: getComputedStyle(el).overflowX,
+            snap: getComputedStyle(el).scrollSnapType,
+            scrollbarWidthProp: getComputedStyle(el).scrollbarWidth,
+            barHeight: getComputedStyle(el, '::-webkit-scrollbar').height,
+            thumb: getComputedStyle(el, '::-webkit-scrollbar-thumb').backgroundColor,
+            pages: el.querySelectorAll('.emoji-picker-section').length,
+            scrollable: el.scrollWidth > el.clientWidth
+        }));
+        expect(bar.overflowX).toBe('auto');
+        expect(bar.snap).toMatch(/x\s+mandatory/);
+        expect(bar.scrollable).toBe(true);
+        expect(bar.pages).toBe(9);
+        // Not hidden: no `scrollbar-width: none` / `display: none` on the bar
+        expect(bar.scrollbarWidthProp, JSON.stringify(bar)).not.toBe('none');
+        expect(bar.barHeight, JSON.stringify(bar)).toBe('10px');
+        expect(bar.thumb, JSON.stringify(bar)).toBe('rgb(123, 31, 162)');
+    });
+
+    test('closing and reopening keeps tab and card together', async ({ page }) => {
+        await openFullPicker(page);
+        await tabEl(page, 'travel').click();
+        await settled(page);
+        await page.keyboard.press('Escape');
+        await expect(page.locator(SHEET)).toHaveAttribute('aria-hidden', 'true');
+
+        await openFullPicker(page);
+        await settled(page);
+        const state = await pickerState(page);
+        expect(state.selectedTab, JSON.stringify(state)).toBe(state.visiblePage);
+        expect(state.cardOffset, JSON.stringify(state)).toBeLessThanOrEqual(1);
+        // Initial focus must not drag the cards back to page 0
+        const focused = await activeDescription(page);
+        expect(focused, JSON.stringify(focused)).toBeTruthy();
+    });
+
+    test('searching and clearing returns to the card the tab names', async ({ page }) => {
+        await openFullPicker(page);
+        await tabEl(page, 'food').click();
+        await settled(page);
+        await page.locator('#emojiPickerRoot .emoji-picker-search').fill('kot');
+        await expect(page.locator('#emojiPickerRoot .emoji-picker-grid--search')).toHaveCount(1);
+        await page.locator('#emojiPickerRoot .emoji-picker-search').fill('');
+        await settled(page);
+        const state = await pickerState(page);
+        expect(state.selectedTab, JSON.stringify(state)).toBe(state.visiblePage);
+        expect(state.cardOffset, JSON.stringify(state)).toBeLessThanOrEqual(1);
+    });
+
+    test('keyboard: arrows stay on the card, Left/Right carry across the card edge and the tab follows', async ({ page }) => {
+        await openFullPicker(page);
+        // End jumps to the last emoji of THIS card only
+        await page.keyboard.press('End');
+        const lastOfFirst = await page.evaluate(() => document.activeElement.getAttribute('data-cat-index'));
+        expect(lastOfFirst).toBe('0');
+        // One more step to the right crosses into the next card
+        await page.keyboard.press('ArrowRight');
+        await settled(page);
+        const state = await pickerState(page);
+        expect(state.selectedTab, JSON.stringify(state)).toBe(1);
+        expect(state.visiblePage, JSON.stringify(state)).toBe(1);
+        expect(await page.evaluate(() => document.activeElement.getAttribute('data-cat-index'))).toBe('1');
+        // ...and back
+        await page.keyboard.press('ArrowLeft');
+        await settled(page);
+        expect((await pickerState(page)).selectedTab).toBe(0);
+    });
+});

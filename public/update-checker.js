@@ -20,7 +20,18 @@
             if (!response.ok) return;
             
             const data = await response.json();
-            const serverVersion = data.version;
+            // package version + the service worker's cache generation: a
+            // deploy that bumps either one counts as a new version
+            const serverVersion = data.version + '|' + (data.cacheVersion || '');
+
+            // Installed PWAs only look for a new service worker on
+            // navigation; ask for it now so the fresh caches are ready by
+            // the time the user taps "Odśwież teraz"
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration()
+                    .then(function (registration) { if (registration) return registration.update(); })
+                    .catch(function () { /* offline or no SW: nothing to do */ });
+            }
             const storedVersion = localStorage.getItem(STORAGE_KEY);
             
             // Store current version if not set

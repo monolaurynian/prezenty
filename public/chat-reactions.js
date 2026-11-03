@@ -456,6 +456,19 @@
         state.set(messageId, sortByAllowlist(list));
     }
 
+    // Where a toggle is POSTed. Private threads and the group chat have
+    // separate message id spaces, so the page picks the scope when it opens
+    // a conversation (setScope) and reset() leaves it alone.
+    let scope = 'thread';
+    function setScope(next) {
+        scope = next === 'group' ? 'group' : 'thread';
+    }
+    function reactionsUrl(id) {
+        return scope === 'group'
+            ? '/api/wiadomosci/group/messages/' + id + '/reactions'
+            : '/api/wiadomosci/messages/' + id + '/reactions';
+    }
+
     function toggle(messageId, emoji) {
         const id = parseMessageId(messageId);
         if (id === null || !isAllowedReactionEmoji(emoji)) return;
@@ -469,7 +482,7 @@
         applyOptimistic(id, emoji);
         refreshStrips();
 
-        fetch('/api/wiadomosci/messages/' + id + '/reactions', {
+        fetch(reactionsUrl(id), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ emoji: emoji })
@@ -797,6 +810,7 @@
         strip: strip,
         refreshStrips: refreshStrips,
         toggle: toggle,
+        setScope: setScope,
         openSheet: openSheet,
         closeSheet: closeSheet,
         reset: reset,

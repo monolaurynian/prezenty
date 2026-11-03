@@ -49,6 +49,17 @@
             transition: background 0.15s ease;
         }
         .thread-row:hover { background: #f8f9fa; }
+        /* The group chat row: a SOLID card (no see-through tint) with the
+           purple accent strip on its left side. Not pinned - it sits in the
+           list by last activity like every other conversation. The extra
+           3px of border is taken out of the padding so the text lines up
+           with the other rows. */
+        .thread-row.thread-row--group {
+            background: #f6eefa;
+            border-left: 3px solid #7B1FA2;
+            padding-left: 11px;
+        }
+        .thread-row.thread-row--group:hover { background: #efe1f6; }
         /* The header is a flex row (label | badge + time). Without
            min-width: 0 the label refuses to shrink below its min-content
            width, so a long name pushed the badge and the timestamp out of

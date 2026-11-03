@@ -530,19 +530,45 @@
     border-bottom-color: #7B1FA2;
 }
 
-/* Outer horizontal scroll container — all categories laid out as pages */
+/* Outer horizontal scroll container: every category is one full-width page
+   (card) and the grid snaps to whole pages. The horizontal scrollbar is
+   deliberately VISIBLE along the bottom edge: drag it or swipe the cards
+   to move between categories (the tab above follows). */
 .emoji-picker-grid {
     display: flex;
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
     flex: 1;
     min-height: 0;
 }
-.emoji-picker-grid::-webkit-scrollbar { display: none; }
+
+/* WebKit/Blink (Chrome, Edge, Safari, Android): a custom scrollbar is
+   always drawn, even where the default one is an auto-hiding overlay */
+.emoji-picker-grid::-webkit-scrollbar {
+    height: 10px;
+}
+
+.emoji-picker-grid::-webkit-scrollbar-track {
+    background: #e9ecef;
+    border-radius: 5px;
+}
+
+.emoji-picker-grid::-webkit-scrollbar-thumb {
+    background: #7B1FA2;
+    border-radius: 5px;
+}
+
+/* Firefox */
+@supports (-moz-appearance: none) {
+    .emoji-picker-grid {
+        scrollbar-width: thin;
+        scrollbar-color: #7B1FA2 #e9ecef;
+    }
+}
 
 .emoji-picker-btn {
     box-sizing: border-box;
@@ -661,6 +687,8 @@
 .emoji-picker-section {
     flex: 0 0 100%;
     scroll-snap-align: start;
+    /* a hard flick lands on the next card instead of flying past it */
+    scroll-snap-stop: always;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
     align-content: start;
@@ -670,6 +698,11 @@
     box-sizing: border-box;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+}
+
+/* display:grid above beats the UA [hidden] rule (search mode hides pages) */
+.emoji-picker-section[hidden] {
+    display: none;
 }
 
 /* Section heading inside each page — just a label at the top, NOT sticky */

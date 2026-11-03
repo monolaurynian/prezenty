@@ -768,26 +768,80 @@
             rove = 0;
         }
 
-        /* ---- Horizontal scroll listener: update active tab as sections scroll ---- */
+        /* ---- Pages: one category = one grid-width page ----
+           Everything below is measured in PAGES (scrollLeft / clientWidth),
+           never with offsetLeft: a section's offsetLeft is relative to the
+           nearest positioned ancestor (the sheet), so it carries the sheet's
+           padding and put the highlighted tab one page behind the card. */
+        function pageWidth() {
+            return grid.clientWidth;
+        }
+
+        function pageAt(scrollLeft) {
+            const width = pageWidth();
+            if (!width || sectionEls.length === 0) return active;
+            return Math.max(0, Math.min(sectionEls.length - 1, Math.round(scrollLeft / width)));
+        }
+
+        // Snaps the grid to a page without animation (used when the picker
+        // is shown again or search is cleared: display:none resets scrollLeft,
+        // so the cards must be re-aligned with the highlighted tab).
+        function syncScrollToActive() {
+            const width = pageWidth();
+            if (!width) return;
+            grid.scrollTo({ left: active * width, behavior: 'auto' });
+        }
+
+        /* ---- Horizontal scroll listener: update active tab as pages scroll ---- */
+        // While a tab-tap scroll is animating, intermediate pages must not
+        // overwrite the tab the user chose (the highlight would flicker
+        // through every category in between, and could end on the wrong one).
+        let jumpTarget = null;
+        let jumpTimer = null;
+
+        function endJump() {
+            jumpTarget = null;
+            if (jumpTimer) { clearTimeout(jumpTimer); jumpTimer = null; }
+            updateActiveFromScroll();
+        }
+
         function updateActiveFromScroll() {
-            if (sectionEls.length === 0) return;
-            const scrollLeft = grid.scrollLeft;
-            // Find the section whose left edge is closest to (but not past) scrollLeft
-            let best = 0;
-            for (let i = 0; i < sectionEls.length; i++) {
-                if (sectionEls[i].offsetLeft <= scrollLeft + 4) best = i;
-            }
+            if (jumpTarget !== null) return;
+            const best = pageAt(grid.scrollLeft);
             if (best !== active) {
                 active = best;
                 paintTabs();
                 revealTab(tabEls[active]);
+                retargetTabStop();
             }
+        }
+
+        // Keeps the grid's single Tab stop on the first emoji of the page
+        // that is showing, so Tab from the tab row lands on a visible card
+        // instead of scrolling back to page 0. Leaves a stop alone while
+        // focus is inside the grid (the user's roving position wins).
+        function retargetTabStop(force) {
+            const focused = document.activeElement;
+            if (!force && focused instanceof Element && grid.contains(focused)) return;
+            const first = buttons.find(b => Number(b.getAttribute('data-cat-index')) === active) || buttons[0];
+            buttons.forEach(b => { b.tabIndex = b === first ? 0 : -1; });
+            rove = buttons.indexOf(first);
         }
 
         grid.addEventListener('scroll', function () {
             if (grid.classList.contains('emoji-picker-grid--search')) return;
+            if (jumpTarget !== null) {
+                // Arrived (or as close as snapping lets us get)
+                if (Math.abs(grid.scrollLeft - jumpTarget) < 2) endJump();
+                return;
+            }
             updateActiveFromScroll();
         }, { passive: true });
+        // A finger or wheel during the animation takes over from it
+        ['touchstart', 'wheel', 'pointerdown'].forEach(function (type) {
+            grid.addEventListener(type, function () { if (jumpTarget !== null) endJump(); }, { passive: true });
+        });
+        grid.addEventListener('scrollend', function () { if (jumpTarget !== null) endJump(); });
 
         /* ---- Assemble container ---- */
         container.textContent = '';
@@ -802,6 +856,10 @@
                 tab.setAttribute('aria-selected', on ? 'true' : 'false');
                 tab.tabIndex = on ? 0 : -1;
             });
+            // The panel is named by the category it is showing
+            if (searchQuery.length === 0 && tabEls[active]) {
+                grid.setAttribute('aria-labelledby', tabEls[active].id);
+            }
         }
 
         function revealTab(tab) {
@@ -830,6 +888,8 @@
         function paintSearchResults(query) {
             // Switch to vertical search layout and hide category sections
             grid.classList.add('emoji-picker-grid--search');
+            jumpTarget = null;
+            grid.scrollLeft = 0;
             sectionEls.forEach(s => { s.hidden = true; });
             noResults.hidden = true;
 
@@ -883,16 +943,15 @@
             }
             // Show all category sections
             sectionEls.forEach(s => { s.hidden = false; });
-            buttons.forEach((b, i) => {
-                b.hidden = false;
-                b.tabIndex = (i === 0) ? 0 : -1;
-            });
+            buttons.forEach(b => { b.hidden = false; });
             noResults.hidden = true;
-            rove = 0;
-            grid.setAttribute('aria-labelledby', tabEls[active].id);
+            retargetTabStop(true);
             grid.removeAttribute('aria-label');
             grid.removeAttribute('data-search-active');
-            grid.scrollLeft = 0;
+            // Back to the card the highlighted tab points at (the search
+            // layout reset the scroll position)
+            paintTabs();
+            syncScrollToActive();
         }
 
         /* ---- Jump to category section (tab click) ---- */
@@ -902,31 +961,38 @@
             revealTab(tabEls[index]);
             const section = sectionEls[index];
             if (!section) return;
-            grid.scrollTo({
-                left: section.offsetLeft,
-                behavior: prefersReducedMotion ? 'auto' : 'smooth'
-            });
+            retargetTabStop();
+            const left = index * pageWidth();
+            if (prefersReducedMotion || Math.abs(grid.scrollLeft - left) < 2) {
+                jumpTarget = null;
+                grid.scrollTo({ left: left, behavior: 'auto' });
+                return;
+            }
+            jumpTarget = left;
+            // Safety net for browsers without `scrollend`: never stay locked
+            if (jumpTimer) clearTimeout(jumpTimer);
+            jumpTimer = setTimeout(endJump, 700);
+            grid.scrollTo({ left: left, behavior: 'smooth' });
         }
 
-        function moveTo(index) {
-            const visibleButtons = buttons.filter(b => !b.hidden);
-            if (visibleButtons.length === 0) return;
-            const next = Math.max(0, Math.min(visibleButtons.length - 1, index));
+        // Emoji buttons of one category page, in order
+        function pageButtons(catIndex) {
+            return buttons.filter(b => Number(b.getAttribute('data-cat-index')) === catIndex);
+        }
+
+        // Makes `target` the grid's single tab stop and focuses it. Focusing
+        // scrolls the grid to the target's page; the scroll listener then
+        // keeps the highlighted tab in step.
+        function focusButton(target) {
+            if (!target) return;
             if (rove >= 0 && buttons[rove]) buttons[rove].tabIndex = -1;
-            const targetBtn = visibleButtons[next];
-            const targetIdx = buttons.indexOf(targetBtn);
-            rove = targetIdx;
-            targetBtn.tabIndex = 0;
-            targetBtn.focus();
-        }
-
-        function columns() {
-            const visibleButtons = buttons.filter(b => !b.hidden);
-            if (visibleButtons.length === 0) return 1;
-            const top = visibleButtons[0].offsetTop;
-            let count = 0;
-            while (count < visibleButtons.length && visibleButtons[count].offsetTop === top) count++;
-            return Math.max(1, count);
+            const previous = document.activeElement;
+            if (previous instanceof Element && previous.classList.contains('emoji-picker-btn')) {
+                previous.tabIndex = -1;
+            }
+            rove = buttons.indexOf(target);
+            target.tabIndex = 0;
+            target.focus();
         }
 
         /* ---- Event listeners ---- */
@@ -973,45 +1039,60 @@
 
         grid.addEventListener('keydown', (e) => {
             if (e.altKey || e.ctrlKey || e.metaKey) return;
-            // In search mode, buttons are in the search results section (not in `buttons` array)
-            let visibleButtons;
-            if (grid.classList.contains('emoji-picker-grid--search') && searchResultsSection) {
-                visibleButtons = Array.from(searchResultsSection.querySelectorAll('.emoji-picker-btn'));
-            } else {
-                visibleButtons = buttons.filter(b => !b.hidden);
-            }
-            const current = visibleButtons.indexOf(document.activeElement);
+            const focused = document.activeElement;
+            if (!(focused instanceof Element) || !focused.classList.contains('emoji-picker-btn')) return;
+
+            // Arrow keys move inside ONE page (the focused emoji's category),
+            // or inside the flat result list while searching. Left/Right at
+            // the edge of a page carry on to the neighbouring page.
+            const searching = grid.classList.contains('emoji-picker-grid--search') && !!searchResultsSection;
+            const catIndex = Number(focused.getAttribute('data-cat-index'));
+            const page = searching
+                ? Array.from(searchResultsSection.querySelectorAll('.emoji-picker-btn'))
+                : pageButtons(catIndex);
+            const current = page.indexOf(focused);
             if (current === -1) return;
-            const last = visibleButtons.length - 1;
-            let next = -1;
-            if (e.key === 'ArrowRight') next = current + 1;
-            else if (e.key === 'ArrowLeft') next = current - 1;
-            else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                const cols = (function() {
-                    if (visibleButtons.length === 0) return 1;
-                    const top = visibleButtons[0].offsetTop;
-                    let count = 0;
-                    while (count < visibleButtons.length && visibleButtons[count].offsetTop === top) count++;
-                    return Math.max(1, count);
-                })();
-                if (e.key === 'ArrowDown') {
-                    next = current + cols;
-                    if (next > last) next = Math.floor(current / cols) < Math.floor(last / cols) ? last : current;
-                } else {
-                    next = current - cols;
-                    if (next < 0) next = current;
+            const last = page.length - 1;
+
+            let target = null;
+            if (e.key === 'ArrowRight') {
+                if (current < last) target = page[current + 1];
+                else if (!searching && catIndex < categories.length - 1) target = pageButtons(catIndex + 1)[0];
+            } else if (e.key === 'ArrowLeft') {
+                if (current > 0) target = page[current - 1];
+                else if (!searching && catIndex > 0) {
+                    const previous = pageButtons(catIndex - 1);
+                    target = previous[previous.length - 1];
                 }
-            } else if (e.key === 'Home') next = 0;
-            else if (e.key === 'End') next = last;
-            if (next === -1) return;
-            next = Math.max(0, Math.min(last, next));
+            } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                // Columns = buttons that share the first row's offsetTop
+                const top = page[0].offsetTop;
+                let cols = 0;
+                while (cols < page.length && page[cols].offsetTop === top) cols++;
+                cols = Math.max(1, cols);
+                if (e.key === 'ArrowDown') {
+                    const next = current + cols;
+                    target = next <= last
+                        ? page[next]
+                        : (Math.floor(current / cols) < Math.floor(last / cols) ? page[last] : focused);
+                } else {
+                    target = current - cols >= 0 ? page[current - cols] : focused;
+                }
+            } else if (e.key === 'Home') target = page[0];
+            else if (e.key === 'End') target = page[last];
+            else return;
+
             e.preventDefault();
-            // update tabIndex on the active button
-            if (current >= 0 && visibleButtons[current]) visibleButtons[current].tabIndex = -1;
-            if (visibleButtons[next]) {
-                visibleButtons[next].tabIndex = 0;
-                visibleButtons[next].focus();
+            if (!target || target === focused) return;
+            if (!searching) {
+                const targetCat = Number(target.getAttribute('data-cat-index'));
+                if (targetCat !== active) {
+                    active = targetCat;
+                    paintTabs();
+                    revealTab(tabEls[active]);
+                }
             }
+            focusButton(target);
         });
 
         searchInput.addEventListener('input', function () {
@@ -1043,16 +1124,20 @@
                     searchQuery = '';
                     searchInput.value = '';
                     tablist.hidden = false;
-                    paintFullView();
                     active = 0;
-                    paintTabs();
+                    paintFullView();
                     tablist.scrollLeft = 0;
-                    grid.scrollLeft = 0;
                     grid.scrollTop = 0;
                 }
                 paintTabs();
                 this.refreshSelected();
                 revealTab(tabEls[active]);
+                // Hiding the picker (display:none) threw the scroll position
+                // away; put the cards back on the page the highlighted tab
+                // names so the two can never disagree after a reopen.
+                jumpTarget = null;
+                syncScrollToActive();
+                retargetTabStop();
                 searchInput.focus();
             },
             // Only flips aria-pressed - never rebuilds nodes or moves focus,
@@ -1063,20 +1148,21 @@
                         isSelected(button.getAttribute('data-emoji')) ? 'true' : 'false');
                 });
             },
-            // Focus lands on the first visible emoji button.
+            // Focus lands on the first emoji of the page that is showing
+            // (not page 0, which would scroll the cards away from the
+            // highlighted tab).
             focusFirst: function () {
-                moveTo(0);
+                const first = pageButtons(active)[0] || buttons[0];
+                focusButton(first);
             },
             // Back to the first category, scrolled to the top.
             reset: function () {
                 searchQuery = '';
                 searchInput.value = '';
                 tablist.hidden = false;
-                paintFullView();
                 active = 0;
-                paintTabs();
+                paintFullView();
                 tablist.scrollLeft = 0;
-                grid.scrollLeft = 0;
                 grid.scrollTop = 0;
             }
         };

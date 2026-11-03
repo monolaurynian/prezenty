@@ -129,6 +129,32 @@ async function initializeDatabase() {
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
         console.log("✓ Anon message reactions table created");
+        // Group chat: one shared room (anonymous). Mirror of the same block
+        // in ensureAnonMessageTables().
+        await connection.execute(`CREATE TABLE IF NOT EXISTS group_chat_messages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            sender_user_id INT NOT NULL,
+            body TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+        await connection.execute(`CREATE TABLE IF NOT EXISTS group_chat_read (
+            user_id INT PRIMARY KEY,
+            last_read_id INT NOT NULL DEFAULT 0,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+        await connection.execute(`CREATE TABLE IF NOT EXISTS group_chat_reactions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            message_id INT NOT NULL,
+            user_id INT NOT NULL,
+            emoji VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_group_message_user_emoji (message_id, user_id, emoji),
+            INDEX idx_group_reaction_message (message_id),
+            FOREIGN KEY (message_id) REFERENCES group_chat_messages(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+        console.log("✓ Group chat tables created");
         
         // Add indexes for better query performance
         console.log("\nAdding database indexes for better performance...");
@@ -164,6 +190,7 @@ async function initializeDatabase() {
         console.log("- sessions (for express-session)");
         console.log("- anon_threads / anon_messages (anonymous chat)");
         console.log("- anon_message_reactions (emoji reactions on chat messages)");
+        console.log("- group_chat_messages / group_chat_read / group_chat_reactions (group chat)");
         console.log("\nIndexes created for optimal query performance");
         
     } catch (error) {

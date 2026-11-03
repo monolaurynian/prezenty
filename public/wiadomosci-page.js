@@ -13,7 +13,7 @@
         // Safe stand-in if chat-reactions.js fails to load (stale cache) -
         // the chat keeps working, just without reaction UI
         const reactionsApi = window.ChatReactions || {
-            ingest: () => '', strip: () => '', refreshStrips: () => {}, reset: () => {}
+            ingest: () => '', strip: () => '', refreshStrips: () => {}, reset: () => {}, setScope: () => {}
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -56,6 +56,8 @@
                 .catch(() => { window.location.href = '/'; });
 
             // Enter sends the reply (Shift+Enter for a newline)
+            document.getElementById('targetSelect').addEventListener('change', onTargetChange);
+
             document.getElementById('replyBody').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -143,6 +145,16 @@
         }
 
         // ===== Compose =====
+        // The group chat is one more choice in the recipient dropdown
+        const GROUP_OPTION_VALUE = 'group';
+
+        // Explains where the message goes when the group chat is chosen
+        function onTargetChange() {
+            const hint = document.getElementById('composeGroupHint');
+            if (!hint) return;
+            hint.style.display = document.getElementById('targetSelect').value === GROUP_OPTION_VALUE ? '' : 'none';
+        }
+
         function loadUsers() {
             return fetch('/api/wiadomosci/users')
                 .then(r => r.json())
@@ -172,6 +184,30 @@
             const original = btn.innerHTML;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Wysyłanie...';
             btn.disabled = true;
+
+            // "Czat grupowy" in the dropdown posts into the one shared room
+            // (no thread is created) and opens it
+            if (targetUserId === GROUP_OPTION_VALUE) {
+                fetch('/api/wiadomosci/group', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ body })
+                })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.ok) {
+                            document.getElementById('composeBody').value = '';
+                            document.getElementById('targetSelect').value = '';
+                            onTargetChange();
+                            openThread('group');
+                        } else {
+                            showToast(d.error || 'Nie udało się wysłać', 'error');
+                        }
+                    })
+                    .catch(() => showToast('Błąd połączenia', 'error'))
+                    .finally(() => { btn.innerHTML = original; btn.disabled = false; });
+                return;
+            }
 
             fetch('/api/wiadomosci/threads', {
                 method: 'POST',
@@ -211,8 +247,7 @@
                     list.innerHTML = threads.map(t => {
                         if (t.isGroup || t.id === 'group') {
                             return `
-                        <div class="thread-row thread-row--pinned" onclick="openThread('group')">
-                            <div class="thread-pin-badge">📌 Przypięty</div>
+                        <div class="thread-row thread-row--group" onclick="openThread('group')">
                             <div class="d-flex justify-content-between align-items-center gap-2">
                                 <span class="thread-who">👥 Czat grupowy</span>
                                 <span class="d-flex align-items-center gap-2">
@@ -251,6 +286,8 @@
             lastChatSignature = null;
             lastReactionSignature = null;
             reactionsApi.reset();
+            // Group messages live in their own id space and endpoint
+            reactionsApi.setScope(threadId === 'group' ? 'group' : 'thread');
             if (pushHistory) {
                 history.pushState({ rozmowa: threadId }, '', '/wiadomosci?rozmowa=' + threadId);
             }
@@ -279,6 +316,7 @@
             lastChatSignature = null;
             lastReactionSignature = null;
             reactionsApi.reset();
+            reactionsApi.setScope('thread');
             document.getElementById('listView').style.display = 'none';
             document.getElementById('chatView').style.display = 'block';
             document.getElementById('deleteThreadBtn').style.display = 'none';
@@ -309,6 +347,7 @@
             lastChatSignature = null;
             lastReactionSignature = null;
             reactionsApi.reset();
+            reactionsApi.setScope('thread');
             document.getElementById('deleteThreadBtn').style.display = 'none';
             document.getElementById('chatView').style.display = 'none';
             document.getElementById('listView').style.display = 'block';
@@ -387,9 +426,24 @@
                     const msgs = d.messages || [];
                     // API returns newest-first; reverse for display
                     const ordered = msgs.slice().reverse();
+
+                    // Same reaction pipeline as the private threads: ingest
+                    // the aggregate first so the strips and the reaction
+                    // signature use the fresh data.
+                    const rsig = reactionsApi.ingest(ordered);
+
                     const sig = 'group:' + ordered.length + ':' + (ordered.length ? ordered[ordered.length - 1].id : 0);
-                    if (sig === lastChatSignature) return;
+                    if (sig === lastChatSignature) {
+                        // Same messages, different reactions: repaint only
+                        // the chip strips (no scroll jump, previews stay)
+                        if (rsig !== lastReactionSignature) {
+                            lastReactionSignature = rsig;
+                            reactionsApi.refreshStrips();
+                        }
+                        return;
+                    }
                     lastChatSignature = sig;
+                    lastReactionSignature = rsig;
                     box.innerHTML = ordered.map(m => `
                         <div class="chat-msg-row ${m.isOwn ? 'from-me' : 'from-them'}">
                             <div class="chat-bubble ${m.isOwn ? 'from-me' : 'from-them'}">
@@ -397,6 +451,7 @@
                                 <div id="lp-g${m.id}"></div>
                                 <div class="chat-time">${timeAgo(m.created_at)}</div>
                             </div>
+                            <div class="chat-reactions" data-reactions-for="${m.id}">${reactionsApi.strip(m)}</div>
                         </div>
                     `).join('');
                     box.scrollTop = box.scrollHeight;

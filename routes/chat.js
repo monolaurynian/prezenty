@@ -14,7 +14,7 @@ const { handleDbError, notFound, forbidden, badRequest } = require('../lib/http-
 const { requireAuth } = require('../lib/auth');
 const { ensureAnonMessageTables, notifyAnonMessage, reactionRateAllows, getGroupChatUnreadCount } = require('../lib/chat');
 const { linkPreviewCache, LINK_PREVIEW_TTL, isSafePreviewUrl, extractMeta, fetchPreview } = require('../lib/link-preview');
-const { demoChat, demoThreadMessages, demoIsParticipant, demoOtherLabel, demoThreadList, demoUnreadCount, demoReactionRows, demoThreadReactionRows, demoReactionToggle } = require('../lib/demo-data');
+const { demoChat, demoThreadMessages, demoIsParticipant, demoOtherLabel, demoThreadList, demoUnreadCount, demoReactionRows, demoThreadReactionRows, demoReactionToggle, demoGroup, demoGroupMessages, demoGroupReactionRows, demoGroupAllReactionRows, demoGroupReactionToggle, demoGroupAddMessage } = require('../lib/demo-data');
 const { sendNotificationToUsers } = require('../lib/push');
 
 // Users the current user can message (everyone but themselves)
@@ -85,21 +85,28 @@ router.get('/api/wiadomosci/threads', requireAuth, async (req, res) => {
             console.error('[WIADOMOSCI] thread reaction preview failed:', reactionErr.message);
         }
 
-        // Build the group chat synthetic thread and prepend it
-        const [lastGroupMsg] = await pool.execute(
-            'SELECT id, body, created_at FROM group_chat_messages ORDER BY id DESC LIMIT 1'
-        );
-        const lastMessage = lastGroupMsg[0] || null;
-        const groupUnread = await getGroupChatUnreadCount(userId);
-        const groupThread = {
-            id: 'group',
-            otherLabel: '👥 Czat grupowy',
-            lastBody: lastMessage ? lastMessage.body : 'Napisz pierwszą wiadomość...',
-            lastAt: lastMessage ? lastMessage.created_at : null,
-            unreadCount: groupUnread,
-            pinned: true,
-            isGroup: true
-        };
+        // The group chat is listed like any other conversation (ordered by
+        // its last activity, not pinned) once it has a message. Before that
+        // it is reachable from the compose dropdown. A failure here must not
+        // take the private conversations down with it.
+        let groupThread = null;
+        try {
+            const [lastGroupMsg] = await pool.execute(
+                'SELECT id, body, created_at FROM group_chat_messages ORDER BY id DESC LIMIT 1'
+            );
+            if (lastGroupMsg[0]) {
+                groupThread = {
+                    id: 'group',
+                    otherLabel: '👥 Czat grupowy',
+                    lastBody: lastGroupMsg[0].body,
+                    lastAt: lastGroupMsg[0].created_at,
+                    unreadCount: await getGroupChatUnreadCount(userId),
+                    isGroup: true
+                };
+            }
+        } catch (groupErr) {
+            console.error('[WIADOMOSCI] group chat row failed:', groupErr.message);
+        }
 
         const mappedThreads = threads.map(t => ({
             id: t.id,
@@ -119,7 +126,10 @@ router.get('/api/wiadomosci/threads', requireAuth, async (req, res) => {
             )
         }));
 
-        mappedThreads.unshift(groupThread);
+        if (groupThread) {
+            mappedThreads.push(groupThread);
+            mappedThreads.sort((a, b) => new Date(b.lastAt) - new Date(a.lastAt));
+        }
         res.json({ threads: mappedThreads });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas pobierania wiadomości');
@@ -461,26 +471,43 @@ router.post('/api/wiadomosci/messages/:messageId/reactions', requireAuth, async 
 // GET /api/wiadomosci/group - fetch last 50 messages, mark as read
 router.get('/api/wiadomosci/group', requireAuth, async (req, res) => {
     if (DEMO_MODE) {
+        const reactionsByMessage = groupReactionsByMessage(demoGroupAllReactionRows(req.session.userId));
         return res.json({
-            messages: [
-                { id: 3, body: 'Jakie macie pomysły na prezenty? 🎁', created_at: new Date(Date.now() - 5e5), isOwn: false },
-                { id: 2, body: 'Witajcie! Cieszę się, że tu jesteście 😊', created_at: new Date(Date.now() - 1e6), isOwn: false },
-                { id: 1, body: 'Witajcie! To jest anonimowy czat grupowy.', created_at: new Date(Date.now() - 2e6), isOwn: true }
-            ]
+            messages: demoGroupMessages(req.session.userId).map(m => Object.assign({}, m, {
+                reactions: reactionsByMessage.get(Number(m.id)) || []
+            }))
         });
     }
     const userId = req.session.userId;
     try {
         await ensureAnonMessageTables();
         const [rows] = await pool.execute(
-            'SELECT id, body, created_at, sender_user_id FROM group_chat_messages ORDER BY created_at DESC, id DESC LIMIT 50',
+            'SELECT id, body, created_at, sender_user_id FROM group_chat_messages ORDER BY id DESC LIMIT 50',
             []
         );
+
+        // Reactions for the whole page of messages in ONE grouped query
+        // (no N+1). Aggregate only: `mine` replaces any user id, exactly
+        // like the private threads.
+        let reactionsByMessage = new Map();
+        if (rows.length > 0) {
+            const ids = rows.map(row => Number(row.id));
+            const [reactionRows] = await pool.execute(`
+                SELECT message_id, emoji, COUNT(*) AS cnt, MAX(user_id = ?) AS mine
+                FROM group_chat_reactions
+                WHERE message_id IN (${ids.map(() => '?').join(',')})
+                GROUP BY message_id, emoji
+            `, [userId, ...ids]);
+            reactionsByMessage = groupReactionsByMessage(reactionRows);
+        }
+
         const messages = rows.map(row => ({
             id: row.id,
             body: row.body,
             created_at: row.created_at,
-            isOwn: row.sender_user_id === userId
+            isOwn: row.sender_user_id === userId,
+            // Aggregate only: [{ emoji, count, mine }]
+            reactions: reactionsByMessage.get(Number(row.id)) || []
         }));
         // Upsert read pointer to max id seen
         if (messages.length > 0) {
@@ -498,11 +525,14 @@ router.get('/api/wiadomosci/group', requireAuth, async (req, res) => {
 
 // POST /api/wiadomosci/group - send a message to the group chat
 router.post('/api/wiadomosci/group', requireAuth, async (req, res) => {
-    if (DEMO_MODE) return res.json({ ok: true, id: 99 });
     const userId = req.session.userId;
     const body = req.body && req.body.body;
     if (!body || !String(body).trim()) return badRequest(res, 'Wpisz wiadomość');
     if (String(body).trim().length > 2000) return badRequest(res, 'Wiadomość jest za długa (max 2000 znaków)');
+    if (DEMO_MODE) {
+        const message = demoGroupAddMessage(userId, String(body).trim());
+        return res.json({ ok: true, id: message.id });
+    }
     try {
         await ensureAnonMessageTables();
         const [result] = await pool.execute(
@@ -517,10 +547,88 @@ router.post('/api/wiadomosci/group', requireAuth, async (req, res) => {
         );
         // Push notification to all other users
         const preview = String(body).trim().slice(0, 100);
-        sendNotificationToUsers(userId, '👥 Czat grupowy', preview, { url: '/wiadomosci.html', isGroup: true }).catch(() => {});
+        sendNotificationToUsers(userId, '👥 Czat grupowy', preview, { url: '/wiadomosci?rozmowa=group', isGroup: true }).catch(() => {});
         res.json({ ok: true, id: insertId });
     } catch (err) {
         return handleDbError(err, res, 'Błąd podczas wysyłania wiadomości');
+    }
+});
+
+// POST /api/wiadomosci/group/messages/:messageId/reactions - toggle an
+// emoji reaction on a group message. Same contract as the private threads:
+// allowlist-only, throttled, idempotent toggle, aggregate-only response
+// ({ emoji, count, mine }), and NO notification, push or unread change.
+// Every signed-in user is a participant of the shared room, so there is no
+// per-message participation check beyond "the message exists".
+router.post('/api/wiadomosci/group/messages/:messageId/reactions', requireAuth, async (req, res) => {
+    const userId = req.session.userId;
+
+    const messageId = parseReactionMessageId(req.params.messageId);
+    if (messageId === null) return badRequest(res, 'Nieprawidłowa wiadomość');
+
+    const emoji = req.body ? req.body.emoji : null;
+    if (!isAllowedReactionEmoji(emoji)) return badRequest(res, 'Nieprawidłowa reakcja');
+
+    // Shares the per-user bucket with the private threads on purpose: the
+    // limit is about how fast one person taps, not where.
+    if (!reactionRateAllows(userId)) {
+        return res.status(429).json({ error: 'Zbyt wiele reakcji. Odczekaj chwilę' });
+    }
+
+    if (DEMO_MODE) {
+        if (!demoGroup.messages.some(m => Number(m.id) === messageId)) {
+            return notFound(res, 'Nie znaleziono wiadomości');
+        }
+        const action = demoGroupReactionToggle(messageId, userId, emoji);
+        return res.json({
+            success: true,
+            action,
+            messageId,
+            emoji,
+            reactions: buildReactionList(demoGroupReactionRows(messageId, userId))
+        });
+    }
+
+    try {
+        await ensureAnonMessageTables();
+        const [mRows] = await pool.execute(
+            'SELECT id FROM group_chat_messages WHERE id = ?',
+            [messageId]
+        );
+        if (mRows.length === 0) return notFound(res, 'Nie znaleziono wiadomości');
+
+        // Toggle: delete first, insert only when nothing was removed.
+        // INSERT IGNORE swallows the duplicate-key a racing double tap causes.
+        const [del] = await pool.execute(
+            'DELETE FROM group_chat_reactions WHERE message_id = ? AND user_id = ? AND emoji = ?',
+            [messageId, userId, emoji]
+        );
+        const action = reactionToggleAction(del.affectedRows);
+        if (action === 'added') {
+            await pool.execute(
+                'INSERT IGNORE INTO group_chat_reactions (message_id, user_id, emoji) VALUES (?, ?, ?)',
+                [messageId, userId, emoji]
+            );
+        }
+
+        const [aggRows] = await pool.execute(`
+            SELECT emoji, COUNT(*) AS cnt, MAX(user_id = ?) AS mine
+            FROM group_chat_reactions
+            WHERE message_id = ?
+            GROUP BY emoji
+        `, [userId, messageId]);
+
+        // Identity-free log line: no user id, no emoji->user pairing
+        console.log(`💜 [WIADOMOSCI] Group reaction ${action} on message ${messageId}`);
+        res.json({
+            success: true,
+            action,
+            messageId,
+            emoji,
+            reactions: buildReactionList(aggRows)
+        });
+    } catch (err) {
+        return handleDbError(err, res, 'Błąd podczas zapisywania reakcji');
     }
 });
 

@@ -1,5 +1,7 @@
 // Moved verbatim from server.js (Phase 2 split)
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const router = express.Router();
 const { DEMO_MODE, isMaintenanceMode } = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
@@ -15,13 +17,30 @@ router.get('/health', (req, res) => {
     });
 });
 
+// The service worker's cache generation (CACHE_NAME in public/sw.js) is
+// read once at startup. A deploy restarts the server, so this always names
+// the generation that is being served - bumping CACHE_NAME is therefore
+// enough to make every open client show the "new version" banner (see
+// public/update-checker.js), without also remembering to bump package.json.
+function readServiceWorkerCacheName() {
+    try {
+        const source = fs.readFileSync(path.join(__dirname, '..', 'public', 'sw.js'), 'utf8');
+        const match = source.match(/const\s+CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
+        return match ? match[1] : null;
+    } catch (err) {
+        return null;
+    }
+}
+const serviceWorkerCacheName = readServiceWorkerCacheName();
+
 // Version endpoint for cache busting
 router.get('/api/version', (req, res) => {
     const packageJson = require('../package.json');
+    res.set('Cache-Control', 'no-store');
     res.json({
         version: packageJson.version,
         timestamp: Date.now(),
-        cacheVersion: 'v8'
+        cacheVersion: serviceWorkerCacheName || 'unknown'
     });
 });
 

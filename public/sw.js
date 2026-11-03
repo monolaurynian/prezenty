@@ -1,13 +1,13 @@
-const CACHE_NAME = 'prezenty-v141';
+const CACHE_NAME = 'prezenty-v142';
 const urlsToCache = [
   '/manifest.json',
   '/pluralize-pl.js',
   '/notification-text.js',
   '/escape-html.js',
-  '/chat-reactions.css?v=4',
-  '/chat-reactions.js?v=5',
+  '/chat-reactions.css?v=5',
+  '/chat-reactions.js?v=6',
   '/emoji-data.js?v=1',
-  '/emoji-picker.js?v=1',
+  '/emoji-picker.js?v=2',
   '/favicon.svg',
   '/seba_logo.png',
   '/styles.deduped.min.css',
@@ -38,8 +38,8 @@ const urlsToCache = [
   '/activity-page.js?v=1',
   '/ustawienia-page.css?v=1',
   '/ustawienia-page.js?v=1',
-  '/wiadomosci-page.css?v=1',
-  '/wiadomosci-page.js?v=2',
+  '/wiadomosci-page.css?v=2',
+  '/wiadomosci-page.js?v=3',
   '/osoby-page.css?v=1',
   '/osoby-page.js?v=1',
   '/archiwum-page.css?v=1',
@@ -65,7 +65,9 @@ self.addEventListener('install', function(event) {
         // Cache files individually to handle failures gracefully
         return Promise.allSettled(
           urlsToCache.map(url => 
-            cache.add(url).catch(err => {
+            // cache: 'reload' skips the browser's HTTP cache, so a new
+            // cache generation can never be filled with stale copies
+            cache.add(new Request(url, { cache: 'reload' })).catch(err => {
               console.warn('[SW] Failed to cache:', url);
               return null;
             })
@@ -250,6 +252,20 @@ self.addEventListener('push', function(event) {
       );
       if (viewingThread) {
         console.log('🔕 [SW] Suppressing notification - conversation', threadId, 'is open and visible');
+        return;
+      }
+    }
+
+    // Same for the group chat: skip the OS notification while its
+    // conversation is open and visible
+    if (notificationData.data && notificationData.data.isGroup) {
+      const viewingGroup = clientList.some(c =>
+        c.visibilityState === 'visible' &&
+        c.url.indexOf('/wiadomosci') !== -1 &&
+        c.url.indexOf('rozmowa=group') !== -1
+      );
+      if (viewingGroup) {
+        console.log('🔕 [SW] Suppressing notification - group chat is open and visible');
         return;
       }
     }

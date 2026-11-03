@@ -321,9 +321,11 @@ test.describe('full emoji picker', () => {
         const panel = page.locator('#emojiPickerRoot [role="tabpanel"]');
         await expect(panel).toHaveAttribute('aria-labelledby', 'emojiPickerTab-smileys');
         expect(await focusedEmojiIndex(page), 'focus should be on the first emoji').toBe(0);
-        // Only the active category is in the DOM
+        // Every category is its own full-width page (card) in one snapping row
+        await expect(page.locator('#emojiPickerRoot .emoji-picker-section'))
+            .toHaveCount(EmojiData.categories.length);
         await expect(page.locator('#emojiPickerRoot .emoji-picker-btn'))
-            .toHaveCount(EmojiData.categories[0].emoji.split(' ').length);
+            .toHaveCount(EmojiData.categories.reduce((sum, c) => sum + c.emoji.split(' ').length, 0));
         // No icon font anywhere in the picker or its back button
         await expect(page.locator('#emojiPickerRoot i, #reactionSheetBack i')).toHaveCount(0);
     });
@@ -529,8 +531,10 @@ test.describe('full emoji picker', () => {
             const report = await collectOverflow(page);
             expect(report.rootScroll.delta, JSON.stringify(report.rootScroll)).toBeLessThanOrEqual(0.5);
             expect(report.offenders, JSON.stringify(report.offenders)).toEqual([]);
-            // The category tab row is the ONE intentional horizontal scroller
-            const strays = report.scrollers.filter(s => !s.path.includes('emoji-picker-tabs'));
+            // The category tab row and the snapping row of category pages are
+            // the two intentional horizontal scrollers
+            const strays = report.scrollers.filter(s =>
+                !s.path.includes('emoji-picker-tabs') && !s.path.includes('emojiPickerPanel'));
             expect(strays, JSON.stringify(strays)).toEqual([]);
         });
     }
@@ -626,15 +630,24 @@ test.describe('full emoji picker', () => {
     test('sw.js and wiadomosci.html agree on the versioned URLs and cache name', async ({ request }) => {
         const sw = await (await request.get('/sw.js')).text();
         const html = await (await request.get('/wiadomosci.html')).text();
-        expect(sw).toContain("'prezenty-v134'");
-        ['/chat-reactions.css?v=4', '/chat-reactions.js?v=5', '/emoji-data.js?v=1', '/emoji-picker.js?v=1']
-            .forEach(url => {
-                expect(sw, `sw.js precache entry ${url}`).toContain(`'${url}'`);
-                expect(html, `wiadomosci.html reference ${url}`).toContain(url.slice(1));
-            });
+        // The cache generation is bumped on every release (so returning
+        // clients drop the old copies); only its shape is asserted here
+        expect(sw).toMatch(/const CACHE_NAME = 'prezenty-v\d+';/);
+
+        // Whatever version each asset has in the page, the service worker
+        // must precache that exact URL - a mismatch is a stale-cache bug
+        const assets = ['chat-reactions.css', 'chat-reactions.js', 'emoji-data.js', 'emoji-picker.js',
+            'wiadomosci-page.css', 'wiadomosci-page.js'];
+        const versioned = {};
+        assets.forEach(name => {
+            const found = html.match(new RegExp(`(?:src|href)="(${name.replace('.', '\\.')}\\?v=\\d+)"`));
+            expect(found, `wiadomosci.html references ${name} with a ?v= version`).not.toBeNull();
+            versioned[name] = found[1];
+            expect(sw, `sw.js precache entry for ${versioned[name]}`).toContain(`'/${versioned[name]}'`);
+        });
         // The dataset must load before chat-reactions.js, the picker after it
-        const order = ['emoji-data.js?v=1', 'chat-reactions.js?v=5', 'emoji-picker.js?v=1']
-            .map(name => html.indexOf(`src="${name}"`));
+        const order = ['emoji-data.js', 'chat-reactions.js', 'emoji-picker.js']
+            .map(name => html.indexOf(`src="${versioned[name]}"`));
         expect(order.every(i => i > -1), JSON.stringify(order)).toBe(true);
         expect(order).toEqual(order.slice().sort((a, b) => a - b));
     });
