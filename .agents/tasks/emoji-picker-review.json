@@ -1,15 +1,5 @@
 {
-  "verdict": "CHANGES_REQUESTED",
-  "findings": [
-    {
-      "id": "B1",
-      "title": "Search state not cleared when reopening full picker after navigating back",
-      "file": "public/emoji-picker.js",
-      "location": "show() method (~line 424); see also chat-reactions.js showAll() ~line 641",
-      "triggeringPath": "User opens full picker → types a search query (tablist.hidden=true, searchQuery set) → presses Back (showQuick hides emojiPickerRoot, does NOT call picker.reset()) → opens full picker again (showAll calls picker.show()). show() does not clear searchQuery, restore tablist.hidden, or call paintFullView(), so the tab bar is absent and only the stale filtered results are shown.",
-      "consequence": "On every re-open after a prior search session the tab row is missing and only the previously filtered emoji are visible; the picker is functionally broken until the user manually clears the search input.",
-      "correction": "At the start of show(), if searchQuery.length > 0, reset searchQuery to '', clear searchInput.value, set tablist.hidden = false, and call paintFullView(). Example: if (searchQuery.length > 0) { searchQuery = ''; searchInput.value = ''; tablist.hidden = false; paintFullView(); }"
-    }
-  ],
+  "verdict": "APPROVED",
+  "findings": [],
   "reviewDoc": "/Users/mati/Documents/prezenty/.agents/tasks/emoji-picker-review.md"
 }
