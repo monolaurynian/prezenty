@@ -304,13 +304,16 @@ function pagerGeometry(page) {
 
 /** Waits until the grid stopped scrolling (snap + smooth scroll finished). */
 async function settled(page) {
+    // Three identical readings 250ms apart: a snap animation can pause for
+    // a moment after the finger lifts, so one equal pair is not enough.
     let last = -1;
+    let equal = 0;
     await expect.poll(async () => {
         const now = (await pickerState(page)).scrollLeft;
-        const stable = now === last;
+        equal = now === last ? equal + 1 : 0;
         last = now;
-        return stable;
-    }, { timeout: 5000, intervals: [150, 150, 150, 150] }).toBe(true);
+        return equal >= 3;
+    }, { timeout: 8000, intervals: [250] }).toBe(true);
 }
 
 test.describe('emoji picker: highlighted tab and card are the same page', () => {
@@ -500,5 +503,133 @@ test.describe('emoji picker: highlighted tab and card are the same page', () => 
         await page.keyboard.press('ArrowLeft');
         await settled(page);
         expect((await pickerState(page)).selectedTab).toBe(0);
+    });
+});
+
+// ===========================================================================
+// Emoji picker: swiping the cards with a finger
+//
+// Earlier tests moved the cards with scrollTo(), which skips the touch
+// pipeline entirely - so they passed while a real swipe did nothing (each
+// card had `overscroll-behavior: contain` on both axes and swallowed the
+// sideways gesture). These tests send real touch events.
+// ===========================================================================
+
+/** A finger swipe: touch down, many small moves, lift. dx/dy in CSS px. */
+async function swipe(cdp, x, y, dx, dy, msPerStep) {
+    const steps = 14;
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+    for (let i = 1; i <= steps; i++) {
+        await cdp.send('Input.dispatchTouchEvent', {
+            type: 'touchMove', touchPoints: [{ x: x + dx * i / steps, y: y + (dy || 0) * i / steps }]
+        });
+        await new Promise(resolve => setTimeout(resolve, msPerStep || 16));
+    }
+    // A hesitant drag stops moving before the finger lifts (no fling)
+    if (msPerStep) await new Promise(resolve => setTimeout(resolve, 150));
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+}
+
+test.describe('emoji picker: swipe the cards', () => {
+    test.use({ hasTouch: true, isMobile: true });
+
+    let cdp;
+    let frame; // bounding box of the card area
+
+    test.beforeEach(async ({ page, context }) => {
+        await openPage(page, THREAD);
+        await setViewport(page, 375);
+        await openFullPicker(page);
+        await settled(page);
+        cdp = await context.newCDPSession(page);
+        frame = await page.locator('#emojiPickerPanel').boundingBox();
+    });
+
+    const startOnEmoji = async (page) => {
+        const box = await page.locator('#emojiPickerRoot .emoji-picker-section:not([hidden]) .emoji-picker-btn').first().boundingBox();
+        return { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + box.height / 2) };
+    };
+
+    test('a swipe that starts on an emoji moves exactly one card, flush, and the tab follows', async ({ page }) => {
+        const from = await startOnEmoji(page);
+        await swipe(cdp, from.x, from.y, -Math.round(frame.width * 0.6));
+        await settled(page);
+        const state = await pickerState(page);
+        expect(state.visiblePage, JSON.stringify(state)).toBe(1);
+        expect(state.selectedTab, JSON.stringify(state)).toBe(1);
+        expect(state.cardOffset, JSON.stringify(state)).toBeLessThanOrEqual(1);
+    });
+
+    test('a swipe that starts in the margin at the edge works too, and swiping back returns', async ({ page }) => {
+        await swipe(cdp, Math.round(frame.x + frame.width - 5), Math.round(frame.y + frame.height * 0.5), -Math.round(frame.width * 0.6));
+        await settled(page);
+        expect((await pickerState(page)).visiblePage).toBe(1);
+
+        await swipe(cdp, Math.round(frame.x + 20), Math.round(frame.y + frame.height * 0.5), Math.round(frame.width * 0.6));
+        await settled(page);
+        const back = await pickerState(page);
+        expect(back.visiblePage, JSON.stringify(back)).toBe(0);
+        expect(back.selectedTab, JSON.stringify(back)).toBe(0);
+        expect(back.cardOffset, JSON.stringify(back)).toBeLessThanOrEqual(1);
+    });
+
+    test('a short swipe snaps back: it never rests between two cards', async ({ page }) => {
+        const from = await startOnEmoji(page);
+        await swipe(cdp, from.x, from.y, 0 - Math.round(frame.width * 0.2), 0, 60);
+        await settled(page);
+        const state = await pickerState(page);
+        expect(state.visiblePage, JSON.stringify(state)).toBe(0);
+        expect(state.cardOffset, JSON.stringify(state)).toBeLessThanOrEqual(1);
+    });
+
+    test('several swipes in a row always land on a whole card', async ({ page }) => {
+        const from = await startOnEmoji(page);
+        for (const distance of [-0.55, -0.7, -0.4, 0.8, -0.65]) {
+            await swipe(cdp, from.x, from.y, Math.round(frame.width * distance));
+            await settled(page);
+            const state = await pickerState(page);
+            expect(state.cardOffset, `after ${distance}: ${JSON.stringify(state)}`).toBeLessThanOrEqual(1);
+            expect(state.selectedTab, `after ${distance}: ${JSON.stringify(state)}`).toBe(state.visiblePage);
+        }
+    });
+
+    test('scrolling a card up and down still works and does not nudge the cards sideways', async ({ page }) => {
+        const from = await startOnEmoji(page);
+        await swipe(cdp, from.x, from.y + 150, 0, -140);
+        await page.waitForTimeout(500);
+        const result = await page.evaluate(() => {
+            const grid = document.getElementById('emojiPickerPanel');
+            const card = grid.querySelector('.emoji-picker-section');
+            return { cardScrollTop: Math.round(card.scrollTop), gridScrollLeft: Math.round(grid.scrollLeft) };
+        });
+        expect(result.cardScrollTop, JSON.stringify(result)).toBeGreaterThan(0);
+        expect(result.gridScrollLeft, JSON.stringify(result)).toBe(0);
+    });
+
+    test('the bar moves along with a swipe', async ({ page }) => {
+        const before = (await pagerGeometry(page)).thumbLeft;
+        const from = await startOnEmoji(page);
+        await swipe(cdp, from.x, from.y, -Math.round(frame.width * 0.6));
+        await settled(page);
+        expect((await pagerGeometry(page)).thumbLeft).toBeGreaterThan(before + 5);
+    });
+});
+
+test.describe('emoji picker: trackpad / horizontal wheel', () => {
+    test('a sideways wheel over the cards scrolls them and always rests on a whole card', async ({ page }) => {
+        await openPage(page, THREAD);
+        await setViewport(page, 1024);
+        await openFullPicker(page);
+        await settled(page);
+        const box = await page.locator('#emojiPickerPanel').boundingBox();
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        for (const dx of [140, 260, -90, 400]) {
+            await page.mouse.wheel(dx, 0);
+            await settled(page);
+            const state = await pickerState(page);
+            expect(state.cardOffset, `wheel ${dx}: ${JSON.stringify(state)}`).toBeLessThanOrEqual(1);
+            expect(state.selectedTab, `wheel ${dx}: ${JSON.stringify(state)}`).toBe(state.visiblePage);
+        }
+        expect((await pickerState(page)).visiblePage).toBeGreaterThan(0);
     });
 });

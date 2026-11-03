@@ -739,10 +739,18 @@
     grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
     align-content: start;
     overflow-y: auto;
+    /* A card only scrolls up and down. Without this its overflow-x
+       computes to `auto` as well, and a sideways swipe that starts on the
+       card has nowhere to go. */
+    overflow-x: hidden;
     padding: 8px 12px;
     gap: 2px;
     box-sizing: border-box;
-    overscroll-behavior: contain;
+    /* Contain ONLY the vertical axis: `contain` on both axes stops a
+       sideways swipe from reaching the snapping row, so the cards could not
+       be swiped at all (only the scrollbar moved them). */
+    overscroll-behavior-x: auto;
+    overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
 }
 
