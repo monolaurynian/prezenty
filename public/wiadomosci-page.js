@@ -231,6 +231,10 @@
             document.getElementById('chatView').style.display = 'block';
             document.getElementById('chatMessages').innerHTML =
                 '<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>';
+            // Clear the app icon badge — user is reading the conversation
+            if ('clearAppBadge' in navigator) {
+                navigator.clearAppBadge().catch(() => {});
+            }
             loadThreadMessages();
         }
 

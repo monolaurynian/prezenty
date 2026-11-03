@@ -55,6 +55,10 @@ function toggleNotificationsPanel() {
             .then(response => response.json())
             .then(data => {
                 console.log('[Notifications] Marked all as read, response:', data);
+                // Clear the app icon badge
+                if ('clearAppBadge' in navigator) {
+                    navigator.clearAppBadge().catch(() => {});
+                }
                 // Clear the badge after marking as read
                 if (badge) {
                     badge.style.display = 'none';

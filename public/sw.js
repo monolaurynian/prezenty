@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v134';
+const CACHE_NAME = 'prezenty-v135';
 const urlsToCache = [
   '/manifest.json',
   '/pluralize-pl.js',
@@ -257,6 +257,11 @@ self.addEventListener('push', function(event) {
     console.log('📢 [SW] Displaying notification:', notificationData.title);
     try {
       await self.registration.showNotification(notificationData.title, notificationData);
+      // Set the app icon badge to the unread count
+      const unreadCount = notificationData.data && notificationData.data.unreadCount;
+      if (unreadCount && 'setAppBadge' in navigator) {
+        await navigator.setAppBadge(unreadCount).catch(() => {});
+      }
       console.log('✅ [SW] Notification displayed successfully');
     } catch (error) {
       console.error('❌ [SW] Error displaying notification:', error);
@@ -269,6 +274,11 @@ self.addEventListener('notificationclick', function(event) {
   console.log('Notification clicked:', event);
   
   event.notification.close();
+
+  // Clear the app badge when the user taps the notification
+  if ('clearAppBadge' in navigator) {
+    navigator.clearAppBadge().catch(() => {});
+  }
   
   // Handle dismiss action
   if (event.action === 'dismiss') {

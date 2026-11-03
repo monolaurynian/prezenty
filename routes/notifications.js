@@ -108,7 +108,7 @@ function debugOnly(req, res, next) {
 }
 
 // Debug endpoint for notification system
-router.get('/api/notifications/debug', debugOnly, requireAuth, async (req, res) => {
+router.get('/api/notifications/debug', requireAuth, async (req, res) => {
     try {
         const userId = req.session.userId;
         console.log('🔍 [DEBUG] Notification debug request from user:', userId);
@@ -126,23 +126,24 @@ router.get('/api/notifications/debug', debugOnly, requireAuth, async (req, res) 
             return res.json(debugInfo);
         }
 
-        // Get subscription counts
-        const [userSubResult] = await pool.execute(
-            'SELECT COUNT(*) as count FROM push_subscriptions WHERE user_id = ?',
+        // Show this user's subscriptions (endpoint masked to just the push service host)
+        const [userSubs] = await pool.execute(
+            'SELECT id, endpoint, created_at FROM push_subscriptions WHERE user_id = ?',
             [userId]
         );
-        debugInfo.userSubscriptions = userSubResult[0].count;
+        debugInfo.userSubscriptions = userSubs.length;
+        debugInfo.devices = userSubs.map(s => ({
+            id: s.id,
+            pushService: pushServiceHost(s.endpoint),
+            // Show last 12 chars of endpoint so you can tell devices apart
+            endpointSuffix: s.endpoint.slice(-12),
+            registeredAt: s.created_at
+        }));
 
         const [totalSubResult] = await pool.execute(
             'SELECT COUNT(*) as count FROM push_subscriptions'
         );
-        debugInfo.totalSubscriptions = totalSubResult[0].count;
-
-        // Get all user IDs with subscriptions
-        const [usersResult] = await pool.execute(
-            'SELECT DISTINCT user_id FROM push_subscriptions'
-        );
-        debugInfo.subscribedUserIds = usersResult.map(row => row.user_id);
+        debugInfo.totalSubscriptionsAllUsers = totalSubResult[0].count;
 
         console.log('🔍 [DEBUG] Debug info:', debugInfo);
         res.json(debugInfo);
