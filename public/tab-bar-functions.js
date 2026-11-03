@@ -354,6 +354,16 @@ function markNotificationsAsRead(notificationIds) {
         .catch(error => console.error('Error marking notification as read:', error));
 }
 
+// Shared helper — keeps the browser tab title in sync with the total
+// unread count (notifications + messages). Call after either count changes.
+let _titleNotifCount = 0;
+let _titleMsgCount = 0;
+function _updateTitle() {
+    const total = _titleNotifCount + _titleMsgCount;
+    const base = document.title.replace(/^\(\d+\)\s*/, ''); // strip old badge
+    document.title = total > 0 ? `(${total}) ${base}` : base;
+}
+
 // Update notification badge
 function updateNotificationBadge() {
     fetch('/api/notifications/unread-count')
@@ -370,10 +380,11 @@ function updateNotificationBadge() {
                     console.log('[Badge] Hidden - no unread notifications');
                 }
             }
+            _titleNotifCount = data.count || 0;
+            _updateTitle();
         })
         .catch(error => {
             console.error('Error fetching notification count:', error);
-            // Hide badge on error to be safe
             const badge = document.getElementById('activityBadge');
             if (badge) {
                 badge.style.display = 'none';
@@ -567,6 +578,8 @@ function updateMessagesBadge() {
             } else {
                 badge.style.display = 'none';
             }
+            _titleMsgCount = d.count || 0;
+            _updateTitle();
         })
         .catch(() => { /* logged out or offline - keep as is */ });
 }
