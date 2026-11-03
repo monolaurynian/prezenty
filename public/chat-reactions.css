@@ -781,7 +781,12 @@
 .emoji-picker-grid.emoji-picker-grid--search .emoji-picker-section {
     flex: none;
     width: 100%;
-    overflow-y: visible;
+    /* The grid itself scrolls the result list. Both axes must be `visible`:
+       a card's `overflow-x: hidden` would otherwise turn this into a
+       (content-sized) scroll container whose overscroll containment stops
+       the wheel and touch from reaching the grid. */
+    overflow: visible;
+    overscroll-behavior: auto;
     scroll-snap-align: none;
 }
 
@@ -789,4 +794,44 @@
     .emoji-picker-search {
         transition: none;
     }
+}
+/* ============================================================
+   Vertical scrollbar of a card: invisible until you scroll
+   The thin bar's space is always reserved (so nothing shifts sideways when
+   it appears) but its thumb is transparent. emoji-picker.js adds
+   .is-scrolling while a card moves and removes it shortly after the
+   scrolling stops. Touch phones already auto-hide their overlay bars.
+   ============================================================ */
+.emoji-picker-section,
+.emoji-picker-grid.emoji-picker-grid--search {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+.emoji-picker-section.is-scrolling,
+.emoji-picker-grid.emoji-picker-grid--search.is-scrolling {
+    scrollbar-color: rgba(123, 31, 162, 0.65) transparent;
+}
+
+/* Safari / older WebKit (ignored where the standard properties above work) */
+.emoji-picker-section::-webkit-scrollbar,
+.emoji-picker-grid.emoji-picker-grid--search::-webkit-scrollbar {
+    display: block;
+    width: 8px;
+}
+
+.emoji-picker-section::-webkit-scrollbar-track,
+.emoji-picker-grid.emoji-picker-grid--search::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.emoji-picker-section::-webkit-scrollbar-thumb,
+.emoji-picker-grid.emoji-picker-grid--search::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 4px;
+}
+
+.emoji-picker-section.is-scrolling::-webkit-scrollbar-thumb,
+.emoji-picker-grid.emoji-picker-grid--search.is-scrolling::-webkit-scrollbar-thumb {
+    background: rgba(123, 31, 162, 0.65);
 }

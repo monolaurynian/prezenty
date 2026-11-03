@@ -633,3 +633,83 @@ test.describe('emoji picker: trackpad / horizontal wheel', () => {
         expect((await pickerState(page)).visiblePage).toBeGreaterThan(0);
     });
 });
+
+test.describe('emoji picker: the up/down scrollbar only shows while scrolling', () => {
+    const thumbColor = (page) => page.locator('#emojiPickerRoot .emoji-picker-section').first()
+        .evaluate(el => getComputedStyle(el).scrollbarColor);
+
+    test('hidden when a card loads, visible while scrolling it, hidden again after', async ({ page }) => {
+        await openPage(page, THREAD);
+        await setViewport(page, 1024);
+        await openFullPicker(page);
+        await settled(page);
+
+        // On load: thin bar with a transparent thumb, and its space is reserved
+        const idle = await thumbColor(page);
+        expect(idle, idle).toMatch(/^(rgba\(0, 0, 0, 0\)|transparent)/);
+        const gutter = await page.locator('#emojiPickerRoot .emoji-picker-section').first().evaluate(el => ({
+            width: getComputedStyle(el).scrollbarWidth,
+            scrollable: el.scrollHeight > el.clientHeight
+        }));
+        expect(gutter.width).toBe('thin');
+        expect(gutter.scrollable, 'the first card is taller than the frame').toBe(true);
+
+        // Scrolling the card up/down shows it
+        const box = await page.locator('#emojiPickerPanel').boundingBox();
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.wheel(0, 120);
+        await expect(page.locator('#emojiPickerRoot .emoji-picker-section').first()).toHaveClass(/is-scrolling/);
+        const scrolling = await thumbColor(page);
+        expect(scrolling, scrolling).toMatch(/rgba?\(123, 31, 162/);
+
+        // ...and it goes away once scrolling stops
+        await expect(page.locator('#emojiPickerRoot .emoji-picker-section').first()).not.toHaveClass(/is-scrolling/, { timeout: 4000 });
+        expect(await thumbColor(page)).toMatch(/^(rgba\(0, 0, 0, 0\)|transparent)/);
+    });
+
+    test('moving the cards sideways does not flash the up/down bar', async ({ page }) => {
+        await openPage(page, THREAD);
+        await setViewport(page, 1024);
+        await openFullPicker(page);
+        await settled(page);
+        await page.evaluate(() => document.getElementById('emojiPickerPanel')
+            .scrollTo({ left: document.getElementById('emojiPickerPanel').clientWidth * 2, behavior: 'auto' }));
+        await settled(page);
+        await expect(page.locator('#emojiPickerRoot .emoji-picker-section.is-scrolling')).toHaveCount(0);
+    });
+
+    test('only the card being scrolled shows its bar', async ({ page }) => {
+        await openPage(page, THREAD);
+        await setViewport(page, 1024);
+        await openFullPicker(page);
+        await page.locator('#emojiPickerTab-food').click();
+        await settled(page);
+        const box = await page.locator('#emojiPickerPanel').boundingBox();
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.wheel(0, 120);
+        await expect(page.locator('#emojiPickerRoot .emoji-picker-section.is-scrolling')).toHaveCount(1);
+        // ...and it is the Food card (index 3), not a neighbour
+        const shown = await page.locator('#emojiPickerRoot .emoji-picker-section').evaluateAll(list =>
+            list.findIndex(el => el.classList.contains('is-scrolling')));
+        expect(shown).toBe(3);
+    });
+
+    test('search results: the list scrolls and shows its bar only while moving', async ({ page }) => {
+        await openPage(page, THREAD);
+        await setViewport(page, 1024);
+        await openFullPicker(page);
+        await page.locator('#emojiPickerRoot .emoji-picker-search').fill('s');
+        const grid = page.locator('#emojiPickerPanel');
+        await expect(grid).toHaveClass(/emoji-picker-grid--search/);
+        expect(await grid.evaluate(el => el.scrollHeight > el.clientHeight), 'the result list is taller than the frame').toBe(true);
+        expect(await grid.evaluate(el => getComputedStyle(el).scrollbarColor)).toMatch(/^(rgba\(0, 0, 0, 0\)|transparent)/);
+        const box = await grid.boundingBox();
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.wheel(0, 100);
+        // The wheel really scrolls the result list (regression: a card-level
+        // overscroll rule once swallowed it)
+        await expect.poll(() => grid.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
+        await expect(grid).toHaveClass(/is-scrolling/);
+        await expect(grid).not.toHaveClass(/is-scrolling/, { timeout: 4000 });
+    });
+});

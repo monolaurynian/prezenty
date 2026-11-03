@@ -919,6 +919,35 @@
         });
         grid.addEventListener('scrollend', function () { if (jumpTarget !== null) endJump(); });
 
+        /* ---- Vertical scrollbar only while scrolling ----
+           A card's scrollbar is invisible by default (see chat-reactions.css)
+           and shown while that card is being scrolled up or down. Scroll
+           events do not bubble, so listen in the capture phase. Sideways
+           movement of the whole row scrolls the grid, not a card, and is
+           ignored here. */
+        const SCROLLBAR_IDLE_MS = 900;
+        let scrollingEl = null;
+        let scrollingTimer = null;
+
+        function hideScrollbar() {
+            if (scrollingEl) scrollingEl.classList.remove('is-scrolling');
+            scrollingEl = null;
+            scrollingTimer = null;
+        }
+
+        grid.addEventListener('scroll', function (e) {
+            const target = e.target;
+            if (!(target instanceof Element)) return;
+            const isCard = target.classList.contains('emoji-picker-section');
+            const isSearchList = target === grid && grid.classList.contains('emoji-picker-grid--search');
+            if (!isCard && !isSearchList) return;
+            if (scrollingEl && scrollingEl !== target) scrollingEl.classList.remove('is-scrolling');
+            scrollingEl = target;
+            target.classList.add('is-scrolling');
+            if (scrollingTimer) clearTimeout(scrollingTimer);
+            scrollingTimer = setTimeout(hideScrollbar, SCROLLBAR_IDLE_MS);
+        }, { capture: true, passive: true });
+
         /* ---- Assemble container ---- */
         container.textContent = '';
         container.appendChild(searchInput);
