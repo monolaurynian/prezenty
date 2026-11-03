@@ -44,10 +44,10 @@
       '🙂':'smile slight',
       '🙃':'upside flip sarcasm',
       '😉':'wink mrugać',
-      '😊':'smile blush happy szczęście',
+      '😊':'smile blush happy szczęście szczęśliwy',
       '😇':'angel innocent halo',
       '🥰':'love heart adore kochać',
-      '😍':'love eyes heart zakochany',
+      '😍':'love eyes heart zakochany miłość',
       '🤩':'star eyes wow amazed',
       '😘':'kiss blow całus',
       '😗':'kiss całus',
@@ -77,7 +77,7 @@
       '😔':'sad pensive smutny',
       '😪':'sleepy tired zmęczony',
       '🤤':'drool yummy',
-      '😴':'sleep tired sleeping spać zmęczony',
+      '😴':'sleep tired sleeping spać zmęczony drzemka',
       '😷':'sick mask chory maska',
       '🤒':'sick fever ill chory gorączka',
       '🤕':'hurt injured ból',
@@ -98,7 +98,7 @@
       '😟':'worried concerned',
       '🙁':'sad frown smutny',
       '☹️':'frown sad smutny',
-      '😮':'surprised open mouth zdziwiony',
+      '😮':'surprised open mouth zdziwiony niespodzianka',
       '😯':'hushed surprised',
       '😲':'astonished shocked szok',
       '😳':'flushed embarrassed zawstydowany',
@@ -106,10 +106,10 @@
       '🥹':'tear moved touched',
       '😦':'frown open mouth',
       '😧':'anguish worried',
-      '😨':'fearful scared strach',
+      '😨':'fearful scared strach przestraszony',
       '😰':'anxious sweat stres',
       '😥':'sad relieved',
-      '😢':'cry sad tear płakać smutny',
+      '😢':'cry sad tear płakać smutny smutek',
       '😭':'sob cry tears płakać szlochać',
       '😱':'scream scared horror krzyk',
       '😖':'confounded frustrated',
@@ -121,7 +121,7 @@
       '🥱':'yawn tired bored ziewać',
       '😤':'triumph huff proud',
       '😡':'angry mad wściekły złość',
-      '😠':'angry mad zły',
+      '😠':'angry mad zły złość wściekły',
       '🤬':'curse angry mad wulgarny',
       '😈':'devil evil smiling',
       '👿':'devil angry evil',
@@ -200,7 +200,7 @@
       '💬':'chat speech bubble message wiadomość',
       '💭':'thought bubble think myśl',
       '💤':'sleep zzz spać',
-      '🔥':'fire hot flame ogień',
+      '🔥':'fire hot flame ogień gorąco płomień',
       '✨':'sparkle stars magic',
       '🌈':'rainbow tęcza',
       '⭐':'star gwiazdka',
@@ -211,13 +211,13 @@
       '🐵':'monkey małpa',
       '🐒':'monkey małpa',
       '🦍':'gorilla goryl',
-      '🐶':'dog puppy pies szczeniak',
+      '🐶':'dog puppy pies szczeniak piesek',
       '🐕':'dog pies',
       '🐩':'poodle pudel pies',
       '🐺':'wolf wilk',
       '🦊':'fox lis',
       '🦝':'raccoon szop',
-      '🐱':'cat kitty kot kotek',
+      '🐱':'cat kitty kot kotek kociak',
       '🐈':'cat kot',
       '🦁':'lion lew',
       '🐯':'tiger tygrys',
@@ -243,7 +243,7 @@
       '🐿️':'chipmunk wiewiórka',
       '🦔':'hedgehog jeż',
       '🦇':'bat nietoperz',
-      '🐻':'bear niedźwiedź miś',
+      '🐻':'bear niedźwiedź miś misio',
       '🐻‍❄️':'polar bear niedźwiedź polarny',
       '🐨':'koala',
       '🐼':'panda',
@@ -257,7 +257,7 @@
       '🦆':'duck kaczka',
       '🦉':'owl sowa',
       '🦜':'parrot papuga',
-      '🐸':'frog żaba',
+      '🐸':'frog żaba żabka',
       '🐊':'crocodile krokodyl',
       '🐢':'turtle żółw',
       '🐍':'snake wąż',
@@ -269,19 +269,19 @@
       '🐝':'bee honey pszczoła miód',
       '🐞':'ladybug biedronka',
       '🕷️':'spider pająk',
-      '🌸':'flower blossom kwiat',
-      '🌹':'rose róża',
+      '🌸':'flower blossom kwiat kwitek',
+      '🌹':'rose róża kwiat',
       '🌺':'flower hibiscus kwiat',
       '🌻':'sunflower słonecznik',
-      '🌼':'flower daisy kwiat',
+      '🌼':'flower daisy kwiat stokrotka',
       '🌷':'tulip tulipan',
       '🍀':'clover luck koniczyna szczęście',
       '🍁':'maple leaf jesień',
       '🍂':'leaves autumn fall jesień',
       '🍃':'leaves green liście',
       '🌱':'seedling grow plant roślina',
-      '🌲':'tree drzewo',
-      '🌳':'tree drzewo',
+      '🌲':'tree drzewo las',
+      '🌳':'tree drzewo park',
       '🌴':'palm tree palma',
       '🌵':'cactus kaktus',
       '🍄':'mushroom grzyb',
@@ -360,7 +360,7 @@
       '🧊':'ice lód',
 
       // ── Travel & places ───────────────────────────────────────────────
-      '🚗':'car auto samochód',
+      '🚗':'car auto samochód jazda',
       '🚕':'taxi cab taksówka',
       '🚙':'suv car samochód',
       '🚌':'bus autobus',
@@ -380,7 +380,7 @@
       '🚁':'helicopter helikopter',
       '⛵':'sailboat żaglówka',
       '🚢':'ship boat statek',
-      '🏠':'house home dom',
+      '🏠':'house home dom budynek',
       '🏡':'house garden dom ogród',
       '🏢':'office building biurowiec',
       '🏥':'hospital szpital',
@@ -410,26 +410,26 @@
       '🌉':'bridge night most noc',
 
       // ── Weather & nature ──────────────────────────────────────────────
-      '☀️':'sun sunny sunshine słońce',
+      '☀️':'sun sunny sunshine słońce słoneczko',
       '🌤️':'sun cloud słońce chmura',
       '⛅':'partly cloudy słońce chmura',
       '🌥️':'cloudy clouds chmury',
       '☁️':'cloud chmura',
       '🌦️':'rain sun deszcz',
-      '🌧️':'rain deszcz',
+      '🌧️':'rain deszcz ulewa',
       '⛈️':'storm thunderstorm burza',
       '🌩️':'lightning storm błyskawica',
       '🌨️':'snow snowing śnieg',
-      '❄️':'snowflake snow cold śnieg zimno',
+      '❄️':'snowflake snow cold śnieg zimno śnieżynka',
       '⛄':'snowman bałwan śnieg',
       '☃️':'snowman bałwan',
       '🌬️':'wind wiatr',
       '🌪️':'tornado twister trąba powietrzna',
-      '🌈':'rainbow tęcza',
+      '🌈':'rainbow tęcza kolory',
       '☔':'umbrella rain parasol deszcz',
       '⚡':'lightning bolt electric błyskawica',
       '🔥':'fire hot flame ogień gorąco',
-      '💧':'water drop woda',
+      '💧':'water drop woda kropla',
       '🌊':'wave ocean sea morze fala',
       '🌙':'moon crescent księżyc noc',
       '🌛':'moon face księżyc',
@@ -451,7 +451,7 @@
       '🎀':'ribbon bow wstążka prezent',
       '🎁':'gift present prezent',
       '🎗️':'ribbon awareness wstążka',
-      '🏆':'trophy award nagroda trofeum',
+      '🏆':'trophy award nagroda trofeum wygrać',
       '🥇':'gold first place złoto pierwsze miejsce',
       '🥈':'silver second place srebro',
       '🥉':'bronze third place brąz',
@@ -476,7 +476,7 @@
       '🤸':'gymnastics gimnastyka',
       '⛳':'golf',
       '🎣':'fishing wędkarstwo',
-      '🎯':'target bullseye cel',
+      '🎯':'target bullseye cel trafić',
       '🎮':'video game gaming gra',
       '🕹️':'joystick game joystick',
       '🎲':'dice game kostka',
@@ -519,7 +519,7 @@
       '👟':'sneaker shoe but',
       '👠':'heel shoe obcas',
       '👢':'boot kozak',
-      '📱':'phone mobile telefon komórkowy',
+      '📱':'phone mobile telefon komórkowy smartfon',
       '📲':'phone call telefon',
       '☎️':'telephone phone telefon',
       '💻':'laptop computer komputer',
@@ -537,24 +537,24 @@
       '📟':'pager',
       '🔋':'battery bateria',
       '🔌':'plug cable kabel',
-      '💡':'light bulb idea żarówka pomysł',
+      '💡':'light bulb idea żarówka pomysł wymyślić',
       '🔦':'flashlight latarka',
       '🕯️':'candle świeca',
       '📔':'notebook notatnik',
-      '📕':'closed book książka',
+      '📕':'closed book książka lektura',
       '📗':'green book książka',
       '📘':'blue book książka',
       '📙':'orange book książka',
-      '📚':'books books książki',
+      '📚':'books books książki nauka',
       '📖':'open book czytać',
       '📰':'newspaper gazeta',
       '📝':'memo pencil notes notatka',
       '📌':'pushpin pin',
       '📎':'paperclip spinacz',
-      '✂️':'scissors nożyczki',
-      '🔒':'lock locked zamek',
+      '✂️':'scissors nożyczki cięcie',
+      '🔒':'lock locked zamek blokada',
       '🔓':'unlock open otwarty',
-      '🔑':'key klucz',
+      '🔑':'key klucz kluczyk',
       '🗝️':'key old klucz',
       '🔨':'hammer młotek',
       '⚒️':'hammer pick',
@@ -593,14 +593,14 @@
       '📩':'email outgoing',
       '📢':'loudspeaker megafon',
       '📣':'megaphone megafon',
-      '🔔':'bell notification dzwonek powiadomienie',
+      '🔔':'bell notification dzwonek powiadomienie alarm',
       '🔕':'bell off wyciszony',
       '⏰':'alarm clock budzik',
       '⌚':'watch zegarek',
       '⏱️':'stopwatch stoper',
       '📅':'calendar kalendarz',
       '📆':'calendar date kalendarz',
-      '🔍':'search magnify szukaj',
+      '🔍':'search magnify szukaj wyszukaj',
       '🔎':'search zoom szukaj',
       '🔐':'lock key zamek',
       '🗑️':'trash bin kosz',
@@ -679,6 +679,8 @@
         const tabEls = [];
         // heading elements (one per category) for scroll-spy
         const headingEls = [];
+        // section wrapper elements (one per category)
+        const sectionEls = [];
 
         const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -729,16 +731,22 @@
         function buildFullGrid() {
             grid.textContent = '';
             headingEls.length = 0;
+            sectionEls.length = 0;
             buttons = [];
 
             categories.forEach((category, catIndex) => {
-                // Sticky section heading
+                // Section wrapper — one full-width "page" per category
+                const section = document.createElement('div');
+                section.className = 'emoji-picker-section';
+                sectionEls.push(section);
+
+                // Section heading
                 const heading = document.createElement('div');
                 heading.className = 'emoji-picker-section-heading';
                 heading.textContent = String(category.label);
                 heading.setAttribute('data-category-index', String(catIndex));
                 headingEls.push(heading);
-                grid.appendChild(heading);
+                section.appendChild(heading);
 
                 // Emoji buttons for this category
                 lists[catIndex].forEach((emoji, emojiIndex) => {
@@ -751,51 +759,35 @@
                     button.tabIndex = (catIndex === 0 && emojiIndex === 0) ? 0 : -1;
                     button.textContent = emoji;
                     buttons.push(button);
-                    grid.appendChild(button);
+                    section.appendChild(button);
                 });
+
+                grid.appendChild(section);
             });
 
             rove = 0;
-            grid.appendChild(noResults);
         }
 
-        /* ---- IntersectionObserver: update active tab as sections scroll ---- */
-        let observer = null;
-        let scrollJumping = false; // suppress observer during programmatic scroll
-
-        function setupObserver() {
-            if (observer) observer.disconnect();
-            // Observe each heading; when a heading enters the top portion of
-            // the grid viewport, mark its category as active.
-            observer = new IntersectionObserver(function (entries) {
-                if (scrollJumping) return;
-                // Find the topmost visible heading
-                let topmost = null;
-                entries.forEach(function (entry) {
-                    if (entry.isIntersecting) {
-                        if (topmost === null ||
-                            entry.boundingClientRect.top < topmost.boundingClientRect.top) {
-                            topmost = entry;
-                        }
-                    }
-                });
-                if (topmost) {
-                    const idx = Number(topmost.target.getAttribute('data-category-index'));
-                    if (idx !== active) {
-                        active = idx;
-                        paintTabs();
-                        revealTab(tabEls[active]);
-                    }
-                }
-            }, {
-                root: grid,
-                // Fire when heading is within the top 20% of the grid container
-                rootMargin: '0px 0px -80% 0px',
-                threshold: 0
-            });
-
-            headingEls.forEach(function (h) { observer.observe(h); });
+        /* ---- Horizontal scroll listener: update active tab as sections scroll ---- */
+        function updateActiveFromScroll() {
+            if (sectionEls.length === 0) return;
+            const scrollLeft = grid.scrollLeft;
+            // Find the section whose left edge is closest to (but not past) scrollLeft
+            let best = 0;
+            for (let i = 0; i < sectionEls.length; i++) {
+                if (sectionEls[i].offsetLeft <= scrollLeft + 4) best = i;
+            }
+            if (best !== active) {
+                active = best;
+                paintTabs();
+                revealTab(tabEls[active]);
+            }
         }
+
+        grid.addEventListener('scroll', function () {
+            if (grid.classList.contains('emoji-picker-grid--search')) return;
+            updateActiveFromScroll();
+        }, { passive: true });
 
         /* ---- Assemble container ---- */
         container.textContent = '';
@@ -822,15 +814,31 @@
             }
         }
 
+        /* ---- Search results section (lazy, reused) ---- */
+        let searchResultsSection = null;
+
+        function getSearchResultsSection() {
+            if (!searchResultsSection) {
+                searchResultsSection = document.createElement('div');
+                searchResultsSection.className = 'emoji-picker-section';
+                searchResultsSection.id = 'emojiSearchResults';
+            }
+            return searchResultsSection;
+        }
+
         /* ---- Search: show flat filtered results ---- */
         function paintSearchResults(query) {
-            // Hide section headings during search
-            headingEls.forEach(h => { h.hidden = true; });
+            // Switch to vertical search layout and hide category sections
+            grid.classList.add('emoji-picker-grid--search');
+            sectionEls.forEach(s => { s.hidden = true; });
             noResults.hidden = true;
 
             const filtered = allEmoji.filter(function (emoji) {
                 const kw = EMOJI_KEYWORDS[emoji];
-                if (kw && kw.includes(query)) return true;
+                if (kw) {
+                    const words = kw.split(' ');
+                    if (words.some(w => w.startsWith(query))) return true;
+                }
                 // Also try category label
                 const catIdx = categories.findIndex(function (_, ci) {
                     return lists[ci].indexOf(emoji) !== -1;
@@ -841,36 +849,40 @@
                 return false;
             });
 
-            // Hide all buttons
-            buttons.forEach(b => { b.hidden = true; });
+            const sec = getSearchResultsSection();
+            sec.textContent = '';
+            grid.appendChild(sec);
 
             if (filtered.length === 0) {
                 noResults.textContent = 'Brak wyników dla \'' + query + '\'';
                 noResults.hidden = false;
+                sec.appendChild(noResults);
                 return;
             }
 
-            // Show only matched buttons (reuse existing nodes to avoid rebuild)
-            const emojiToButton = {};
-            buttons.forEach(function (b) {
-                const emoji = b.getAttribute('data-emoji');
-                // There could be duplicates; keep first occurrence
-                if (!emojiToButton[emoji]) emojiToButton[emoji] = b;
-            });
-
             rove = -1;
             filtered.forEach(function (emoji, i) {
-                const btn = emojiToButton[emoji];
-                if (!btn) return;
-                btn.hidden = false;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'emoji-picker-btn';
+                btn.setAttribute('data-emoji', emoji);
+                btn.setAttribute('aria-pressed', isSelected(emoji) ? 'true' : 'false');
                 btn.tabIndex = (i === 0) ? 0 : -1;
-                if (i === 0) rove = buttons.indexOf(btn);
+                btn.textContent = emoji;
+                sec.appendChild(btn);
+                if (i === 0) rove = 0;
             });
         }
 
         /* ---- Restore full continuous view ---- */
         function paintFullView() {
-            headingEls.forEach(h => { h.hidden = false; });
+            // Remove search mode class and search results section
+            grid.classList.remove('emoji-picker-grid--search');
+            if (searchResultsSection && searchResultsSection.parentNode === grid) {
+                grid.removeChild(searchResultsSection);
+            }
+            // Show all category sections
+            sectionEls.forEach(s => { s.hidden = false; });
             buttons.forEach((b, i) => {
                 b.hidden = false;
                 b.tabIndex = (i === 0) ? 0 : -1;
@@ -880,7 +892,7 @@
             grid.setAttribute('aria-labelledby', tabEls[active].id);
             grid.removeAttribute('aria-label');
             grid.removeAttribute('data-search-active');
-            grid.scrollTop = 0;
+            grid.scrollLeft = 0;
         }
 
         /* ---- Jump to category section (tab click) ---- */
@@ -888,14 +900,12 @@
             active = index;
             paintTabs();
             revealTab(tabEls[index]);
-
-            const heading = headingEls[index];
-            if (!heading) return;
-
-            scrollJumping = true;
-            heading.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
-            // Re-enable observer after scroll settles (~500 ms)
-            setTimeout(function () { scrollJumping = false; }, 600);
+            const section = sectionEls[index];
+            if (!section) return;
+            grid.scrollTo({
+                left: section.offsetLeft,
+                behavior: prefersReducedMotion ? 'auto' : 'smooth'
+            });
         }
 
         function moveTo(index) {
@@ -930,7 +940,6 @@
                 searchQuery = '';
                 searchInput.value = '';
                 paintFullView();
-                setupObserver();
             }
             jumpToCategory(index);
         });
@@ -950,7 +959,6 @@
                 searchQuery = '';
                 searchInput.value = '';
                 paintFullView();
-                setupObserver();
             }
             jumpToCategory(next);
             tabEls[next].focus();
@@ -965,7 +973,13 @@
 
         grid.addEventListener('keydown', (e) => {
             if (e.altKey || e.ctrlKey || e.metaKey) return;
-            const visibleButtons = buttons.filter(b => !b.hidden);
+            // In search mode, buttons are in the search results section (not in `buttons` array)
+            let visibleButtons;
+            if (grid.classList.contains('emoji-picker-grid--search') && searchResultsSection) {
+                visibleButtons = Array.from(searchResultsSection.querySelectorAll('.emoji-picker-btn'));
+            } else {
+                visibleButtons = buttons.filter(b => !b.hidden);
+            }
             const current = visibleButtons.indexOf(document.activeElement);
             if (current === -1) return;
             const last = visibleButtons.length - 1;
@@ -973,7 +987,13 @@
             if (e.key === 'ArrowRight') next = current + 1;
             else if (e.key === 'ArrowLeft') next = current - 1;
             else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                const cols = columns();
+                const cols = (function() {
+                    if (visibleButtons.length === 0) return 1;
+                    const top = visibleButtons[0].offsetTop;
+                    let count = 0;
+                    while (count < visibleButtons.length && visibleButtons[count].offsetTop === top) count++;
+                    return Math.max(1, count);
+                })();
                 if (e.key === 'ArrowDown') {
                     next = current + cols;
                     if (next > last) next = Math.floor(current / cols) < Math.floor(last / cols) ? last : current;
@@ -984,16 +1004,20 @@
             } else if (e.key === 'Home') next = 0;
             else if (e.key === 'End') next = last;
             if (next === -1) return;
+            next = Math.max(0, Math.min(last, next));
             e.preventDefault();
-            moveTo(next);
+            // update tabIndex on the active button
+            if (current >= 0 && visibleButtons[current]) visibleButtons[current].tabIndex = -1;
+            if (visibleButtons[next]) {
+                visibleButtons[next].tabIndex = 0;
+                visibleButtons[next].focus();
+            }
         });
 
         searchInput.addEventListener('input', function () {
             searchQuery = searchInput.value.toLowerCase().trim();
             rove = 0;
             if (searchQuery.length > 0) {
-                // Disconnect observer during search; it only applies to full view
-                if (observer) observer.disconnect();
                 tablist.hidden = true;
                 grid.removeAttribute('aria-labelledby');
                 grid.setAttribute('aria-label', 'Wyniki wyszukiwania');
@@ -1003,16 +1027,12 @@
             } else {
                 tablist.hidden = false;
                 paintFullView();
-                setupObserver();
             }
         });
 
         /* ---- Initial render ---- */
         buildFullGrid();
         paintTabs();
-
-        // Set up observer after a microtask so the grid is in the DOM
-        setTimeout(setupObserver, 0);
 
         return {
             // Makes sure tabs and grid reflect the current selection state.
@@ -1027,14 +1047,13 @@
                     active = 0;
                     paintTabs();
                     tablist.scrollLeft = 0;
+                    grid.scrollLeft = 0;
                     grid.scrollTop = 0;
                 }
                 paintTabs();
                 this.refreshSelected();
                 revealTab(tabEls[active]);
                 searchInput.focus();
-                // Re-attach observer (sheet may have been hidden + re-shown)
-                setTimeout(setupObserver, 0);
             },
             // Only flips aria-pressed - never rebuilds nodes or moves focus,
             // so a poll-driven repaint cannot steal the user's place.
@@ -1057,8 +1076,8 @@
                 active = 0;
                 paintTabs();
                 tablist.scrollLeft = 0;
+                grid.scrollLeft = 0;
                 grid.scrollTop = 0;
-                setTimeout(setupObserver, 0);
             }
         };
     }
