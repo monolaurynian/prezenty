@@ -71,8 +71,26 @@
                 const note = document.createElement('div');
                 note.className = 'chat-gif-missing';
                 note.textContent = 'Ten GIF jest niedostępny';
-                (img.closest('.chat-gif-toggle') || img).replaceWith(note);
+                // replace the whole GIF (picture + its zoom/play buttons)
+                (img.closest('.chat-gif-wrap') || img.closest('.chat-gif-zoom') || img.closest('.chat-gif-toggle') || img).replaceWith(note);
             }, true);
+
+            // Tap a GIF (or the corner button in reduced-motion mode) to zoom
+            messagesBox.addEventListener('click', (e) => {
+                if (!(e.target instanceof Element)) return;
+                const zoom = e.target.closest('.chat-gif-zoom');
+                if (!zoom || !window.GifLightbox) return;
+                window.GifLightbox.open({
+                    animated: zoom.getAttribute('data-animated'),
+                    still: zoom.getAttribute('data-still'),
+                    zoomAnimated: zoom.getAttribute('data-zoom-animated'),
+                    zoomStill: zoom.getAttribute('data-zoom-still'),
+                    width: zoom.getAttribute('data-w'),
+                    height: zoom.getAttribute('data-h'),
+                    alt: 'Powiększony GIF',
+                    trigger: zoom
+                });
+            });
             // Reduced motion: tap a still to play it, tap again to stop
             messagesBox.addEventListener('click', (e) => {
                 if (!(e.target instanceof Element)) return;
@@ -478,14 +496,29 @@
             }
             if (!urls) return '';
             const dims = `width="${size.width}" height="${size.height}"`;
+            // What the zoom modal needs: the chat-size pictures plus the
+            // bigger ones (all URLs built by us / returned by the provider)
+            const zoom = urls.zoom || { animated: urls.animated, still: urls.still };
+            const zoomData =
+                ` data-animated="${escapeHtml(urls.animated)}" data-still="${escapeHtml(urls.still)}"` +
+                ` data-zoom-animated="${escapeHtml(zoom.animated)}" data-zoom-still="${escapeHtml(zoom.still)}"` +
+                ` data-w="${gif.width}" data-h="${gif.height}"`;
             if (prefersReducedMotion()) {
-                // Reduced motion: a still picture, tap to play
-                return `<button type="button" class="chat-gif-toggle is-still" aria-label="Odtwórz GIF"` +
+                // Reduced motion: a still picture, tap to play; zooming has
+                // its own corner button so the two taps do not collide
+                return `<span class="chat-gif-wrap">` +
+                    `<button type="button" class="chat-gif-toggle is-still" aria-label="Odtwórz GIF"` +
                     ` data-still="${escapeHtml(urls.still)}" data-animated="${escapeHtml(urls.animated)}">` +
-                    `<img class="chat-gif" src="${escapeHtml(urls.still)}" ${dims} alt="GIF - nieruchomy podgląd" loading="lazy"></button>`;
+                    `<img class="chat-gif" src="${escapeHtml(urls.still)}" ${dims} alt="GIF - nieruchomy podgląd" loading="lazy"></button>` +
+                    `<button type="button" class="chat-gif-zoom chat-gif-zoom-badge" aria-label="Powiększ GIF"${zoomData}>` +
+                    GIF_ZOOM_ICON + `</button></span>`;
             }
-            return `<img class="chat-gif" src="${escapeHtml(urls.animated)}" ${dims} alt="Animowany GIF" loading="lazy">`;
+            return `<button type="button" class="chat-gif-zoom" aria-label="Powiększ GIF"${zoomData}>` +
+                `<img class="chat-gif" src="${escapeHtml(urls.animated)}" ${dims} alt="Animowany GIF" loading="lazy"></button>`;
         }
+
+        // "expand" arrows for the zoom button (inline: no icon font needed)
+        const GIF_ZOOM_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
 
         // Fills the KLIPY slots drawn by gifHtml(): asks KLIPY (once, batched,
         // cached) for the real picture URLs of the slugs on screen.

@@ -72,12 +72,18 @@
         // them (never rebuilt from an id), so there is nothing to compute
         // here: gif-klipy.js looks them up by slug.
         if (gif.provider === 'klipy') return null;
+        // `zoom` is the larger picture shown in the zoom modal
         if (gif.provider === 'demo') {
             const url = '/demo-gifs/' + gif.id + '.gif';
-            return { animated: url, still: '/demo-gifs/' + gif.id + '-still.gif' };
+            const still = '/demo-gifs/' + gif.id + '-still.gif';
+            return { animated: url, still: still, zoom: { animated: url, still: still } };
         }
         const base = 'https://media.giphy.com/media/' + gif.id + '/';
-        return { animated: base + '200w.gif', still: base + '200w_s.gif' };
+        return {
+            animated: base + '200w.gif',
+            still: base + '200w_s.gif',
+            zoom: { animated: base + 'giphy-downsized.gif', still: base + 'giphy_s.gif' }
+        };
     }
 
     /** Size to draw at: never wider than maxWidth, aspect ratio kept. */

@@ -67,12 +67,15 @@
     }
 
     // The renditions to use: ~220px wide ("sm") is right for a chat bubble
-    // and a thumbnail; fall back to bigger ones only if it is missing.
+    // and a thumbnail; fall back to bigger ones only if it is missing. The
+    // zoom modal prefers the next size up ("md", ~340px), then "hd".
     const SIZES = ['sm', 'md', 'xs', 'hd'];
+    const ZOOM_SIZES = ['md', 'hd', 'sm'];
 
-    function pickMedia(file, kinds) {
-        for (let i = 0; i < SIZES.length; i++) {
-            const size = file && file[SIZES[i]];
+    function pickMedia(file, kinds, sizes) {
+        const order = sizes || SIZES;
+        for (let i = 0; i < order.length; i++) {
+            const size = file && file[order[i]];
             if (!size) continue;
             for (let k = 0; k < kinds.length; k++) {
                 const media = size[kinds[k]];
@@ -96,10 +99,17 @@
         const width = Math.round(animated.width);
         const height = Math.round(animated.height);
         if (!gifApi.buildGifToken('klipy', slug, width, height)) return null;
+        // The bigger picture for the zoom modal: also a URL KLIPY returned,
+        // untouched (never rebuilt); falls back to the chat-size one
+        const zoomAnimated = pickMedia(item.file, ['webp', 'gif'], ZOOM_SIZES) || animated;
+        const zoomStill = pickMedia(item.file, ['jpg'], ZOOM_SIZES) || still;
         return {
             provider: 'klipy', id: slug, width: width, height: height,
             title: typeof item.title === 'string' ? item.title : '',
-            urls: { animated: animated.url, still: still.url },
+            urls: {
+                animated: animated.url, still: still.url,
+                zoom: { animated: zoomAnimated.url, still: zoomStill.url }
+            },
             analytics: null
         };
     }

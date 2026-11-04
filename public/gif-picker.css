@@ -380,6 +380,177 @@
     letter-spacing: 0.5px;
 }
 
+/* --- Tap a GIF to zoom ------------------------------------------------ */
+.chat-gif-zoom {
+    display: block;
+    padding: 0;
+    border: none;
+    background: none;
+    border-radius: 14px;
+    cursor: zoom-in;
+    line-height: 0;
+    max-width: 100%;
+}
+
+.chat-gif-zoom:focus-visible,
+.chat-gif-zoom-badge:focus-visible {
+    outline: 2px solid #1E88E5;
+    outline-offset: 2px;
+}
+
+/* Reduced motion: the picture itself plays/stops on tap, so zooming gets
+   its own small button in the corner (a 44px touch target) */
+.chat-gif-wrap {
+    position: relative;
+    display: block;
+    max-width: 100%;
+}
+
+.chat-gif-zoom-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.62);
+    cursor: zoom-in;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-gif-zoom-badge svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+/* --- The zoom modal (gif-lightbox.js) --------------------------------- */
+#gifLightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 10004;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 64px 12px 24px;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.88);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    cursor: zoom-out;
+}
+
+#gifLightbox.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.gif-lightbox-figure {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    min-height: 0;
+    transform: scale(0.92);
+    transition: transform 0.2s ease;
+}
+
+#gifLightbox.is-open .gif-lightbox-figure {
+    transform: scale(1);
+}
+
+/* Big, but never wider than the screen or taller than ~75% of it; small
+   GIFs are scaled up to a comfortable size and the aspect ratio is kept */
+.gif-lightbox-img {
+    display: block;
+    width: min(92vw, 560px);
+    height: auto;
+    max-width: 100%;
+    max-height: 75vh;
+    max-height: 75dvh;
+    object-fit: contain;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.gif-lightbox-img[hidden],
+.gif-lightbox-missing[hidden],
+.gif-lightbox-play[hidden] {
+    display: none;
+}
+
+.gif-lightbox-missing {
+    margin: 0;
+    padding: 16px 20px;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #2d3748;
+    font-size: 15px;
+}
+
+.gif-lightbox-close {
+    position: absolute;
+    top: max(12px, env(safe-area-inset-top, 0px));
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.gif-lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.gif-lightbox-play {
+    min-height: 44px;
+    padding: 0 22px;
+    border: none;
+    border-radius: 22px;
+    background: #ffffff;
+    color: #7B1FA2;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.gif-lightbox-close:focus-visible,
+.gif-lightbox-play:focus-visible {
+    outline: 3px solid #1E88E5;
+    outline-offset: 2px;
+}
+
+/* The page behind the modal does not scroll */
+html.gif-lightbox-open,
+html.gif-lightbox-open body {
+    overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #gifLightbox,
+    .gif-lightbox-figure {
+        transition: none;
+    }
+}
+
 /* A KLIPY GIF whose picture URL is still being looked up: a box of the final
    size (width + aspect-ratio are set inline), so the chat does not jump when
    the picture arrives. */
