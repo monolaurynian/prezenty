@@ -31,6 +31,17 @@ NODE_ENV=production
 
 Set your own `SESSION_SECRET` and `VAPID_*` values in production; the built-in fallbacks are public. See [Rotating secrets](DEPLOYMENT.md#rotating-secrets).
 
+### GIFs in messages (optional)
+
+GIFs come from [GIPHY](https://developers.giphy.com). Without a key the GIF buttons are simply hidden and everything else works.
+
+```
+GIPHY_API_KEY=your_giphy_api_key
+GIPHY_RATING=pg          # optional: g, pg, pg-13 or r (default pg)
+```
+
+Create an app on developers.giphy.com to get a key. See [GIFs](DEPLOYMENT.md#gifs-giphy) for limits and terms. Demo mode (no database) uses four local GIFs from `public/demo-gifs/` instead, with no key.
+
 ## Deployment on Render
 
 1. Connect your GitHub repository to Render

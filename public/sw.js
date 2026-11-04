@@ -1,13 +1,16 @@
-﻿const CACHE_NAME = 'prezenty-v147';
+﻿const CACHE_NAME = 'prezenty-v148';
 const urlsToCache = [
   '/manifest.json',
   '/pluralize-pl.js',
   '/notification-text.js',
   '/escape-html.js',
   '/chat-reactions.css?v=9',
-  '/chat-reactions.js?v=6',
+  '/gif-message.js?v=1',
+  '/chat-reactions.js?v=7',
   '/emoji-data.js?v=1',
   '/emoji-picker.js?v=4',
+  '/gif-picker.js?v=1',
+  '/gif-picker.css?v=1',
   '/favicon.svg',
   '/seba_logo.png',
   '/styles.deduped.min.css',
@@ -39,7 +42,7 @@ const urlsToCache = [
   '/ustawienia-page.css?v=1',
   '/ustawienia-page.js?v=1',
   '/wiadomosci-page.css?v=2',
-  '/wiadomosci-page.js?v=3',
+  '/wiadomosci-page.js?v=4',
   '/osoby-page.css?v=1',
   '/osoby-page.js?v=1',
   '/archiwum-page.css?v=1',

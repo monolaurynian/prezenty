@@ -58,6 +58,32 @@
             // Enter sends the reply (Shift+Enter for a newline)
             document.getElementById('targetSelect').addEventListener('change', onTargetChange);
 
+            // GIFs: show the buttons only when the server says GIFs are on
+            setupGifs();
+
+            // A GIF that fails to load (removed upstream, offline) becomes a
+            // short note instead of a broken-image icon. `error` does not
+            // bubble, hence the capture phase.
+            const messagesBox = document.getElementById('chatMessages');
+            messagesBox.addEventListener('error', (e) => {
+                const img = e.target;
+                if (!(img instanceof HTMLImageElement) || !img.classList.contains('chat-gif')) return;
+                const note = document.createElement('div');
+                note.className = 'chat-gif-missing';
+                note.textContent = 'Ten GIF jest niedostępny';
+                (img.closest('.chat-gif-toggle') || img).replaceWith(note);
+            }, true);
+            // Reduced motion: tap a still to play it, tap again to stop
+            messagesBox.addEventListener('click', (e) => {
+                if (!(e.target instanceof Element)) return;
+                const toggle = e.target.closest('.chat-gif-toggle');
+                if (!toggle) return;
+                const img = toggle.querySelector('img');
+                const playing = toggle.classList.toggle('is-still') === false;
+                img.src = playing ? toggle.getAttribute('data-animated') : toggle.getAttribute('data-still');
+                toggle.setAttribute('aria-label', playing ? 'Zatrzymaj GIF' : 'Odtwórz GIF');
+            });
+
             document.getElementById('replyBody').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -126,7 +152,13 @@
                 && typeof window.reactionPreview === 'function') {
                 return window.reactionPreview(r.emoji, r.excerpt);
             }
-            return (t && t.lastBody) || '';
+            return plainPreview(t && t.lastBody);
+        }
+
+        // A GIF message is a token: show it as "GIF" in lists, not as raw text
+        function plainPreview(body) {
+            const label = window.GifMessage && window.GifMessage.gifPreviewText(body);
+            return label || body || '';
         }
 
         function showToast(message, type) {
@@ -147,6 +179,52 @@
         // ===== Compose =====
         // The group chat is one more choice in the recipient dropdown
         const GROUP_OPTION_VALUE = 'group';
+
+        // The message body for a picked GIF, or null (with a toast) if the
+        // pick is not valid. Never fall back to sending the typed draft.
+        function gifToken(gif) {
+            const token = window.GifMessage.buildGifToken(gif.provider, gif.id, gif.width, gif.height);
+            if (!token) showToast('Nie można wysłać tego GIF-a', 'error');
+            return token;
+        }
+
+        // Asks the server whether GIFs are on; if so, wires up both GIF buttons
+        // (the conversation composer and the new-message card).
+        function setupGifs() {
+            if (!window.GifPicker || !window.GifMessage) return;
+            fetch('/api/wiadomosci/gif-config')
+                .then(r => (r.ok ? r.json() : null))
+                .then(cfg => {
+                    if (!cfg) return;
+                    window.GifPicker.init(cfg);
+                    if (!window.GifPicker.isEnabled()) return;
+                    const reply = document.getElementById('gifBtn');
+                    const compose = document.getElementById('gifComposeBtn');
+                    [reply, compose].forEach(btn => { if (btn) btn.style.display = ''; });
+                    if (reply) {
+                        reply.addEventListener('click', () => {
+                            window.GifPicker.open({
+                                trigger: reply,
+                                onPick: (gif) => { const token = gifToken(gif); if (token) sendReply(token); }
+                            });
+                        });
+                    }
+                    if (compose) {
+                        compose.addEventListener('click', () => {
+                            // The recipient decides where the GIF goes, so ask first
+                            if (!document.getElementById('targetSelect').value) {
+                                showToast('Wybierz odbiorcę', 'error');
+                                return;
+                            }
+                            window.GifPicker.open({
+                                trigger: compose,
+                                onPick: (gif) => { const token = gifToken(gif); if (token) sendNewMessage(token); }
+                            });
+                        });
+                    }
+                })
+                .catch(() => { /* GIFs stay off; the chat works as before */ });
+        }
 
         // Explains where the message goes when the group chat is chosen
         function onTargetChange() {
@@ -171,9 +249,10 @@
                 .catch(() => []);
         }
 
-        function sendNewMessage() {
+        // `overrideBody` is a GIF token from the picker; otherwise the textarea is sent
+        function sendNewMessage(overrideBody) {
             const targetUserId = document.getElementById('targetSelect').value;
-            const body = document.getElementById('composeBody').value.trim();
+            const body = typeof overrideBody === 'string' ? overrideBody : document.getElementById('composeBody').value.trim();
             const msgEl = document.getElementById('composeMessage');
             msgEl.style.display = 'none';
 
@@ -196,7 +275,7 @@
                     .then(r => r.json())
                     .then(d => {
                         if (d.ok) {
-                            document.getElementById('composeBody').value = '';
+                            if (typeof overrideBody !== 'string') document.getElementById('composeBody').value = '';
                             document.getElementById('targetSelect').value = '';
                             onTargetChange();
                             openThread('group');
@@ -217,7 +296,7 @@
                 .then(r => r.json())
                 .then(d => {
                     if (d.success) {
-                        document.getElementById('composeBody').value = '';
+                        if (typeof overrideBody !== 'string') document.getElementById('composeBody').value = '';
                         document.getElementById('targetSelect').value = '';
                         showToast('Wiadomość wysłana anonimowo! 🎅', 'success');
                         loadThreads();
@@ -255,7 +334,7 @@
                                     <small style="color:#9ca3af !important;">${timeAgo(t.lastAt)}</small>
                                 </span>
                             </div>
-                            <div class="thread-last">${escapeHtml(t.lastBody || '')}</div>
+                            <div class="thread-last">${escapeHtml(plainPreview(t.lastBody))}</div>
                         </div>`;
                         }
                         return `
@@ -355,8 +434,41 @@
             loadThreads();
         }
 
+        // ===== GIF messages =====
+        // A message whose whole body is a GIF token (see gif-message.js)
+        // is drawn as a picture. The URL is built from the validated id,
+        // never taken from the message text.
+        function parsedGif(text) {
+            return window.GifMessage ? window.GifMessage.parseGif(text) : null;
+        }
+
+        // Extra bubble class so a GIF gets snug padding
+        function gifBubbleClass(text) {
+            return parsedGif(text) ? ' has-gif' : '';
+        }
+
+        function prefersReducedMotion() {
+            return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        }
+
+        function gifHtml(gif) {
+            const urls = window.GifMessage.gifUrls(gif);
+            if (!urls) return '';
+            const size = window.GifMessage.displaySize(gif, 220);
+            const dims = `width="${size.width}" height="${size.height}"`;
+            if (prefersReducedMotion()) {
+                // Reduced motion: a still picture, tap to play
+                return `<button type="button" class="chat-gif-toggle is-still" aria-label="Odtwórz GIF"` +
+                    ` data-still="${escapeHtml(urls.still)}" data-animated="${escapeHtml(urls.animated)}">` +
+                    `<img class="chat-gif" src="${escapeHtml(urls.still)}" ${dims} alt="GIF - nieruchomy podgląd" loading="lazy"></button>`;
+            }
+            return `<img class="chat-gif" src="${escapeHtml(urls.animated)}" ${dims} alt="Animowany GIF" loading="lazy">`;
+        }
+
         // URLs in messages become clickable links
         function renderMessageBody(text) {
+            const gif = parsedGif(text);
+            if (gif) return gifHtml(gif);
             const esc = escapeHtml(text);
             return esc.replace(/(https?:\/\/[^\s<]+)/g,
                 (u) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`);
@@ -446,7 +558,7 @@
                     lastReactionSignature = rsig;
                     box.innerHTML = ordered.map(m => `
                         <div class="chat-msg-row ${m.isOwn ? 'from-me' : 'from-them'}">
-                            <div class="chat-bubble ${m.isOwn ? 'from-me' : 'from-them'}">
+                            <div class="chat-bubble ${m.isOwn ? 'from-me' : 'from-them'}${gifBubbleClass(m.body)}">
                                 ${renderMessageBody(m.body)}
                                 <div id="lp-g${m.id}"></div>
                                 <div class="chat-time">${timeAgo(m.created_at)}</div>
@@ -497,7 +609,7 @@
 
                     box.innerHTML = msgs.map(m => `
                         <div class="chat-msg-row ${m.fromMe ? 'from-me' : 'from-them'}">
-                            <div class="chat-bubble ${m.fromMe ? 'from-me' : 'from-them'}">
+                            <div class="chat-bubble ${m.fromMe ? 'from-me' : 'from-them'}${gifBubbleClass(m.body)}">
                                 ${renderMessageBody(m.body)}
                                 <div id="lp-${m.id}"></div>
                                 <div class="chat-time">${timeAgo(m.createdAt)}</div>
@@ -523,9 +635,11 @@
                 .catch(() => showToast('Nie udało się załadować rozmowy', 'error'));
         }
 
-        function sendReply() {
+        // `overrideBody` is a GIF token from the picker; otherwise the textarea is sent
+        function sendReply(overrideBody) {
             const input = document.getElementById('replyBody');
-            const body = input.value.trim();
+            const isOverride = typeof overrideBody === 'string';
+            const body = isOverride ? overrideBody : input.value.trim();
             if (!body || (!currentThreadId && !newChatTargetId)) return;
 
             const btn = document.getElementById('replyBtn');
@@ -541,7 +655,7 @@
                     .then(r => r.json())
                     .then(d => {
                         if (d.ok) {
-                            input.value = '';
+                            if (!isOverride) input.value = ''; // a GIF leaves the typed draft alone
                             lastChatSignature = null; // force re-render
                             loadGroupMessages();
                         } else {
@@ -570,7 +684,7 @@
                 .then(r => r.json())
                 .then(d => {
                     if (d.success) {
-                        input.value = '';
+                        if (!isOverride) input.value = ''; // a GIF leaves the typed draft alone
                         if (isNew && d.threadId) {
                             currentThreadId = d.threadId;
                             newChatTargetId = null;

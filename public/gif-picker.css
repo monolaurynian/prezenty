@@ -1,0 +1,387 @@
+/* ============================================================
+   GIF picker (gif-picker.js) and GIF messages in the chat
+   Same look as the reaction sheet: a bottom sheet on phones, a centred card
+   on desktop. Palette: purple #7B1FA2, text #2d3748, focus #1E88E5.
+   ============================================================ */
+
+/* --- Composer buttons ---------------------------------------------- */
+.btn-gif {
+    flex: none;
+    min-width: 44px;
+    min-height: 38px;
+    padding: 0 12px;
+    border: 2px solid #7B1FA2;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #7B1FA2 !important;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+}
+
+.btn-gif:hover {
+    background: #F3E5F5;
+}
+
+.btn-gif:focus-visible {
+    outline: 2px solid #1E88E5;
+    outline-offset: 2px;
+}
+
+/* --- Sheet ---------------------------------------------------------- */
+#gifSheetOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10002;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#gifSheetOverlay.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+#gifSheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 82vh;
+    height: min(82dvh, 620px);
+    background: #ffffff;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 10003;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+    visibility: hidden;
+    color: #2d3748;
+}
+
+#gifSheet.is-open {
+    transform: translateY(0);
+    visibility: visible;
+}
+
+#gifSheet::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.18);
+    pointer-events: none;
+}
+
+.gif-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 4px 8px;
+    flex: none;
+}
+
+.gif-sheet-header h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.gif-sheet-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: #2d3748;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.gif-sheet-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.gif-sheet-search {
+    display: block;
+    flex: none;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 0 6px;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #f9fafb;
+    font-size: 16px; /* 16px: iOS does not zoom the page on focus */
+    color: #2d3748;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.gif-sheet-search:focus {
+    border-color: #7B1FA2;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.15);
+}
+
+.gif-sheet-status {
+    flex: none;
+    margin: 4px 4px 6px;
+    font-size: 14px;
+    color: #4a5568;
+}
+
+.gif-sheet-status[hidden],
+.gif-sheet-more[hidden],
+.gif-sheet-preview[hidden] {
+    display: none;
+}
+
+/* Two balanced columns of still thumbnails; this area scrolls */
+.gif-sheet-results {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    align-items: flex-start;
+    padding: 2px 0 4px;
+}
+
+.gif-sheet-col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gif-sheet-item {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    background: #e9ecef;
+    overflow: hidden;
+    cursor: pointer;
+    line-height: 0;
+}
+
+.gif-sheet-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.gif-sheet-item[aria-pressed="true"] {
+    border-color: #7B1FA2;
+    box-shadow: inset 0 0 0 1px #ffffff;
+}
+
+.gif-sheet-item:focus-visible,
+.gif-sheet-send:focus-visible,
+.gif-sheet-cancel:focus-visible,
+.gif-sheet-more:focus-visible,
+.gif-sheet-close:focus-visible {
+    outline: 2px solid #1E88E5;
+    outline-offset: 2px;
+}
+
+.gif-sheet-more {
+    flex: none;
+    margin: 6px 0 0;
+    min-height: 44px;
+    border: 1px solid #868F99;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #2d3748;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* The chosen GIF, animated, with the only button that sends it */
+.gif-sheet-preview {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 14px;
+    background: #F3E5F5;
+}
+
+.gif-sheet-preview-img {
+    flex: none;
+    width: auto;
+    height: auto;
+    max-width: 120px;
+    max-height: 120px;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.gif-sheet-preview-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.gif-sheet-send,
+.gif-sheet-cancel {
+    min-height: 44px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.gif-sheet-send {
+    border: none;
+    background: #7B1FA2;
+    color: #ffffff;
+}
+
+.gif-sheet-cancel {
+    border: 1px solid #7B1FA2;
+    background: #ffffff;
+    color: #7B1FA2;
+}
+
+.gif-sheet-attribution {
+    flex: none;
+    margin: 8px 0 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+/* Desktop: the same element becomes a centred card */
+@media (min-width: 769px) {
+    #gifSheet {
+        left: 50%;
+        right: auto;
+        bottom: auto;
+        top: 50%;
+        width: 440px;
+        max-width: calc(100vw - 32px);
+        height: min(78vh, 600px);
+        height: min(78dvh, 600px);
+        border-radius: 20px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        padding-bottom: 12px;
+        transform: translate(-50%, -50%) scale(0.95);
+        opacity: 0;
+        transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+    }
+
+    #gifSheet.is-open {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+
+    #gifSheet::before {
+        display: none;
+    }
+
+    .gif-sheet-header {
+        padding-top: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #gifSheetOverlay,
+    #gifSheet,
+    #gifSheet.is-open {
+        transition: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) and (min-width: 769px) {
+    #gifSheet,
+    #gifSheet.is-open {
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* --- A GIF inside a chat bubble ------------------------------------- */
+.chat-bubble.has-gif {
+    padding: 4px;
+}
+
+.chat-bubble.has-gif .chat-time {
+    padding: 2px 6px 0;
+}
+
+.chat-gif {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 14px;
+    background: #e9ecef;
+}
+
+.chat-gif-toggle {
+    position: relative;
+    display: block;
+    padding: 0;
+    border: none;
+    background: none;
+    border-radius: 14px;
+    cursor: pointer;
+    line-height: 0;
+}
+
+.chat-gif-toggle:focus-visible {
+    outline: 2px solid #1E88E5;
+    outline-offset: 2px;
+}
+
+/* Reduced motion: a still with a small play badge; tap to animate */
+.chat-gif-toggle.is-still::after {
+    content: "GIF";
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    padding: 3px 7px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.72);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+}
+
+.chat-gif-missing {
+    font-size: 13px;
+    padding: 6px 10px;
+    color: #4a5568;
+}

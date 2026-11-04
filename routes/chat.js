@@ -16,6 +16,18 @@ const { ensureAnonMessageTables, notifyAnonMessage, reactionRateAllows, getGroup
 const { linkPreviewCache, LINK_PREVIEW_TTL, isSafePreviewUrl, extractMeta, fetchPreview } = require('../lib/link-preview');
 const { demoChat, demoThreadMessages, demoIsParticipant, demoOtherLabel, demoThreadList, demoUnreadCount, demoReactionRows, demoThreadReactionRows, demoReactionToggle, demoGroup, demoGroupMessages, demoGroupReactionRows, demoGroupAllReactionRows, demoGroupReactionToggle, demoGroupAddMessage } = require('../lib/demo-data');
 const { sendNotificationToUsers } = require('../lib/push');
+const { gifConfig } = require('../lib/gif');
+const { gifPreviewText } = require('../public/gif-message');
+
+// Whether GIFs are on and what the browser needs to use the provider.
+// GIPHY requires its search/trending calls to come from the user's browser,
+// so the (public-by-design) key is handed to signed-in users here. Nothing
+// else is exposed; see lib/gif.js.
+router.get('/api/wiadomosci/gif-config', requireAuth, (req, res) => {
+    const { enabled, provider, apiKey, rating } = gifConfig();
+    res.set('Cache-Control', 'no-store');
+    res.json({ enabled, provider, apiKey, rating });
+});
 
 // Users the current user can message (everyone but themselves)
 router.get('/api/wiadomosci/users', requireAuth, async (req, res) => {
@@ -546,7 +558,8 @@ router.post('/api/wiadomosci/group', requireAuth, async (req, res) => {
             [userId, insertId]
         );
         // Push notification to all other users
-        const preview = String(body).trim().slice(0, 100);
+        // A GIF shows as "GIF", never as its raw token
+        const preview = gifPreviewText(body) || String(body).trim().slice(0, 100);
         sendNotificationToUsers(userId, '👥 Czat grupowy', preview, { url: '/wiadomosci?rozmowa=group', isGroup: true }).catch(() => {});
         res.json({ ok: true, id: insertId });
     } catch (err) {

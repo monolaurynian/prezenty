@@ -7,6 +7,7 @@ const { DEMO_MODE, isMaintenanceMode } = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { updateTracker } = require('../lib/update-tracker');
 const { latestRelease } = require('../lib/release-notes');
+const { gifEnabled } = require('../lib/gif');
 
 // Routes
 router.get('/health', (req, res) => {
@@ -44,7 +45,7 @@ router.get('/api/version', (req, res) => {
         cacheVersion: serviceWorkerCacheName || 'unknown',
         // What's new for users, or null: the banner only appears when a
         // release has something worth announcing (see lib/release-notes.js)
-        release: latestRelease()
+        release: latestRelease({ gif: gifEnabled() })
     });
 });
 

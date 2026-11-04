@@ -15,6 +15,8 @@ const { RELEASES, latestRelease } = require('../../lib/release-notes');
 
 const PAGE = { path: '/wiadomosci', name: 'chat list', ready: '.thread-row' };
 const BANNER = '#updateBanner';
+// The demo server has GIFs on (no key needed), so its newest announcement is the GIF one
+const DEMO_RELEASE = latestRelease({ gif: true });
 
 /** Pretend this browser has used the app before (a returning user). */
 async function asReturningUser(page, seen) {
@@ -39,7 +41,7 @@ test.describe('release notes data', () => {
         const json = await (await request.get('/api/version')).json();
         const release = json.release;
         expect(release, 'this release has notes').toBeTruthy();
-        expect(release.id).toBe(latestRelease().id);
+        expect(release.id).toBe(DEMO_RELEASE.id);
         expect(release.title).toBeTruthy();
         expect(release.intro).toBeTruthy();
         expect(release.items.length).toBeGreaterThanOrEqual(1);
@@ -61,10 +63,23 @@ test.describe('release notes data', () => {
         });
     });
 
-    test('the announcement is the group chat, in relaxed Polish', () => {
-        const release = latestRelease();
-        expect(release.title).toContain('Czat grupowy');
-        expect(release.items.map(i => i.text).join(' ')).toMatch(/Do kogo\?/);
+    test('the group chat and GIF announcements are written in relaxed Polish', () => {
+        const group = RELEASES.find(r => r.id === '2026-11-czat-grupowy');
+        expect(group.title).toContain('Czat grupowy');
+        expect(group.items.map(i => i.text).join(' ')).toMatch(/Do kogo\?/);
+
+        const gif = RELEASES.find(r => r.id === '2026-11-gify');
+        expect(gif.title).toContain('GIF');
+        expect(gif.requires).toBe('gif');
+        expect(gif.items.map(i => i.text).join(' ')).toMatch(/przycisk GIF/);
+    });
+
+    test('an announcement that needs a feature is skipped where the feature is off', () => {
+        // GIFs off (no GIPHY_API_KEY): fall back to the previous announcement
+        expect(latestRelease({ gif: false }).id).toBe('2026-11-czat-grupowy');
+        expect(latestRelease().id).toBe('2026-11-czat-grupowy');
+        // GIFs on: the GIF announcement is the newest
+        expect(latestRelease({ gif: true }).id).toBe('2026-11-gify');
     });
 });
 
@@ -75,7 +90,7 @@ test.describe('banner behaviour', () => {
 
         const banner = page.locator(BANNER);
         await expect(banner).toBeVisible();
-        const release = latestRelease();
+        const release = DEMO_RELEASE;
         await expect(banner).toContainText(release.title);
         await expect(banner).toContainText(release.intro);
         await expect(banner.locator('li')).toHaveCount(release.items.length);
@@ -96,7 +111,7 @@ test.describe('banner behaviour', () => {
         await page.waitForTimeout(800);
         await expect(page.locator(BANNER)).toHaveCount(0);
         const seen = await page.evaluate(() => localStorage.getItem('app_release_seen'));
-        expect(seen).toBe(latestRelease().id);
+        expect(seen).toBe(DEMO_RELEASE.id);
     });
 
     test('a release without notes updates quietly: no banner', async ({ page }) => {
@@ -137,7 +152,7 @@ test.describe('banner behaviour', () => {
         await openPage(page, PAGE);
         const banner = page.locator(BANNER);
         await expect(banner).toBeVisible();
-        await banner.getByRole('button', { name: latestRelease().action.label }).click();
+        await banner.getByRole('button', { name: DEMO_RELEASE.action.label }).click();
         await expect(page).toHaveURL(/\/wiadomosci\?rozmowa=group/);
         await expect(page.locator('#chatTitle')).toContainText('Czat grupowy');
     });

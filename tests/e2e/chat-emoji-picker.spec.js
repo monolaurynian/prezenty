@@ -637,6 +637,7 @@ test.describe('full emoji picker', () => {
         // Whatever version each asset has in the page, the service worker
         // must precache that exact URL - a mismatch is a stale-cache bug
         const assets = ['chat-reactions.css', 'chat-reactions.js', 'emoji-data.js', 'emoji-picker.js',
+            'gif-message.js', 'gif-picker.js', 'gif-picker.css',
             'wiadomosci-page.css', 'wiadomosci-page.js'];
         const versioned = {};
         assets.forEach(name => {

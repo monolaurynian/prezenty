@@ -21,3 +21,5 @@ services:
         value: u662139794_prezenty
       - key: DB_PORT
         value: 3306
+      - key: GIPHY_API_KEY
+        sync: false  # Optional: enables GIFs in messages. Set in the Render dashboard.

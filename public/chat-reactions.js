@@ -163,10 +163,31 @@
         return { start: Number(bucket.start), hits: hits, allowed: hits <= maxHits };
     }
 
+    // gif-message.js (loaded before this file on the page): require() on the
+    // server, window.GifMessage in the browser. Missing = no GIF label.
+    let gifMessage = null;
+    try {
+        if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+            gifMessage = require('./gif-message');
+        } else if (root && root.GifMessage) {
+            gifMessage = root.GifMessage;
+        }
+    } catch (error) {
+        gifMessage = (root && root.GifMessage) || null;
+    }
+    function gifPreview(body) {
+        return gifMessage && typeof gifMessage.gifPreviewText === 'function'
+            ? gifMessage.gifPreviewText(body)
+            : null;
+    }
+
     // One-line excerpt of a message body for the conversation-list preview.
     // Whitespace/newline runs collapse to a single space; longer text is cut
     // by CODE POINTS (so an emoji is never split) and ends with an ellipsis.
     function reactionExcerpt(body, max) {
+        // A GIF message is a token, not words: excerpt it as "GIF"
+        const gifLabel = gifPreview(body);
+        if (gifLabel) return gifLabel;
         const limit = Number.isFinite(max) && max > 1 ? Math.floor(max) : 50;
         const text = String(body === null || body === undefined ? '' : body)
             .replace(/\s+/g, ' ')

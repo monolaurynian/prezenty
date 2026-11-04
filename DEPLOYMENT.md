@@ -157,6 +157,18 @@ If you need to create database tables:
 - Review Render deployment logs
 - Verify environment variables in dashboard
 
+## GIFs (GIPHY)
+
+Chat messages can carry GIFs from GIPHY. The feature is off until `GIPHY_API_KEY` is set (Render: dashboard > Environment; it is declared in `render.yaml` with `sync: false`, so it is never committed). Optional `GIPHY_RATING` (`g`, `pg`, `pg-13`, `r`; default `pg`).
+
+How it works, and what to know:
+- **Searches run in the user's browser**, because GIPHY requires it. The server only hands the (public-by-design) key to signed-in users at `GET /api/wiadomosci/gif-config`. GIPHY therefore sees a user's IP address and search words, plus a random per-browser id (not linked to the account). Other chat users see only the picture, never who sent it.
+- **Stored as a token, not a URL.** A GIF message body is `[gif:giphy:<id>:<w>x<h>]`; the picture URL is rebuilt from the id on `media.giphy.com`. No database change is needed.
+- **Rate limit.** A new key is a "beta" key limited to 100 API calls per hour, counted for the whole app. The picker waits for typing to pause and caches results, but a busy evening can hit the limit; users then see "Za dużo wyszukiwań" and can retry. Upgrading to a production key (GIPHY reviews it) lifts the limit.
+- **Attribution.** GIPHY's terms require the "Powered by GIPHY" mark where its API is used. The picker shows it as text; before applying for a production key, replace it with GIPHY's official logo asset (from their brand page).
+- **Switching it off** is just removing the variable: the buttons disappear, and existing GIF messages still display.
+- **Other providers.** Tenor's API closed on 30 June 2026. Another provider (for example KLIPY) is one more adapter in `public/gif-picker.js` (`PROVIDERS`) plus an allowed provider name in `public/gif-message.js`.
+
 ## Rotating secrets
 
 The app has fallback values for `SESSION_SECRET` and the VAPID (web push) key pair. Those fallback values are committed to git, so they are public. In production, set your own values and rotate them. Rotating (not deleting) is what matters: the old values stay in git history.
