@@ -72,6 +72,33 @@
         return typeof url === 'string' && /^\/(?!\/)/.test(url) ? url : null;
     }
 
+    // A banner picture is one of our own files: a plain same-site path to an
+    // image, with no query string, no "..", nothing that could point elsewhere.
+    const IMAGE_PATH = /^\/(?!\/)[A-Za-z0-9_\-\/.]+\.(?:gif|png|jpe?g|webp)$/;
+
+    function safeImagePath(path) {
+        return typeof path === 'string' && IMAGE_PATH.test(path) && path.indexOf('..') === -1 ? path : null;
+    }
+
+    function safeImage(image) {
+        if (!image || typeof image !== 'object') return null;
+        const src = safeImagePath(image.src);
+        const width = Number(image.width);
+        const height = Number(image.height);
+        if (!src || !(width >= 20 && width <= 2000) || !(height >= 20 && height <= 2000)) return null;
+        return {
+            src: src,
+            still: safeImagePath(image.still),
+            alt: typeof image.alt === 'string' ? image.alt : '',
+            width: Math.round(width),
+            height: Math.round(height)
+        };
+    }
+
+    function prefersReducedMotion() {
+        return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
     function showUpdateNotification(release) {
         if (document.getElementById(BANNER_ID)) return;
 
@@ -87,6 +114,21 @@
             'box-sizing:border-box;padding:16px 18px;border-radius:18px;color:#ffffff;' +
             'background:linear-gradient(135deg,#43a047,#2e7d32);' +
             'box-shadow:0 8px 28px rgba(0,0,0,0.35);text-align:left;');
+
+        const image = safeImage(release.image);
+        if (image) {
+            const picture = document.createElement('img');
+            // People who prefer reduced motion get the still version
+            picture.src = prefersReducedMotion() && image.still ? image.still : image.src;
+            picture.alt = image.alt;
+            picture.width = image.width;
+            picture.height = image.height;
+            picture.style.cssText = 'display:block;width:100%;height:auto;max-width:' + image.width +
+                'px;margin:0 auto 12px;border-radius:12px;background:#ffffff;';
+            // A missing file must not leave a broken-image icon: show the text alone
+            picture.addEventListener('error', function () { picture.remove(); });
+            card.appendChild(picture);
+        }
 
         card.appendChild(el('div', 'font-size:18px;font-weight:700;margin-bottom:4px;', release.title || 'Nowa wersja'));
         if (release.intro) {

@@ -10,7 +10,8 @@
  *  - the main button refreshes and then opens the feature.
  */
 const { test, expect } = require('../fixtures');
-const { openPage } = require('../helpers/pages');
+const { openPage, setViewport } = require('../helpers/pages');
+const { collectOverflow } = require('../helpers/overflow');
 const { RELEASES, latestRelease } = require('../../lib/release-notes');
 
 const PAGE = { path: '/wiadomosci', name: 'chat list', ready: '.thread-row' };
@@ -164,5 +165,162 @@ test.describe('banner behaviour', () => {
         const heights = await page.locator(`${BANNER} button`).evaluateAll(list =>
             list.map(b => Math.round(b.getBoundingClientRect().height)));
         heights.forEach(h => expect(h).toBeGreaterThanOrEqual(44));
+    });
+});
+
+// ===========================================================================
+// A picture (animated GIF) in the banner
+// ===========================================================================
+
+test.describe('banner picture', () => {
+    const GIF_ENTRY = RELEASES.find(r => r.id === '2026-11-gify');
+
+    test('the GIF announcement carries our own animated GIF and a still, both real files', async ({ request }) => {
+        const json = await (await request.get('/api/version')).json();
+        expect(json.release.image).toEqual(GIF_ENTRY.image);
+        expect(GIF_ENTRY.image.src).toBe('/release/gify.gif');
+        expect(GIF_ENTRY.image.alt.length).toBeGreaterThan(20);
+
+        for (const [name, url] of [['animated', GIF_ENTRY.image.src], ['still', GIF_ENTRY.image.still]]) {
+            const response = await request.get(url);
+            expect(response.status(), name).toBe(200);
+            expect(response.headers()['content-type'], name).toContain('image/gif');
+            const body = await response.body();
+            expect(body.subarray(0, 6).toString('latin1'), name).toMatch(/^GIF8[79]a$/);
+            expect(body.length, `${name} stays light`).toBeLessThan(100 * 1024);
+        }
+        // The animated one really has several frames; the still has one
+        const animated = await (await request.get(GIF_ENTRY.image.src)).body();
+        const graphicControls = animated.toString('latin1').split('\x21\xF9\x04').length - 1;
+        expect(graphicControls).toBeGreaterThan(3);
+    });
+
+    test('the banner shows the picture above the title, loaded and inside the card', async ({ page }) => {
+        await asReturningUser(page);
+        await openPage(page, PAGE);
+        const banner = page.locator(BANNER);
+        await expect(banner).toBeVisible();
+
+        const picture = banner.locator('img');
+        await expect(picture).toHaveCount(1);
+        await expect(picture).toHaveAttribute('src', '/release/gify.gif');
+        await expect(picture).toHaveAttribute('alt', GIF_ENTRY.image.alt);
+        await expect.poll(() => picture.evaluate(img => img.naturalWidth)).toBe(360);
+
+        const layout = await banner.evaluate(root => {
+            const card = root.firstElementChild.getBoundingClientRect();
+            const img = root.querySelector('img').getBoundingClientRect();
+            // the title is the leaf <div> that starts with "Nowość" (not the card around it)
+            const title = Array.prototype.find.call(root.querySelectorAll('div'),
+                d => d.children.length === 0 && d.textContent.indexOf('Nowość') === 0).getBoundingClientRect();
+            return { cardLeft: card.left, cardRight: card.right, imgLeft: img.left, imgRight: img.right, imgBottom: img.bottom, titleTop: title.top };
+        });
+        expect(layout.imgLeft, JSON.stringify(layout)).toBeGreaterThanOrEqual(layout.cardLeft - 0.5);
+        expect(layout.imgRight, JSON.stringify(layout)).toBeLessThanOrEqual(layout.cardRight + 0.5);
+        expect(layout.imgBottom, JSON.stringify(layout)).toBeLessThanOrEqual(layout.titleTop + 0.5);
+    });
+
+    for (const width of [320, 375, 768]) {
+        test(`the banner with its picture fits the ${width}px screen and its buttons stay reachable`, async ({ page }) => {
+            await asReturningUser(page);
+            await openPage(page, PAGE);
+            await setViewport(page, width);
+            const banner = page.locator(BANNER);
+            await expect(banner).toBeVisible();
+            await expect.poll(() => banner.locator('img').evaluate(img => img.naturalWidth)).toBe(360);
+
+            const fit = await banner.evaluate(root => {
+                const card = root.firstElementChild;
+                const r = card.getBoundingClientRect();
+                const buttons = Array.prototype.map.call(root.querySelectorAll('button'), b => b.getBoundingClientRect());
+                return { left: r.left, right: r.right, view: window.innerWidth, viewH: window.innerHeight,
+                    buttonsInside: buttons.every(b => b.left >= r.left - 0.5 && b.right <= r.right + 0.5),
+                    // the card scrolls inside itself when taller than the screen
+                    scrollable: card.scrollHeight > card.clientHeight, cardHeight: r.height };
+            });
+            expect(fit.left, JSON.stringify(fit)).toBeGreaterThanOrEqual(0);
+            expect(fit.right, JSON.stringify(fit)).toBeLessThanOrEqual(fit.view + 0.5);
+            expect(fit.buttonsInside, JSON.stringify(fit)).toBe(true);
+            expect(fit.cardHeight, JSON.stringify(fit)).toBeLessThanOrEqual(fit.viewH * 0.8 + 1);
+            // The primary button can always be reached (scrolling the card if needed)
+            await banner.getByRole('button', { name: DEMO_RELEASE.action.label }).scrollIntoViewIfNeeded();
+            await expect(banner.getByRole('button', { name: DEMO_RELEASE.action.label })).toBeVisible();
+            const report = await collectOverflow(page);
+            expect(report.rootScroll.delta, JSON.stringify(report.rootScroll)).toBeLessThanOrEqual(0.5);
+        });
+    }
+
+    test('reduced motion: the still picture is shown, not the animation', async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await asReturningUser(page);
+        await openPage(page, PAGE);
+        await expect(page.locator(`${BANNER} img`)).toHaveAttribute('src', '/release/gify-still.gif');
+    });
+
+    test('a missing picture file leaves the text alone: no broken-image icon', async ({ page }) => {
+        await asReturningUser(page);
+        await page.route('**/release/gify.gif', route => route.fulfill({ status: 404, body: 'nope' }));
+        await openPage(page, PAGE);
+        const banner = page.locator(BANNER);
+        await expect(banner).toBeVisible();
+        await expect(banner.locator('img')).toHaveCount(0);
+        await expect(banner).toContainText(DEMO_RELEASE.title);
+        await expect(banner.getByRole('button', { name: DEMO_RELEASE.action.label })).toBeVisible();
+    });
+
+    const HOSTILE = [
+        ['another site', 'https://evil.example/x.gif'],
+        ['protocol-relative', '//evil.example/x.gif'],
+        ['a data: URL', 'data:image/gif;base64,R0lGODlhAQABAAAAACw='],
+        ['a javascript: URL', 'javascript:alert(1)'],
+        ['a query string', '/release/gify.gif?x=1'],
+        ['path traversal', '/release/../../etc/passwd.gif'],
+        ['not an image', '/release/gify.html'],
+        ['a quote in the path', '/release/a"onerror="window.__xss=1.gif'],
+        ['a number', 5],
+        ['an object', { a: 1 }]
+    ];
+    for (const [label, src] of HOSTILE) {
+        test(`an image source that is ${label} is ignored (the banner still shows its text)`, async ({ page }) => {
+            await asReturningUser(page);
+            await serveRelease(page, {
+                id: 'image-check-' + label.replace(/\W+/g, '-'), title: 'Tytuł', intro: 'Wstęp',
+                items: [{ icon: '•', text: 'punkt' }],
+                image: { src, still: src, alt: 'x', width: 360, height: 180 }
+            });
+            const requested = [];
+            page.on('request', r => { if (/evil\.example|etc\/passwd/.test(r.url())) requested.push(r.url()); });
+            await openPage(page, PAGE);
+            const banner = page.locator(BANNER);
+            await expect(banner).toBeVisible();
+            await expect(banner.locator('img')).toHaveCount(0);
+            await expect(banner).toContainText('Tytuł');
+            expect(requested).toEqual([]);
+            expect(await page.evaluate(() => window.__xss)).toBeUndefined();
+        });
+    }
+
+    test('bad dimensions or a bad still do not break the picture rules', async ({ page }) => {
+        await asReturningUser(page);
+        await serveRelease(page, {
+            id: 'image-dims', title: 'Tytuł', intro: 'Wstęp', items: [{ icon: '•', text: 'punkt' }],
+            image: { src: '/release/gify.gif', still: 'https://evil.example/s.gif', alt: 'x', width: 360, height: 180 }
+        });
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await openPage(page, PAGE);
+        // The still was rejected, so even with reduced motion the own file is used
+        const picture = page.locator(`${BANNER} img`);
+        await expect(picture).toHaveCount(1);
+        await expect(picture).toHaveAttribute('src', '/release/gify.gif');
+
+        await page.evaluate(() => localStorage.removeItem('app_release_seen'));
+        await page.unroute('**/api/version');
+        await serveRelease(page, {
+            id: 'image-dims-2', title: 'Tytuł 2', intro: 'Wstęp', items: [{ icon: '•', text: 'punkt' }],
+            image: { src: '/release/gify.gif', alt: 'x', width: 0, height: 99999 }
+        });
+        await page.reload({ waitUntil: 'load' });
+        await expect(page.locator(BANNER)).toContainText('Tytuł 2');
+        await expect(page.locator(`${BANNER} img`)).toHaveCount(0);
     });
 });
