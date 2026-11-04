@@ -33,14 +33,17 @@ Set your own `SESSION_SECRET` and `VAPID_*` values in production; the built-in f
 
 ### GIFs in messages (optional)
 
-GIFs come from [GIPHY](https://developers.giphy.com). Without a key the GIF buttons are simply hidden and everything else works.
+GIFs come from [KLIPY](https://partner.klipy.com) or [GIPHY](https://developers.giphy.com). Without a key the GIF buttons are simply hidden and everything else works.
 
 ```
+KLIPY_API_KEY=your_klipy_app_key
+KLIPY_CONTENT_FILTER=high   # optional: off, low, medium or high (default high)
 GIPHY_API_KEY=your_giphy_api_key
-GIPHY_RATING=pg          # optional: g, pg, pg-13 or r (default pg)
+GIPHY_RATING=pg             # optional: g, pg, pg-13 or r (default pg)
+GIF_PROVIDER=klipy          # optional: which one the picker uses if both keys are set
 ```
 
-Create an app on developers.giphy.com to get a key. See [GIFs](DEPLOYMENT.md#gifs-giphy) for limits and terms. Demo mode (no database) uses four local GIFs from `public/demo-gifs/` instead, with no key.
+Set one key (or both). See [GIFs](DEPLOYMENT.md#gifs-klipy-or-giphy) for limits, terms and privacy. Demo mode (no database) uses four local GIFs from `public/demo-gifs/` instead, with no key.
 
 ## Deployment on Render
 

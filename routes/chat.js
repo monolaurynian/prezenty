@@ -20,13 +20,13 @@ const { gifConfig } = require('../lib/gif');
 const { gifPreviewText } = require('../public/gif-message');
 
 // Whether GIFs are on and what the browser needs to use the provider.
-// GIPHY requires its search/trending calls to come from the user's browser,
+// KLIPY and GIPHY both require their calls to come from the user's browser,
 // so the (public-by-design) key is handed to signed-in users here. Nothing
 // else is exposed; see lib/gif.js.
 router.get('/api/wiadomosci/gif-config', requireAuth, (req, res) => {
-    const { enabled, provider, apiKey, rating } = gifConfig();
+    const { enabled, provider, apiKey, rating, contentFilter, klipyKey } = gifConfig();
     res.set('Cache-Control', 'no-store');
-    res.json({ enabled, provider, apiKey, rating });
+    res.json({ enabled, provider, apiKey, rating, contentFilter, klipyKey });
 });
 
 // Users the current user can message (everyone but themselves)

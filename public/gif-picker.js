@@ -30,7 +30,6 @@
     const PAGE_SIZE = 24;
     const SEARCH_DELAY_MS = 450;
     const MAX_QUERY = 50; // GIPHY's limit
-    const CUSTOMER_KEY = 'prezenty-gif-customer';
 
     const gifApi = root.GifMessage;
     let config = { enabled: false };
@@ -42,37 +41,33 @@
     // Provider adapters
     // ------------------------------------------------------------------
 
-    // A random id for this browser, so the provider can keep results
-    // consistent without knowing who the user is.
-    function customerId() {
-        try {
-            let id = root.localStorage.getItem(CUSTOMER_KEY);
-            if (!id) {
-                const bytes = new Uint8Array(16);
-                (root.crypto || {}).getRandomValues ? root.crypto.getRandomValues(bytes) : bytes.forEach((_, i) => { bytes[i] = Math.floor(Math.random() * 256); });
-                id = Array.prototype.map.call(bytes, b => ('0' + b.toString(16)).slice(-2)).join('');
-                root.localStorage.setItem(CUSTOMER_KEY, id);
-            }
-            return id;
-        } catch (e) { return 'anonymous'; }
-    }
-
+    // Providers get a random per-browser id (GifMessage.customerId), so
+    // results stay consistent without anyone learning who the user is.
     function ping(url) {
         if (!url) return;
         try {
             const u = new URL(url);
             u.searchParams.set('ts', String(Date.now()));
-            u.searchParams.set('customer_id', customerId());
+            u.searchParams.set('customer_id', gifApi.customerId());
             root.fetch(u.toString(), { mode: 'no-cors', keepalive: true }).catch(function () {});
         } catch (e) { /* analytics must never break sending */ }
     }
 
     const GIPHY_HOST = 'https://api.giphy.com/v1/gifs/';
 
+    // Adapter contract:
+    //   search(query, cursor, cfg) -> { items, hasMore, next }
+    //     `cursor` starts at 0 and is whatever the adapter returned as `next`
+    //     last time (an offset for GIPHY, a page number for KLIPY)
+    //     item = { provider, id, width, height, title, analytics, urls? }
+    //     `urls` = { still, animated } when the provider hands out exact URLs
+    //     (KLIPY); otherwise they are built from the id (gif-message.js).
+    //   onSent(item, query)  optional, after the user sends the GIF
     const PROVIDERS = {
         giphy: {
             label: 'GIPHY',
             attribution: 'Powered by GIPHY',
+            placeholder: 'Szukaj GIF-ów...',
             async search(query, offset, cfg) {
                 const params = new URLSearchParams({
                     api_key: cfg.apiKey,
@@ -80,7 +75,7 @@
                     offset: String(offset),
                     rating: cfg.rating || 'pg',
                     bundle: 'messaging_non_clips',
-                    customer_id: customerId()
+                    customer_id: gifApi.customerId()
                 });
                 if (query) {
                     params.set('q', query.slice(0, MAX_QUERY));
@@ -105,7 +100,27 @@
                     return item && gifApi.buildGifToken('giphy', item.id, item.width, item.height);
                 });
                 const total = json.pagination ? Number(json.pagination.total_count) : 0;
-                return { items: items, hasMore: items.length === PAGE_SIZE && (!total || offset + items.length < total) };
+                const received = (json.data || []).length;
+                return {
+                    items: items,
+                    hasMore: received === PAGE_SIZE && (!total || offset + received < total),
+                    next: offset + received // raw count: dropped items must not shift the next page
+                };
+            }
+        },
+
+        // KLIPY: the work happens in gif-klipy.js (it also resolves slugs for
+        // the chat). Terms: "Powered by KLIPY" in the search area and content.
+        klipy: {
+            label: 'KLIPY',
+            attribution: 'Powered by KLIPY',
+            placeholder: 'Szukaj GIF-ów w KLIPY...',
+            async search(query, page) {
+                const result = await root.GifKlipy.search(query, page || 1);
+                return result;
+            },
+            onSent(item, query) {
+                root.GifKlipy.share(item.id, query);
             }
         },
 
@@ -113,6 +128,7 @@
         demo: {
             label: 'Demo',
             attribution: 'Demo GIFs',
+            placeholder: 'Szukaj GIF-ów...',
             async search(query, offset) {
                 const all = [
                     { id: 'brawo', title: 'Brawo', width: 200, height: 150, tags: 'brawo gratulacje clap' },
@@ -122,7 +138,8 @@
                 ].map(function (item) { return Object.assign({ provider: 'demo', analytics: null }, item); });
                 const q = String(query || '').toLowerCase();
                 const found = q ? all.filter(function (item) { return (item.title + ' ' + item.tags).toLowerCase().indexOf(q) !== -1; }) : all;
-                return { items: found.slice(offset), hasMore: false };
+                const items = found.slice(offset);
+                return { items: items, hasMore: false, next: offset + items.length };
             }
         }
     };
@@ -284,8 +301,13 @@
         clearSelection();
     }
 
+    // Exact URLs from the provider (KLIPY) win; otherwise build from the id
+    function urlsFor(item) {
+        return item.urls || gifApi.gifUrls(item);
+    }
+
     function addItem(item) {
-        const urls = gifApi.gifUrls(item);
+        const urls = urlsFor(item);
         if (!urls) return;
         const index = state.items.length;
         state.items.push(item);
@@ -317,7 +339,7 @@
         const query = els.search.value.trim().slice(0, MAX_QUERY);
         const ticket = ++state.ticket;
         if (reset) {
-            state.offset = 0;
+            state.cursor = 0;
             state.query = query;
             clearResults();
             els.more.hidden = true;
@@ -325,15 +347,15 @@
         setStatus(reset ? 'Szukam...' : 'Ładuję więcej...');
         els.more.disabled = true;
         try {
-            const cacheKey = state.query + '|' + state.offset;
+            const cacheKey = state.query + '|' + state.cursor;
             let page = state.cache.get(cacheKey);
             if (!page) {
-                page = await adapter.search(state.query, state.offset, config);
+                page = await adapter.search(state.query, state.cursor, config);
                 state.cache.set(cacheKey, page);
             }
             if (ticket !== state.ticket) return; // a newer search replaced this one
             page.items.forEach(addItem);
-            state.offset += page.items.length;
+            state.cursor = page.next;
             els.more.hidden = !page.hasMore;
             setStatus(state.items.length ? '' : (state.query ? 'Nic nie znaleziono. Spróbuj innego słowa.' : 'Brak GIF-ów.'));
         } catch (error) {
@@ -361,7 +383,7 @@
     function select(index, button) {
         const item = state.items[index];
         if (!item) return;
-        const urls = gifApi.gifUrls(item);
+        const urls = urlsFor(item);
         if (!urls) return;
         clearSelection();
         state.selected = item;
@@ -379,6 +401,8 @@
         const item = state && state.selected;
         if (!item) return;
         if (item.analytics && item.analytics.onsent) ping(item.analytics.onsent.url);
+        const adapter = provider();
+        if (adapter && typeof adapter.onSent === 'function') adapter.onSent(item, state.query);
         const pick = state.onPick;
         closeSheet(true);
         if (typeof pick === 'function') {
@@ -392,10 +416,12 @@
         focusBefore = (options && options.trigger) || document.activeElement;
         state = {
             onPick: options && options.onPick,
-            ticket: 0, offset: 0, query: '', items: [], colHeights: [0, 0],
+            ticket: 0, cursor: 0, query: '', items: [], colHeights: [0, 0],
             cache: new Map(), selected: null, timer: null
         };
         els.attribution.textContent = provider().attribution;
+        els.search.placeholder = provider().placeholder || 'Szukaj GIF-ów...';
+        els.search.setAttribute('aria-label', els.search.placeholder.replace(/\.\.\.$/, ''));
         els.search.value = '';
         els.sheet.removeAttribute('aria-hidden');
         els.sheet.removeAttribute('inert');
@@ -426,8 +452,15 @@
     }
 
     root.GifPicker = {
-        init: function (next) { config = next && next.enabled ? next : { enabled: false }; },
-        isEnabled: function () { return !!(config.enabled && provider() && gifApi); },
+        init: function (next) {
+            config = next && next.enabled ? next : { enabled: false };
+            // KLIPY also needs its key for showing GIFs already in the chat
+            if (root.GifKlipy) root.GifKlipy.configure(next || {});
+        },
+        isEnabled: function () {
+            if (!(config.enabled && provider() && gifApi)) return false;
+            return config.provider !== 'klipy' || (!!root.GifKlipy && root.GifKlipy.hasKey());
+        },
         open: openSheet,
         close: function () { closeSheet(); }
     };

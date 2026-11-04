@@ -125,7 +125,9 @@ test.describe('gif config', () => {
         const response = await request.get('/api/wiadomosci/gif-config');
         expect(response.status()).toBe(200);
         expect(response.headers()['cache-control']).toContain('no-store');
-        expect(await response.json()).toEqual({ enabled: true, provider: 'demo', apiKey: null, rating: 'pg' });
+        expect(await response.json()).toEqual({
+            enabled: true, provider: 'demo', apiKey: null, rating: 'pg', contentFilter: 'high', klipyKey: null
+        });
     });
 
     test('signed-out requests are refused', async ({ playwright, baseURL }) => {
@@ -325,8 +327,11 @@ test.describe('gif messages', () => {
 
         const bubble = page.locator('.chat-bubble.has-gif').last();
         await expect(bubble.locator('img.chat-gif')).toHaveAttribute('src', '/demo-gifs/swieta.gif');
-        // A reaction strip sits under the GIF like any message
-        const row = page.locator('.chat-msg-row', { has: bubble });
+        // A reaction strip sits under the GIF like any message. The GIF just
+        // sent is the newest message, so its row is the last one (the shared
+        // demo chat may hold other GIFs from earlier tests).
+        const row = page.locator('.chat-msg-row').last();
+        await expect(row.locator('img.chat-gif')).toHaveAttribute('src', '/demo-gifs/swieta.gif');
         await expect(row.locator('.chat-reactions .chat-reaction-add')).toHaveCount(1);
 
         // The conversation list shows a label, never the token

@@ -380,6 +380,29 @@
     letter-spacing: 0.5px;
 }
 
+/* A KLIPY GIF whose picture URL is still being looked up: a box of the final
+   size (width + aspect-ratio are set inline), so the chat does not jump when
+   the picture arrives. */
+.chat-gif-slot {
+    display: block;
+    max-width: 100%;
+    border-radius: 14px;
+    background: linear-gradient(110deg, #e9ecef 30%, #f5f6f8 50%, #e9ecef 70%);
+    background-size: 200% 100%;
+    animation: gifSlotShimmer 1.4s linear infinite;
+}
+
+@keyframes gifSlotShimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chat-gif-slot {
+        animation: none;
+    }
+}
+
 .chat-gif-missing {
     font-size: 13px;
     padding: 6px 10px;

@@ -221,11 +221,15 @@ test.describe('group chat: reactions', () => {
         await page.evaluate(() => window.openThread(1));
         await expect(page.locator('#chatTitle')).not.toContainText('Czat grupowy');
         await expect(strip(page, 4).locator('.chat-reaction-add')).toBeVisible();
-        const requested = page.waitForRequest(r => /\/api\/wiadomosci\/messages\/4\/reactions$/.test(r.url()));
+        const answered = page.waitForResponse(r => /\/api\/wiadomosci\/messages\/4\/reactions$/.test(r.url()) && r.request().method() === 'POST');
         await page.evaluate(() => window.ChatReactions.toggle(4, '\u2764\uFE0F'));
-        await requested;
-        // take it back
+        await answered;
+        await expect(chip(page, 4, HEART)).toHaveAttribute('aria-pressed', 'true');
+        // take it back (a second tap while the first is still in flight is
+        // ignored on purpose, so wait for the answer above first)
+        const removed = page.waitForResponse(r => /\/api\/wiadomosci\/messages\/4\/reactions$/.test(r.url()) && r.request().method() === 'POST');
         await page.evaluate(() => window.ChatReactions.toggle(4, '\u2764\uFE0F'));
+        await removed;
         await expect(chip(page, 4, HEART)).toHaveCount(0);
     });
 });
@@ -317,6 +321,10 @@ async function settled(page) {
 }
 
 test.describe('emoji picker: highlighted tab and card are the same page', () => {
+    // Some tests walk all nine cards and wait for each snap to settle
+    // (three identical readings, 250ms apart), which can exceed the 30s default
+    test.describe.configure({ timeout: 90000 });
+
     test.beforeEach(async ({ page }) => {
         await openPage(page, THREAD);
         await setViewport(page, 375);
@@ -532,6 +540,8 @@ async function swipe(cdp, x, y, dx, dy, msPerStep) {
 
 test.describe('emoji picker: swipe the cards', () => {
     test.use({ hasTouch: true, isMobile: true });
+    // Several swipes in a row, each waiting for the snap to settle
+    test.describe.configure({ timeout: 90000 });
 
     let cdp;
     let frame; // bounding box of the card area

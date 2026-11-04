@@ -157,18 +157,37 @@ If you need to create database tables:
 - Review Render deployment logs
 - Verify environment variables in dashboard
 
-## GIFs (GIPHY)
+## GIFs (KLIPY or GIPHY)
 
-Chat messages can carry GIFs from GIPHY. The feature is off until `GIPHY_API_KEY` is set (Render: dashboard > Environment; it is declared in `render.yaml` with `sync: false`, so it is never committed). Optional `GIPHY_RATING` (`g`, `pg`, `pg-13`, `r`; default `pg`).
+Chat messages can carry GIFs. The feature is off until a provider key is set (Render: dashboard > Environment; both keys are declared in `render.yaml` with `sync: false`, so they are never committed).
 
-How it works, and what to know:
-- **Searches run in the user's browser**, because GIPHY requires it. The server only hands the (public-by-design) key to signed-in users at `GET /api/wiadomosci/gif-config`. GIPHY therefore sees a user's IP address and search words, plus a random per-browser id (not linked to the account). Other chat users see only the picture, never who sent it.
-- **Stored as a token, not a URL.** A GIF message body is `[gif:giphy:<id>:<w>x<h>]`; the picture URL is rebuilt from the id on `media.giphy.com`. No database change is needed.
-- **Rate limit.** A new key is a "beta" key limited to 100 API calls per hour, counted for the whole app. The picker waits for typing to pause and caches results, but a busy evening can hit the limit; users then see "Za dużo wyszukiwań" and can retry. Upgrading to a production key (GIPHY reviews it) lifts the limit.
-- **Attribution.** GIPHY's terms require the "Powered by GIPHY" mark where its API is used. The picker shows it as text; before applying for a production key, replace it with GIPHY's official logo asset (from their brand page).
-- **Switching it off** is just removing the variable: the buttons disappear, and existing GIF messages still display.
-- **Other providers.** Tenor's API closed on 30 June 2026. Another provider (for example KLIPY) is one more adapter in `public/gif-picker.js` (`PROVIDERS`) plus an allowed provider name in `public/gif-message.js`.
+| Variable | Meaning |
+|---|---|
+| `KLIPY_API_KEY` | App key from [partner.klipy.com](https://partner.klipy.com) |
+| `KLIPY_CONTENT_FILTER` | `off`, `low`, `medium`, `high` (default `high`) |
+| `GIPHY_API_KEY` | Key from [developers.giphy.com](https://developers.giphy.com) |
+| `GIPHY_RATING` | `g`, `pg`, `pg-13`, `r` (default `pg`) |
+| `GIF_PROVIDER` | `klipy` or `giphy`: which one the picker uses when both keys are set (default `klipy`) |
 
+Set one key or both. If you move from one provider to the other, keep the old key too: GIFs already sent through KLIPY can only be shown by asking KLIPY for their pictures.
+
+What to know, for both:
+- **Searches run in the user's browser**, because both providers require it. The server only hands the (public-by-design) key to signed-in users at `GET /api/wiadomosci/gif-config`. The provider therefore sees a user's IP address and search words, plus a random per-browser id (not linked to the account). Other chat users see only the picture, never who sent it.
+- **Test keys are limited to 100 requests per hour** on both services, counted for the whole app. The picker waits for typing to pause and caches results, but a busy evening can hit the limit; users then see "Za dużo wyszukiwań" and can retry. Both providers lift the limit with a production key (GIPHY: paid, reviewed; KLIPY: requested in the Partner Panel).
+- **Attribution.** Both want their brand shown. The picker shows "Powered by KLIPY" / "Powered by GIPHY" as text; before applying for a production key, swap in the official logo from the provider's brand page.
+- **No database change.** A GIF is stored as the message text `[gif:<provider>:<id>:<w>x<h>]`, never as a URL. Switching the feature off just hides the buttons; messages already sent still display.
+
+KLIPY specifics (from [their integration requirements](https://docs.klipy.com/integration-requirements.md)):
+- **Pictures come from KLIPY's API, not from us.** A message stores only KLIPY's slug (e.g. `hello-hi-662`). When a conversation opens, the page asks KLIPY's "items" endpoint for the real picture URLs (one batched request, remembered while the page is open) and uses them unchanged. A short grey placeholder of the final size holds the place meanwhile. If KLIPY no longer has a GIF, or the lookup fails, the message shows "Ten GIF jest niedostępny".
+- **Everything is loaded straight from KLIPY**: our server never proxies, stores or re-hosts their media or API calls. Only `static.klipy.com`, `static1.klipy.com` and `static2.klipy.com` pictures are accepted.
+- **Results are shown in the order KLIPY sends them.** The only filtering is KLIPY's own `content_filter` (and whatever you configure in the Partner Panel under "Manage content"). I could not read the table that explains what each level blocks (it is an image in their docs), so check it in the Partner Panel and adjust `KLIPY_CONTENT_FILTER` to taste; `high` is the default for a family app.
+- **Keep ads off** for this key in the Partner Panel (they are opt-in). An ad object is not a GIF, so the picker would skip it, and KLIPY asks partners not to suppress results.
+- **An invalid key answers HTTP 404** (not 401); the picker treats it as "GIFs temporarily unavailable".
+- Sending a GIF also tells KLIPY (their "share" trigger) so their ranking improves; nothing is sent until the user taps "Wyślij GIF".
+
+GIPHY specifics: the picture URL is rebuilt from the id on `media.giphy.com`; "Powered by GIPHY" is mandatory under their terms.
+
+Tenor's API closed on 30 June 2026. Another provider is one more adapter in `public/gif-picker.js` (`PROVIDERS`) plus an allowed provider name in `public/gif-message.js`.
 ## Rotating secrets
 
 The app has fallback values for `SESSION_SECRET` and the VAPID (web push) key pair. Those fallback values are committed to git, so they are public. In production, set your own values and rotate them. Rotating (not deleting) is what matters: the old values stay in git history.

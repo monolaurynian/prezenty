@@ -191,7 +191,7 @@
         // Asks the server whether GIFs are on; if so, wires up both GIF buttons
         // (the conversation composer and the new-message card).
         function setupGifs() {
-            if (!window.GifPicker || !window.GifMessage) return;
+            if (!window.GifPicker || !window.GifMessage) { resolveGifConfig(); return; }
             fetch('/api/wiadomosci/gif-config')
                 .then(r => (r.ok ? r.json() : null))
                 .then(cfg => {
@@ -223,7 +223,8 @@
                         });
                     }
                 })
-                .catch(() => { /* GIFs stay off; the chat works as before */ });
+                .catch(() => { /* GIFs stay off; the chat works as before */ })
+                .then(resolveGifConfig);
         }
 
         // Explains where the message goes when the group chat is chosen
@@ -451,10 +452,31 @@
             return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
         }
 
+        const GIF_MISSING_HTML = '<div class="chat-gif-missing">Ten GIF jest niedostępny</div>';
+
+        // Settles once the GIF config request is done (success or failure).
+        // KLIPY slots wait for it: until then the key is not known, and
+        // "unavailable" would be shown for GIFs that are merely not looked up yet.
+        let resolveGifConfig;
+        const gifConfigReady = new Promise(resolve => { resolveGifConfig = resolve; });
+
         function gifHtml(gif) {
-            const urls = window.GifMessage.gifUrls(gif);
-            if (!urls) return '';
+            let urls = window.GifMessage.gifUrls(gif);
             const size = window.GifMessage.displaySize(gif, 220);
+            if (gif.provider === 'klipy') {
+                // KLIPY hands out the picture URLs through its API (they are
+                // not rebuilt from the id). Known -> draw it now; unknown ->
+                // a slot of the final size, filled in by hydrateKlipyGifs().
+                const entry = window.GifKlipy ? window.GifKlipy.cached(gif.id) : null;
+                if (entry === null) return GIF_MISSING_HTML;   // KLIPY no longer has it
+                if (!entry) {
+                    return `<span class="chat-gif-slot" role="img" aria-label="GIF się ładuje"` +
+                        ` data-klipy-slug="${escapeHtml(gif.id)}" data-w="${gif.width}" data-h="${gif.height}"` +
+                        ` style="width:${size.width}px;aspect-ratio:${gif.width}/${gif.height}"></span>`;
+                }
+                urls = entry.urls;
+            }
+            if (!urls) return '';
             const dims = `width="${size.width}" height="${size.height}"`;
             if (prefersReducedMotion()) {
                 // Reduced motion: a still picture, tap to play
@@ -463,6 +485,27 @@
                     `<img class="chat-gif" src="${escapeHtml(urls.still)}" ${dims} alt="GIF - nieruchomy podgląd" loading="lazy"></button>`;
             }
             return `<img class="chat-gif" src="${escapeHtml(urls.animated)}" ${dims} alt="Animowany GIF" loading="lazy">`;
+        }
+
+        // Fills the KLIPY slots drawn by gifHtml(): asks KLIPY (once, batched,
+        // cached) for the real picture URLs of the slugs on screen.
+        function hydrateKlipyGifs(container) {
+            const slots = Array.prototype.slice.call(container.querySelectorAll('.chat-gif-slot[data-klipy-slug]'));
+            if (!slots.length) return;
+            const missing = (slot) => { if (slot.isConnected) slot.outerHTML = GIF_MISSING_HTML; };
+            gifConfigReady.then(() => {
+                if (!window.GifKlipy || !window.GifKlipy.hasKey()) { slots.forEach(missing); return; }
+                return window.GifKlipy.resolve(slots.map(slot => slot.getAttribute('data-klipy-slug')));
+            }).then(() => {
+                slots.forEach(slot => {
+                    if (!slot.isConnected) return; // the list was re-rendered meanwhile
+                    const slug = slot.getAttribute('data-klipy-slug');
+                    const gif = parsedGif(`[gif:klipy:${slug}:${slot.getAttribute('data-w')}x${slot.getAttribute('data-h')}]`);
+                    // undefined = the lookup itself failed (offline, rate limit)
+                    if (!gif || window.GifKlipy.cached(slug) === undefined) { missing(slot); return; }
+                    slot.outerHTML = gifHtml(gif);
+                });
+            });
         }
 
         // URLs in messages become clickable links
@@ -567,6 +610,7 @@
                         </div>
                     `).join('');
                     box.scrollTop = box.scrollHeight;
+                    hydrateKlipyGifs(box);
                     ordered.forEach(m => {
                         const url = firstUrlIn(m.body);
                         if (url) loadLinkPreview(url, 'lp-g' + m.id);
@@ -618,6 +662,7 @@
                         </div>
                     `).join('');
                     box.scrollTop = box.scrollHeight;
+                    hydrateKlipyGifs(box);
 
                     // Thread exists and loaded - deletion is possible
                     document.getElementById('deleteThreadBtn').style.display = '';
