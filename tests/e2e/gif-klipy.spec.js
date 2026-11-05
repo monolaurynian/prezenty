@@ -485,12 +485,14 @@ test.describe('klipy GIFs in a conversation', () => {
         calls.items.length = 0;
         await page.evaluate(() => window.loadThreadMessages());
 
-        const note = page.locator('.chat-gif-failed').last();
+        // Only the message just sent: the shared chat still holds notes from earlier tests
+        const row = page.locator('.chat-msg-row').last();
+        const note = row.locator('.chat-gif-failed');
         await expect(note).toContainText('Nie udało się wczytać GIF-a');
         await expect(note.locator('.chat-gif-retry')).toHaveText('Spróbuj ponownie');
-        await expect(page.locator('.chat-gif-slot')).toHaveCount(0);
+        await expect(row.locator('.chat-gif-slot')).toHaveCount(0);
         // never the permanent message for a temporary problem
-        await expect(page.locator('.chat-gif-missing:not(.chat-gif-failed)')).toHaveCount(0);
+        await expect(row.locator('.chat-gif-missing:not(.chat-gif-failed)')).toHaveCount(0);
         // first try + the two automatic retries
         expect(calls.items.length, JSON.stringify(calls.items)).toBe(3);
         expect(warnings.join('\n')).toContain('[GIF] KLIPY lookup failed');
@@ -505,13 +507,14 @@ test.describe('klipy GIFs in a conversation', () => {
         await openPage(page, GROUP);
         expect(await postGroupBody(page, '[gif:klipy:znowu-dziala-961:220x220]')).toBe(200);
         await page.evaluate(() => window.loadThreadMessages());
-        const retry = page.locator('.chat-gif-retry').last();
+        const row = page.locator('.chat-msg-row').last();
+        const retry = row.locator('.chat-gif-retry');
         await expect(retry).toBeVisible();
 
         healthy = true;
         await retry.click();
-        await expect(page.locator(`img.chat-gif[src="${U('znowu-dziala-961', 'sm', 'webp')}"]`)).toBeVisible();
-        await expect(page.locator('.chat-gif-failed')).toHaveCount(0);
+        await expect(row.locator(`img.chat-gif[src="${U('znowu-dziala-961', 'sm', 'webp')}"]`)).toBeVisible();
+        await expect(row.locator('.chat-gif-failed')).toHaveCount(0);
     });
 
     test('a failed lookup that recovers during the automatic retries just shows the GIF', async ({ page }) => {
@@ -524,8 +527,9 @@ test.describe('klipy GIFs in a conversation', () => {
         expect(await postGroupBody(page, '[gif:klipy:szybko-wraca-962:220x220]')).toBe(200);
         calls.items.length = 0; asked = 0;
         await page.evaluate(() => window.loadThreadMessages());
-        await expect(page.locator(`img.chat-gif[src="${U('szybko-wraca-962', 'sm', 'webp')}"]`)).toBeVisible();
-        await expect(page.locator('.chat-gif-failed')).toHaveCount(0);
+        const row = page.locator('.chat-msg-row').last();
+        await expect(row.locator(`img.chat-gif[src="${U('szybko-wraca-962', 'sm', 'webp')}"]`)).toBeVisible();
+        await expect(row.locator('.chat-gif-failed')).toHaveCount(0);
     });
 
     test('a picture that will not load (blocked, offline) becomes the retryable note, not "niedostępny"', async ({ page }) => {
@@ -535,8 +539,9 @@ test.describe('klipy GIFs in a conversation', () => {
         await openPage(page, GROUP);
         expect(await postGroupBody(page, '[gif:klipy:obrazek-pada-963:220x220]')).toBe(200);
         await page.evaluate(() => window.loadThreadMessages());
-        await expect(page.locator('.chat-gif-failed .chat-gif-retry').last()).toBeVisible();
-        await expect(page.locator('.chat-gif-missing:not(.chat-gif-failed)')).toHaveCount(0);
+        const row = page.locator('.chat-msg-row').last();
+        await expect(row.locator('.chat-gif-failed .chat-gif-retry')).toBeVisible();
+        await expect(row.locator('.chat-gif-missing:not(.chat-gif-failed)')).toHaveCount(0);
     });
 
     test('a hostile items response (foreign host) is not drawn', async ({ page }) => {
