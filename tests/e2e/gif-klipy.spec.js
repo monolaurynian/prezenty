@@ -431,9 +431,10 @@ test.describe('klipy GIFs in a conversation', () => {
 
         // One request carried all the slugs that were on screen and unknown;
         // the one KLIPY left out is asked for once more on its own before it counts as gone
-        expect(calls.items.length, JSON.stringify(calls.items)).toBe(2);
+        // (two other ways of asking, since this slug has no capitals and no "--id")
+        expect(calls.items.length, JSON.stringify(calls.items)).toBe(3);
         expect(calls.items[0].split(',')).toEqual(expect.arrayContaining(['album-zdjec-901', 'drugi-obrazek-902', 'usuniety-gif-903']));
-        expect(calls.items[1]).toBe('usuniety-gif-903');
+        expect(calls.items.slice(1)).toEqual(['usuniety-gif-903', 'usuniety-gif-903']);
         const itemsCall = calls.api.find(c => c.url.pathname.endsWith('/gifs/items'));
         expect(itemsCall.url.searchParams.get('customer_id')).toMatch(/^[0-9a-f]{32}$/);
 

@@ -32,7 +32,9 @@
     if (typeof document === 'undefined') return;
 
     const API = 'https://api.klipy.com/api/v1/';
-    const MEDIA_HOST = /^https:\/\/static[12]?\.klipy\.com\//;
+    // Any host under klipy.com (static.klipy.com, static1..., a CDN name...):
+    // KLIPY's own domain only, https only
+    const MEDIA_HOST = /^https:\/\/(?:[a-z0-9-]+\.)+klipy\.com\//;
     const PER_PAGE = 24;          // KLIPY allows 8-50
     const ITEMS_CHUNK = 20;       // slugs per "items" request
     const FORMATS = 'webp,gif,jpg'; // skip mp4/webm: smaller responses
@@ -48,6 +50,7 @@
     // is different from KLIPY saying it no longer has the GIF (cache = null).
     // A failure is temporary, so it is never remembered as "gone".
     const failed = new Map();  // slug -> error kind ('rate' | 'key' | 'http' | 'network')
+    let learnedVariant = 0;    // which way of asking "items" last found a GIF the first way missed
 
     function configure(config) {
         appKey = config && config.klipyKey ? String(config.klipyKey) : null;
@@ -120,6 +123,29 @@
         };
     }
 
+    /** Why normalize() would refuse this item, for the console (diagnosis only). */
+    function whyNot(item) {
+        if (!item || typeof item !== 'object') return 'not an object';
+        if (item.type && item.type !== 'gif') return 'type is "' + item.type + '", not gif';
+        if (typeof item.slug !== 'string') return 'no slug';
+        const animated = pickMedia(item.file, ['webp', 'gif']);
+        if (!animated) {
+            const sample = [];
+            Object.keys(item.file || {}).forEach(function (size) {
+                Object.keys(item.file[size] || {}).forEach(function (kind) {
+                    const media = item.file[size][kind];
+                    if (media && typeof media.url === 'string' && sample.length < 3) sample.push(size + '.' + kind + '=' + media.url.slice(0, 60));
+                });
+            });
+            return 'no usable webp/gif on a klipy.com host (' + (sample.join(' ') || 'item has no files') + ')';
+        }
+        if (!(animated.width > 0) || !(animated.height > 0)) return 'no width/height';
+        if (!gifApi.buildGifToken('klipy', item.slug, Math.round(animated.width), Math.round(animated.height))) {
+            return 'slug or size not allowed in a message (' + item.slug.length + ' chars, ' + animated.width + 'x' + animated.height + ')';
+        }
+        return 'unknown';
+    }
+
     async function request(path, params, options) {
         const response = await root.fetch(url(path, params), options);
         if (response.status === 429) throw makeError('rate', 'Za dużo wyszukiwań. Spróbuj za chwilę.');
@@ -161,42 +187,106 @@
         const batches = [];
         for (let i = 0; i < wanted.length; i += ITEMS_CHUNK) batches.push(wanted.slice(i, i + ITEMS_CHUNK));
 
-        // One "items" request for these slugs; fills the cache with what came
-        // back and resolves to the slugs that did NOT come back
-        function lookup(slugList) {
-            return request('gifs/items', {
-                slugs: slugList.join(','),
-                customer_id: gifApi.customerId(),
-                format_filter: FORMATS
-            }).then(function (json) {
+        // The ways of asking the "items" endpoint, the documented one first.
+        // The others are only used for a GIF the first answer left out, in
+        // case the extra parameters of the first one were what hid it.
+        const VARIANTS = [
+            function (list) { return { slugs: list.join(','), customer_id: gifApi.customerId(), format_filter: FORMATS }; },
+            function (list) { return { slugs: list.join(',') }; },
+            function (list) { return { slugs: list.join(','), customer_id: gifApi.customerId(), locale: 'pl' }; },
+            // Slugs such as "merry-christmas-trump--krgkjE0X7" carry a mixed-case
+            // id; in one real chat every GIF with such a slug was "not found"
+            // while the all-lowercase ones were found. Try lowercase last.
+            function (list) { return { slugs: list.map(function (s) { return s.toLowerCase(); }).join(','), customer_id: gifApi.customerId(), format_filter: FORMATS }; },
+            // Last resort: only the id after "--" (the part that tells two
+            // GIFs with the same title apart)
+            function (list) { return { slugs: list.map(idPart).join(','), customer_id: gifApi.customerId(), format_filter: FORMATS }; }
+        ];
+
+        // "merry-christmas-trump--krgkjE0X7" -> "krgkjE0X7" ("" when there is no "--")
+        function idPart(slug) {
+            const at = slug.lastIndexOf('--');
+            return at > 0 && slug.length - at - 2 >= 6 ? slug.slice(at + 2) : '';
+        }
+        const MAX_SECOND_TRIES = 8;   // protects the hourly request budget
+
+        // One "items" request. Fills the cache with what came back and
+        // resolves to { missing: slugs not usable, rejected: why, for the console }
+        function lookup(slugList, variant) {
+            return request('gifs/items', VARIANTS[variant](slugList)).then(function (json) {
                 const data = json.data || {};
+                const list = Array.isArray(data.data) ? data.data : [];
                 const found = new Set();
-                (Array.isArray(data.data) ? data.data : []).forEach(function (item) {
+                const rejected = [];
+                const entries = [];
+                list.forEach(function (item) {
                     const entry = normalize(item);
-                    if (entry) {
-                        cache.set(entry.id, { urls: entry.urls, width: entry.width, height: entry.height });
-                        found.add(entry.id);
-                    }
+                    if (entry) entries.push(entry);
+                    else rejected.push((item && item.slug) + ': ' + whyNot(item));
                 });
-                return slugList.filter(function (slug) { return !found.has(slug); });
+                // Match what came back to what was asked for. The slug KLIPY
+                // returns may differ from ours in letter case, so fall back to
+                // a case-insensitive match - stored under OUR slug, the one in the message.
+                slugList.forEach(function (slug) {
+                    const id = idPart(slug).toLowerCase();
+                    const entry = entries.find(function (e) { return e.id === slug; }) ||
+                        entries.find(function (e) { return e.id.toLowerCase() === slug.toLowerCase(); }) ||
+                        (id ? entries.find(function (e) { return e.id.toLowerCase().endsWith('--' + id); }) : null);
+                    if (!entry) return;
+                    cache.set(slug, { urls: entry.urls, width: entry.width, height: entry.height });
+                    found.add(slug);
+                });
+                const missing = slugList.filter(function (slug) { return !found.has(slug); });
+                const unmatched = entries.filter(function (e) {
+                    return !slugList.some(function (slug) { return slug.toLowerCase() === e.id.toLowerCase(); });
+                });
+                if (missing.length && unmatched.length) {
+                    rejected.push('answered with other slugs: ' + unmatched.map(function (e) { return e.id; }).join(', '));
+                }
+                return { missing: missing, rejected: rejected };
             });
         }
 
-        batches.forEach(function (batch) {
-            const promise = lookup(batch).then(function (notReturned) {
-                // A GIF missing from a batch answer is asked for once more on
-                // its own, so one odd answer cannot hide a GIF that exists
-                if (batch.length === 1 || !notReturned.length) return notReturned;
-                return notReturned.reduce(function (chain, slug) {
-                    return chain.then(function (stillMissing) {
-                        return lookup([slug]).then(function (again) { return stillMissing.concat(again); });
+        // A GIF left out of the first answer is asked for on its own, in the
+        // other ways, before it counts as gone. Resolves to true when found.
+        function askAgain(slug, notes) {
+            // the way that worked last time goes first, to spare the request budget
+            const order = [];
+            if (learnedVariant > 0) order.push(learnedVariant);
+            for (let v = 1; v < VARIANTS.length; v++) if (v !== learnedVariant) order.push(v);
+            return order.reduce(function (chain, variant) {
+                return chain.then(function (done) {
+                    if (done) return true;
+                    // the lowercase way is pointless for a slug that is already lowercase
+                    if (variant === 3 && slug === slug.toLowerCase()) return false;
+                    // ...and the id-only way needs an id
+                    if (variant === 4 && !idPart(slug)) return false;
+                    return lookup([slug], variant).then(function (result) {
+                        result.rejected.forEach(function (note) { notes.push(note); });
+                        if (result.missing.length === 0) { learnedVariant = variant; return true; }
+                        return false;
                     });
-                }, Promise.resolve([]));
+                });
+            }, Promise.resolve(false));
+        }
+
+        batches.forEach(function (batch) {
+            const notes = [];
+            const promise = lookup(batch, 0).then(function (first) {
+                first.rejected.forEach(function (note) { notes.push(note); });
+                const tries = first.missing.slice(0, MAX_SECOND_TRIES);
+                const untried = first.missing.slice(MAX_SECOND_TRIES);
+                return tries.reduce(function (chain, slug) {
+                    return chain.then(function (gone) {
+                        return askAgain(slug, notes).then(function (found) { return found ? gone : gone.concat(slug); });
+                    });
+                }, Promise.resolve([])).then(function (gone) { return gone.concat(untried); });
             }).then(function (gone) {
-                // Asked for twice and still not returned: gone from KLIPY (remember that)
+                // Still not usable after every way of asking: gone from KLIPY (remember that)
                 gone.forEach(function (slug) { cache.set(slug, null); });
                 if (gone.length && root.console && root.console.warn) {
-                    root.console.warn('[GIF] KLIPY has no GIF for: ' + gone.join(', '));
+                    root.console.warn('[GIF] KLIPY has no usable GIF for: ' + gone.join(', ') +
+                        (notes.length ? ' | KLIPY sent but we could not use: ' + notes.join(' ; ') : ' | KLIPY did not send them at all'));
                 }
             }).catch(function (error) {
                 // Network / rate limit / key: NOT "the GIF is gone". Leave it

@@ -469,44 +469,88 @@
     // Compact (about half the screen: the conversation stays in view) or
     // expanded (nearly full height) - toggled by the chevron.
     //
-    // On a phone, scrolling down through the GIFs also expands it (more
-    // pictures at once), and scrolling back up to the top collapses it again.
-    // Only a panel that the scroll itself expanded is collapsed by scrolling,
-    // and the chevron overrides all of this for the current opening.
-    const SCROLL_EXPAND_FROM = 24;     // px scrolled down before it expands
-    const SCROLL_COLLAPSE_AT = 4;      // px from the top at which it collapses
-    const SETTLE_MS = 400;             // resizing moves the list: ignore its scroll events
+    // On a phone, scrolling the GIFs also resizes the panel, smoothly and in
+    // step with the finger: scrolling down grows it from compact towards
+    // expanded over SCROLL_RANGE px of scrolling, and scrolling back up to the
+    // top shrinks it again. When the scrolling pauses it eases to whichever
+    // end is nearer. The chevron overrides all of this for the current opening.
+    const SCROLL_RANGE = 160;          // px of scrolling from compact to expanded
+    const IDLE_MS = 140;               // a pause this long ends the gesture
+    const SETTLE_MS = 400;             // resetting the list moves it: ignore those scroll events
 
     function isDocked() {
         return !!(root.matchMedia && root.matchMedia('(max-width: 768px)').matches);
     }
 
+    // The two heights the panel has on a phone (mirrors gif-picker.css)
+    function panelHeights() {
+        const h = root.innerHeight;
+        return { compact: Math.min(h * 0.5, 440), full: Math.min(h * 0.86, 680) };
+    }
+
+    // Back to the CSS-controlled heights (no inline override)
+    function clearLiveSize() {
+        if (state && state.idleTimer) { clearTimeout(state.idleTimer); state.idleTimer = null; }
+        if (state) state.liveH = null;
+        if (els) { els.sheet.style.height = ''; els.sheet.style.transition = ''; }
+    }
+
     function onResultsScroll() {
         if (!state || !els) return;
         const top = els.results.scrollTop;
-        const before = state.lastTop || 0;
+        const last = state.lastTop || 0;
         state.lastTop = top;
         if (state.userChose || !isDocked()) return;
         if (root.performance.now() < (state.settleUntil || 0)) return;
-        const expanded = els.sheet.classList.contains('is-expanded');
-        if (!expanded && top > before && top > SCROLL_EXPAND_FROM) {
-            state.settleUntil = root.performance.now() + SETTLE_MS;
-            setExpanded(true);
-            state.scrollExpanded = true;
-        } else if (expanded && state.scrollExpanded && top < before && top <= SCROLL_COLLAPSE_AT) {
-            state.settleUntil = root.performance.now() + SETTLE_MS;
-            setExpanded(false);
-            state.scrollExpanded = false;
+        const moved = top - last;
+        if (!moved) return;
+
+        const sizes = panelHeights();
+        const span = sizes.full - sizes.compact;
+        const perPx = span / SCROLL_RANGE;
+        // where the panel is right now (it may still be easing from the last gesture)
+        if (state.liveH == null) state.liveH = Math.round(els.sheet.getBoundingClientRect().height);
+        let h = state.liveH;
+        if (moved > 0) {
+            h = Math.min(sizes.full, h + moved * perPx);
+        } else if (top <= SCROLL_RANGE) {
+            // on the way back to the top it follows the scroll, but never
+            // jumps: it only shrinks by as much as the finger moved
+            const target = sizes.compact + (top / SCROLL_RANGE) * span;
+            if (h > target) h = Math.max(target, h + moved * perPx);
         }
+        h = Math.max(sizes.compact, Math.min(sizes.full, h));
+        if (h !== state.liveH) {
+            state.liveH = h;
+            els.sheet.style.transition = 'none';          // follow the finger exactly
+            els.sheet.style.height = h.toFixed(1) + 'px';
+        }
+        if (state.idleTimer) clearTimeout(state.idleTimer);
+        state.idleTimer = setTimeout(settleSize, IDLE_MS);
+    }
+
+    // The scrolling paused: ease to compact or expanded, whichever is nearer
+    function settleSize() {
+        if (!state || !els) return;
+        state.idleTimer = null;
+        if (state.liveH == null) return;
+        const sizes = panelHeights();
+        const expand = (state.liveH - sizes.compact) / (sizes.full - sizes.compact) >= 0.5;
+        state.liveH = null;
+        els.sheet.style.transition = '';                  // animate again
+        void els.sheet.offsetHeight;                      // start from the inline height
+        els.sheet.style.height = '';                      // hand over to the CSS heights
+        setExpanded(expand);
     }
 
     function setExpanded(on) {
+        // a chevron tap (or opening) takes over from any in-progress scroll resize
+        if (state && state.liveH != null) clearLiveSize();
         els.sheet.classList.toggle('is-expanded', on);
         els.expand.setAttribute('aria-expanded', on ? 'true' : 'false');
         els.expand.setAttribute('aria-label', on ? 'Zwiń listę GIF-ów' : 'Rozwiń listę GIF-ów');
         reserveSpace();
     }
-
     // On a phone the panel covers the bottom of the screen. Reserve that much
     // room at the bottom of the page (html.gif-panel-open pads <body>) and tell
     // the page how much is covered, so it can keep the newest messages in view.
@@ -541,6 +585,13 @@
     // The height the panel has (or is animating to) in its current state.
     function finalHeight() {
         const sheet = els.sheet;
+        // On a phone the two heights are known, so there is nothing to measure.
+        // (Measuring used to switch the transition off for a moment, which made
+        // the panel jump to its final size instead of animating there.)
+        if (isDocked()) {
+            const sizes = panelHeights();
+            return Math.round(sheet.classList.contains('is-expanded') ? sizes.full : sizes.compact);
+        }
         const previous = sheet.style.transition;
         sheet.style.transition = 'none';          // measure without animating
         const height = Math.round(sheet.getBoundingClientRect().height);
@@ -551,6 +602,7 @@
     function closeSheet(skipFocus) {
         if (!els || !state) return;
         if (state.timer) clearTimeout(state.timer);
+        clearLiveSize();
         state.ticket++;
         const onClose = state.onClose;
         state = null;
