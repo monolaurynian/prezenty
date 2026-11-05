@@ -251,7 +251,7 @@ test.describe('klipy picker', () => {
 
         await page.locator(`${SHEET} .gif-sheet-item`).nth(1).click();
         // Preview = the small animated WebP (lighter than the GIF), unmodified
-        await expect(page.locator(`${SHEET} .gif-sheet-preview img`)).toHaveAttribute('src', U('pies-w-czapce-202', 'sm', 'webp'));
+        await expect(page.locator(`#gifPreview img`)).toHaveAttribute('src', U('pies-w-czapce-202', 'sm', 'webp'));
     });
 
     test('search is debounced, sends the exact words and the filter, and pages by page number', async ({ page }) => {
@@ -365,7 +365,7 @@ test.describe('klipy sending', () => {
         await page.locator(`${SHEET} .gif-sheet-item`).first().click();
 
         const sent = page.waitForResponse(r => /\/api\/wiadomosci\/threads\/1\/messages$/.test(r.url()) && r.request().method() === 'POST');
-        await page.locator(`${SHEET} .gif-sheet-send`).click();
+        await page.locator(`#gifPreview .gif-sheet-send`).click();
         expect((await sent).request().postDataJSON().body).toBe('[gif:klipy:wynik-szukania-303:220x165]');
 
         // The share trigger: slug in the path, the browser's random id and the search words in the body
@@ -388,7 +388,7 @@ test.describe('klipy sending', () => {
         await openPage(page, THREAD);
         await openKlipyPicker(page);
         await page.locator(`${SHEET} .gif-sheet-item`).first().click();
-        await page.locator(`${SHEET} .gif-sheet-send`).click();
+        await page.locator(`#gifPreview .gif-sheet-send`).click();
         await expect.poll(() => calls.shares.length).toBe(1);
         expect(calls.shares[0].body.q).toBe('');
         expect(calls.shares[0].slug).toBe('kot-na-plocie-101');
@@ -399,7 +399,7 @@ test.describe('klipy sending', () => {
         await openPage(page, THREAD);
         await openKlipyPicker(page);
         await page.locator(`${SHEET} .gif-sheet-item`).first().click();
-        await page.locator(`${SHEET} .gif-sheet-cancel`).click();
+        await page.locator(`#gifPreview .gif-sheet-cancel`).click();
         await page.keyboard.press('Escape');
         await page.waitForTimeout(400);
         expect(calls.shares).toEqual([]);
@@ -453,7 +453,7 @@ test.describe('klipy tabs', () => {
         await openKlipyPicker(page);
         await page.locator(`${SHEET} .gif-sheet-tab`).nth(1).click();
         await page.locator(`${SHEET} .gif-sheet-item.is-sticker`).first().click();
-        const send = page.locator(`${SHEET} .gif-sheet-send`);
+        const send = page.locator(`#gifPreview .gif-sheet-send`);
         await expect(send).toHaveText('Wyślij naklejkę');
         const sent = page.waitForResponse(r => /\/api\/wiadomosci\/group$/.test(r.url()) && r.request().method() === 'POST');
         await send.click();

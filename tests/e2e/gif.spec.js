@@ -202,16 +202,16 @@ test.describe('gif picker', () => {
         await openGifPicker(page);
         await page.locator(`${SHEET} .gif-sheet-item`).first().click();
 
-        const preview = page.locator(`${SHEET} .gif-sheet-preview`);
+        const preview = page.locator(`#gifPreview`);
         await expect(preview).toBeVisible();
         // The preview is the animated file
         await expect(preview.locator('img')).toHaveAttribute('src', /\/demo-gifs\/brawo\.gif$/);
         await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toHaveAttribute('aria-pressed', 'true');
-        await expect(page.locator(`${SHEET} .gif-sheet-send`)).toBeFocused();
+        await expect(page.locator(`#gifPreview .gif-sheet-send`)).toBeFocused();
         expect(await page.locator('.chat-bubble').count()).toBe(before);
 
         // Changing your mind clears the preview and still sends nothing
-        await page.locator(`${SHEET} .gif-sheet-cancel`).click();
+        await page.locator(`#gifPreview .gif-sheet-cancel`).click();
         await expect(preview).toBeHidden();
         await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toHaveAttribute('aria-pressed', 'false');
         expect(await page.locator('.chat-bubble').count()).toBe(before);
@@ -226,7 +226,7 @@ test.describe('gif picker', () => {
         await expect(page.locator(`${SHEET} .gif-sheet-item`)).toHaveCount(1); // wait out the search debounce
         await page.locator(`${SHEET} .gif-sheet-item`).first().click();
         const sent = page.waitForResponse(r => /\/api\/wiadomosci\/threads\/1\/messages$/.test(r.url()) && r.request().method() === 'POST');
-        await page.locator(`${SHEET} .gif-sheet-send`).click();
+        await page.locator(`#gifPreview .gif-sheet-send`).click();
         expect((await sent).request().postDataJSON().body).toBe('[gif:demo:hura:200x200]');
 
         await expect(page.locator(SHEET)).toHaveAttribute('aria-hidden', 'true');
@@ -275,7 +275,7 @@ test.describe('gif picker', () => {
         await page.keyboard.press('Escape');
         await openGifPicker(page);
         await expect(page.locator(`${SHEET} .gif-sheet-search`)).toHaveValue('');
-        await expect(page.locator(`${SHEET} .gif-sheet-preview`)).toBeHidden();
+        await expect(page.locator(`#gifPreview`)).toBeHidden();
         await expect(page.locator(`${SHEET} .gif-sheet-item`)).toHaveCount(4);
     });
 
@@ -296,8 +296,19 @@ test.describe('gif picker', () => {
             expect(rect.right, JSON.stringify(rect)).toBeLessThanOrEqual(rect.w + 0.5);
             expect(rect.bottom, JSON.stringify(rect)).toBeLessThanOrEqual(rect.h + 0.5);
 
-            const small = await page.evaluate(() => ['.gif-sheet-close', '.gif-sheet-send', '.gif-sheet-cancel', '.gif-sheet-item', '.gif-sheet-search']
-                .flatMap(sel => Array.prototype.slice.call(document.querySelectorAll('#gifSheet ' + sel)).map(el => {
+            // The preview is a full-screen modal on top: it covers the viewport and its buttons are inside
+            const modal = await page.locator('#gifPreview').evaluate(el => {
+                const r = el.getBoundingClientRect();
+                const inside = ['.gif-sheet-send', '.gif-sheet-cancel', '.gif-sheet-preview-img'].every(sel => {
+                    const b = el.querySelector(sel).getBoundingClientRect();
+                    return b.left >= -0.5 && b.right <= window.innerWidth + 0.5 && b.top >= -0.5 && b.bottom <= window.innerHeight + 0.5;
+                });
+                return { w: Math.round(r.width), h: Math.round(r.height), vw: window.innerWidth, vh: window.innerHeight, inside };
+            });
+            expect(modal, JSON.stringify(modal)).toEqual({ w: modal.vw, h: modal.vh, vw: modal.vw, vh: modal.vh, inside: true });
+
+            const small = await page.evaluate(() => [['#gifSheet', '.gif-sheet-close'], ['#gifPreview', '.gif-sheet-send'], ['#gifPreview', '.gif-sheet-cancel'], ['#gifSheet', '.gif-sheet-item'], ['#gifSheet', '.gif-sheet-search']]
+                .flatMap(([scope, sel]) => Array.prototype.slice.call(document.querySelectorAll(scope + ' ' + sel)).map(el => {
                     const b = el.getBoundingClientRect();
                     return { sel, w: Math.round(b.width), h: Math.round(b.height) };
                 })).filter(t => t.h < 43.99 || (t.sel !== '.gif-sheet-search' && t.w < 43.99)));
@@ -321,7 +332,7 @@ test.describe('gif messages', () => {
         await expect(page.locator(`${SHEET} .gif-sheet-item`)).toHaveCount(1); // wait out the search debounce
         await page.locator(`${SHEET} .gif-sheet-item`).first().click();
         const sent = page.waitForResponse(r => /\/api\/wiadomosci\/group$/.test(r.url()) && r.request().method() === 'POST');
-        await page.locator(`${SHEET} .gif-sheet-send`).click();
+        await page.locator(`#gifPreview .gif-sheet-send`).click();
         expect((await sent).request().postDataJSON().body).toBe('[gif:demo:swieta:200x260]');
 
         const bubble = page.locator('.chat-bubble.has-gif').last();
@@ -353,7 +364,7 @@ test.describe('gif messages', () => {
         await expect(page.locator(`${SHEET} .gif-sheet-item`)).toHaveCount(1); // wait out the search debounce
         await page.locator(`${SHEET} .gif-sheet-item`).first().click();
         const sent = page.waitForResponse(r => /\/api\/wiadomosci\/group$/.test(r.url()) && r.request().method() === 'POST');
-        await page.locator(`${SHEET} .gif-sheet-send`).click();
+        await page.locator(`#gifPreview .gif-sheet-send`).click();
         expect((await sent).request().postDataJSON().body).toBe('[gif:demo:dzieki:200x112]');
         await expect(page).toHaveURL(/rozmowa=group/);
         await expect(page.locator('.chat-bubble.has-gif img.chat-gif').last()).toHaveAttribute('src', '/demo-gifs/dzieki.gif');
@@ -528,9 +539,9 @@ test.describe('gif picker: GIPHY adapter (mocked)', () => {
         await openPage(page, THREAD);
         await openGifPicker(page);
         await page.locator(`${SHEET} .gif-sheet-item`).nth(1).click();
-        await expect(page.locator(`${SHEET} .gif-sheet-preview img`)).toHaveAttribute('src', 'https://media.giphy.com/media/trendB2/200w.gif');
+        await expect(page.locator(`#gifPreview img`)).toHaveAttribute('src', 'https://media.giphy.com/media/trendB2/200w.gif');
         const sent = page.waitForResponse(r => /\/api\/wiadomosci\/threads\/1\/messages$/.test(r.url()) && r.request().method() === 'POST');
-        await page.locator(`${SHEET} .gif-sheet-send`).click();
+        await page.locator(`#gifPreview .gif-sheet-send`).click();
         expect((await sent).request().postDataJSON().body).toBe('[gif:giphy:trendB2:200x300]');
 
         const bubble = page.locator('.chat-bubble.has-gif').last();

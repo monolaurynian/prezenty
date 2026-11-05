@@ -166,6 +166,10 @@
     const PREVIEW_LABELS = { gif: 'Podgląd GIF-a', sticker: 'Podgląd naklejki', meme: 'Podgląd memu' };
     const MORE_LABEL = 'Pokaż więcej';
 
+    function provider() {
+        return PROVIDERS[config.provider] || null;
+    }
+
     // ------------------------------------------------------------------
     // DOM
     // ------------------------------------------------------------------
@@ -264,18 +268,27 @@
         const thumb = node('div', 'gif-sheet-pagethumb');
         pagebar.appendChild(thumb);
 
+        // The preview: a full-screen modal over everything (it lives on <body>,
+        // not inside the sheet, so it can cover the whole screen) showing the
+        // chosen picture large, with "Wyślij" and "Pomiń"
         const preview = node('div', 'gif-sheet-preview');
+        preview.id = 'gifPreview';
+        preview.setAttribute('role', 'dialog');
+        preview.setAttribute('aria-modal', 'true');
+        preview.setAttribute('aria-label', 'Podgląd');
         preview.hidden = true;
         const previewImg = node('img', 'gif-sheet-preview-img');
         previewImg.alt = '';
+        const previewTitle = node('p', 'gif-sheet-preview-title');
         const previewActions = node('div', 'gif-sheet-preview-actions');
         const send = node('button', 'gif-sheet-send', 'Wyślij GIF');
         send.type = 'button';
-        const cancel = node('button', 'gif-sheet-cancel', 'Wybierz inny');
+        const cancel = node('button', 'gif-sheet-cancel', 'Pomiń');
         cancel.type = 'button';
         previewActions.appendChild(send);
         previewActions.appendChild(cancel);
         preview.appendChild(previewImg);
+        preview.appendChild(previewTitle);
         preview.appendChild(previewActions);
 
         const attribution = node('p', 'gif-sheet-attribution');
@@ -286,16 +299,26 @@
         sheet.appendChild(tabs);
         sheet.appendChild(pager);
         sheet.appendChild(pagebar);
-        sheet.appendChild(preview);
         sheet.appendChild(attribution);
 
         document.body.appendChild(overlay);
         document.body.appendChild(sheet);
+        document.body.appendChild(preview);
 
         els = {
             overlay, sheet, title, close, expand, search, pager, pagebar, thumb,
-            preview, previewImg, send, cancel, attribution, tabs, tabButtons, indicator
+            preview, previewImg, previewTitle, send, cancel, attribution, tabs, tabButtons, indicator
         };
+
+        // Skip (button, Escape, or a tap on the dark area) goes back to the pictures
+        preview.addEventListener('click', function (e) { if (e.target === preview) skipPreview(); });
+        preview.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); skipPreview(); return; }
+            if (e.key !== 'Tab') return;
+            // Tab stays between the two buttons
+            if (e.shiftKey && document.activeElement === send) { e.preventDefault(); cancel.focus(); }
+            else if (!e.shiftKey && document.activeElement === cancel) { e.preventDefault(); send.focus(); }
+        });
 
         // The indicator and the thumb are placed from measurements: redo them on resize
         root.addEventListener('resize', function () { if (state && state.kinds) paintPosition(); });
@@ -340,7 +363,7 @@
             pager.addEventListener(type, function () { if (state) state.jump = null; }, { passive: true });
         });
         installPagebar();
-        cancel.addEventListener('click', clearSelection);
+        cancel.addEventListener('click', skipPreview);
         send.addEventListener('click', sendSelected);
         search.addEventListener('input', function () {
             if (state.timer) clearTimeout(state.timer);
@@ -524,12 +547,23 @@
 
     function clearSelection() {
         if (!els) return;
-        if (state) state.selected = null;
+        if (state) {
+            state.selected = null;
+            // the sheet was frozen behind the preview: wake it
+            if (!els.preview.hidden && els.sheet.classList.contains('is-open')) els.sheet.removeAttribute('inert');
+        }
         els.preview.hidden = true;
         els.previewImg.removeAttribute('src');
         els.pager.querySelectorAll('.gif-sheet-item[aria-pressed="true"]').forEach(function (b) {
             b.setAttribute('aria-pressed', 'false');
         });
+    }
+
+    // "Pomiń": close the preview, back to the pictures (focus returns to the one chosen)
+    function skipPreview() {
+        const back = state && state.selectedButton;
+        clearSelection();
+        if (back && document.contains(back) && typeof back.focus === 'function') back.focus();
     }
 
     function select(kind, index, button) {
@@ -541,14 +575,19 @@
         clearSelection();
         state.selected = item;
         state.selectedQuery = tab.query;
+        state.selectedButton = button;
         button.setAttribute('aria-pressed', 'true');
         const itemKind = item.kind || 'gif';
         els.previewImg.alt = item.title ? PREVIEW_LABELS[itemKind] + ': ' + item.title : PREVIEW_LABELS[itemKind];
         els.previewImg.classList.toggle('is-sticker', itemKind === 'sticker');
+        els.previewTitle.textContent = item.title || '';
+        els.previewTitle.hidden = !item.title;
+        els.preview.setAttribute('aria-label', PREVIEW_LABELS[itemKind]);
         els.send.textContent = SEND_LABELS[itemKind];
         els.previewImg.width = item.width;
         els.previewImg.height = item.height;
         els.previewImg.src = urls.animated;
+        els.sheet.setAttribute('inert', '');          // the preview is the only thing to use now
         els.preview.hidden = false;
         if (item.analytics && item.analytics.onclick) ping(item.analytics.onclick.url);
         els.send.focus();

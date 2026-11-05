@@ -293,7 +293,7 @@ test.describe('GIF panel on a phone', () => {
         await openComposer(page, 375);
         await page.locator('#gifBtn').click();
         await page.locator(`${SHEET} .gif-sheet-item`).first().click();
-        const send = page.locator(`${SHEET} .gif-sheet-send`);
+        const send = page.locator(`#gifPreview .gif-sheet-send`);
         await expect(send).toBeVisible();
         const sent = page.waitForResponse(r => /\/api\/wiadomosci\/group$/.test(r.url()) && r.request().method() === 'POST');
         await send.click();

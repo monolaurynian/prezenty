@@ -361,57 +361,97 @@ html.gif-panel-open body {
     cursor: pointer;
 }
 
-/* The chosen GIF, animated, with the only button that sends it */
+/* The chosen picture: a full-screen modal (gif-picker.js puts it on <body>
+   so it covers everything), the picture big, then "Wyślij" and "Pomiń" */
 .gif-sheet-preview {
-    flex: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10005;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 12px;
-    margin-top: 8px;
-    padding: 10px;
-    border-radius: 14px;
-    background: #F3E5F5;
+    justify-content: center;
+    gap: 14px;
+    box-sizing: border-box;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    background: rgba(10, 10, 14, 0.88);
+    animation: gifPreviewFade 0.18s ease-out;
 }
 
 .gif-sheet-preview-img {
-    flex: none;
-    width: auto;
+    display: block;
+    flex: 0 1 auto;
+    min-height: 0;
+    /* small pictures are scaled up to a comfortable size; tall ones are
+       capped so the buttons always stay on screen */
+    width: min(92vw, 520px);
     height: auto;
-    max-width: 120px;
-    max-height: 120px;
-    border-radius: 8px;
+    max-height: 60vh;
+    max-height: 60dvh;
+    object-fit: contain;
+    border-radius: 18px;
     background: #ffffff;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: gifPreviewPop 0.22s ease-out;
+}
+
+.gif-sheet-preview-title {
+    margin: 0;
+    max-width: min(92vw, 520px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #ffffff;
+    font-size: 14px;
+    opacity: 0.85;
+}
+
+.gif-sheet-preview-title[hidden] {
+    display: none;
 }
 
 .gif-sheet-preview-actions {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    flex: 1;
-    min-width: 0;
+    gap: 10px;
+    width: min(92vw, 360px);
 }
 
 .gif-sheet-send,
 .gif-sheet-cancel {
-    min-height: 44px;
-    border-radius: 12px;
-    font-size: 14px;
+    min-height: 52px;
+    border-radius: 14px;
+    font-size: 16px;
     font-weight: 700;
     cursor: pointer;
 }
 
 .gif-sheet-send {
-    border: none;
+    border: 2px solid #7B1FA2;
     background: #7B1FA2;
     color: #ffffff;
 }
 
 .gif-sheet-cancel {
-    border: 1px solid #7B1FA2;
-    background: #ffffff;
-    color: #7B1FA2;
+    border: 2px solid #ffffff;
+    background: transparent;
+    color: #ffffff;
 }
 
+@keyframes gifPreviewFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes gifPreviewPop {
+    from { transform: scale(0.94); }
+    to { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gif-sheet-preview,
+    .gif-sheet-preview-img { animation: none; }
+}
 .gif-sheet-attribution {
     flex: none;
     margin: 8px 0 0;
