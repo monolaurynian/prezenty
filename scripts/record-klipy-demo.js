@@ -137,6 +137,22 @@ async function record(options) {
         for (let i = 0; i < 8; i++) { await page.mouse.wheel(0, 40); await wait(90); }
         await wait(1800);
 
+        // 4b. The other KLIPY kinds, one tab each
+        const tabs = page.locator('#gifSheet .gif-sheet-tab');
+        if (await tabs.count()) {
+            await say('4b/7  Tabs for KLIPY stickers and memes too');
+            await tabs.nth(1).click();
+            await page.locator('#gifSheet .gif-sheet-item').first().waitFor();
+            await wait(2500);
+            await tabs.nth(2).click();
+            await page.locator('#gifSheet .gif-sheet-item').first().waitFor();
+            await wait(2500);
+            await tabs.nth(0).click();
+            await page.locator('#gifSheet .gif-sheet-item').first().waitFor();
+            await wait(1200);
+            note('GIF, sticker and meme tabs', (await tabs.count()) === 3);
+        }
+
         // 5. Searching
         await say('5/7  Searching KLIPY');
         const search = page.locator('#gifSheet .gif-sheet-search');

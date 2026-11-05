@@ -122,8 +122,8 @@
             .then(function (response) { return response.ok ? response.json() : null; })
             .then(function (config) {
                 if (!config || !config.enabled || !config.klipyKey) return null;
-                return loadScriptOnce('/gif-message.js?v=4', function () { return !!window.GifMessage; })
-                    .then(function () { return loadScriptOnce('/gif-klipy.js?v=6', function () { return !!window.GifKlipy; }); })
+                return loadScriptOnce('/gif-message.js?v=5', function () { return !!window.GifMessage; })
+                    .then(function () { return loadScriptOnce('/gif-klipy.js?v=7', function () { return !!window.GifKlipy; }); })
                     .then(function () {
                         window.GifKlipy.configure(config);
                         return window.GifKlipy.resolve([slug]);

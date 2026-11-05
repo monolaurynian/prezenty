@@ -757,3 +757,84 @@ html.gif-lightbox-open body {
 .gif-lightbox-credit[hidden] {
     display: none;
 }
+
+/* --- KLIPY tabs: GIF-y / Naklejki / Memy -------------------------------- */
+.gif-sheet-tabs {
+    display: flex;
+    flex: none;
+    gap: 6px;
+    margin: 0 0 8px;
+    padding: 4px;
+    border-radius: 24px;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.gif-sheet-tabs[hidden],
+.gif-sheet-tab[hidden] {
+    display: none;
+}
+
+.gif-sheet-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 8px;
+    border: none;
+    border-radius: 20px;
+    background: transparent;
+    color: #4a5568;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.gif-sheet-tab[aria-selected="true"] {
+    background: #7B1FA2;
+    color: #ffffff;
+}
+
+.gif-sheet-tab:focus-visible {
+    outline: 2px solid #1E88E5;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gif-sheet-tab { transition: none; }
+}
+
+/* --- Stickers are cut-outs with a transparent background ---------------- */
+.gif-sheet-item.is-sticker,
+.gif-sheet-preview-img.is-sticker {
+    background-color: #f8f9fa;
+    background-image:
+        linear-gradient(45deg, #e9ecef 25%, transparent 25%, transparent 75%, #e9ecef 75%),
+        linear-gradient(45deg, #e9ecef 25%, transparent 25%, transparent 75%, #e9ecef 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 8px 8px;
+}
+
+/* In the chat a sticker has no bubble around it */
+.chat-bubble.has-sticker,
+.chat-bubble.has-sticker.from-me,
+.chat-bubble.has-sticker.from-them {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+}
+
+/* (the "from me" bubble forces white text with !important; a sticker has no
+   purple behind it, so the time must be dark) */
+.chat-bubble.has-sticker.from-me,
+.chat-bubble.has-sticker.from-me *,
+.chat-bubble.has-sticker .chat-time {
+    color: #2d3748 !important;
+}
+
+.chat-gif-zoom.is-sticker .chat-gif,
+.chat-gif-wrap.is-sticker .chat-gif {
+    background: transparent;
+}

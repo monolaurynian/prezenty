@@ -57,7 +57,7 @@ test.describe('gif token', () => {
     const OK = '[gif:giphy:xT4uQulxzV39haRFjG:200x150]';
 
     test('a valid token parses and round-trips', () => {
-        expect(GifMessage.parseGif(OK)).toEqual({ provider: 'giphy', id: 'xT4uQulxzV39haRFjG', width: 200, height: 150 });
+        expect(GifMessage.parseGif(OK)).toEqual({ provider: 'giphy', kind: 'gif', id: 'xT4uQulxzV39haRFjG', width: 200, height: 150 });
         expect(GifMessage.parseGif('  ' + OK + '\n')).not.toBeNull(); // surrounding whitespace is trimmed
         expect(GifMessage.buildGifToken('giphy', 'xT4uQulxzV39haRFjG', 200, 150)).toBe(OK);
         expect(GifMessage.buildGifToken('demo', 'hura', 200.4, 199.6)).toBe('[gif:demo:hura:200x200]');

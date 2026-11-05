@@ -62,7 +62,8 @@ const U = (slug, size, ext) => `https://static.klipy.com/ii/testhash0123456789ab
  */
 async function mockKlipy(page, handlers) {
     const h = handlers || {};
-    const calls = { api: [], shares: [], items: [], media: [] };
+    // items: slugs asked of the GIF folder; otherItems: of the sticker / meme folders
+    const calls = { api: [], shares: [], items: [], otherItems: [], media: [], folders: [] };
     await page.route('**/api/wiadomosci/gif-config', route => route.fulfill({ json: {
         enabled: true, provider: 'klipy', apiKey: KEY, rating: 'pg', contentFilter: 'high', klipyKey: KEY
     } }));
@@ -70,17 +71,20 @@ async function mockKlipy(page, handlers) {
         const request = route.request();
         const url = new URL(request.url());
         calls.api.push({ method: request.method(), url });
-        const prefix = `/api/v1/${KEY}/gifs/`;
-        if (!url.pathname.startsWith(prefix)) {
+        // GIFs live under /gifs/, stickers under /stickers/, memes under /static-memes/
+        const found = url.pathname.match(new RegExp(`^/api/v1/${KEY}/(gifs|stickers|static-memes)/`));
+        if (!found) {
             return route.fulfill({ status: 404, json: { result: false, errors: { message: ['The provided API key is invalid.'] } } });
         }
+        const prefix = found[0];
+        calls.folders.push(found[1]);
         const tail = url.pathname.slice(prefix.length);
         if (tail.startsWith('share/')) {
             calls.shares.push({ slug: decodeURIComponent(tail.slice(6)), body: request.postDataJSON() });
             return route.fulfill({ json: { result: true } });
         }
         if (tail === 'items') {
-            calls.items.push(url.searchParams.get('slugs'));
+            (found[1] === 'gifs' ? calls.items : calls.otherItems).push(url.searchParams.get('slugs'));
             if (h.items) return h.items(route, url);
             return route.fulfill({ json: page1(url.searchParams.get('slugs').split(',').map(s => klipyItem(s, 220, 220, s))) });
         }
@@ -120,7 +124,7 @@ async function postGroupBody(page, body) {
 test.describe('klipy token', () => {
     test('a slug token parses, round-trips and has no computed URL', () => {
         const token = '[gif:klipy:hello-hi-662:220x220]';
-        expect(GifMessage.parseGif(token)).toEqual({ provider: 'klipy', id: 'hello-hi-662', width: 220, height: 220 });
+        expect(GifMessage.parseGif(token)).toEqual({ provider: 'klipy', kind: 'gif', id: 'hello-hi-662', width: 220, height: 220 });
         expect(GifMessage.buildGifToken('klipy', 'hello-hi-662', 220, 220)).toBe(token);
         // KLIPY forbids rebuilding URLs: the page must look them up
         expect(GifMessage.gifUrls(GifMessage.parseGif(token))).toBeNull();
@@ -403,6 +407,101 @@ test.describe('klipy sending', () => {
 });
 
 // ===========================================================================
+// Tabs: GIF-y / Naklejki / Memy (KLIPY has an endpoint folder for each)
+// ===========================================================================
+
+test.describe('klipy tabs', () => {
+    // Items for whichever folder was asked, typed the way that folder's items are
+    const TYPE = { gifs: 'gif', stickers: 'sticker', 'static-memes': 'meme' };
+    const folderOf = url => url.pathname.split('/')[4];
+    const byFolder = (route, url) => {
+        const folder = folderOf(url);
+        const q = url.searchParams.get('q');
+        const slugs = url.searchParams.get('slugs');
+        const names = slugs ? slugs.split(',') : [`${TYPE[folder]}-${q || 'top'}-1`, `${TYPE[folder]}-${q || 'top'}-2`];
+        return route.fulfill({ json: page1(names.map(n => klipyItem(n, 200, 150, n, { type: TYPE[folder] }))) });
+    };
+
+    test('each tab asks its own KLIPY folder, the typed words follow you, and a tab you left comes back untouched', async ({ page }) => {
+        const calls = await mockKlipy(page, { trending: byFolder, search: byFolder });
+        await openPage(page, GROUP);
+        await openKlipyPicker(page);
+        const tabs = page.locator(`${SHEET} .gif-sheet-tab`);
+        await expect(tabs).toHaveText(['GIF-y', 'Naklejki', 'Memy']);
+        await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
+        await expect(page.locator(`${SHEET} .gif-sheet-search`)).toHaveAttribute('placeholder', 'Search KLIPY');
+
+        await tabs.nth(1).click();
+        await expect(page.locator(`${SHEET} .gif-sheet-item.is-sticker`).first()).toBeVisible();
+        await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toHaveAttribute('aria-label', /^Naklejka: sticker-top-1/);
+        await page.locator(`${SHEET} .gif-sheet-search`).fill('kot');
+        await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toHaveAttribute('aria-label', /sticker-kot-1/);
+
+        await tabs.nth(2).click();   // the words typed on the sticker tab are used here too
+        await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toHaveAttribute('aria-label', /^Mem: meme-kot-1/);
+        expect(calls.folders).toEqual(expect.arrayContaining(['gifs', 'stickers', 'static-memes']));
+
+        const before = calls.api.length;
+        await tabs.nth(1).click();   // back to stickers with the same words: no new request
+        await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toHaveAttribute('aria-label', /sticker-kot-1/);
+        expect(calls.api.length).toBe(before);
+    });
+
+    test('a sticker is sent as its own kind: "Wyślij naklejkę", a sticker token, the sticker share ping', async ({ page }) => {
+        const calls = await mockKlipy(page, { trending: byFolder, search: byFolder });
+        await openPage(page, GROUP);
+        await openKlipyPicker(page);
+        await page.locator(`${SHEET} .gif-sheet-tab`).nth(1).click();
+        await page.locator(`${SHEET} .gif-sheet-item.is-sticker`).first().click();
+        const send = page.locator(`${SHEET} .gif-sheet-send`);
+        await expect(send).toHaveText('Wyślij naklejkę');
+        const sent = page.waitForResponse(r => /\/api\/wiadomosci\/group$/.test(r.url()) && r.request().method() === 'POST');
+        await send.click();
+        expect((await sent).request().postDataJSON().body).toBe('[gif:klipy-sticker:sticker-top-1:200x150]');
+        await expect.poll(() => calls.shares.length).toBe(1);
+        expect(calls.shares[0].slug).toBe('sticker-top-1');
+        expect(calls.folders).toContain('stickers');
+    });
+
+    test('a sticker in the chat has no bubble, a KLIPY mark, and is looked up in the sticker folder after a reload', async ({ page }) => {
+        const calls = await mockKlipy(page, { items: byFolder });
+        await openPage(page, GROUP);
+        expect(await postGroupBody(page, '[gif:klipy-sticker:naklejka-tuz-tuz-801:200x150]')).toBe(200);
+        calls.folders.length = 0;
+        await page.evaluate(() => window.loadThreadMessages());
+        const bubble = page.locator('.chat-bubble.has-sticker').last();
+        await expect(bubble.locator('img.chat-gif')).toBeVisible();
+        expect(await bubble.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
+        expect(await bubble.locator('.chat-gif-zoom').evaluate(el => getComputedStyle(el, '::after').content)).toBe('"KLIPY"');
+        expect(calls.folders).toEqual(['stickers']);
+        // the list says what it is
+        await page.goto('/wiadomosci', { waitUntil: 'load' });
+        await expect(page.locator('.thread-row', { hasText: 'Czat grupowy' }).locator('.thread-last')).toHaveText(GifMessage.PREVIEW_LABELS.sticker);
+    });
+
+    test('a meme that KLIPY no longer has says so in its own words', async ({ page }) => {
+        await mockKlipy(page, { items: (route) => route.fulfill({ json: page1([]) }) });
+        await openPage(page, GROUP);
+        expect(await postGroupBody(page, '[gif:klipy-meme:usuniety-mem-802:200x150]')).toBe(200);
+        await page.evaluate(() => window.loadThreadMessages());
+        await expect(page.locator('.chat-msg-row').last().locator('.chat-gif-missing')).toHaveText('Ten mem jest niedostępny');
+    });
+
+    test('tokens: stickers and memes round-trip, only KLIPY has them, and they say what they are in lists', () => {
+        const sticker = GifMessage.buildGifToken('klipy', 'naklejka-1', 200, 150, 'sticker');
+        expect(sticker).toBe('[gif:klipy-sticker:naklejka-1:200x150]');
+        expect(GifMessage.parseGif(sticker)).toEqual({ provider: 'klipy', kind: 'sticker', id: 'naklejka-1', width: 200, height: 150 });
+        expect(GifMessage.parseGif('[gif:klipy-meme:mem-1:200x150]').kind).toBe('meme');
+        expect(GifMessage.parseGif('[gif:klipy:gif-1:200x150]').kind).toBe('gif');
+        expect(GifMessage.buildGifToken('giphy', 'abcdef', 200, 150, 'sticker')).toBeNull();
+        expect(GifMessage.buildGifToken('klipy', 'x-1', 200, 150, 'clip')).toBeNull();
+        expect(GifMessage.parseGif('[gif:klipy-clip:x-1:200x150]')).toBeNull();
+        expect(GifMessage.gifPreviewText(sticker)).toBe(GifMessage.PREVIEW_LABELS.sticker);
+        expect(GifMessage.gifPreviewText('[gif:klipy-meme:mem-1:200x150]')).toBe(GifMessage.PREVIEW_LABELS.meme);
+    });
+});
+
+// ===========================================================================
 // Showing KLIPY GIFs that are already in a conversation
 // ===========================================================================
 
@@ -422,7 +521,8 @@ test.describe('klipy GIFs in a conversation', () => {
         await page.evaluate(() => window.loadThreadMessages());
 
         const shown = page.locator('.chat-bubble.has-gif img.chat-gif');
-        await expect(shown.last()).toBeVisible();
+        // (the shared chat holds pictures from earlier tests: wait for THIS test's)
+        await expect(page.locator(`img.chat-gif[src="${U('album-zdjec-901', 'sm', 'webp')}"]`).last()).toBeVisible();
         const sources = await shown.evaluateAll(list => list.map(i => i.getAttribute('src')));
         expect(sources).toContain(U('album-zdjec-901', 'sm', 'webp'));
         expect(sources).toContain(U('drugi-obrazek-902', 'sm', 'webp'));

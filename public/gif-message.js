@@ -26,12 +26,30 @@
     // provider : id : width x height. Ids are letters, digits, "_" and "-"
     // (GIPHY ids are ~20 characters; KLIPY slugs are a title plus a number,
     // e.g. "hello-hi-662", so they can be longer).
-    const TOKEN = /^\[gif:(giphy|klipy|demo):([A-Za-z0-9_-]{3,120}):(\d{2,4})x(\d{2,4})\]$/;
+    //
+    // KLIPY also has stickers and memes. They are the same kind of message,
+    // told apart by the provider part of the token:
+    //     [gif:klipy:slug:WxH]           a GIF
+    //     [gif:klipy-sticker:slug:WxH]   a sticker
+    //     [gif:klipy-meme:slug:WxH]      a meme
+    // parseGif() answers with provider "klipy" and kind "gif" | "sticker" | "meme".
+    const TOKEN = /^\[gif:(giphy|klipy|klipy-sticker|klipy-meme|demo):([A-Za-z0-9_-]{3,120}):(\d{2,4})x(\d{2,4})\]$/;
     const PROVIDERS = ['giphy', 'klipy', 'demo'];
+    const KINDS = ['gif', 'sticker', 'meme'];
+    // token segment -> { provider, kind }
+    const SEGMENTS = {
+        giphy: { provider: 'giphy', kind: 'gif' },
+        klipy: { provider: 'klipy', kind: 'gif' },
+        'klipy-sticker': { provider: 'klipy', kind: 'sticker' },
+        'klipy-meme': { provider: 'klipy', kind: 'meme' },
+        demo: { provider: 'demo', kind: 'gif' }
+    };
     // Longest id each provider can really have. KLIPY slugs are a title plus
     // a number; GIPHY ids are short random strings. Keeping GIPHY and demo
     // ids tight means a token for them cannot be stretched to the KLIPY limit.
     const MAX_ID_LENGTH = { giphy: 40, demo: 40, klipy: 120 };
+    // How wide each kind is drawn in a chat bubble at most
+    const MAX_WIDTH = { gif: 220, sticker: 160, meme: 240 };
     const MIN_SIDE = 20;
     const MAX_SIDE = 2000;
 
@@ -47,17 +65,26 @@
         const width = Number(match[3]);
         const height = Number(match[4]);
         if (!inRange(width) || !inRange(height)) return null;
-        if (match[2].length > MAX_ID_LENGTH[match[1]]) return null;
-        return { provider: match[1], id: match[2], width: width, height: height };
+        const segment = SEGMENTS[match[1]];
+        if (match[2].length > MAX_ID_LENGTH[segment.provider]) return null;
+        return { provider: segment.provider, kind: segment.kind, id: match[2], width: width, height: height };
     }
 
-    /** The token to store for a picked GIF, or null if any part is invalid. */
-    function buildGifToken(provider, id, width, height) {
+    /**
+     * The token to store for a picked GIF (or KLIPY sticker / meme: pass
+     * kind "sticker" | "meme"), or null if any part is invalid.
+     */
+    function buildGifToken(provider, id, width, height, kind) {
         if (PROVIDERS.indexOf(provider) === -1) return null;
         const w = Math.round(Number(width));
         const h = Math.round(Number(height));
         if (!inRange(w) || !inRange(h)) return null;
-        const token = '[gif:' + provider + ':' + id + ':' + w + 'x' + h + ']';
+        let segment = provider;
+        if (kind && kind !== 'gif') {
+            if (provider !== 'klipy' || KINDS.indexOf(kind) === -1) return null;   // only KLIPY has them
+            segment = 'klipy-' + kind;
+        }
+        const token = '[gif:' + segment + ':' + id + ':' + w + 'x' + h + ']';
         return parseGif(token) ? token : null;
     }
 
@@ -67,7 +94,7 @@
      * Built from the validated id only.
      */
     function gifUrls(gif) {
-        if (!gif || !parseGif(buildGifToken(gif.provider, gif.id, gif.width, gif.height))) return null;
+        if (!gif || !parseGif(buildGifToken(gif.provider, gif.id, gif.width, gif.height, gif.kind))) return null;
         // KLIPY requires its media URLs to be used exactly as its API returns
         // them (never rebuilt from an id), so there is nothing to compute
         // here: gif-klipy.js looks them up by slug.
@@ -88,7 +115,7 @@
 
     /** Size to draw at: never wider than maxWidth, aspect ratio kept. */
     function displaySize(gif, maxWidth) {
-        const cap = Number.isFinite(maxWidth) && maxWidth > 0 ? maxWidth : 220;
+        const cap = Number.isFinite(maxWidth) && maxWidth > 0 ? maxWidth : (MAX_WIDTH[gif && gif.kind] || 220);
         const width = Math.min(cap, gif.width);
         return { width: Math.round(width), height: Math.max(1, Math.round(gif.height * width / gif.width)) };
     }
@@ -121,8 +148,14 @@
 
     /** One-line stand-in for conversation lists, notifications and excerpts. */
     const PREVIEW_LABEL = '\uD83C\uDF9E\uFE0F GIF';
+    const PREVIEW_LABELS = {
+        gif: PREVIEW_LABEL,
+        sticker: '\uD83C\uDFF7\uFE0F Naklejka',
+        meme: '\uD83D\uDDBC\uFE0F Mem'
+    };
     function gifPreviewText(body) {
-        return parseGif(body) ? PREVIEW_LABEL : null;
+        const gif = parseGif(body);
+        return gif ? PREVIEW_LABELS[gif.kind] : null;
     }
 
     const api = {
@@ -132,7 +165,9 @@
         displaySize: displaySize,
         customerId: customerId,
         gifPreviewText: gifPreviewText,
-        PREVIEW_LABEL: PREVIEW_LABEL
+        PREVIEW_LABEL: PREVIEW_LABEL,
+        PREVIEW_LABELS: PREVIEW_LABELS,
+        KINDS: KINDS
     };
 
     if (typeof module !== 'undefined' && module.exports) {

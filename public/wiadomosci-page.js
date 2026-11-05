@@ -75,9 +75,9 @@
                 const token = holder && holder.getAttribute('data-gif-token');
                 const parsed = token && parsedGif(token);
                 // For KLIPY, forget the URLs so a retry asks the API again
-                if (parsed && parsed.provider === 'klipy' && window.GifKlipy) window.GifKlipy.forget(parsed.id);
+                if (parsed && parsed.provider === 'klipy' && window.GifKlipy) window.GifKlipy.forget(parsed.id, parsed.kind);
                 const replacement = document.createElement('div');
-                replacement.innerHTML = parsed ? gifFailedHtml(token) : GIF_MISSING_HTML;
+                replacement.innerHTML = parsed ? gifFailedHtml(token) : GIF_MISSING_HTML;   // (the kind picks the wording)
                 // replace the whole GIF (picture + its zoom/play buttons)
                 (holder || img.closest('.chat-gif-toggle') || img).replaceWith(replacement.firstElementChild);
             }, true);
@@ -89,7 +89,7 @@
                 if (!retry) return;
                 const gif = parsedGif(retry.getAttribute('data-gif-token'));
                 if (!gif) return;
-                if (gif.provider === 'klipy' && window.GifKlipy) window.GifKlipy.forget(gif.id);
+                if (gif.provider === 'klipy' && window.GifKlipy) window.GifKlipy.forget(gif.id, gif.kind);
                 const note = retry.closest('.chat-gif-failed');
                 const parent = note.parentElement;
                 note.outerHTML = gifHtml(gif);
@@ -291,8 +291,8 @@
         // The message body for a picked GIF, or null (with a toast) if the
         // pick is not valid. Never fall back to sending the typed draft.
         function gifToken(gif) {
-            const token = window.GifMessage.buildGifToken(gif.provider, gif.id, gif.width, gif.height);
-            if (!token) showToast('Nie można wysłać tego GIF-a', 'error');
+            const token = window.GifMessage.buildGifToken(gif.provider, gif.id, gif.width, gif.height, gif.kind);
+            if (!token) showToast('Nie można wysłać tego obrazka', 'error');
             return token;
         }
 
@@ -557,9 +557,22 @@
             return window.GifMessage ? window.GifMessage.parseGif(text) : null;
         }
 
-        // Extra bubble class so a GIF gets snug padding
+        // Extra bubble class so a GIF gets snug padding; a sticker also loses
+        // the bubble background (it is a cut-out picture)
         function gifBubbleClass(text) {
-            return parsedGif(text) ? ' has-gif' : '';
+            const gif = parsedGif(text);
+            if (!gif) return '';
+            return gif.kind === 'sticker' ? ' has-gif has-sticker' : ' has-gif';
+        }
+
+        // Wording per kind (GIF / sticker / meme): what it is called in notes
+        const KIND_WORDS = {
+            gif: { gone: 'Ten GIF jest niedostępny', failed: 'Nie udało się wczytać GIF-a', loading: 'GIF się ładuje', alt: 'Animowany GIF', still: 'GIF - nieruchomy podgląd', play: 'Odtwórz GIF', zoom: 'Powiększ GIF' },
+            sticker: { gone: 'Ta naklejka jest niedostępna', failed: 'Nie udało się wczytać naklejki', loading: 'Naklejka się ładuje', alt: 'Naklejka', still: 'Naklejka - nieruchomy podgląd', play: 'Odtwórz naklejkę', zoom: 'Powiększ naklejkę' },
+            meme: { gone: 'Ten mem jest niedostępny', failed: 'Nie udało się wczytać memu', loading: 'Mem się ładuje', alt: 'Mem', still: 'Mem', play: 'Odtwórz mem', zoom: 'Powiększ mem' }
+        };
+        function kindWords(kind) {
+            return KIND_WORDS[kind] || KIND_WORDS.gif;
         }
 
         function prefersReducedMotion() {
@@ -567,14 +580,18 @@
         }
 
         // The GIF is gone for good (the provider no longer has it)
-        const GIF_MISSING_HTML = '<div class="chat-gif-missing">Ten GIF jest niedostępny</div>';
+        function gifMissingHtml(kind) {
+            return `<div class="chat-gif-missing">${kindWords(kind).gone}</div>`;
+        }
+        const GIF_MISSING_HTML = gifMissingHtml('gif');
 
         // The GIF could not be LOADED right now (network, a provider rate
         // limit, a blocked host): that is temporary, so say so and offer a retry.
         // `token` is the validated message token, safe to put in an attribute.
         function gifFailedHtml(token) {
+            const parsed = parsedGif(token);
             return `<div class="chat-gif-missing chat-gif-failed">` +
-                `<span>Nie udało się wczytać GIF-a</span> ` +
+                `<span>${kindWords(parsed && parsed.kind).failed}</span> ` +
                 `<button type="button" class="chat-gif-retry" data-gif-token="${escapeHtml(token)}">Spróbuj ponownie</button></div>`;
         }
 
@@ -592,16 +609,19 @@
 
         function gifHtml(gif) {
             let urls = window.GifMessage.gifUrls(gif);
-            const size = window.GifMessage.displaySize(gif, 220);
+            const size = window.GifMessage.displaySize(gif);
+            const words = kindWords(gif.kind);
+            // stickers are cut-outs: no backdrop, a smaller size
+            const kindClass = gif.kind === 'sticker' ? ' is-sticker' : '';
             if (gif.provider === 'klipy') {
                 // KLIPY hands out the picture URLs through its API (they are
                 // not rebuilt from the id). Known -> draw it now; unknown ->
                 // a slot of the final size, filled in by hydrateKlipyGifs().
-                const entry = window.GifKlipy ? window.GifKlipy.cached(gif.id) : null;
-                if (entry === null) return GIF_MISSING_HTML;   // KLIPY no longer has it
+                const entry = window.GifKlipy ? window.GifKlipy.cached(gif.id, gif.kind) : null;
+                if (entry === null) return gifMissingHtml(gif.kind);   // KLIPY no longer has it
                 if (!entry) {
-                    return `<span class="chat-gif-slot" role="img" aria-label="GIF się ładuje"` +
-                        ` data-klipy-slug="${escapeHtml(gif.id)}" data-w="${gif.width}" data-h="${gif.height}"` +
+                    return `<span class="chat-gif-slot" role="img" aria-label="${words.loading}"` +
+                        ` data-klipy-slug="${escapeHtml(gif.id)}" data-kind="${gif.kind}" data-w="${gif.width}" data-h="${gif.height}"` +
                         ` style="width:${size.width}px;aspect-ratio:${gif.width}/${gif.height}"></span>`;
                 }
                 urls = entry.urls;
@@ -611,7 +631,7 @@
             // What the zoom modal needs: the chat-size pictures plus the
             // bigger ones (all URLs built by us / returned by the provider)
             const zoom = urls.zoom || { animated: urls.animated, still: urls.still };
-            const token = window.GifMessage.buildGifToken(gif.provider, gif.id, gif.width, gif.height);
+            const token = window.GifMessage.buildGifToken(gif.provider, gif.id, gif.width, gif.height, gif.kind);
             // KLIPY asks for its mark wherever its content is shown: a small corner
             // watermark on the picture and "Powered by KLIPY" in the zoom modal
             const isKlipy = gif.provider === 'klipy';
@@ -622,18 +642,18 @@
                 ` data-zoom-animated="${escapeHtml(zoom.animated)}" data-zoom-still="${escapeHtml(zoom.still)}"` +
                 ` data-w="${gif.width}" data-h="${gif.height}"` +
                 (isKlipy ? ' data-credit="Powered by KLIPY"' : '');
-            if (prefersReducedMotion()) {
+            if (prefersReducedMotion() && urls.still !== urls.animated) {
                 // Reduced motion: a still picture, tap to play; zooming has
                 // its own corner button so the two taps do not collide
-                return `<span class="chat-gif-wrap${markClass}" data-gif-token="${escapeHtml(token)}">` +
-                    `<button type="button" class="chat-gif-toggle is-still" aria-label="Odtwórz GIF"` +
+                return `<span class="chat-gif-wrap${markClass}${kindClass}" data-gif-token="${escapeHtml(token)}">` +
+                    `<button type="button" class="chat-gif-toggle is-still" aria-label="${words.play}"` +
                     ` data-still="${escapeHtml(urls.still)}" data-animated="${escapeHtml(urls.animated)}">` +
-                    `<img class="chat-gif" src="${escapeHtml(urls.still)}" ${dims} alt="GIF - nieruchomy podgląd" loading="lazy"></button>` +
-                    `<button type="button" class="chat-gif-zoom chat-gif-zoom-badge" aria-label="Powiększ GIF"${zoomData}>` +
+                    `<img class="chat-gif" src="${escapeHtml(urls.still)}" ${dims} alt="${words.still}" loading="lazy"></button>` +
+                    `<button type="button" class="chat-gif-zoom chat-gif-zoom-badge" aria-label="${words.zoom}"${zoomData}>` +
                     GIF_ZOOM_ICON + `</button></span>`;
             }
-            return `<button type="button" class="chat-gif-zoom${markClass}" aria-label="Powiększ GIF"${zoomData}>` +
-                `<img class="chat-gif" src="${escapeHtml(urls.animated)}" ${dims} alt="Animowany GIF" loading="lazy"></button>`;
+            return `<button type="button" class="chat-gif-zoom${markClass}${kindClass}" aria-label="${words.zoom}"${zoomData}>` +
+                `<img class="chat-gif" src="${escapeHtml(urls.animated)}" ${dims} alt="${words.alt}" loading="lazy"></button>`;
         }
 
         // "expand" arrows for the zoom button (inline: no icon font needed)
@@ -654,11 +674,20 @@
             attempt = attempt || 0;
             const slots = Array.prototype.slice.call(container.querySelectorAll('.chat-gif-slot[data-klipy-slug]'));
             if (!slots.length) return;
-            const tokenOf = (slot) => `[gif:klipy:${slot.getAttribute('data-klipy-slug')}:${slot.getAttribute('data-w')}x${slot.getAttribute('data-h')}]`;
-            const missing = (slot) => { if (slot.isConnected) slot.outerHTML = GIF_MISSING_HTML; };
+            const kindOf = (slot) => slot.getAttribute('data-kind') || 'gif';
+            // the token segment: "klipy" for a GIF, "klipy-sticker", "klipy-meme"
+            const tokenOf = (slot) => {
+                const kind = kindOf(slot);
+                const segment = kind === 'gif' ? 'klipy' : 'klipy-' + kind;
+                return `[gif:${segment}:${slot.getAttribute('data-klipy-slug')}:${slot.getAttribute('data-w')}x${slot.getAttribute('data-h')}]`;
+            };
+            const missing = (slot) => { if (slot.isConnected) slot.outerHTML = gifMissingHtml(kindOf(slot)); };
             gifConfigReady.then(() => {
                 if (!window.GifKlipy || !window.GifKlipy.hasKey()) { slots.forEach(missing); return; }
-                return window.GifKlipy.resolve(slots.map(slot => slot.getAttribute('data-klipy-slug')));
+                // one batched lookup per kind (each kind has its own KLIPY endpoint)
+                const byKind = {};
+                slots.forEach(slot => { (byKind[kindOf(slot)] = byKind[kindOf(slot)] || []).push(slot.getAttribute('data-klipy-slug')); });
+                return Promise.all(Object.keys(byKind).map(kind => window.GifKlipy.resolve(byKind[kind], kind)));
             }).then(() => {
                 const unresolved = [];
                 slots.forEach(slot => {
@@ -667,7 +696,7 @@
                     const gif = parsedGif(tokenOf(slot));
                     if (!gif) { missing(slot); return; }
                     // undefined = the lookup itself failed (offline, rate limit)
-                    if (window.GifKlipy.cached(slug) === undefined) { unresolved.push(slot); return; }
+                    if (window.GifKlipy.cached(slug, gif.kind) === undefined) { unresolved.push(slot); return; }
                     slot.outerHTML = gifHtml(gif); // null (gone) draws the "niedostępny" note
                 });
                 if (!unresolved.length) return;
