@@ -1,17 +1,19 @@
 /*
  * GIF picker: a bottom sheet (centred card on desktop) to search or browse
- * GIFs and send one.
+ * GIFs and send one. With KLIPY it also has stickers and memes: three cards
+ * side by side, swiped like the emoji picker's categories (native scroll
+ * snapping), with tabs on top and a drawn page scrollbar underneath.
  *
  *   GifPicker.init(config)                  config = GET /api/wiadomosci/gif-config
  *   GifPicker.isEnabled()
- *   GifPicker.open({ onPick(gif), trigger })  gif = { provider, id, width, height }
+ *   GifPicker.open({ onPick(gif), trigger })  gif = { provider, kind, id, width, height }
  *
- * Providers are small adapters ({ search(query, offset, cfg) -> page }), so
- * another one (e.g. KLIPY) is one more entry in PROVIDERS. GIPHY must be
- * called from the browser (its terms), so this file talks to api.giphy.com
- * directly with the key the server handed over.
+ * Providers are small adapters ({ search(query, offset, cfg, kind) -> page }),
+ * so another one is one more entry in PROVIDERS. GIPHY must be called from
+ * the browser (its terms), so this file talks to api.giphy.com directly with
+ * the key the server handed over.
  *
- * Choosing is two steps on purpose: tapping a GIF previews it (animated)
+ * Choosing is two steps on purpose: tapping a picture previews it (animated)
  * and only "Wyślij GIF" sends it. Messages here are anonymous and cannot be
  * unsent, so a stray tap must not send.
  *
@@ -56,13 +58,14 @@
     const GIPHY_HOST = 'https://api.giphy.com/v1/gifs/';
 
     // Adapter contract:
-    //   search(query, cursor, cfg) -> { items, hasMore, next }
+    //   search(query, cursor, cfg, kind) -> { items, hasMore, next }
     //     `cursor` starts at 0 and is whatever the adapter returned as `next`
     //     last time (an offset for GIPHY, a page number for KLIPY)
-    //     item = { provider, id, width, height, title, analytics, urls? }
+    //     item = { provider, kind?, id, width, height, title, analytics, urls? }
     //     `urls` = { still, animated } when the provider hands out exact URLs
     //     (KLIPY); otherwise they are built from the id (gif-message.js).
     //   onSent(item, query)  optional, after the user sends the GIF
+    //   kinds                optional: ['gif', 'sticker', 'meme'] = show one tab each
     const PROVIDERS = {
         giphy: {
             label: 'GIPHY',
@@ -118,7 +121,7 @@
             // (docs.klipy.com/attribution). It stays English on purpose.
             placeholder: 'Search KLIPY',
             searchLabel: 'Szukaj w KLIPY',
-            // KLIPY has three kinds of pictures; the panel shows a tab for each
+            // KLIPY has three kinds of pictures; the panel shows a card and a tab for each
             kinds: ['gif', 'sticker', 'meme'],
             async search(query, page, cfg, kind) {
                 const result = await root.GifKlipy.search(query, page || 1, kind || 'gif');
@@ -161,6 +164,7 @@
     const EMPTY_LABELS = { gif: 'Brak GIF-ów.', sticker: 'Brak naklejek.', meme: 'Brak memów.' };
     const ITEM_LABELS = { gif: 'GIF', sticker: 'Naklejka', meme: 'Mem' };
     const PREVIEW_LABELS = { gif: 'Podgląd GIF-a', sticker: 'Podgląd naklejki', meme: 'Podgląd memu' };
+    const MORE_LABEL = 'Pokaż więcej';
 
     // ------------------------------------------------------------------
     // DOM
@@ -171,6 +175,10 @@
         if (className) el.className = className;
         if (text !== undefined) el.textContent = text;
         return el;
+    }
+
+    function reducedMotion() {
+        return !!(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches);
     }
 
     function build() {
@@ -223,13 +231,13 @@
         searchbox.appendChild(search);
 
         // Tabs (only where the provider has more than GIFs: KLIPY). One search
-        // field serves all of them: it searches the tab you are on.
+        // field serves all of them: it searches the card you are on.
         const tabs = node('div', 'gif-sheet-tabs');
         tabs.setAttribute('role', 'tablist');
         tabs.setAttribute('aria-label', 'Rodzaj obrazka');
         tabs.hidden = true;
         const tabButtons = {};
-        // the purple pill that slides behind the selected tab
+        // the purple pill behind the selected tab; it follows the swipe
         const indicator = node('span', 'gif-sheet-tab-indicator');
         indicator.setAttribute('aria-hidden', 'true');
         tabs.appendChild(indicator);
@@ -244,25 +252,17 @@
             tabButtons[kind] = tab;
         });
 
-        const status = node('p', 'gif-sheet-status');
-        status.setAttribute('role', 'status');
-        status.setAttribute('aria-live', 'polite');
+        // The cards (one per kind, filled in by openSheet) sit side by side in
+        // a row that scrolls sideways and snaps to whole cards
+        const pager = node('div', 'gif-sheet-pager');
 
-        const results = node('div', 'gif-sheet-results');
-        results.id = 'gifSheetResults';
-        const colA = node('div', 'gif-sheet-col');
-        const colB = node('div', 'gif-sheet-col');
-        const grid = node('div', 'gif-sheet-grid');
-        grid.appendChild(colA);
-        grid.appendChild(colB);
-        results.appendChild(grid);
-
-        // "Pokaż więcej" is the last thing INSIDE the scrolling list, so it only
-        // shows up once you have scrolled down to the end of what is loaded
-        const more = node('button', 'gif-sheet-more', MORE_LABEL);
-        more.type = 'button';
-        more.hidden = true;
-        results.appendChild(more);
+        // Page scrollbar, drawn by us (a native one is unreliable on phones;
+        // same idea as the emoji picker's): a track with a thumb one card wide
+        const pagebar = node('div', 'gif-sheet-pagebar');
+        pagebar.setAttribute('aria-hidden', 'true');
+        pagebar.hidden = true;
+        const thumb = node('div', 'gif-sheet-pagethumb');
+        pagebar.appendChild(thumb);
 
         const preview = node('div', 'gif-sheet-preview');
         preview.hidden = true;
@@ -284,8 +284,8 @@
         sheet.appendChild(header);
         sheet.appendChild(searchbox);
         sheet.appendChild(tabs);
-        sheet.appendChild(status);
-        sheet.appendChild(results);
+        sheet.appendChild(pager);
+        sheet.appendChild(pagebar);
         sheet.appendChild(preview);
         sheet.appendChild(attribution);
 
@@ -293,16 +293,16 @@
         document.body.appendChild(sheet);
 
         els = {
-            overlay, sheet, title, close, expand, search, status, results, cols: [colA, colB],
-            more, preview, previewImg, send, cancel, attribution, tabs, tabButtons, indicator
+            overlay, sheet, title, close, expand, search, pager, pagebar, thumb,
+            preview, previewImg, send, cancel, attribution, tabs, tabButtons, indicator
         };
 
-        // The indicator is placed from measurements, so redo it when the size changes
-        root.addEventListener('resize', function () { if (state && state.kinds) placeIndicator(false); });
+        // The indicator and the thumb are placed from measurements: redo them on resize
+        root.addEventListener('resize', function () { if (state && state.kinds) paintPosition(); });
 
         tabs.addEventListener('click', function (e) {
             const tab = e.target instanceof Element && e.target.closest('.gif-sheet-tab');
-            if (tab) switchTab(tab.getAttribute('data-kind'));
+            if (tab) goToTab(tab.getAttribute('data-kind'));
         });
         // Arrow keys move between tabs (Home / End jump), like any tab list
         tabs.addEventListener('keydown', function (e) {
@@ -315,8 +315,8 @@
             else if (e.key === 'End') next = state.kinds.length - 1;
             if (next < 0) return;
             e.preventDefault();
-            switchTab(state.kinds[next]);
-            els.tabButtons[state.kind].focus();
+            goToTab(state.kinds[next]);
+            els.tabButtons[state.kinds[next]].focus();
         });
 
         overlay.addEventListener('click', closeSheet);
@@ -327,32 +327,41 @@
             if (state) state.userChose = true;
             setExpanded(!sheet.classList.contains('is-expanded'));
         });
-        // Dragging / wheeling the list resizes the panel first (see resizeBy);
+        // Dragging / wheeling a list resizes the panel first (see resizeBy);
         // these must be non-passive so the list can be told to stay put
-        results.addEventListener('touchstart', onResultsTouchStart, { passive: true });
-        results.addEventListener('touchmove', onResultsTouchMove, { passive: false });
-        results.addEventListener('touchend', onResultsTouchEnd, { passive: true });
-        results.addEventListener('touchcancel', onResultsTouchEnd, { passive: true });
-        results.addEventListener('wheel', onResultsWheel, { passive: false });
+        pager.addEventListener('touchstart', onResultsTouchStart, { passive: true });
+        pager.addEventListener('touchmove', onResultsTouchMove, { passive: false });
+        pager.addEventListener('touchend', onResultsTouchEnd, { passive: true });
+        pager.addEventListener('touchcancel', onResultsTouchEnd, { passive: true });
+        pager.addEventListener('wheel', onResultsWheel, { passive: false });
+        pager.addEventListener('scroll', onPagerScroll, { passive: true });
+        // A finger or wheel during a tab animation takes over from it
+        ['touchstart', 'wheel', 'pointerdown'].forEach(function (type) {
+            pager.addEventListener(type, function () { if (state) state.jump = null; }, { passive: true });
+        });
+        installPagebar();
         cancel.addEventListener('click', clearSelection);
         send.addEventListener('click', sendSelected);
-        more.addEventListener('click', function () { load(false); });
         search.addEventListener('input', function () {
             if (state.timer) clearTimeout(state.timer);
-            state.timer = setTimeout(function () { load(true); }, SEARCH_DELAY_MS);
+            state.timer = setTimeout(function () { load(activeTab(), true); }, SEARCH_DELAY_MS);
         });
         search.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 if (state.timer) clearTimeout(state.timer);
-                load(true);
+                load(activeTab(), true);
             }
         });
-        results.addEventListener('click', function (e) {
+        pager.addEventListener('click', function (e) {
             if (!(e.target instanceof Element)) return;
+            const card = e.target.closest('.gif-sheet-card');
+            if (!card) return;
+            const kind = card.getAttribute('data-kind');
+            if (e.target.closest('.gif-sheet-more')) { load(state.tabs[kind], false); return; }
             const button = e.target.closest('.gif-sheet-item');
             if (!button) return;
-            select(Number(button.getAttribute('data-index')), button);
+            select(kind, Number(button.getAttribute('data-index')), button);
         });
         sheet.addEventListener('keydown', function (e) {
             if (!state) return;
@@ -374,24 +383,49 @@
     }
 
     // ------------------------------------------------------------------
-    // Loading and rendering
+    // Cards: one per kind, each with its own list, state and "Pokaż więcej"
     // ------------------------------------------------------------------
 
-    const MORE_LABEL = 'Pokaż więcej';
-
-    function provider() {
-        return PROVIDERS[config.provider] || null;
+    function activeTab() {
+        return state.tabs[state.kind];
     }
 
-    function setStatus(message) {
-        els.status.textContent = message || '';
-        els.status.hidden = !message;
+    function makeTab(kind) {
+        const card = node('div', 'gif-sheet-card gif-sheet-results');
+        card.setAttribute('data-kind', kind);
+        card.setAttribute('role', 'tabpanel');
+        const status = node('p', 'gif-sheet-status');
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        status.hidden = true;
+        const colA = node('div', 'gif-sheet-col');
+        const colB = node('div', 'gif-sheet-col');
+        const grid = node('div', 'gif-sheet-grid');
+        grid.appendChild(colA);
+        grid.appendChild(colB);
+        // "Pokaż więcej" is the last thing INSIDE the scrolling card, so it only
+        // shows up once you have scrolled down to the end of what is loaded
+        const more = node('button', 'gif-sheet-more', MORE_LABEL);
+        more.type = 'button';
+        more.hidden = true;
+        card.appendChild(status);
+        card.appendChild(grid);
+        card.appendChild(more);
+        return {
+            kind: kind, card: card, status: status, cols: [colA, colB], more: more,
+            items: [], colHeights: [0, 0], cursor: 0, query: '', loaded: false, loading: false, ticket: 0
+        };
     }
 
-    function clearResults() {
-        els.cols.forEach(function (col) { col.textContent = ''; });
-        state.items = [];
-        state.colHeights = [0, 0];
+    function setStatus(tab, message) {
+        tab.status.textContent = message || '';
+        tab.status.hidden = !message;
+    }
+
+    function clearResults(tab) {
+        tab.cols.forEach(function (col) { col.textContent = ''; });
+        tab.items = [];
+        tab.colHeights = [0, 0];
         clearSelection();
     }
 
@@ -400,15 +434,15 @@
         return item.urls || gifApi.gifUrls(item);
     }
 
-    function addItem(item) {
+    function addItem(tab, item) {
         const urls = urlsFor(item);
         if (!urls) return;
-        const index = state.items.length;
-        state.items.push(item);
+        const index = tab.items.length;
+        tab.items.push(item);
 
         // Shorter column first keeps the two columns balanced
-        const col = state.colHeights[0] <= state.colHeights[1] ? 0 : 1;
-        state.colHeights[col] += item.height / item.width;
+        const col = tab.colHeights[0] <= tab.colHeights[1] ? 0 : 1;
+        tab.colHeights[col] += item.height / item.width;
 
         const button = node('button', 'gif-sheet-item');
         button.type = 'button';
@@ -426,58 +460,62 @@
         img.src = urls.still;   // still thumbnails: light on phones, calm to look at
         img.addEventListener('error', function () { button.remove(); });
         button.appendChild(img);
-        els.cols[col].appendChild(button);
+        tab.cols[col].appendChild(button);
     }
 
-    async function load(reset) {
+    // Loads a page into `tab`: reset = a new search (or first load), else the next page.
+    // The words are whatever is in the search field.
+    async function load(tab, reset) {
         const adapter = provider();
-        if (!adapter || !state) return;
+        if (!adapter || !state || !tab) return;
         const query = els.search.value.trim().slice(0, MAX_QUERY);
-        const ticket = ++state.ticket;
+        const ticket = ++tab.ticket;
+        const owner = state;
         if (reset) {
-            state.cursor = 0;
-            state.query = query;
-            state.loaded = false;
-            clearResults();
-            els.more.hidden = true;
+            tab.cursor = 0;
+            tab.query = query;
+            tab.loaded = false;
+            tab.failed = false;
+            clearResults(tab);
+            tab.more.hidden = true;
         }
-        setStatus(reset ? 'Szukam...' : '');
-        const firstNew = state.items.length;   // index of the first GIF this page adds
-        els.more.disabled = true;
-        if (!reset) els.more.textContent = 'Ładuję...';   // feedback on the button itself
+        tab.loading = true;
+        setStatus(tab, reset ? 'Szukam...' : '');
+        const firstNew = tab.items.length;   // index of the first picture this page adds
+        tab.more.disabled = true;
+        if (!reset) tab.more.textContent = 'Ładuję...';   // feedback on the button itself
         try {
-            const kind = state.kind;
-            const cacheKey = kind + '|' + state.query + '|' + state.cursor;
-            let page = state.cache.get(cacheKey);
+            const cacheKey = tab.kind + '|' + tab.query + '|' + tab.cursor;
+            let page = owner.cache.get(cacheKey);
             if (!page) {
-                page = await adapter.search(state.query, state.cursor, config, kind);
-                state.cache.set(cacheKey, page);
+                page = await adapter.search(tab.query, tab.cursor, config, tab.kind);
+                owner.cache.set(cacheKey, page);
             }
-            if (ticket !== state.ticket) return; // a newer search (or tab) replaced this one
-            page.items.forEach(addItem);
-            state.cursor = page.next;
-            state.loaded = true;
-            if (reset && state.slide) { slideIn(state.slide); state.slide = 0; }
-            els.more.hidden = !page.hasMore;
-            if (!reset) revealFrom(firstNew);
-            setStatus(state.items.length ? '' : (state.query ? 'Nic nie znaleziono. Spróbuj innego słowa.' : EMPTY_LABELS[kind]));
+            if (ticket !== tab.ticket || owner !== state) return; // a newer search replaced this one
+            page.items.forEach(function (item) { addItem(tab, item); });
+            tab.cursor = page.next;
+            tab.loaded = true;
+            tab.more.hidden = !page.hasMore;
+            if (!reset) revealFrom(tab, firstNew);
+            setStatus(tab, tab.items.length ? '' : (tab.query ? 'Nic nie znaleziono. Spróbuj innego słowa.' : EMPTY_LABELS[tab.kind]));
         } catch (error) {
-            if (ticket !== state.ticket) return;
-            setStatus((error && error.kind && error.message) || 'Nie udało się pobrać GIF-ów. Sprawdź połączenie.');
+            if (ticket !== tab.ticket || owner !== state) return;
+            tab.failed = true;      // not retried by every scroll tick: only by a new search or tab tap
+            setStatus(tab, (error && error.kind && error.message) || 'Nie udało się pobrać GIF-ów. Sprawdź połączenie.');
         } finally {
-            els.more.disabled = false;
-            els.more.textContent = MORE_LABEL;
+            tab.loading = false;
+            tab.more.disabled = false;
+            tab.more.textContent = MORE_LABEL;
         }
     }
 
-    // After "Pokaż więcej": bring the first new GIF into view, so it is
+    // After "Pokaż więcej": bring the first new picture into view, so it is
     // obvious that something was added below
-    function revealFrom(index) {
-        const first = els.results.querySelector('.gif-sheet-item[data-index="' + index + '"]');
+    function revealFrom(tab, index) {
+        const first = tab.card.querySelector('.gif-sheet-item[data-index="' + index + '"]');
         if (!first) return;
-        const reduced = !!(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches);
-        const top = els.results.scrollTop + (first.getBoundingClientRect().top - els.results.getBoundingClientRect().top) - 8;
-        els.results.scrollTo({ top: Math.max(0, top), behavior: reduced ? 'auto' : 'smooth' });
+        const top = tab.card.scrollTop + (first.getBoundingClientRect().top - tab.card.getBoundingClientRect().top) - 8;
+        tab.card.scrollTo({ top: Math.max(0, top), behavior: reducedMotion() ? 'auto' : 'smooth' });
     }
 
     // ------------------------------------------------------------------
@@ -489,23 +527,25 @@
         if (state) state.selected = null;
         els.preview.hidden = true;
         els.previewImg.removeAttribute('src');
-        els.results.querySelectorAll('.gif-sheet-item[aria-pressed="true"]').forEach(function (b) {
+        els.pager.querySelectorAll('.gif-sheet-item[aria-pressed="true"]').forEach(function (b) {
             b.setAttribute('aria-pressed', 'false');
         });
     }
 
-    function select(index, button) {
-        const item = state.items[index];
+    function select(kind, index, button) {
+        const tab = state.tabs[kind];
+        const item = tab && tab.items[index];
         if (!item) return;
         const urls = urlsFor(item);
         if (!urls) return;
         clearSelection();
         state.selected = item;
+        state.selectedQuery = tab.query;
         button.setAttribute('aria-pressed', 'true');
-        const kind = item.kind || 'gif';
-        els.previewImg.alt = item.title ? PREVIEW_LABELS[kind] + ': ' + item.title : PREVIEW_LABELS[kind];
-        els.previewImg.classList.toggle('is-sticker', kind === 'sticker');
-        els.send.textContent = SEND_LABELS[kind];
+        const itemKind = item.kind || 'gif';
+        els.previewImg.alt = item.title ? PREVIEW_LABELS[itemKind] + ': ' + item.title : PREVIEW_LABELS[itemKind];
+        els.previewImg.classList.toggle('is-sticker', itemKind === 'sticker');
+        els.send.textContent = SEND_LABELS[itemKind];
         els.previewImg.width = item.width;
         els.previewImg.height = item.height;
         els.previewImg.src = urls.animated;
@@ -519,7 +559,7 @@
         if (!item) return;
         if (item.analytics && item.analytics.onsent) ping(item.analytics.onsent.url);
         const adapter = provider();
-        if (adapter && typeof adapter.onSent === 'function') adapter.onSent(item, state.query);
+        if (adapter && typeof adapter.onSent === 'function') adapter.onSent(item, state.selectedQuery || '');
         const pick = state.onPick;
         closeSheet(true);
         if (typeof pick === 'function') {
@@ -528,96 +568,164 @@
     }
 
     // ------------------------------------------------------------------
-    // Tabs (KLIPY: GIFs, stickers, memes)
+    // Tabs and the sideways pager (KLIPY: GIFs, stickers, memes)
     // ------------------------------------------------------------------
 
+    // Builds the cards for the kinds this provider has, and the tab bar
     function showTabs() {
         const kinds = state.kinds;
+        const list = kinds || ['gif'];
         els.tabs.hidden = !kinds;
+        els.pagebar.hidden = !kinds;
+        els.pager.classList.toggle('is-single', !kinds);
         els.title.textContent = kinds ? 'Wybierz GIF-a, naklejkę lub mem' : 'Wybierz GIF-a';
         Object.keys(els.tabButtons).forEach(function (kind) {
             els.tabButtons[kind].hidden = !kinds || kinds.indexOf(kind) === -1;
         });
-        markTab(false);
+        els.pager.textContent = '';
+        state.tabs = {};
+        list.forEach(function (kind) {
+            const tab = makeTab(kind);
+            state.tabs[kind] = tab;
+            els.pager.appendChild(tab.card);
+        });
+        els.pager.scrollLeft = 0;
+        markTab();
+        paintPosition();
     }
 
-    // `animate`: slide the indicator to the new tab (false = put it there at once)
-    function markTab(animate) {
+    // aria state and the roving tab stop
+    function markTab() {
         Object.keys(els.tabButtons).forEach(function (kind) {
             const on = kind === state.kind;
             els.tabButtons[kind].setAttribute('aria-selected', on ? 'true' : 'false');
             els.tabButtons[kind].setAttribute('tabindex', on ? '0' : '-1');
         });
-        placeIndicator(animate);
     }
 
-    function placeIndicator(animate) {
-        const selected = els.tabButtons[state.kind];
-        const indicator = els.indicator;
-        if (!selected || els.tabs.hidden || selected.hidden) return;
-        if (!animate) indicator.style.transition = 'none';
-        indicator.style.width = selected.offsetWidth + 'px';
-        indicator.style.transform = 'translateX(' + selected.offsetLeft + 'px)';
-        if (!animate) {
-            void indicator.offsetWidth;          // apply it before animations come back
-            indicator.style.transition = '';
-        }
+    // Where the pager is, in cards (0 = first card, 1 = second ...), fractions in between
+    function pagePosition() {
+        const width = els.pager.clientWidth;
+        return width ? els.pager.scrollLeft / width : 0;
     }
 
-    // The list of the tab just opened slides in from the side the tab is on,
-    // so the move feels like going along a row. (CSS drops it for reduced motion.)
-    function slideIn(direction) {
-        const results = els.results;
-        results.classList.remove('is-sliding-next', 'is-sliding-prev');
-        void results.offsetWidth;                // restart the animation
-        results.classList.add(direction > 0 ? 'is-sliding-next' : 'is-sliding-prev');
-        if (state.slideTimer) clearTimeout(state.slideTimer);
-        state.slideTimer = setTimeout(function () {
-            results.classList.remove('is-sliding-next', 'is-sliding-prev');
-        }, 360);
-    }
-
-    // Show another tab. What the tab was showing is kept, so coming back is
-    // instant (no new request) and lands on the same spot of the list.
-    function switchTab(kind) {
-        if (!state || !state.kinds || state.kinds.indexOf(kind) === -1 || kind === state.kind) return;
-        if (state.timer) clearTimeout(state.timer);
-        state.ticket++;                       // a load still running for the old tab is dropped
-        state.saved[state.kind] = {
-            items: state.items, cursor: state.cursor, query: state.query, loaded: state.loaded,
-            hasMore: !els.more.hidden, scrollTop: els.results.scrollTop
-        };
-        clearLiveSize();
-        const direction = state.kinds.indexOf(kind) - state.kinds.indexOf(state.kind);
-        state.kind = kind;
-        markTab(true);
-        clearResults();
-        els.more.hidden = true;
-        els.results.scrollTop = 0;
-        const typed = els.search.value.trim().slice(0, MAX_QUERY);
-        const saved = state.saved[kind];
-        if (saved && saved.loaded && saved.query === typed) {
-            // same words as when this tab was last shown: put it back as it was
-            state.cursor = saved.cursor;
-            state.query = saved.query;
-            state.loaded = true;
-            saved.items.forEach(addItem);
-            els.more.hidden = !saved.hasMore;
-            setStatus(state.items.length ? '' : EMPTY_LABELS[kind]);
-            els.results.scrollTop = saved.scrollTop;
-            slideIn(direction);
-        } else {
-            state.slide = direction;     // played when the new tab's first results arrive
-            load(true);
-        }
-    }
-
-    // A horizontal swipe on the list moves to the next / previous tab
-    function swipeTab(direction) {
+    // Puts the tab indicator behind the tab(s) the pager is over, and the
+    // scrollbar thumb along its track, both following the swipe
+    function paintPosition() {
         if (!state || !state.kinds) return;
-        const at = state.kinds.indexOf(state.kind) + direction;
-        if (at < 0 || at >= state.kinds.length) return;
-        switchTab(state.kinds[at]);
+        const pos = Math.max(0, Math.min(state.kinds.length - 1, pagePosition()));
+        const low = Math.floor(pos);
+        const high = Math.min(state.kinds.length - 1, low + 1);
+        const frac = pos - low;
+        const a = els.tabButtons[state.kinds[low]];
+        const b = els.tabButtons[state.kinds[high]];
+        if (a && b && !els.tabs.hidden) {
+            const left = a.offsetLeft + (b.offsetLeft - a.offsetLeft) * frac;
+            const width = a.offsetWidth + (b.offsetWidth - a.offsetWidth) * frac;
+            els.indicator.style.width = width + 'px';
+            els.indicator.style.transform = 'translateX(' + left + 'px)';
+        }
+        const track = els.pagebar.clientWidth;
+        if (track) {
+            const thumbWidth = Math.max(36, track / state.kinds.length);
+            const range = track - thumbWidth;
+            els.thumb.style.width = thumbWidth + 'px';
+            els.thumb.style.transform = 'translateX(' + (state.kinds.length > 1 ? pos / (state.kinds.length - 1) * range : 0) + 'px)';
+        }
+    }
+
+    // The pager moved (swipe, tab tap, thumb drag): follow it
+    let paintQueued = false;
+    function onPagerScroll() {
+        if (!state || !state.kinds) return;
+        if (!paintQueued) {
+            paintQueued = true;
+            root.requestAnimationFrame(function () { paintQueued = false; paintPosition(); });
+        }
+        if (state.jump) {
+            // heading for a card chosen by tab / track tap: do not wake the ones on the way
+            if (Math.abs(els.pager.scrollLeft - state.jump.left) < 2) state.jump = null;
+            return;
+        }
+        const index = Math.max(0, Math.min(state.kinds.length - 1, Math.round(pagePosition())));
+        activate(state.kinds[index]);
+    }
+
+    // `kind` is now the card in front: the tabs say so, and a card that has
+    // not been loaded (or was loaded for other words) loads now
+    function activate(kind) {
+        if (!state || !state.tabs[kind]) return;
+        if (kind !== state.kind) {
+            state.kind = kind;
+            markTab();
+            clearSelection();                // a preview belongs to the card it came from
+            clearLiveSize();
+        }
+        const tab = state.tabs[kind];
+        const typed = els.search.value.trim().slice(0, MAX_QUERY);
+        if (!tab.loading && !(tab.failed && tab.query === typed) && (!tab.loaded || tab.query !== typed)) load(tab, true);
+    }
+
+    // Tab tapped / key pressed: wake that card now and scroll to it
+    function goToTab(kind) {
+        if (!state || !state.kinds || state.kinds.indexOf(kind) === -1) return;
+        if (state.timer) clearTimeout(state.timer);
+        const left = state.kinds.indexOf(kind) * els.pager.clientWidth;
+        state.jump = Math.abs(els.pager.scrollLeft - left) < 2 ? null : { left: left };
+        if (state.jumpTimer) clearTimeout(state.jumpTimer);
+        // (if the scroll never lands exactly, stop waiting for it after a second)
+        state.jumpTimer = setTimeout(function () { if (state) state.jump = null; }, 1000);
+        // tapping a tab also retries a card that failed to load
+        if (state.tabs[kind]) state.tabs[kind].failed = false;
+        activate(kind);
+        els.pager.scrollTo({ left: left, behavior: reducedMotion() ? 'auto' : 'smooth' });
+    }
+
+    // The drawn scrollbar: drag the thumb, or tap the track to jump to that card
+    function installPagebar() {
+        const pagebar = els.pagebar;
+        const thumb = els.thumb;
+        let drag = null;
+
+        function endDrag() {
+            if (!drag) return;
+            drag = null;
+            els.pager.classList.remove('is-dragging');
+            // let go between two cards: settle on the nearest one
+            if (state && state.kinds) goToTab(state.kinds[Math.max(0, Math.min(state.kinds.length - 1, Math.round(pagePosition())))]);
+        }
+
+        thumb.addEventListener('pointerdown', function (e) {
+            if (!state || !state.kinds) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof thumb.setPointerCapture === 'function') {
+                try { thumb.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+            }
+            state.jump = null;
+            drag = { startX: e.clientX, startScroll: els.pager.scrollLeft };
+            // snapping off while dragging, so the cards follow the thumb smoothly
+            els.pager.classList.add('is-dragging');
+        });
+        thumb.addEventListener('pointermove', function (e) {
+            if (!drag) return;
+            const max = els.pager.scrollWidth - els.pager.clientWidth;
+            const range = pagebar.clientWidth - thumb.offsetWidth;
+            if (range <= 0 || max <= 0) return;
+            els.pager.scrollLeft = drag.startScroll + (e.clientX - drag.startX) / range * max;
+        });
+        thumb.addEventListener('pointerup', endDrag);
+        thumb.addEventListener('pointercancel', endDrag);
+        thumb.addEventListener('lostpointercapture', endDrag);
+
+        pagebar.addEventListener('pointerdown', function (e) {
+            if (e.target !== pagebar || !state || !state.kinds) return;
+            e.preventDefault();
+            const box = pagebar.getBoundingClientRect();
+            const ratio = box.width ? (e.clientX - box.left) / box.width : 0;
+            const index = Math.max(0, Math.min(state.kinds.length - 1, Math.floor(ratio * state.kinds.length)));
+            goToTab(state.kinds[index]);
+        });
     }
 
     function openSheet(options) {
@@ -628,10 +736,9 @@
             onPick: options && options.onPick,
             onOpen: options && options.onOpen,
             onClose: options && options.onClose,
-            ticket: 0, cursor: 0, query: '', items: [], colHeights: [0, 0],
             cache: new Map(), selected: null, timer: null,
-            // tabs: the kinds this provider has (KLIPY: GIFs, stickers, memes)
-            kinds: provider().kinds || null, kind: 'gif', loaded: false, saved: {}
+            // the kinds this provider has (KLIPY: GIFs, stickers, memes) and the one in front
+            kinds: provider().kinds || null, kind: 'gif', tabs: {}, jump: null
         };
         showTabs();
         els.attribution.textContent = provider().attribution;
@@ -643,26 +750,28 @@
         els.sheet.removeAttribute('inert');
         els.overlay.classList.add('is-open');
         els.sheet.classList.add('is-open');
-        clearResults();
-        load(true);
+        clearSelection();
+        load(activeTab(), true);
         // On a phone, focusing the search would raise the keyboard over the
         // very list the user came to look at: start on the panel instead.
         const touch = !!(root.matchMedia && root.matchMedia('(pointer: coarse)').matches);
         (touch ? els.close : els.search).focus();
+        paintPosition();
     }
 
     // Compact (about half the screen: the conversation stays in view) or
     // expanded (nearly full height) - toggled by the chevron.
     //
-    // On a phone a drag (or wheel) on the GIF list also resizes the panel, and
+    // On a phone a drag (or wheel) on a list also resizes the panel, and
     // while it is doing so the LIST stays put: the movement goes into the
     // panel's height first, so only one thing moves under the finger. Dragging
     // up grows the panel until it is expanded, then the list scrolls as usual.
     // Dragging down at the top of the list shrinks it back towards compact.
     // When the finger lifts (or the wheel pauses) the panel eases to whichever
     // end is nearer. The chevron overrides all of this for the current opening.
+    // A SIDEWAYS drag is the pager's: it is never touched here.
     const IDLE_MS = 160;               // a wheel pause this long ends the gesture
-    const SWIPE_MIN = 70;              // px sideways that count as a tab swipe
+    const AXIS_SLOP = 3;               // px of movement before a drag is called sideways or vertical
 
     function isDocked() {
         return !!(root.matchMedia && root.matchMedia('(max-width: 768px)').matches);
@@ -691,7 +800,7 @@
         const h = state.liveH != null ? state.liveH : Math.round(els.sheet.getBoundingClientRect().height);
         let next;
         if (move > 0 && h < sizes.full) next = Math.min(sizes.full, h + move);
-        else if (move < 0 && els.results.scrollTop <= 0 && h > sizes.compact) next = Math.max(sizes.compact, h + move);
+        else if (move < 0 && activeTab().card.scrollTop <= 0 && h > sizes.compact) next = Math.max(sizes.compact, h + move);
         else return false;
         state.liveH = next;
         els.sheet.style.transition = 'none';          // follow the finger exactly
@@ -715,38 +824,37 @@
 
     function onResultsTouchStart(e) {
         if (!state || !e.touches || e.touches.length !== 1) return;
-        state.touchY = e.touches[0].clientY;
-        state.swipe = { x0: e.touches[0].clientX, y0: e.touches[0].clientY, x: e.touches[0].clientX, y: e.touches[0].clientY };
+        state.touch = { x0: e.touches[0].clientX, y0: e.touches[0].clientY, y: e.touches[0].clientY, axis: null };
     }
 
     function onResultsTouchMove(e) {
-        if (!state || !e.touches || e.touches.length !== 1 || state.touchY == null) return;
+        const touch = state && state.touch;
+        if (!touch || !e.touches || e.touches.length !== 1) return;
+        const x = e.touches[0].clientX;
         const y = e.touches[0].clientY;
-        const move = state.touchY - y;              // finger up = positive
-        state.touchY = y;
-        if (state.swipe) { state.swipe.x = e.touches[0].clientX; state.swipe.y = y; }
+        if (!touch.axis) {
+            // The first movement decides: sideways belongs to the pager (it
+            // scrolls natively and must not be interfered with), vertical to us
+            const dx = Math.abs(x - touch.x0);
+            const dy = Math.abs(y - touch.y0);
+            if (Math.max(dx, dy) < AXIS_SLOP) return;
+            touch.axis = dx > dy ? 'x' : 'y';
+        }
+        if (touch.axis !== 'y') return;
+        const move = touch.y - y;                   // finger up = positive
+        touch.y = y;
         if (resizeBy(move) && e.cancelable) e.preventDefault();   // the list stays put
     }
 
     function onResultsTouchEnd() {
         if (!state) return;
-        state.touchY = null;
-        // A clearly sideways swipe changes the tab (when there are tabs)
-        const swipe = state.swipe;
-        state.swipe = null;
-        if (swipe && state.kinds && state.liveH == null) {
-            const dx = swipe.x - swipe.x0;
-            const dy = swipe.y - swipe.y0;
-            if (Math.abs(dx) >= SWIPE_MIN && Math.abs(dx) > Math.abs(dy) * 1.8) {
-                swipeTab(dx < 0 ? 1 : -1);          // finger moving left = next tab
-                return;
-            }
-        }
+        state.touch = null;
         settleSize();
     }
 
     function onResultsWheel(e) {
         if (!state) return;
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;     // sideways: the pager's
         const unit = e.deltaMode === 1 ? 16 : 1;    // lines -> px
         if (resizeBy(e.deltaY * unit)) {
             e.preventDefault();
@@ -763,6 +871,7 @@
         els.expand.setAttribute('aria-label', on ? 'Zwiń listę GIF-ów' : 'Rozwiń listę GIF-ów');
         reserveSpace();
     }
+
     // On a phone the panel covers the bottom of the screen. Reserve that much
     // room at the bottom of the page (html.gif-panel-open pads <body>) and tell
     // the page how much is covered, so it can keep the newest messages in view.
@@ -815,7 +924,7 @@
         if (!els || !state) return;
         if (state.timer) clearTimeout(state.timer);
         clearLiveSize();
-        state.ticket++;
+        Object.keys(state.tabs).forEach(function (kind) { state.tabs[kind].ticket++; });
         const onClose = state.onClose;
         state = null;
         document.documentElement.classList.remove('gif-panel-open');
@@ -827,7 +936,7 @@
         els.sheet.setAttribute('inert', '');
         els.preview.hidden = true;
         els.previewImg.removeAttribute('src');
-        els.cols.forEach(function (col) { col.textContent = ''; }); // free the images
+        els.pager.textContent = '';                  // free the images
         const target = focusBefore;
         focusBefore = null;
         if (skipFocus !== true && target && document.contains(target) && typeof target.focus === 'function') {

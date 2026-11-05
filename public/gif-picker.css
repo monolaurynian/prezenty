@@ -251,13 +251,51 @@ html.gif-panel-open body {
     display: none;
 }
 
-/* Two balanced columns of still thumbnails; this area scrolls */
-.gif-sheet-results {
+/* The cards (GIF-y / Naklejki / Memy) sit side by side in a row that scrolls
+   sideways and snaps to whole cards, like the emoji picker's categories.
+   The browser's own scrollbar is hidden (unreliable on phones): the drawn
+   .gif-sheet-pagebar underneath is the one people see. */
+.gif-sheet-pager {
+    display: flex;
     flex: 1;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.gif-sheet-pager::-webkit-scrollbar {
+    display: none;
+}
+
+/* one provider, one card: nothing to swipe */
+.gif-sheet-pager.is-single {
+    overflow-x: hidden;
+    scroll-snap-type: none;
+}
+
+/* dragging the scrollbar thumb: snapping off so the cards follow smoothly */
+.gif-sheet-pager.is-dragging {
+    scroll-snap-type: none;
+}
+
+/* Each card is one full-width page; it scrolls up and down on its own.
+   Two balanced columns of still thumbnails. */
+.gif-sheet-results {
+    flex: 0 0 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    overscroll-behavior: contain;
+    /* up/down stops here; sideways must pass on to the pager (contain on both
+       axes would kill the swipe between cards) */
+    overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
     padding: 2px 0 4px;
 }
@@ -745,7 +783,6 @@ html.gif-lightbox-open body {
     border-radius: 22px;
     background: #7B1FA2;
     box-shadow: 0 2px 6px rgba(123, 31, 162, 0.35);
-    transition: transform 0.28s cubic-bezier(0.3, 0.8, 0.3, 1), width 0.28s cubic-bezier(0.3, 0.8, 0.3, 1);
     pointer-events: none;
 }
 
@@ -776,32 +813,6 @@ html.gif-lightbox-open body {
 .gif-sheet-tab:focus-visible {
     outline: 2px solid #1E88E5;
     outline-offset: 2px;
-}
-
-/* The list of a newly opened tab slides in a little from its side */
-@keyframes gifSlideNext {
-    from { opacity: 0; transform: translateX(36px); }
-    to { opacity: 1; transform: none; }
-}
-
-@keyframes gifSlidePrev {
-    from { opacity: 0; transform: translateX(-36px); }
-    to { opacity: 1; transform: none; }
-}
-
-.gif-sheet-results.is-sliding-next > * {
-    animation: gifSlideNext 0.26s ease-out both;
-}
-
-.gif-sheet-results.is-sliding-prev > * {
-    animation: gifSlidePrev 0.26s ease-out both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .gif-sheet-tab,
-    .gif-sheet-tab-indicator { transition: none; }
-    .gif-sheet-results.is-sliding-next > *,
-    .gif-sheet-results.is-sliding-prev > * { animation: none; }
 }
 
 /* --- Stickers are cut-outs with a transparent background ---------------- */
@@ -835,4 +846,65 @@ html.gif-lightbox-open body {
 .chat-gif-zoom.is-sticker .chat-gif,
 .chat-gif-wrap.is-sticker .chat-gif {
     background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gif-sheet-tab { transition: none; }
+}
+
+/* Page scrollbar under the cards: a 24px-tall touch target drawing a 10px bar;
+   the thumb is one card wide and is moved by gif-picker.js */
+.gif-sheet-pagebar {
+    position: relative;
+    flex: none;
+    height: 24px;
+    margin: 4px 4px 0;
+    touch-action: none;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.gif-sheet-pagebar[hidden] {
+    display: none;
+}
+
+.gif-sheet-pagebar::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 10px;
+    transform: translateY(-50%);
+    border-radius: 5px;
+    background: #e9ecef;
+    pointer-events: none;
+}
+
+.gif-sheet-pagethumb {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    touch-action: none;
+    cursor: grab;
+    will-change: transform;
+}
+
+.gif-sheet-pagethumb::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 10px;
+    transform: translateY(-50%);
+    border-radius: 5px;
+    background: #7B1FA2;
+}
+
+.gif-sheet-pager.is-dragging ~ .gif-sheet-pagebar .gif-sheet-pagethumb {
+    cursor: grabbing;
 }
