@@ -272,7 +272,8 @@ test.describe('gif picker', () => {
         await page.locator(`${SHEET} .gif-sheet-search`).fill('hura');
         await expect(page.locator(`${SHEET} .gif-sheet-item`)).toHaveCount(1); // wait out the search debounce
         await page.locator(`${SHEET} .gif-sheet-item`).first().click();
-        await page.keyboard.press('Escape');
+        await page.keyboard.press('Escape');   // closes the preview...
+        await page.keyboard.press('Escape');   // ...and then the picker
         await openGifPicker(page);
         await expect(page.locator(`${SHEET} .gif-sheet-search`)).toHaveValue('');
         await expect(page.locator(`#gifPreview`)).toBeHidden();

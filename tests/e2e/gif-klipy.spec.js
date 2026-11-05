@@ -273,9 +273,9 @@ test.describe('klipy picker', () => {
         expect(searches[0].url.searchParams.get('page')).toBe('1');
         expect(searches[0].url.searchParams.get('content_filter')).toBe('high');
 
-        await page.locator(`${SHEET} .gif-sheet-more`).click();
+        await page.locator(`${SHEET} .gif-sheet-card[data-kind="gif"] .gif-sheet-more`).click();
         await expect(page.locator(`${SHEET} .gif-sheet-item`)).toHaveCount(27);
-        await expect(page.locator(`${SHEET} .gif-sheet-more`)).toBeHidden();
+        await expect(page.locator(`${SHEET} .gif-sheet-card[data-kind="gif"] .gif-sheet-more`)).toBeHidden();
         const pages = calls.api.filter(c => c.url.pathname.endsWith('/gifs/search')).map(c => c.url.searchParams.get('page'));
         expect(pages).toEqual(['1', '2']);
     });
@@ -313,7 +313,7 @@ test.describe('klipy picker', () => {
         await openPage(page, THREAD);
         await openKlipyPicker(page);
         const search = page.locator(`${SHEET} .gif-sheet-search`);
-        const status = page.locator(`${SHEET} .gif-sheet-status`);
+        const status = page.locator(`${SHEET} .gif-sheet-card[data-kind="gif"] .gif-sheet-status`);
 
         await search.fill('pierwszy');
         await expect(status).toContainText('chwilowo niedostępne');
@@ -335,10 +335,10 @@ test.describe('klipy picker', () => {
         await openKlipyPicker(page);
         const search = page.locator(`${SHEET} .gif-sheet-search`);
         await search.fill('cos');
-        await expect(page.locator(`${SHEET} .gif-sheet-status`)).toContainText('Nie udało się pobrać');
+        await expect(page.locator(`${SHEET} .gif-sheet-card[data-kind="gif"] .gif-sheet-status`)).toContainText('Nie udało się pobrać');
         mode = 'abort';
         await search.fill('cos innego');
-        await expect(page.locator(`${SHEET} .gif-sheet-status`)).toContainText('Nie udało się pobrać');
+        await expect(page.locator(`${SHEET} .gif-sheet-card[data-kind="gif"] .gif-sheet-status`)).toContainText('Nie udało się pobrać');
     });
 
     test('with no KLIPY key in the config the GIF buttons stay hidden', async ({ page }) => {
@@ -414,6 +414,8 @@ test.describe('klipy tabs', () => {
     // Items for whichever folder was asked, typed the way that folder's items are
     const TYPE = { gifs: 'gif', stickers: 'sticker', 'static-memes': 'meme' };
     const folderOf = url => url.pathname.split('/')[4];
+    // the first picture of one kind's card (each kind has its own card in the picker)
+    const firstOf = (page, kind) => page.locator(`${SHEET} .gif-sheet-card[data-kind="${kind}"] .gif-sheet-item`).first();
     const byFolder = (route, url) => {
         const folder = folderOf(url);
         const q = url.searchParams.get('q');
@@ -433,17 +435,17 @@ test.describe('klipy tabs', () => {
 
         await tabs.nth(1).click();
         await expect(page.locator(`${SHEET} .gif-sheet-item.is-sticker`).first()).toBeVisible();
-        await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toHaveAttribute('aria-label', /^Naklejka: sticker-top-1/);
+        await expect(firstOf(page, 'sticker')).toHaveAttribute('aria-label', /^Naklejka: sticker-top-1/);
         await page.locator(`${SHEET} .gif-sheet-search`).fill('kot');
-        await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toHaveAttribute('aria-label', /sticker-kot-1/);
+        await expect(firstOf(page, 'sticker')).toHaveAttribute('aria-label', /sticker-kot-1/);
 
         await tabs.nth(2).click();   // the words typed on the sticker tab are used here too
-        await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toHaveAttribute('aria-label', /^Mem: meme-kot-1/);
+        await expect(firstOf(page, 'meme')).toHaveAttribute('aria-label', /^Mem: meme-kot-1/);
         expect(calls.folders).toEqual(expect.arrayContaining(['gifs', 'stickers', 'static-memes']));
 
         const before = calls.api.length;
         await tabs.nth(1).click();   // back to stickers with the same words: no new request
-        await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toHaveAttribute('aria-label', /sticker-kot-1/);
+        await expect(firstOf(page, 'sticker')).toHaveAttribute('aria-label', /sticker-kot-1/);
         expect(calls.api.length).toBe(before);
     });
 

@@ -224,8 +224,8 @@ test.describe('GIF panel on a phone', () => {
         await expect(page.locator(SHEET)).toHaveClass(/is-open/);
         await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toBeVisible();
 
+        await expect.poll(async () => Math.round((await box(page, SHEET)).bottom)).toBe(740);   // (it slides up)
         const compact = await box(page, SHEET);
-        expect(Math.round(compact.bottom)).toBe(740);
         expect(compact.height).toBeLessThanOrEqual(740 * 0.5 + 1);
         expect(await page.locator('#gifSheetOverlay').evaluate(el => getComputedStyle(el).backgroundColor))
             .toMatch(/rgba\(0, 0, 0, 0\)|transparent/);

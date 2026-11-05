@@ -79,8 +79,21 @@ test.describe('release notes data', () => {
         // GIFs off (no GIPHY_API_KEY): fall back to the previous announcement
         expect(latestRelease({ gif: false }).id).toBe('2026-11-czat-grupowy');
         expect(latestRelease().id).toBe('2026-11-czat-grupowy');
-        // GIFs on: the GIF announcement is the newest
+        // GIFs on (any provider): the GIF announcement is the newest
         expect(latestRelease({ gif: true }).id).toBe('2026-11-gify-klipy');
+        // KLIPY on (stickers and memes): the stickers and memes announcement is
+        expect(latestRelease({ gif: true, klipy: true }).id).toBe('2026-11-naklejki-i-memy');
+        expect(latestRelease({ klipy: true }).id).toBe('2026-11-naklejki-i-memy');
+    });
+
+    test('the stickers and memes announcement is relaxed Polish and points at the group chat', () => {
+        const entry = RELEASES.find(r => r.id === '2026-11-naklejki-i-memy');
+        expect(entry.requires).toBe('klipy');
+        expect(entry.title).toContain('naklejki');
+        expect(entry.items.length).toBeGreaterThanOrEqual(1);
+        expect(entry.items.length).toBeLessThanOrEqual(4);
+        expect(entry.items.map(i => i.text).join(' ')).toMatch(/Naklejki/);
+        expect(entry.action.url).toBe('/wiadomosci?rozmowa=group');
     });
 });
 
@@ -101,6 +114,22 @@ test.describe('banner behaviour', () => {
         await expect(banner).toHaveCount(0);
 
         // Next visit: already told, so no banner
+        await page.reload({ waitUntil: 'load' });
+        await page.locator('.thread-row').first().waitFor();
+        await page.waitForTimeout(800);
+        await expect(page.locator(BANNER)).toHaveCount(0);
+    });
+
+    test('someone who already saw the GIF announcement is shown the stickers and memes one, once', async ({ page }) => {
+        const entry = RELEASES.find(r => r.id === '2026-11-naklejki-i-memy');
+        await asReturningUser(page, '2026-11-gify-klipy');   // has seen the GIF announcement
+        await serveRelease(page, entry);                      // as a KLIPY server would answer
+        await openPage(page, PAGE);
+        const banner = page.locator(BANNER);
+        await expect(banner).toBeVisible();
+        await expect(banner).toContainText(entry.title);
+        await expect(banner.locator('li')).toHaveCount(entry.items.length);
+        await banner.getByRole('button', { name: 'Później' }).click();
         await page.reload({ waitUntil: 'load' });
         await page.locator('.thread-row').first().waitFor();
         await page.waitForTimeout(800);
