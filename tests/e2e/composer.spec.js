@@ -262,6 +262,25 @@ test.describe('GIF panel on a phone', () => {
         expect(await page.evaluate(() => getComputedStyle(document.body).paddingBottom)).not.toBe('0px');
     });
 
+    test('scrolling the list grows the panel first while the list stays put, then eases to expanded; scrolling back at the top shrinks it', async ({ page }) => {
+        await openComposer(page, 375);
+        await page.locator('#gifBtn').click();
+        await expect(page.locator(`${SHEET} .gif-sheet-item`).first()).toBeVisible();
+        await page.waitForTimeout(500);
+        const compact = (await box(page, SHEET)).height;
+        const list = () => page.locator(`${SHEET} .gif-sheet-results`).evaluate(el => el.scrollTop);
+
+        await page.mouse.move(187, 600);
+        await page.mouse.wheel(0, 180);   // past half way, so it settles on expanded
+        await expect.poll(async () => (await box(page, SHEET)).height).toBeGreaterThan(compact + 40);
+        expect(await list(), 'the list does not move while the panel is growing').toBe(0);
+        await expect(page.locator(SHEET)).toHaveClass(/is-expanded/);   // eases to the nearer end on its own
+
+        await page.mouse.wheel(0, -400);
+        await expect.poll(async () => Math.round((await box(page, SHEET)).height)).toBe(Math.round(compact));
+        await expect(page.locator(SHEET)).not.toHaveClass(/is-expanded/);
+    });
+
     test('tapping the chat outside the panel closes it', async ({ page }) => {
         await openComposer(page, 375);
         await page.locator('#gifBtn').click();

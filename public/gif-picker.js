@@ -266,7 +266,13 @@
             if (state) state.userChose = true;
             setExpanded(!sheet.classList.contains('is-expanded'));
         });
-        results.addEventListener('scroll', onResultsScroll, { passive: true });
+        // Dragging / wheeling the list resizes the panel first (see resizeBy);
+        // these must be non-passive so the list can be told to stay put
+        results.addEventListener('touchstart', onResultsTouchStart, { passive: true });
+        results.addEventListener('touchmove', onResultsTouchMove, { passive: false });
+        results.addEventListener('touchend', onResultsTouchEnd, { passive: true });
+        results.addEventListener('touchcancel', onResultsTouchEnd, { passive: true });
+        results.addEventListener('wheel', onResultsWheel, { passive: false });
         cancel.addEventListener('click', clearSelection);
         send.addEventListener('click', sendSelected);
         more.addEventListener('click', function () { load(false); });
@@ -323,9 +329,6 @@
         els.cols.forEach(function (col) { col.textContent = ''; });
         state.items = [];
         state.colHeights = [0, 0];
-        // emptying the list jumps it back to the top: that is not the person scrolling
-        state.lastTop = 0;
-        state.settleUntil = root.performance.now() + SETTLE_MS;
         clearSelection();
     }
 
@@ -469,14 +472,14 @@
     // Compact (about half the screen: the conversation stays in view) or
     // expanded (nearly full height) - toggled by the chevron.
     //
-    // On a phone, scrolling the GIFs also resizes the panel, smoothly and in
-    // step with the finger: scrolling down grows it from compact towards
-    // expanded over SCROLL_RANGE px of scrolling, and scrolling back up to the
-    // top shrinks it again. When the scrolling pauses it eases to whichever
+    // On a phone a drag (or wheel) on the GIF list also resizes the panel, and
+    // while it is doing so the LIST stays put: the movement goes into the
+    // panel's height first, so only one thing moves under the finger. Dragging
+    // up grows the panel until it is expanded, then the list scrolls as usual.
+    // Dragging down at the top of the list shrinks it back towards compact.
+    // When the finger lifts (or the wheel pauses) the panel eases to whichever
     // end is nearer. The chevron overrides all of this for the current opening.
-    const SCROLL_RANGE = 160;          // px of scrolling from compact to expanded
-    const IDLE_MS = 140;               // a pause this long ends the gesture
-    const SETTLE_MS = 400;             // resetting the list moves it: ignore those scroll events
+    const IDLE_MS = 160;               // a wheel pause this long ends the gesture
 
     function isDocked() {
         return !!(root.matchMedia && root.matchMedia('(max-width: 768px)').matches);
@@ -495,44 +498,29 @@
         if (els) { els.sheet.style.height = ''; els.sheet.style.transition = ''; }
     }
 
-    function onResultsScroll() {
-        if (!state || !els) return;
-        const top = els.results.scrollTop;
-        const last = state.lastTop || 0;
-        state.lastTop = top;
-        if (state.userChose || !isDocked()) return;
-        if (root.performance.now() < (state.settleUntil || 0)) return;
-        const moved = top - last;
-        if (!moved) return;
-
+    // `move` > 0: the list wants to go further down (finger / wheel moving up);
+    // `move` < 0: back up. Returns true when the panel took the movement, in
+    // which case the list must not scroll with it.
+    function resizeBy(move) {
+        if (!state || !els || state.userChose || !isDocked() || !move) return false;
         const sizes = panelHeights();
-        const span = sizes.full - sizes.compact;
-        const perPx = span / SCROLL_RANGE;
         // where the panel is right now (it may still be easing from the last gesture)
         if (state.liveH == null) state.liveH = Math.round(els.sheet.getBoundingClientRect().height);
-        let h = state.liveH;
-        if (moved > 0) {
-            h = Math.min(sizes.full, h + moved * perPx);
-        } else if (top <= SCROLL_RANGE) {
-            // on the way back to the top it follows the scroll, but never
-            // jumps: it only shrinks by as much as the finger moved
-            const target = sizes.compact + (top / SCROLL_RANGE) * span;
-            if (h > target) h = Math.max(target, h + moved * perPx);
-        }
-        h = Math.max(sizes.compact, Math.min(sizes.full, h));
-        if (h !== state.liveH) {
-            state.liveH = h;
-            els.sheet.style.transition = 'none';          // follow the finger exactly
-            els.sheet.style.height = h.toFixed(1) + 'px';
-        }
-        if (state.idleTimer) clearTimeout(state.idleTimer);
-        state.idleTimer = setTimeout(settleSize, IDLE_MS);
+        const h = state.liveH;
+        let next;
+        if (move > 0 && h < sizes.full) next = Math.min(sizes.full, h + move);
+        else if (move < 0 && els.results.scrollTop <= 0 && h > sizes.compact) next = Math.max(sizes.compact, h + move);
+        else return false;
+        state.liveH = next;
+        els.sheet.style.transition = 'none';          // follow the finger exactly
+        els.sheet.style.height = next.toFixed(1) + 'px';
+        return true;
     }
 
-    // The scrolling paused: ease to compact or expanded, whichever is nearer
+    // The gesture ended: ease to compact or expanded, whichever is nearer
     function settleSize() {
         if (!state || !els) return;
-        state.idleTimer = null;
+        if (state.idleTimer) { clearTimeout(state.idleTimer); state.idleTimer = null; }
         if (state.liveH == null) return;
         const sizes = panelHeights();
         const expand = (state.liveH - sizes.compact) / (sizes.full - sizes.compact) >= 0.5;
@@ -541,6 +529,34 @@
         void els.sheet.offsetHeight;                      // start from the inline height
         els.sheet.style.height = '';                      // hand over to the CSS heights
         setExpanded(expand);
+    }
+
+    function onResultsTouchStart(e) {
+        if (!state || !e.touches || e.touches.length !== 1) return;
+        state.touchY = e.touches[0].clientY;
+    }
+
+    function onResultsTouchMove(e) {
+        if (!state || !e.touches || e.touches.length !== 1 || state.touchY == null) return;
+        const y = e.touches[0].clientY;
+        const move = state.touchY - y;              // finger up = positive
+        state.touchY = y;
+        if (resizeBy(move) && e.cancelable) e.preventDefault();   // the list stays put
+    }
+
+    function onResultsTouchEnd() {
+        if (state) state.touchY = null;
+        settleSize();
+    }
+
+    function onResultsWheel(e) {
+        if (!state) return;
+        const unit = e.deltaMode === 1 ? 16 : 1;    // lines -> px
+        if (resizeBy(e.deltaY * unit)) {
+            e.preventDefault();
+            if (state.idleTimer) clearTimeout(state.idleTimer);
+            state.idleTimer = setTimeout(settleSize, IDLE_MS);
+        }
     }
 
     function setExpanded(on) {

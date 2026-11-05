@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v157';
+const CACHE_NAME = 'prezenty-v158';
 const urlsToCache = [
   '/manifest.json',
   '/pluralize-pl.js',
@@ -10,7 +10,7 @@ const urlsToCache = [
   '/chat-reactions.js?v=7',
   '/emoji-data.js?v=1',
   '/emoji-picker.js?v=4',
-  '/gif-picker.js?v=5',
+  '/gif-picker.js?v=6',
   '/gif-lightbox.js?v=1',
   '/gif-picker.css?v=5',
   '/favicon.svg',
