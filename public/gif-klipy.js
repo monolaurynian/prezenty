@@ -67,7 +67,9 @@
 
     function url(path, params) {
         const query = new URLSearchParams(params);
-        return API + encodeURIComponent(appKey) + '/' + path + '?' + query.toString();
+        // A comma is legal in a query string and is how the "items" endpoint
+        // separates slugs (slugs=a,b), so send it as written, not as %2C
+        return API + encodeURIComponent(appKey) + '/' + path + '?' + query.toString().replace(/%2C/gi, ',');
     }
 
     // The renditions to use: ~220px wide ("sm") is right for a chat bubble
@@ -159,9 +161,11 @@
         const batches = [];
         for (let i = 0; i < wanted.length; i += ITEMS_CHUNK) batches.push(wanted.slice(i, i + ITEMS_CHUNK));
 
-        batches.forEach(function (batch) {
-            const promise = request('gifs/items', {
-                slugs: batch.join(','),
+        // One "items" request for these slugs; fills the cache with what came
+        // back and resolves to the slugs that did NOT come back
+        function lookup(slugList) {
+            return request('gifs/items', {
+                slugs: slugList.join(','),
                 customer_id: gifApi.customerId(),
                 format_filter: FORMATS
             }).then(function (json) {
@@ -174,8 +178,26 @@
                         found.add(entry.id);
                     }
                 });
-                // Asked for but not returned: gone from KLIPY (remember that)
-                batch.forEach(function (slug) { if (!found.has(slug)) cache.set(slug, null); });
+                return slugList.filter(function (slug) { return !found.has(slug); });
+            });
+        }
+
+        batches.forEach(function (batch) {
+            const promise = lookup(batch).then(function (notReturned) {
+                // A GIF missing from a batch answer is asked for once more on
+                // its own, so one odd answer cannot hide a GIF that exists
+                if (batch.length === 1 || !notReturned.length) return notReturned;
+                return notReturned.reduce(function (chain, slug) {
+                    return chain.then(function (stillMissing) {
+                        return lookup([slug]).then(function (again) { return stillMissing.concat(again); });
+                    });
+                }, Promise.resolve([]));
+            }).then(function (gone) {
+                // Asked for twice and still not returned: gone from KLIPY (remember that)
+                gone.forEach(function (slug) { cache.set(slug, null); });
+                if (gone.length && root.console && root.console.warn) {
+                    root.console.warn('[GIF] KLIPY has no GIF for: ' + gone.join(', '));
+                }
             }).catch(function (error) {
                 // Network / rate limit / key: NOT "the GIF is gone". Leave it
                 // uncached (so a retry asks again) but remember why it failed.

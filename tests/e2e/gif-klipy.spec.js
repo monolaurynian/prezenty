@@ -429,9 +429,11 @@ test.describe('klipy GIFs in a conversation', () => {
         // The one KLIPY no longer has becomes a note
         await expect(page.locator('.chat-gif-missing').last()).toHaveText('Ten GIF jest niedostępny');
 
-        // One request carried all the slugs that were on screen and unknown
-        expect(calls.items.length, JSON.stringify(calls.items)).toBe(1);
+        // One request carried all the slugs that were on screen and unknown;
+        // the one KLIPY left out is asked for once more on its own before it counts as gone
+        expect(calls.items.length, JSON.stringify(calls.items)).toBe(2);
         expect(calls.items[0].split(',')).toEqual(expect.arrayContaining(['album-zdjec-901', 'drugi-obrazek-902', 'usuniety-gif-903']));
+        expect(calls.items[1]).toBe('usuniety-gif-903');
         const itemsCall = calls.api.find(c => c.url.pathname.endsWith('/gifs/items'));
         expect(itemsCall.url.searchParams.get('customer_id')).toMatch(/^[0-9a-f]{32}$/);
 

@@ -510,6 +510,7 @@
             reactionsApi.setScope('thread');
             document.getElementById('listView').style.display = 'none';
             document.getElementById('chatView').style.display = 'block';
+            syncComposer();
             document.getElementById('deleteThreadBtn').style.display = 'none';
             document.getElementById('chatTitle').innerHTML =
                 `<i class="fas fa-comment-dots" style="color:#7B1FA2;"></i>${escapeHtml(username)}`;
@@ -542,6 +543,7 @@
             document.getElementById('deleteThreadBtn').style.display = 'none';
             document.getElementById('chatView').style.display = 'none';
             document.getElementById('listView').style.display = 'block';
+            syncComposer();   // the new-message field is visible again: size it to its text
             if (replaceUrl) history.replaceState(null, '', '/wiadomosci');
             loadThreads();
         }
@@ -858,9 +860,16 @@
             const send = document.getElementById(sendId);
             const gif = document.getElementById(gifId);
             if (!input || !send) return;
-            // grow / shrink to fit
-            input.style.height = 'auto';
-            input.style.height = Math.min(input.scrollHeight, 132) + 'px';
+            // grow / shrink to fit. A field on a hidden view (the other
+            // one of list / conversation) measures 0, which used to leave it
+            // squashed flat when that view came back: so only measure a
+            // visible field, and let a hidden one fall back to its natural height
+            if (input.offsetParent === null) {
+                input.style.height = '';
+            } else {
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight, 132) + 'px';
+            }
             const hasText = input.value.trim().length > 0;
             const showGif = gifAvailable && !hasText;
             if (gif) gif.style.display = showGif ? '' : 'none';

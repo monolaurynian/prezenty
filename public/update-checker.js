@@ -123,7 +123,7 @@
             .then(function (config) {
                 if (!config || !config.enabled || !config.klipyKey) return null;
                 return loadScriptOnce('/gif-message.js?v=4', function () { return !!window.GifMessage; })
-                    .then(function () { return loadScriptOnce('/gif-klipy.js?v=3', function () { return !!window.GifKlipy; }); })
+                    .then(function () { return loadScriptOnce('/gif-klipy.js?v=4', function () { return !!window.GifKlipy; }); })
                     .then(function () {
                         window.GifKlipy.configure(config);
                         return window.GifKlipy.resolve([slug]);

@@ -260,7 +260,13 @@
 
         overlay.addEventListener('click', closeSheet);
         close.addEventListener('click', closeSheet);
-        expand.addEventListener('click', function () { setExpanded(!sheet.classList.contains('is-expanded')); });
+        expand.addEventListener('click', function () {
+            // Once the chevron has been used, scrolling no longer resizes the
+            // panel (until it is opened again): the person decided
+            if (state) state.userChose = true;
+            setExpanded(!sheet.classList.contains('is-expanded'));
+        });
+        results.addEventListener('scroll', onResultsScroll, { passive: true });
         cancel.addEventListener('click', clearSelection);
         send.addEventListener('click', sendSelected);
         more.addEventListener('click', function () { load(false); });
@@ -317,6 +323,9 @@
         els.cols.forEach(function (col) { col.textContent = ''; });
         state.items = [];
         state.colHeights = [0, 0];
+        // emptying the list jumps it back to the top: that is not the person scrolling
+        state.lastTop = 0;
+        state.settleUntil = root.performance.now() + SETTLE_MS;
         clearSelection();
     }
 
@@ -459,6 +468,38 @@
 
     // Compact (about half the screen: the conversation stays in view) or
     // expanded (nearly full height) - toggled by the chevron.
+    //
+    // On a phone, scrolling down through the GIFs also expands it (more
+    // pictures at once), and scrolling back up to the top collapses it again.
+    // Only a panel that the scroll itself expanded is collapsed by scrolling,
+    // and the chevron overrides all of this for the current opening.
+    const SCROLL_EXPAND_FROM = 24;     // px scrolled down before it expands
+    const SCROLL_COLLAPSE_AT = 4;      // px from the top at which it collapses
+    const SETTLE_MS = 400;             // resizing moves the list: ignore its scroll events
+
+    function isDocked() {
+        return !!(root.matchMedia && root.matchMedia('(max-width: 768px)').matches);
+    }
+
+    function onResultsScroll() {
+        if (!state || !els) return;
+        const top = els.results.scrollTop;
+        const before = state.lastTop || 0;
+        state.lastTop = top;
+        if (state.userChose || !isDocked()) return;
+        if (root.performance.now() < (state.settleUntil || 0)) return;
+        const expanded = els.sheet.classList.contains('is-expanded');
+        if (!expanded && top > before && top > SCROLL_EXPAND_FROM) {
+            state.settleUntil = root.performance.now() + SETTLE_MS;
+            setExpanded(true);
+            state.scrollExpanded = true;
+        } else if (expanded && state.scrollExpanded && top < before && top <= SCROLL_COLLAPSE_AT) {
+            state.settleUntil = root.performance.now() + SETTLE_MS;
+            setExpanded(false);
+            state.scrollExpanded = false;
+        }
+    }
+
     function setExpanded(on) {
         els.sheet.classList.toggle('is-expanded', on);
         els.expand.setAttribute('aria-expanded', on ? 'true' : 'false');

@@ -69,7 +69,7 @@ test.describe('release notes data', () => {
         expect(group.title).toContain('Czat grupowy');
         expect(group.items.map(i => i.text).join(' ')).toMatch(/Do kogo\?/);
 
-        const gif = RELEASES.find(r => r.id === '2026-11-gify');
+        const gif = RELEASES.find(r => r.id === '2026-11-gify-klipy');
         expect(gif.title).toContain('GIF');
         expect(gif.requires).toBe('gif');
         expect(gif.items.map(i => i.text).join(' ')).toMatch(/przycisk GIF/);
@@ -80,7 +80,7 @@ test.describe('release notes data', () => {
         expect(latestRelease({ gif: false }).id).toBe('2026-11-czat-grupowy');
         expect(latestRelease().id).toBe('2026-11-czat-grupowy');
         // GIFs on: the GIF announcement is the newest
-        expect(latestRelease({ gif: true }).id).toBe('2026-11-gify');
+        expect(latestRelease({ gif: true }).id).toBe('2026-11-gify-klipy');
     });
 });
 
@@ -173,7 +173,7 @@ test.describe('banner behaviour', () => {
 // ===========================================================================
 
 test.describe('banner picture', () => {
-    const GIF_ENTRY = RELEASES.find(r => r.id === '2026-11-gify');
+    const GIF_ENTRY = RELEASES.find(r => r.id === '2026-11-gify-klipy');
 
     test('the GIF announcement carries our own animated GIF and a still, both real files', async ({ request }) => {
         const json = await (await request.get('/api/version')).json();
@@ -330,7 +330,7 @@ test.describe('banner picture', () => {
 // ===========================================================================
 
 test.describe('banner picture from KLIPY', () => {
-    const GIF_ENTRY = RELEASES.find(r => r.id === '2026-11-gify');
+    const GIF_ENTRY = RELEASES.find(r => r.id === '2026-11-gify-klipy');
     const KEY = 'TEST_APP_KEY_123';
     const SLUG = GIF_ENTRY.image.klipy;
     const url = (size, ext) => `https://static.klipy.com/ii/testhash/14/af/${SLUG}-${size}.${ext}`;
