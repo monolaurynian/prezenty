@@ -94,6 +94,9 @@
             padding: 4px 0;
             min-width: 0;
         }
+        /* The conversation's list. On a phone wiadomosci-page.js (fitChat)
+           replaces this max-height with whatever fits above the tab bar. */
+        #chatMessages { max-height: 58vh; min-height: 180px; }
         .chat-bubble {
             max-width: 82%;
             min-width: 0;

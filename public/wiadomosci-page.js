@@ -240,6 +240,7 @@
         // padded and scrolled to make room for the panel).
         function restoreAfterPanel() {
             panelScroll = 0;
+            fitChat();
             const composer = document.getElementById('composer');
             if (composer && composer.offsetParent !== null) {
                 composer.scrollIntoView({ block: 'nearest', behavior: 'instant' });
@@ -906,10 +907,51 @@
             send.disabled = !hasText || busy;
         }
 
+        // On a phone the conversation is sized to the screen: the message list
+        // takes what is left between the top of the page and the tab bar, so
+        // the whole conversation (list + composer) is on one screen and the
+        // page itself has nothing to scroll. A taller list (a fixed share of
+        // the screen height, as before) pushed the composer below the screen
+        // on small phones (iPhone SE), and the list - which catches every
+        // swipe on it - then made the rest of the page hard to reach.
+        // Only runs while the conversation is on show and the GIF panel is
+        // closed (the panel has its own arrangement, see keepChatAbovePanel).
+        function fitChat() {
+            const box = document.getElementById('chatMessages');
+            const view = document.getElementById('chatView');
+            const container = document.querySelector('.container');
+            if (!box || !view || !container) return;
+            const docked = !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+            if (view.offsetParent === null || !docked) {
+                // list view or desktop: the stylesheet's sizes apply again
+                box.style.maxHeight = '';
+                container.style.removeProperty('margin-bottom');
+                if (view.firstElementChild) view.firstElementChild.style.removeProperty('margin-bottom');
+                return;
+            }
+            if (document.documentElement.classList.contains('gif-panel-open')) return;
+            const card = view.firstElementChild;
+            if (!card) return;
+            // the page's own bottom margin would add scrollable emptiness under the card
+            container.style.setProperty('margin-bottom', '0', 'important');
+            card.style.setProperty('margin-bottom', '0', 'important');
+            const pad = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;   // room for the tab bar
+            const boxRect = box.getBoundingClientRect();
+            const below = card.getBoundingClientRect().bottom - boxRect.bottom;           // composer + card padding
+            const top = boxRect.top + window.scrollY;
+            const room = Math.floor(window.innerHeight - pad - top - below);
+            const atEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 4;
+            box.style.maxHeight = Math.max(180, room) + 'px';
+            if (atEnd) box.scrollTop = box.scrollHeight;       // keep the newest message in view
+        }
+        window.addEventListener('resize', fitChat);
+        window.addEventListener('orientationchange', fitChat);
+
         // Both composers: the one in a conversation and the "new message" card
         function syncComposer() {
             syncOneComposer('replyBody', 'replyBtn', 'gifBtn', sending);
             syncOneComposer('composeBody', 'composeBtn', 'gifComposeBtn', composeSending);
+            fitChat();   // the composer may have grown / shrunk, or the view changed
         }
 
         // `overrideBody` is a GIF token from the picker; otherwise the textarea is sent
