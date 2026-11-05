@@ -202,7 +202,7 @@
                     picture.onerror = useOwn;
                     picture.src = still ? found.still : found.animated;
                     // KLIPY asks to be credited where its GIFs are shown
-                    credit = el('div', 'font-size:11px;opacity:0.85;text-align:center;margin:-8px 0 10px;', 'GIF: KLIPY');
+                    credit = el('div', 'font-size:11px;opacity:0.85;text-align:center;margin:-8px 0 10px;', 'Powered by KLIPY');
                     picture.insertAdjacentElement('afterend', credit);
                 });
             } else {

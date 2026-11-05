@@ -65,12 +65,17 @@
         play.type = 'button';
         play.hidden = true;
 
+        // "Powered by KLIPY" for GIFs that come from there (text set per opening)
+        const credit = node('p', 'gif-lightbox-credit');
+        credit.hidden = true;
+
         overlay.appendChild(close);
         overlay.appendChild(figure);
         overlay.appendChild(play);
+        overlay.appendChild(credit);
         document.body.appendChild(overlay);
 
-        els = { overlay: overlay, close: close, figure: figure, image: image, missing: missing, play: play };
+        els = { overlay: overlay, close: close, figure: figure, image: image, missing: missing, play: play, credit: credit };
 
         // A tap on the dark area, the picture or the figure closes it; the
         // buttons do their own thing
@@ -140,6 +145,8 @@
         const height = safeSize(o.height, 220);
         els.image.hidden = false;
         els.missing.hidden = true;
+        els.credit.textContent = typeof o.credit === 'string' ? o.credit : '';
+        els.credit.hidden = !els.credit.textContent;
         els.image.alt = typeof o.alt === 'string' ? o.alt : 'Powiększony GIF';
         els.image.width = width;
         els.image.height = height;

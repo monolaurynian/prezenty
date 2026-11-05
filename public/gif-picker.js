@@ -114,7 +114,10 @@
         klipy: {
             label: 'KLIPY',
             attribution: 'Powered by KLIPY',
-            placeholder: 'Szukaj GIF-ów w KLIPY...',
+            // KLIPY REQUIRES exactly this placeholder in its search field
+            // (docs.klipy.com/attribution). It stays English on purpose.
+            placeholder: 'Search KLIPY',
+            searchLabel: 'Szukaj w KLIPY',
             async search(query, page) {
                 const result = await root.GifKlipy.search(query, page || 1);
                 return result;
@@ -218,12 +221,17 @@
         results.id = 'gifSheetResults';
         const colA = node('div', 'gif-sheet-col');
         const colB = node('div', 'gif-sheet-col');
-        results.appendChild(colA);
-        results.appendChild(colB);
+        const grid = node('div', 'gif-sheet-grid');
+        grid.appendChild(colA);
+        grid.appendChild(colB);
+        results.appendChild(grid);
 
-        const more = node('button', 'gif-sheet-more', 'Pokaż więcej');
+        // "Pokaż więcej" is the last thing INSIDE the scrolling list, so it only
+        // shows up once you have scrolled down to the end of what is loaded
+        const more = node('button', 'gif-sheet-more', MORE_LABEL);
         more.type = 'button';
         more.hidden = true;
+        results.appendChild(more);
 
         const preview = node('div', 'gif-sheet-preview');
         preview.hidden = true;
@@ -246,7 +254,6 @@
         sheet.appendChild(searchbox);
         sheet.appendChild(status);
         sheet.appendChild(results);
-        sheet.appendChild(more);
         sheet.appendChild(preview);
         sheet.appendChild(attribution);
 
@@ -316,6 +323,8 @@
     // Loading and rendering
     // ------------------------------------------------------------------
 
+    const MORE_LABEL = 'Pokaż więcej';
+
     function provider() {
         return PROVIDERS[config.provider] || null;
     }
@@ -375,8 +384,10 @@
             clearResults();
             els.more.hidden = true;
         }
-        setStatus(reset ? 'Szukam...' : 'Ładuję więcej...');
+        setStatus(reset ? 'Szukam...' : '');
+        const firstNew = state.items.length;   // index of the first GIF this page adds
         els.more.disabled = true;
+        if (!reset) els.more.textContent = 'Ładuję...';   // feedback on the button itself
         try {
             const cacheKey = state.query + '|' + state.cursor;
             let page = state.cache.get(cacheKey);
@@ -388,13 +399,25 @@
             page.items.forEach(addItem);
             state.cursor = page.next;
             els.more.hidden = !page.hasMore;
+            if (!reset) revealFrom(firstNew);
             setStatus(state.items.length ? '' : (state.query ? 'Nic nie znaleziono. Spróbuj innego słowa.' : 'Brak GIF-ów.'));
         } catch (error) {
             if (ticket !== state.ticket) return;
             setStatus((error && error.kind && error.message) || 'Nie udało się pobrać GIF-ów. Sprawdź połączenie.');
         } finally {
             els.more.disabled = false;
+            els.more.textContent = MORE_LABEL;
         }
+    }
+
+    // After "Pokaż więcej": bring the first new GIF into view, so it is
+    // obvious that something was added below
+    function revealFrom(index) {
+        const first = els.results.querySelector('.gif-sheet-item[data-index="' + index + '"]');
+        if (!first) return;
+        const reduced = !!(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        const top = els.results.scrollTop + (first.getBoundingClientRect().top - els.results.getBoundingClientRect().top) - 8;
+        els.results.scrollTo({ top: Math.max(0, top), behavior: reduced ? 'auto' : 'smooth' });
     }
 
     // ------------------------------------------------------------------
@@ -454,7 +477,7 @@
         };
         els.attribution.textContent = provider().attribution;
         els.search.placeholder = provider().placeholder || 'Szukaj GIF-ów...';
-        els.search.setAttribute('aria-label', els.search.placeholder.replace(/\.\.\.$/, ''));
+        els.search.setAttribute('aria-label', provider().searchLabel || els.search.placeholder.replace(/\.\.\.$/, ''));
         els.search.value = '';
         setExpanded(false);        // always opens compact
         els.sheet.removeAttribute('aria-hidden');

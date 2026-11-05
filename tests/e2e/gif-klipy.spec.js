@@ -232,7 +232,7 @@ test.describe('klipy picker', () => {
         expect(await page.evaluate(() => localStorage.getItem('prezenty-gif-customer'))).toBe(customer);
 
         await expect(page.locator(`${SHEET} .gif-sheet-attribution`)).toHaveText('Powered by KLIPY');
-        await expect(page.locator(`${SHEET} .gif-sheet-search`)).toHaveAttribute('placeholder', 'Szukaj GIF-ów w KLIPY...');
+        await expect(page.locator(`${SHEET} .gif-sheet-search`)).toHaveAttribute('placeholder', 'Search KLIPY');
         await expect(page.locator(`${SHEET} .gif-sheet-item`)).toHaveCount(2);
     });
 
@@ -461,6 +461,19 @@ test.describe('klipy GIFs in a conversation', () => {
         const row = page.locator('.chat-msg-row').last();
         await expect(row.locator(`img.chat-gif[src="${U('merry-christmas-trump', 'sm', 'webp')}"]`)).toBeVisible();
         await expect(row.locator('.chat-gif-missing')).toHaveCount(0);
+    });
+
+    test('KLIPY branding: a KLIPY watermark on the picture in the chat and "Powered by KLIPY" in the zoom modal', async ({ page }) => {
+        await mockKlipy(page);
+        await openPage(page, GROUP);
+        expect(await postGroupBody(page, '[gif:klipy:znak-klipy-991:220x220]')).toBe(200);
+        await page.evaluate(() => window.loadThreadMessages());
+        const zoom = page.locator('.chat-gif-zoom.is-klipy').last();
+        await expect(zoom).toBeVisible();
+        expect(await zoom.evaluate(el => getComputedStyle(el, '::after').content)).toBe('"KLIPY"');
+        await zoom.click();
+        await expect(page.locator('.gif-lightbox-credit')).toHaveText('Powered by KLIPY');
+        await expect(page.locator('.gif-lightbox-credit')).toBeVisible();
     });
 
     test('while the lookup is pending a slot of the final size holds the place (no layout jump), then the picture replaces it', async ({ page }) => {

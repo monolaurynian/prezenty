@@ -255,14 +255,18 @@ html.gif-panel-open body {
 .gif-sheet-results {
     flex: 1;
     min-height: 0;
-    display: flex;
-    gap: 8px;
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    align-items: flex-start;
     padding: 2px 0 4px;
+}
+
+/* the two columns of thumbnails; "Pokaż więcej" follows them inside the scroller */
+.gif-sheet-grid {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
 }
 
 .gif-sheet-col {
@@ -306,8 +310,9 @@ html.gif-panel-open body {
 }
 
 .gif-sheet-more {
-    flex: none;
-    margin: 6px 0 0;
+    display: block;
+    width: 100%;
+    margin: 12px 0 6px;
     min-height: 44px;
     border: 1px solid #868F99;
     border-radius: 12px;
@@ -710,4 +715,45 @@ html.gif-lightbox-open body {
     font-size: 13px;
     padding: 6px 10px;
     color: #4a5568;
+}
+
+/* --- KLIPY branding (docs.klipy.com/attribution) ------------------------
+   A small "KLIPY" watermark on KLIPY pictures in the chat, and
+   "Powered by KLIPY" in the zoom modal, next to the picker's own mark. */
+.chat-gif-zoom.is-klipy,
+.chat-gif-wrap.is-klipy {
+    position: relative;
+}
+
+.chat-gif-zoom.is-klipy::after,
+.chat-gif-wrap.is-klipy::after {
+    content: 'KLIPY';
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.58);
+    color: #ffffff;
+    font: 700 10px/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
+    letter-spacing: 0.6px;
+    pointer-events: none;
+}
+
+.gif-lightbox-credit {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    margin: 0;
+    text-align: center;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.92;
+    pointer-events: none;
+}
+
+.gif-lightbox-credit[hidden] {
+    display: none;
 }

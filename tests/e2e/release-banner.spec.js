@@ -373,7 +373,7 @@ test.describe('banner picture from KLIPY', () => {
         const picture = page.locator(`${BANNER} img`);
         await expect(picture).toHaveAttribute('src', url('md', 'webp'));   // bigger rendition, exactly as returned
         await expect(picture).toHaveAttribute('alt', GIF_ENTRY.image.klipyAlt);
-        await expect(page.locator(BANNER)).toContainText('GIF: KLIPY');
+        await expect(page.locator(BANNER)).toContainText('Powered by KLIPY');
         await expect.poll(() => picture.evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
 
         expect(asked.items.length).toBe(1);

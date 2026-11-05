@@ -51,3 +51,6 @@ tests/.results/
 tests/.cache/
 playwright-report/
 test-results/
+
+# screen recordings made by scripts/record-klipy-demo.js
+recordings/
