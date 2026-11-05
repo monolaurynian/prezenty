@@ -50,7 +50,6 @@
     // is different from KLIPY saying it no longer has the GIF (cache = null).
     // A failure is temporary, so it is never remembered as "gone".
     const failed = new Map();  // slug -> error kind ('rate' | 'key' | 'http' | 'network')
-    let learnedVariant = 0;    // which way of asking "items" last found a GIF the first way missed
 
     function configure(config) {
         appKey = config && config.klipyKey ? String(config.klipyKey) : null;
@@ -187,27 +186,23 @@
         const batches = [];
         for (let i = 0; i < wanted.length; i += ITEMS_CHUNK) batches.push(wanted.slice(i, i + ITEMS_CHUNK));
 
-        // The ways of asking the "items" endpoint, the documented one first.
-        // The others are only used for a GIF the first answer left out, in
-        // case the extra parameters of the first one were what hid it.
+        // Searched GIFs have slugs like "merry-christmas-trump--krgkjE0X7": the
+        // title plus "--" and an id. Asked for by that slug, KLIPY's "items"
+        // endpoint answers with the item under the title alone
+        // ("merry-christmas-trump"), as seen in a real chat. Two such GIFs can
+        // share a title ("love-you-3775"), so a title can only be trusted for a
+        // slug when it is unambiguous: one slug asked, one item answered.
+        function titleOf(slug) {
+            const at = slug.lastIndexOf('--');
+            return at > 0 ? slug.slice(0, at) : '';
+        }
+
+        // The documented request first; a GIF it leaves out is asked for alone
+        // (so there is nothing to confuse), without the extra parameters.
         const VARIANTS = [
             function (list) { return { slugs: list.join(','), customer_id: gifApi.customerId(), format_filter: FORMATS }; },
-            function (list) { return { slugs: list.join(',') }; },
-            function (list) { return { slugs: list.join(','), customer_id: gifApi.customerId(), locale: 'pl' }; },
-            // Slugs such as "merry-christmas-trump--krgkjE0X7" carry a mixed-case
-            // id; in one real chat every GIF with such a slug was "not found"
-            // while the all-lowercase ones were found. Try lowercase last.
-            function (list) { return { slugs: list.map(function (s) { return s.toLowerCase(); }).join(','), customer_id: gifApi.customerId(), format_filter: FORMATS }; },
-            // Last resort: only the id after "--" (the part that tells two
-            // GIFs with the same title apart)
-            function (list) { return { slugs: list.map(idPart).join(','), customer_id: gifApi.customerId(), format_filter: FORMATS }; }
+            function (list) { return { slugs: list.join(',') }; }
         ];
-
-        // "merry-christmas-trump--krgkjE0X7" -> "krgkjE0X7" ("" when there is no "--")
-        function idPart(slug) {
-            const at = slug.lastIndexOf('--');
-            return at > 0 && slug.length - at - 2 >= 6 ? slug.slice(at + 2) : '';
-        }
         const MAX_SECOND_TRIES = 8;   // protects the hourly request budget
 
         // One "items" request. Fills the cache with what came back and
@@ -219,27 +214,33 @@
                 const found = new Set();
                 const rejected = [];
                 const entries = [];
+                const used = new Set();
                 list.forEach(function (item) {
                     const entry = normalize(item);
                     if (entry) entries.push(entry);
                     else rejected.push((item && item.slug) + ': ' + whyNot(item));
                 });
-                // Match what came back to what was asked for. The slug KLIPY
-                // returns may differ from ours in letter case, so fall back to
-                // a case-insensitive match - stored under OUR slug, the one in the message.
+                // Match what came back to what was asked for: the same slug, the
+                // same slug in other letter case, or - when unambiguous - the
+                // title of a "title--id" slug. Always stored under OUR slug, the
+                // one in the message.
                 slugList.forEach(function (slug) {
-                    const id = idPart(slug).toLowerCase();
-                    const entry = entries.find(function (e) { return e.id === slug; }) ||
-                        entries.find(function (e) { return e.id.toLowerCase() === slug.toLowerCase(); }) ||
-                        (id ? entries.find(function (e) { return e.id.toLowerCase().endsWith('--' + id); }) : null);
+                    const lower = slug.toLowerCase();
+                    const title = titleOf(lower);
+                    let entry = entries.find(function (e) { return e.id === slug; }) ||
+                        entries.find(function (e) { return e.id.toLowerCase() === lower; });
+                    if (!entry && title) {
+                        const askedWithTitle = slugList.filter(function (s) { return titleOf(s.toLowerCase()) === title || s.toLowerCase() === title; });
+                        const answeredWithTitle = entries.filter(function (e) { return e.id.toLowerCase() === title; });
+                        if (askedWithTitle.length === 1 && answeredWithTitle.length === 1) entry = answeredWithTitle[0];
+                    }
                     if (!entry) return;
+                    used.add(entry);
                     cache.set(slug, { urls: entry.urls, width: entry.width, height: entry.height });
                     found.add(slug);
                 });
                 const missing = slugList.filter(function (slug) { return !found.has(slug); });
-                const unmatched = entries.filter(function (e) {
-                    return !slugList.some(function (slug) { return slug.toLowerCase() === e.id.toLowerCase(); });
-                });
+                const unmatched = entries.filter(function (e) { return !used.has(e); });
                 if (missing.length && unmatched.length) {
                     rejected.push('answered with other slugs: ' + unmatched.map(function (e) { return e.id; }).join(', '));
                 }
@@ -247,27 +248,13 @@
             });
         }
 
-        // A GIF left out of the first answer is asked for on its own, in the
-        // other ways, before it counts as gone. Resolves to true when found.
+        // A GIF left out of the first answer is asked for on its own before it
+        // counts as gone. Resolves to true when found.
         function askAgain(slug, notes) {
-            // the way that worked last time goes first, to spare the request budget
-            const order = [];
-            if (learnedVariant > 0) order.push(learnedVariant);
-            for (let v = 1; v < VARIANTS.length; v++) if (v !== learnedVariant) order.push(v);
-            return order.reduce(function (chain, variant) {
-                return chain.then(function (done) {
-                    if (done) return true;
-                    // the lowercase way is pointless for a slug that is already lowercase
-                    if (variant === 3 && slug === slug.toLowerCase()) return false;
-                    // ...and the id-only way needs an id
-                    if (variant === 4 && !idPart(slug)) return false;
-                    return lookup([slug], variant).then(function (result) {
-                        result.rejected.forEach(function (note) { notes.push(note); });
-                        if (result.missing.length === 0) { learnedVariant = variant; return true; }
-                        return false;
-                    });
-                });
-            }, Promise.resolve(false));
+            return lookup([slug], 1).then(function (result) {
+                result.rejected.forEach(function (note) { notes.push(note); });
+                return result.missing.length === 0;
+            });
         }
 
         batches.forEach(function (batch) {

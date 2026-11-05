@@ -431,10 +431,9 @@ test.describe('klipy GIFs in a conversation', () => {
 
         // One request carried all the slugs that were on screen and unknown;
         // the one KLIPY left out is asked for once more on its own before it counts as gone
-        // (two other ways of asking, since this slug has no capitals and no "--id")
-        expect(calls.items.length, JSON.stringify(calls.items)).toBe(3);
+        expect(calls.items.length, JSON.stringify(calls.items)).toBe(2);
         expect(calls.items[0].split(',')).toEqual(expect.arrayContaining(['album-zdjec-901', 'drugi-obrazek-902', 'usuniety-gif-903']));
-        expect(calls.items.slice(1)).toEqual(['usuniety-gif-903', 'usuniety-gif-903']);
+        expect(calls.items[1]).toBe('usuniety-gif-903');
         const itemsCall = calls.api.find(c => c.url.pathname.endsWith('/gifs/items'));
         expect(itemsCall.url.searchParams.get('customer_id')).toMatch(/^[0-9a-f]{32}$/);
 
@@ -447,6 +446,21 @@ test.describe('klipy GIFs in a conversation', () => {
         await page.waitForTimeout(800);
         expect(calls.items.length).toBe(askedBefore);
         expect(await page.locator('.chat-gif-slot').count()).toBe(0);
+    });
+
+    // Real KLIPY behaviour (seen in a production console): a searched GIF has a
+    // slug "title--kId", and the items endpoint answers with the item under "title".
+    test('a searched GIF ("title--id") is found when KLIPY answers under the title alone', async ({ page }) => {
+        const titleOf = s => (s.includes('--') ? s.slice(0, s.lastIndexOf('--')) : s);
+        await mockKlipy(page, { items: (route, url) => route.fulfill({
+            json: page1(url.searchParams.get('slugs').split(',').map(s => klipyItem(titleOf(s), 220, 220, titleOf(s))))
+        }) });
+        await openPage(page, GROUP);
+        expect(await postGroupBody(page, '[gif:klipy:merry-christmas-trump--krgkjE0X7:220x220]')).toBe(200);
+        await page.evaluate(() => window.loadThreadMessages());
+        const row = page.locator('.chat-msg-row').last();
+        await expect(row.locator(`img.chat-gif[src="${U('merry-christmas-trump', 'sm', 'webp')}"]`)).toBeVisible();
+        await expect(row.locator('.chat-gif-missing')).toHaveCount(0);
     });
 
     test('while the lookup is pending a slot of the final size holds the place (no layout jump), then the picture replaces it', async ({ page }) => {
