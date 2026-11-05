@@ -810,6 +810,7 @@
     // end is nearer. The chevron overrides all of this for the current opening.
     // A SIDEWAYS drag is the pager's: it is never touched here.
     const IDLE_MS = 160;               // a wheel pause this long ends the gesture
+    const EDGE_SLOP = 3;               // px: within this of compact / expanded counts as being there
     const AXIS_SLOP = 3;               // px of movement before a drag is called sideways or vertical
 
     function isDocked() {
@@ -836,7 +837,13 @@
         if (!state || !els || state.userChose || !isDocked() || !move) return false;
         const sizes = panelHeights();
         // where the panel is right now (it may still be easing from the last gesture)
-        const h = state.liveH != null ? state.liveH : Math.round(els.sheet.getBoundingClientRect().height);
+        let h = state.liveH != null ? state.liveH : els.sheet.getBoundingClientRect().height;
+        // The CSS heights (dvh) and the ones computed above can differ by a
+        // fraction of a pixel (on an iPhone: fractional layout heights). Without
+        // this, a panel that is already expanded still counted as "growing" on
+        // every drag, took the movement, and cancelled the list's scrolling.
+        if (Math.abs(h - sizes.full) <= EDGE_SLOP) h = sizes.full;
+        else if (Math.abs(h - sizes.compact) <= EDGE_SLOP) h = sizes.compact;
         let next;
         if (move > 0 && h < sizes.full) next = Math.min(sizes.full, h + move);
         else if (move < 0 && activeTab().card.scrollTop <= 0 && h > sizes.compact) next = Math.max(sizes.compact, h + move);
@@ -882,7 +889,11 @@
         if (touch.axis !== 'y') return;
         const move = touch.y - y;                   // finger up = positive
         touch.y = y;
-        if (resizeBy(move) && e.cancelable) e.preventDefault();   // the list stays put
+        // Once the browser is already scrolling the list (iOS decides early) the
+        // move can no longer be cancelled: let the list scroll and leave the
+        // panel alone, rather than moving both under the finger.
+        if (!e.cancelable) return;
+        if (resizeBy(move)) e.preventDefault();   // the list stays put
     }
 
     function onResultsTouchEnd() {
