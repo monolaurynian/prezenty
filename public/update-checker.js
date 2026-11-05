@@ -181,7 +181,7 @@
         picture.alt = (image.klipy || remote) ? '' : image.alt;   // no alt text flashing while it loads
         picture.width = sizeFrom.width;
         picture.height = sizeFrom.height;
-        const fit = 'display:block;margin:0 auto 12px;border-radius:12px;background:#ffffff;object-fit:contain;max-height:300px;';
+        const fit = 'display:block;margin:0 auto 12px;border-radius:12px;background:#ffffff;object-fit:contain;max-height:min(300px,24vh);';   // (a tall picture must leave room for the buttons)
         // a remote picture may be tall: let the box match it instead of filling a wide white box
         picture.style.cssText = remote
             ? fit + 'width:auto;height:auto;max-width:100%;'

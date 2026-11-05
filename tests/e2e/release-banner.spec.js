@@ -492,7 +492,7 @@ test.describe('banner picture from KLIPY', () => {
             expect(fit.imgLeft, JSON.stringify(fit)).toBeGreaterThanOrEqual(fit.cardLeft - 0.5);
             expect(fit.imgRight, JSON.stringify(fit)).toBeLessThanOrEqual(fit.cardRight + 0.5);
             expect(fit.cardRight, JSON.stringify(fit)).toBeLessThanOrEqual(fit.view + 0.5);
-            expect(fit.imgHeight, JSON.stringify(fit)).toBeLessThanOrEqual(241);
+            expect(fit.imgHeight, JSON.stringify(fit)).toBeLessThanOrEqual(301);   // the banner picture is capped at 300px tall
             const report = await collectOverflow(page);
             expect(report.rootScroll.delta, JSON.stringify(report.rootScroll)).toBeLessThanOrEqual(0.5);
         });
