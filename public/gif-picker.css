@@ -717,49 +717,9 @@ html.gif-lightbox-open body {
     color: #4a5568;
 }
 
-/* --- KLIPY branding (docs.klipy.com/attribution) ------------------------
-   A small "KLIPY" watermark on KLIPY pictures in the chat, and
-   "Powered by KLIPY" in the zoom modal, next to the picker's own mark. */
-.chat-gif-zoom.is-klipy,
-.chat-gif-wrap.is-klipy {
-    position: relative;
-}
-
-.chat-gif-zoom.is-klipy::after,
-.chat-gif-wrap.is-klipy::after {
-    content: 'KLIPY';
-    position: absolute;
-    left: 6px;
-    bottom: 6px;
-    padding: 3px 7px;
-    border-radius: 6px;
-    background: rgba(0, 0, 0, 0.58);
-    color: #ffffff;
-    font: 700 10px/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
-    letter-spacing: 0.6px;
-    pointer-events: none;
-}
-
-.gif-lightbox-credit {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-    margin: 0;
-    text-align: center;
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 600;
-    opacity: 0.92;
-    pointer-events: none;
-}
-
-.gif-lightbox-credit[hidden] {
-    display: none;
-}
-
 /* --- KLIPY tabs: GIF-y / Naklejki / Memy -------------------------------- */
 .gif-sheet-tabs {
+    position: relative;
     display: flex;
     flex: none;
     gap: 6px;
@@ -774,7 +734,24 @@ html.gif-lightbox-open body {
     display: none;
 }
 
+/* The purple pill under the selected tab; gif-picker.js moves it with
+   transform / width, so it glides from one tab to the next */
+.gif-sheet-tab-indicator {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    height: 44px;
+    width: 0;
+    border-radius: 22px;
+    background: #7B1FA2;
+    box-shadow: 0 2px 6px rgba(123, 31, 162, 0.35);
+    transition: transform 0.28s cubic-bezier(0.3, 0.8, 0.3, 1), width 0.28s cubic-bezier(0.3, 0.8, 0.3, 1);
+    pointer-events: none;
+}
+
 .gif-sheet-tab {
+    position: relative;
+    z-index: 1;
     flex: 1 1 0;
     min-width: 0;
     min-height: 44px;
@@ -793,8 +770,7 @@ html.gif-lightbox-open body {
 }
 
 .gif-sheet-tab[aria-selected="true"] {
-    background: #7B1FA2;
-    color: #ffffff;
+    color: #ffffff;   /* the indicator behind it provides the purple */
 }
 
 .gif-sheet-tab:focus-visible {
@@ -802,8 +778,30 @@ html.gif-lightbox-open body {
     outline-offset: 2px;
 }
 
+/* The list of a newly opened tab slides in a little from its side */
+@keyframes gifSlideNext {
+    from { opacity: 0; transform: translateX(36px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes gifSlidePrev {
+    from { opacity: 0; transform: translateX(-36px); }
+    to { opacity: 1; transform: none; }
+}
+
+.gif-sheet-results.is-sliding-next > * {
+    animation: gifSlideNext 0.26s ease-out both;
+}
+
+.gif-sheet-results.is-sliding-prev > * {
+    animation: gifSlidePrev 0.26s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .gif-sheet-tab { transition: none; }
+    .gif-sheet-tab,
+    .gif-sheet-tab-indicator { transition: none; }
+    .gif-sheet-results.is-sliding-next > *,
+    .gif-sheet-results.is-sliding-prev > * { animation: none; }
 }
 
 /* --- Stickers are cut-outs with a transparent background ---------------- */

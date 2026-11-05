@@ -109,7 +109,6 @@
                     width: zoom.getAttribute('data-w'),
                     height: zoom.getAttribute('data-h'),
                     alt: 'Powiększony GIF',
-                    credit: zoom.getAttribute('data-credit') || '',
                     trigger: zoom
                 });
             });
@@ -632,27 +631,22 @@
             // bigger ones (all URLs built by us / returned by the provider)
             const zoom = urls.zoom || { animated: urls.animated, still: urls.still };
             const token = window.GifMessage.buildGifToken(gif.provider, gif.id, gif.width, gif.height, gif.kind);
-            // KLIPY asks for its mark wherever its content is shown: a small corner
-            // watermark on the picture and "Powered by KLIPY" in the zoom modal
-            const isKlipy = gif.provider === 'klipy';
-            const markClass = isKlipy ? ' is-klipy' : '';
             const zoomData =
                 ` data-gif-token="${escapeHtml(token)}"` +
                 ` data-animated="${escapeHtml(urls.animated)}" data-still="${escapeHtml(urls.still)}"` +
                 ` data-zoom-animated="${escapeHtml(zoom.animated)}" data-zoom-still="${escapeHtml(zoom.still)}"` +
-                ` data-w="${gif.width}" data-h="${gif.height}"` +
-                (isKlipy ? ' data-credit="Powered by KLIPY"' : '');
+                ` data-w="${gif.width}" data-h="${gif.height}"`;
             if (prefersReducedMotion() && urls.still !== urls.animated) {
                 // Reduced motion: a still picture, tap to play; zooming has
                 // its own corner button so the two taps do not collide
-                return `<span class="chat-gif-wrap${markClass}${kindClass}" data-gif-token="${escapeHtml(token)}">` +
+                return `<span class="chat-gif-wrap${kindClass}" data-gif-token="${escapeHtml(token)}">` +
                     `<button type="button" class="chat-gif-toggle is-still" aria-label="${words.play}"` +
                     ` data-still="${escapeHtml(urls.still)}" data-animated="${escapeHtml(urls.animated)}">` +
                     `<img class="chat-gif" src="${escapeHtml(urls.still)}" ${dims} alt="${words.still}" loading="lazy"></button>` +
                     `<button type="button" class="chat-gif-zoom chat-gif-zoom-badge" aria-label="${words.zoom}"${zoomData}>` +
                     GIF_ZOOM_ICON + `</button></span>`;
             }
-            return `<button type="button" class="chat-gif-zoom${markClass}${kindClass}" aria-label="${words.zoom}"${zoomData}>` +
+            return `<button type="button" class="chat-gif-zoom${kindClass}" aria-label="${words.zoom}"${zoomData}>` +
                 `<img class="chat-gif" src="${escapeHtml(urls.animated)}" ${dims} alt="${words.alt}" loading="lazy"></button>`;
         }
 

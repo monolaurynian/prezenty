@@ -104,8 +104,6 @@ async function record(options) {
             }, null, { timeout: 8000 }).catch(() => {});
             await say('1/7  "What\'s new" announcement with a GIF from KLIPY');
             await wait(2500);
-            const credited = (await banner.innerText()).includes('Powered by KLIPY');
-            note('announcement credits KLIPY ("Powered by KLIPY")', credited);
             await wait(2500);
             await banner.getByRole('button', { name: 'Później' }).click();
             await say('');
@@ -169,18 +167,15 @@ async function record(options) {
         const sent = page.waitForResponse((r) => /\/api\/wiadomosci\/group$/.test(r.url()) && r.request().method() === 'POST');
         await page.locator('#gifSheet .gif-sheet-send').click();
         await sent;
-        await say('7/7  The GIF arrives in the chat with a KLIPY watermark; tap it to zoom');
-        const sentGif = page.locator('.chat-gif-zoom.is-klipy, .chat-gif-wrap.is-klipy').last();
+        await say('7/7  The GIF arrives in the chat; tap it to zoom');
+        const sentGif = page.locator('.chat-gif-zoom, .chat-gif-wrap').last();
         await sentGif.waitFor();
         await sentGif.scrollIntoViewIfNeeded();
-        note('KLIPY watermark on the GIF in the chat', true);
         await wait(3000);
 
         // 7. Zoom
         await sentGif.click();
         await page.locator('#gifLightbox.is-open').waitFor();
-        const credit = (await page.locator('.gif-lightbox-credit').innerText()).trim();
-        note('"Powered by KLIPY" in the zoom view', credit === 'Powered by KLIPY', credit);
         await wait(3500);
         await page.keyboard.press('Escape');
         await say('');

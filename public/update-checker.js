@@ -177,9 +177,7 @@
             picture.style.cssText = 'display:block;width:100%;height:auto;max-width:' + image.width +
                 'px;max-height:240px;object-fit:contain;margin:0 auto 12px;border-radius:12px;background:#ffffff;';
             // A missing file must not leave a broken-image icon: show the text alone
-            let credit = null;
-            const useOwn = function () {
-                if (credit) { credit.remove(); credit = null; }
+                const useOwn = function () {
                 picture.alt = image.alt;
                 picture.width = image.width;
                 picture.height = image.height;
@@ -201,9 +199,6 @@
                     // if KLIPY's file will not load, fall back to our own picture
                     picture.onerror = useOwn;
                     picture.src = still ? found.still : found.animated;
-                    // KLIPY asks to be credited where its GIFs are shown
-                    credit = el('div', 'font-size:11px;opacity:0.85;text-align:center;margin:-8px 0 10px;', 'Powered by KLIPY');
-                    picture.insertAdjacentElement('afterend', credit);
                 });
             } else {
                 useOwn();

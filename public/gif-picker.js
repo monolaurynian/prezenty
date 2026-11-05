@@ -229,6 +229,10 @@
         tabs.setAttribute('aria-label', 'Rodzaj obrazka');
         tabs.hidden = true;
         const tabButtons = {};
+        // the purple pill that slides behind the selected tab
+        const indicator = node('span', 'gif-sheet-tab-indicator');
+        indicator.setAttribute('aria-hidden', 'true');
+        tabs.appendChild(indicator);
         Object.keys(TAB_LABELS).forEach(function (kind) {
             const tab = node('button', 'gif-sheet-tab', TAB_LABELS[kind]);
             tab.type = 'button';
@@ -290,8 +294,11 @@
 
         els = {
             overlay, sheet, title, close, expand, search, status, results, cols: [colA, colB],
-            more, preview, previewImg, send, cancel, attribution, tabs, tabButtons
+            more, preview, previewImg, send, cancel, attribution, tabs, tabButtons, indicator
         };
+
+        // The indicator is placed from measurements, so redo it when the size changes
+        root.addEventListener('resize', function () { if (state && state.kinds) placeIndicator(false); });
 
         tabs.addEventListener('click', function (e) {
             const tab = e.target instanceof Element && e.target.closest('.gif-sheet-tab');
@@ -450,6 +457,7 @@
             page.items.forEach(addItem);
             state.cursor = page.next;
             state.loaded = true;
+            if (reset && state.slide) { slideIn(state.slide); state.slide = 0; }
             els.more.hidden = !page.hasMore;
             if (!reset) revealFrom(firstNew);
             setStatus(state.items.length ? '' : (state.query ? 'Nic nie znaleziono. Spróbuj innego słowa.' : EMPTY_LABELS[kind]));
@@ -530,15 +538,43 @@
         Object.keys(els.tabButtons).forEach(function (kind) {
             els.tabButtons[kind].hidden = !kinds || kinds.indexOf(kind) === -1;
         });
-        markTab();
+        markTab(false);
     }
 
-    function markTab() {
+    // `animate`: slide the indicator to the new tab (false = put it there at once)
+    function markTab(animate) {
         Object.keys(els.tabButtons).forEach(function (kind) {
             const on = kind === state.kind;
             els.tabButtons[kind].setAttribute('aria-selected', on ? 'true' : 'false');
             els.tabButtons[kind].setAttribute('tabindex', on ? '0' : '-1');
         });
+        placeIndicator(animate);
+    }
+
+    function placeIndicator(animate) {
+        const selected = els.tabButtons[state.kind];
+        const indicator = els.indicator;
+        if (!selected || els.tabs.hidden || selected.hidden) return;
+        if (!animate) indicator.style.transition = 'none';
+        indicator.style.width = selected.offsetWidth + 'px';
+        indicator.style.transform = 'translateX(' + selected.offsetLeft + 'px)';
+        if (!animate) {
+            void indicator.offsetWidth;          // apply it before animations come back
+            indicator.style.transition = '';
+        }
+    }
+
+    // The list of the tab just opened slides in from the side the tab is on,
+    // so the move feels like going along a row. (CSS drops it for reduced motion.)
+    function slideIn(direction) {
+        const results = els.results;
+        results.classList.remove('is-sliding-next', 'is-sliding-prev');
+        void results.offsetWidth;                // restart the animation
+        results.classList.add(direction > 0 ? 'is-sliding-next' : 'is-sliding-prev');
+        if (state.slideTimer) clearTimeout(state.slideTimer);
+        state.slideTimer = setTimeout(function () {
+            results.classList.remove('is-sliding-next', 'is-sliding-prev');
+        }, 360);
     }
 
     // Show another tab. What the tab was showing is kept, so coming back is
@@ -552,8 +588,9 @@
             hasMore: !els.more.hidden, scrollTop: els.results.scrollTop
         };
         clearLiveSize();
+        const direction = state.kinds.indexOf(kind) - state.kinds.indexOf(state.kind);
         state.kind = kind;
-        markTab();
+        markTab(true);
         clearResults();
         els.more.hidden = true;
         els.results.scrollTop = 0;
@@ -568,7 +605,9 @@
             els.more.hidden = !saved.hasMore;
             setStatus(state.items.length ? '' : EMPTY_LABELS[kind]);
             els.results.scrollTop = saved.scrollTop;
+            slideIn(direction);
         } else {
+            state.slide = direction;     // played when the new tab's first results arrive
             load(true);
         }
     }

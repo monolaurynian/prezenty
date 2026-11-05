@@ -463,7 +463,7 @@ test.describe('klipy tabs', () => {
         expect(calls.folders).toContain('stickers');
     });
 
-    test('a sticker in the chat has no bubble, a KLIPY mark, and is looked up in the sticker folder after a reload', async ({ page }) => {
+    test('a sticker in the chat has no bubble and is looked up in the sticker folder after a reload', async ({ page }) => {
         const calls = await mockKlipy(page, { items: byFolder });
         await openPage(page, GROUP);
         expect(await postGroupBody(page, '[gif:klipy-sticker:naklejka-tuz-tuz-801:200x150]')).toBe(200);
@@ -472,7 +472,6 @@ test.describe('klipy tabs', () => {
         const bubble = page.locator('.chat-bubble.has-sticker').last();
         await expect(bubble.locator('img.chat-gif')).toBeVisible();
         expect(await bubble.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
-        expect(await bubble.locator('.chat-gif-zoom').evaluate(el => getComputedStyle(el, '::after').content)).toBe('"KLIPY"');
         expect(calls.folders).toEqual(['stickers']);
         // the list says what it is
         await page.goto('/wiadomosci', { waitUntil: 'load' });
@@ -561,19 +560,6 @@ test.describe('klipy GIFs in a conversation', () => {
         const row = page.locator('.chat-msg-row').last();
         await expect(row.locator(`img.chat-gif[src="${U('merry-christmas-trump', 'sm', 'webp')}"]`)).toBeVisible();
         await expect(row.locator('.chat-gif-missing')).toHaveCount(0);
-    });
-
-    test('KLIPY branding: a KLIPY watermark on the picture in the chat and "Powered by KLIPY" in the zoom modal', async ({ page }) => {
-        await mockKlipy(page);
-        await openPage(page, GROUP);
-        expect(await postGroupBody(page, '[gif:klipy:znak-klipy-991:220x220]')).toBe(200);
-        await page.evaluate(() => window.loadThreadMessages());
-        const zoom = page.locator('.chat-gif-zoom.is-klipy').last();
-        await expect(zoom).toBeVisible();
-        expect(await zoom.evaluate(el => getComputedStyle(el, '::after').content)).toBe('"KLIPY"');
-        await zoom.click();
-        await expect(page.locator('.gif-lightbox-credit')).toHaveText('Powered by KLIPY');
-        await expect(page.locator('.gif-lightbox-credit')).toBeVisible();
     });
 
     test('while the lookup is pending a slot of the final size holds the place (no layout jump), then the picture replaces it', async ({ page }) => {
