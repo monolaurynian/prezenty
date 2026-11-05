@@ -68,12 +68,33 @@
             messagesBox.addEventListener('error', (e) => {
                 const img = e.target;
                 if (!(img instanceof HTMLImageElement) || !img.classList.contains('chat-gif')) return;
-                const note = document.createElement('div');
-                note.className = 'chat-gif-missing';
-                note.textContent = 'Ten GIF jest niedostępny';
+                // The picture would not load. We cannot tell "removed" from
+                // "offline / blocked / briefly unreachable", so this is a
+                // retryable failure, not a permanent "unavailable".
+                const holder = img.closest('[data-gif-token]');
+                const token = holder && holder.getAttribute('data-gif-token');
+                const parsed = token && parsedGif(token);
+                // For KLIPY, forget the URLs so a retry asks the API again
+                if (parsed && parsed.provider === 'klipy' && window.GifKlipy) window.GifKlipy.forget(parsed.id);
+                const replacement = document.createElement('div');
+                replacement.innerHTML = parsed ? gifFailedHtml(token) : GIF_MISSING_HTML;
                 // replace the whole GIF (picture + its zoom/play buttons)
-                (img.closest('.chat-gif-wrap') || img.closest('.chat-gif-zoom') || img.closest('.chat-gif-toggle') || img).replaceWith(note);
+                (holder || img.closest('.chat-gif-toggle') || img).replaceWith(replacement.firstElementChild);
             }, true);
+
+            // "Spróbuj ponownie": draw the GIF again from its message token
+            messagesBox.addEventListener('click', (e) => {
+                if (!(e.target instanceof Element)) return;
+                const retry = e.target.closest('.chat-gif-retry');
+                if (!retry) return;
+                const gif = parsedGif(retry.getAttribute('data-gif-token'));
+                if (!gif) return;
+                if (gif.provider === 'klipy' && window.GifKlipy) window.GifKlipy.forget(gif.id);
+                const note = retry.closest('.chat-gif-failed');
+                const parent = note.parentElement;
+                note.outerHTML = gifHtml(gif);
+                hydrateKlipyGifs(parent);
+            });
 
             // Tap a GIF (or the corner button in reduced-motion mode) to zoom
             messagesBox.addEventListener('click', (e) => {
@@ -108,6 +129,17 @@
                     sendReply();
                 }
             });
+            document.getElementById('replyBody').addEventListener('input', syncComposer);
+            // The new-message card: the same keys as in a conversation
+            const composeBody = document.getElementById('composeBody');
+            composeBody.addEventListener('input', syncComposer);
+            composeBody.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendNewMessage();
+                }
+            });
+            syncComposer();
 
             // Periodic refresh: an open conversation polls fast so replies
             // show up quickly, the thread list refreshes lazily
@@ -198,6 +230,63 @@
         // The group chat is one more choice in the recipient dropdown
         const GROUP_OPTION_VALUE = 'group';
 
+        // The docked GIF panel covers the bottom of the screen, composer
+        // included. Scroll the page so the newest messages end just above
+        // the panel instead of hiding behind it (the page has already been
+        // given room at the bottom, see html.gif-panel-open in gif-picker.css).
+        let panelScroll = 0;   // how far WE scrolled the page for the open panel
+
+        // When the panel closes, put the composer back in view (the page was
+        // padded and scrolled to make room for the panel).
+        function restoreAfterPanel() {
+            panelScroll = 0;
+            const composer = document.getElementById('composer');
+            if (composer && composer.offsetParent !== null) {
+                composer.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+            }
+        }
+
+        function keepChatAbovePanel(panel) {
+            if (!panel || !panel.docked) return;
+            // Expanded, the panel takes nearly the whole screen: chasing the
+            // newest message would scroll the whole conversation out of sight
+            // for no benefit. Hand back what was scrolled for the compact
+            // panel, and leave the page alone until it is compact again.
+            if (panel.expanded) {
+                if (panelScroll > 0) {
+                    window.scrollTo({ top: Math.max(0, window.scrollY - panelScroll), behavior: 'instant' });
+                    panelScroll = 0;
+                }
+                return;
+            }
+            const box = document.getElementById('chatMessages');
+            if (!box || box.offsetParent === null) return;   // list view: nothing to keep in view
+            box.scrollTop = box.scrollHeight;                // the newest message, inside the list
+            // The page was only just given room for the panel (padding at
+            // the bottom), so it may not be tall enough to scroll by the full
+            // amount yet: scroll once layout has caught up, then once more as
+            // a safety net.
+            const scrollIntoClear = () => {
+                // how far the end of the list is below the line just above the panel
+                const delta = box.getBoundingClientRect().bottom - (panel.top - 8);
+                // 'instant', not 'auto': Bootstrap sets scroll-behavior: smooth
+                // on the page, and overlapping smooth scrolls stop short
+                if (delta > 0.5) {
+                    // covered: scroll the page up until the list ends above the panel
+                    window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' });
+                    panelScroll += delta;
+                } else if (delta < -0.5 && panelScroll > 0) {
+                    // the panel got smaller (collapsed): give back what we scrolled,
+                    // but never more than we scrolled ourselves
+                    const back = Math.min(-delta, panelScroll);
+                    window.scrollTo({ top: window.scrollY - back, behavior: 'instant' });
+                    panelScroll -= back;
+                }
+            };
+            scrollIntoClear();
+            requestAnimationFrame(() => { scrollIntoClear(); setTimeout(scrollIntoClear, 120); });
+        }
+
         // The message body for a picked GIF, or null (with a toast) if the
         // pick is not valid. Never fall back to sending the typed draft.
         function gifToken(gif) {
@@ -218,11 +307,16 @@
                     if (!window.GifPicker.isEnabled()) return;
                     const reply = document.getElementById('gifBtn');
                     const compose = document.getElementById('gifComposeBtn');
-                    [reply, compose].forEach(btn => { if (btn) btn.style.display = ''; });
+                    // The conversation's GIF pill appears/disappears with the text
+                    // in the field (syncComposer), in the new-message card too
+                    gifAvailable = true;
+                    syncComposer();
                     if (reply) {
                         reply.addEventListener('click', () => {
                             window.GifPicker.open({
                                 trigger: reply,
+                                onOpen: keepChatAbovePanel,
+                                onClose: restoreAfterPanel,
                                 onPick: (gif) => { const token = gifToken(gif); if (token) sendReply(token); }
                             });
                         });
@@ -278,10 +372,8 @@
             if (!targetUserId) { showToast('Wybierz odbiorcę', 'error'); return; }
             if (!body) { showToast('Wpisz wiadomość', 'error'); return; }
 
-            const btn = document.getElementById('composeBtn');
-            const original = btn.innerHTML;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Wysyłanie...';
-            btn.disabled = true;
+            composeSending = true;
+            syncComposer();
 
             // "Czat grupowy" in the dropdown posts into the one shared room
             // (no thread is created) and opens it
@@ -303,7 +395,7 @@
                         }
                     })
                     .catch(() => showToast('Błąd połączenia', 'error'))
-                    .finally(() => { btn.innerHTML = original; btn.disabled = false; });
+                    .finally(() => { composeSending = false; syncComposer(); });
                 return;
             }
 
@@ -324,7 +416,7 @@
                     }
                 })
                 .catch(() => showToast('Błąd połączenia', 'error'))
-                .finally(() => { btn.innerHTML = original; btn.disabled = false; });
+                .finally(() => { composeSending = false; syncComposer(); });
         }
 
         // ===== Threads =====
@@ -391,6 +483,7 @@
             }
             document.getElementById('listView').style.display = 'none';
             document.getElementById('chatView').style.display = 'block';
+            syncComposer();
             document.getElementById('chatMessages').innerHTML =
                 '<div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>';
             // Hide delete button for group chat (it can't be deleted)
@@ -470,7 +563,23 @@
             return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
         }
 
+        // The GIF is gone for good (the provider no longer has it)
         const GIF_MISSING_HTML = '<div class="chat-gif-missing">Ten GIF jest niedostępny</div>';
+
+        // The GIF could not be LOADED right now (network, a provider rate
+        // limit, a blocked host): that is temporary, so say so and offer a retry.
+        // `token` is the validated message token, safe to put in an attribute.
+        function gifFailedHtml(token) {
+            return `<div class="chat-gif-missing chat-gif-failed">` +
+                `<span>Nie udało się wczytać GIF-a</span> ` +
+                `<button type="button" class="chat-gif-retry" data-gif-token="${escapeHtml(token)}">Spróbuj ponownie</button></div>`;
+        }
+
+        // Pauses (ms) before the automatic retries of a failed KLIPY lookup.
+        // window.GIF_RETRY_DELAYS lets the test suite shorten them.
+        function gifRetryDelays() {
+            return Array.isArray(window.GIF_RETRY_DELAYS) ? window.GIF_RETRY_DELAYS : [3000, 8000, 20000];
+        }
 
         // Settles once the GIF config request is done (success or failure).
         // KLIPY slots wait for it: until then the key is not known, and
@@ -499,14 +608,16 @@
             // What the zoom modal needs: the chat-size pictures plus the
             // bigger ones (all URLs built by us / returned by the provider)
             const zoom = urls.zoom || { animated: urls.animated, still: urls.still };
+            const token = window.GifMessage.buildGifToken(gif.provider, gif.id, gif.width, gif.height);
             const zoomData =
+                ` data-gif-token="${escapeHtml(token)}"` +
                 ` data-animated="${escapeHtml(urls.animated)}" data-still="${escapeHtml(urls.still)}"` +
                 ` data-zoom-animated="${escapeHtml(zoom.animated)}" data-zoom-still="${escapeHtml(zoom.still)}"` +
                 ` data-w="${gif.width}" data-h="${gif.height}"`;
             if (prefersReducedMotion()) {
                 // Reduced motion: a still picture, tap to play; zooming has
                 // its own corner button so the two taps do not collide
-                return `<span class="chat-gif-wrap">` +
+                return `<span class="chat-gif-wrap" data-gif-token="${escapeHtml(token)}">` +
                     `<button type="button" class="chat-gif-toggle is-still" aria-label="Odtwórz GIF"` +
                     ` data-still="${escapeHtml(urls.still)}" data-animated="${escapeHtml(urls.animated)}">` +
                     `<img class="chat-gif" src="${escapeHtml(urls.still)}" ${dims} alt="GIF - nieruchomy podgląd" loading="lazy"></button>` +
@@ -522,22 +633,42 @@
 
         // Fills the KLIPY slots drawn by gifHtml(): asks KLIPY (once, batched,
         // cached) for the real picture URLs of the slugs on screen.
-        function hydrateKlipyGifs(container) {
+        //
+        // Three different outcomes, three different looks:
+        //   found         -> the picture
+        //   KLIPY says it is gone -> "Ten GIF jest niedostępny" (permanent)
+        //   the LOOKUP failed (network, rate limit) -> the slot stays as a
+        //     placeholder while it is retried a few times with growing pauses;
+        //     if that still fails: "Nie udało się wczytać GIF-a" + a retry button.
+        //     (A failed lookup used to be shown as "gone", which was wrong and
+        //     stayed wrong until the page was reloaded.)
+        function hydrateKlipyGifs(container, attempt) {
+            attempt = attempt || 0;
             const slots = Array.prototype.slice.call(container.querySelectorAll('.chat-gif-slot[data-klipy-slug]'));
             if (!slots.length) return;
+            const tokenOf = (slot) => `[gif:klipy:${slot.getAttribute('data-klipy-slug')}:${slot.getAttribute('data-w')}x${slot.getAttribute('data-h')}]`;
             const missing = (slot) => { if (slot.isConnected) slot.outerHTML = GIF_MISSING_HTML; };
             gifConfigReady.then(() => {
                 if (!window.GifKlipy || !window.GifKlipy.hasKey()) { slots.forEach(missing); return; }
                 return window.GifKlipy.resolve(slots.map(slot => slot.getAttribute('data-klipy-slug')));
             }).then(() => {
+                const unresolved = [];
                 slots.forEach(slot => {
                     if (!slot.isConnected) return; // the list was re-rendered meanwhile
                     const slug = slot.getAttribute('data-klipy-slug');
-                    const gif = parsedGif(`[gif:klipy:${slug}:${slot.getAttribute('data-w')}x${slot.getAttribute('data-h')}]`);
+                    const gif = parsedGif(tokenOf(slot));
+                    if (!gif) { missing(slot); return; }
                     // undefined = the lookup itself failed (offline, rate limit)
-                    if (!gif || window.GifKlipy.cached(slug) === undefined) { missing(slot); return; }
-                    slot.outerHTML = gifHtml(gif);
+                    if (window.GifKlipy.cached(slug) === undefined) { unresolved.push(slot); return; }
+                    slot.outerHTML = gifHtml(gif); // null (gone) draws the "niedostępny" note
                 });
+                if (!unresolved.length) return;
+                const delays = gifRetryDelays();
+                if (attempt < delays.length) {
+                    setTimeout(() => hydrateKlipyGifs(container, attempt + 1), delays[attempt]);
+                } else {
+                    unresolved.forEach(slot => { if (slot.isConnected) slot.outerHTML = gifFailedHtml(tokenOf(slot)); });
+                }
             });
         }
 
@@ -713,6 +844,36 @@
                 .catch(() => showToast('Nie udało się załadować rozmowy', 'error'));
         }
 
+        // ===== Composer =====
+        // The field grows with the text (up to ~5 lines, then scrolls). The
+        // right-hand side shows the purple GIF pill while there is nothing to
+        // send, and the round send button once there is. With GIFs off the
+        // send button stays (greyed while the field is empty).
+        let gifAvailable = false;   // set by setupGifs()
+        let sending = false;        // a message is in flight (conversation)
+        let composeSending = false; // a message is in flight (new-message card)
+
+        function syncOneComposer(inputId, sendId, gifId, busy) {
+            const input = document.getElementById(inputId);
+            const send = document.getElementById(sendId);
+            const gif = document.getElementById(gifId);
+            if (!input || !send) return;
+            // grow / shrink to fit
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 132) + 'px';
+            const hasText = input.value.trim().length > 0;
+            const showGif = gifAvailable && !hasText;
+            if (gif) gif.style.display = showGif ? '' : 'none';
+            send.hidden = showGif;
+            send.disabled = !hasText || busy;
+        }
+
+        // Both composers: the one in a conversation and the "new message" card
+        function syncComposer() {
+            syncOneComposer('replyBody', 'replyBtn', 'gifBtn', sending);
+            syncOneComposer('composeBody', 'composeBtn', 'gifComposeBtn', composeSending);
+        }
+
         // `overrideBody` is a GIF token from the picker; otherwise the textarea is sent
         function sendReply(overrideBody) {
             const input = document.getElementById('replyBody');
@@ -720,8 +881,8 @@
             const body = isOverride ? overrideBody : input.value.trim();
             if (!body || (!currentThreadId && !newChatTargetId)) return;
 
-            const btn = document.getElementById('replyBtn');
-            btn.disabled = true;
+            sending = true;
+            syncComposer();
 
             // Group chat branch
             if (currentThreadId === 'group') {
@@ -733,7 +894,7 @@
                     .then(r => r.json())
                     .then(d => {
                         if (d.ok) {
-                            if (!isOverride) input.value = ''; // a GIF leaves the typed draft alone
+                            if (!isOverride) { input.value = ''; syncComposer(); } // a GIF leaves the typed draft alone
                             lastChatSignature = null; // force re-render
                             loadGroupMessages();
                         } else {
@@ -741,7 +902,7 @@
                         }
                     })
                     .catch(() => showToast('Błąd połączenia', 'error'))
-                    .finally(() => { btn.disabled = false; });
+                    .finally(() => { sending = false; syncComposer(); });
                 return;
             }
 
@@ -762,7 +923,7 @@
                 .then(r => r.json())
                 .then(d => {
                     if (d.success) {
-                        if (!isOverride) input.value = ''; // a GIF leaves the typed draft alone
+                        if (!isOverride) { input.value = ''; syncComposer(); } // a GIF leaves the typed draft alone
                         if (isNew && d.threadId) {
                             currentThreadId = d.threadId;
                             newChatTargetId = null;
@@ -774,7 +935,7 @@
                     }
                 })
                 .catch(() => showToast('Błąd połączenia', 'error'))
-                .finally(() => { btn.disabled = false; });
+                .finally(() => { sending = false; syncComposer(); });
         }
 
         // Hard-deletes the thread for BOTH participants - the other

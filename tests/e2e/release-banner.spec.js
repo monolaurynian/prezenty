@@ -324,3 +324,149 @@ test.describe('banner picture', () => {
         await expect(page.locator(`${BANNER} img`)).toHaveCount(0);
     });
 });
+
+// ===========================================================================
+// The banner picture can be a KLIPY GIF, looked up live in the browser
+// ===========================================================================
+
+test.describe('banner picture from KLIPY', () => {
+    const GIF_ENTRY = RELEASES.find(r => r.id === '2026-11-gify');
+    const KEY = 'TEST_APP_KEY_123';
+    const SLUG = GIF_ENTRY.image.klipy;
+    const url = (size, ext) => `https://static.klipy.com/ii/testhash/14/af/${SLUG}-${size}.${ext}`;
+    const media = (size, ext, w, h) => ({ url: url(size, ext), width: w, height: h, size: 1234 });
+    const rendition = (size, w, h) => ({ gif: media(size, 'gif', w, h), webp: media(size, 'webp', w, h), jpg: media(size, 'jpg', w, h) });
+    const ITEM = {
+        id: 1, slug: SLUG, title: 'what buddy', type: 'gif',
+        file: { hd: rendition('hd', 498, 280), md: rendition('md', 340, 191), sm: rendition('sm', 220, 124), xs: rendition('xs', 90, 51) }
+    };
+    const GIF_BYTES = require('fs').readFileSync(require('path').join(__dirname, '..', '..', 'public', 'demo-gifs', 'hura.gif'));
+
+    /** KLIPY on, with the item lookup answered by `items` (default: the item). */
+    async function mockKlipy(page, items) {
+        const asked = { items: [] };
+        await page.route('**/api/wiadomosci/gif-config', route => route.fulfill({ json: {
+            enabled: true, provider: 'klipy', apiKey: KEY, rating: 'pg', contentFilter: 'high', klipyKey: KEY
+        } }));
+        await page.route('https://api.klipy.com/**', (route) => {
+            const u = new URL(route.request().url());
+            if (u.pathname.endsWith('/gifs/items')) {
+                asked.items.push(u);
+                if (items) return items(route);
+            }
+            return route.fulfill({ json: { result: true, data: { data: [ITEM], current_page: 1, per_page: 24, has_next: false } } });
+        });
+        await page.route('https://static*.klipy.com/**', route => route.fulfill({ contentType: 'image/gif', body: GIF_BYTES }));
+        return asked;
+    }
+
+    test('the announcement names the KLIPY GIF by slug, with the drawn picture kept as the fallback', () => {
+        expect(SLUG).toBe('what-buddy');
+        expect(GIF_ENTRY.image.src).toBe('/release/gify.gif');
+        expect(GIF_ENTRY.image.klipyAlt.length).toBeGreaterThan(10);
+    });
+
+    test('where KLIPY is on: the GIF is asked for from the browser, shown as KLIPY returned it, and credited', async ({ page }) => {
+        await asReturningUser(page);
+        const asked = await mockKlipy(page);
+        await openPage(page, PAGE);
+        const picture = page.locator(`${BANNER} img`);
+        await expect(picture).toHaveAttribute('src', url('md', 'webp'));   // bigger rendition, exactly as returned
+        await expect(picture).toHaveAttribute('alt', GIF_ENTRY.image.klipyAlt);
+        await expect(page.locator(BANNER)).toContainText('GIF: KLIPY');
+        await expect.poll(() => picture.evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
+
+        expect(asked.items.length).toBe(1);
+        expect(asked.items[0].searchParams.get('slugs')).toBe(SLUG);
+        expect(asked.items[0].searchParams.get('customer_id')).toMatch(/^[0-9a-f]{32}$/);
+        // nothing of ours was asked to serve a copy
+        await expect(page.locator(BANNER)).not.toContainText('undefined');
+    });
+
+    test('reduced motion: the still JPG of the KLIPY GIF', async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await asReturningUser(page);
+        await mockKlipy(page);
+        await openPage(page, PAGE);
+        await expect(page.locator(`${BANNER} img`)).toHaveAttribute('src', url('md', 'jpg'));
+    });
+
+    test('KLIPY refusing (rate limit) leaves our drawn GIF, with no credit', async ({ page }) => {
+        await asReturningUser(page);
+        await mockKlipy(page, route => route.fulfill({ status: 429, json: { result: false } }));
+        await openPage(page, PAGE);
+        await expect(page.locator(`${BANNER} img`)).toHaveAttribute('src', '/release/gify.gif');
+        await expect(page.locator(`${BANNER} img`)).toHaveAttribute('alt', GIF_ENTRY.image.alt);
+        await expect(page.locator(BANNER)).not.toContainText('KLIPY');
+    });
+
+    test('a GIF KLIPY no longer has leaves our drawn GIF', async ({ page }) => {
+        await asReturningUser(page);
+        await mockKlipy(page, route => route.fulfill({ json: { result: true, data: { data: [], current_page: 1, per_page: 24, has_next: false } } }));
+        await openPage(page, PAGE);
+        await expect(page.locator(`${BANNER} img`)).toHaveAttribute('src', '/release/gify.gif');
+        await expect(page.locator(BANNER)).not.toContainText('KLIPY');
+    });
+
+    test('KLIPY\'s picture not loading falls back to our drawn GIF', async ({ page }) => {
+        await asReturningUser(page);
+        await mockKlipy(page);
+        await page.route('https://static*.klipy.com/**', route => route.abort());
+        await openPage(page, PAGE);
+        await expect(page.locator(`${BANNER} img`)).toHaveAttribute('src', '/release/gify.gif');
+        await expect(page.locator(BANNER)).not.toContainText('KLIPY');
+    });
+
+    test('a KLIPY answer that never comes does not hold the banner: our GIF after a few seconds', async ({ page }) => {
+        await asReturningUser(page);
+        await mockKlipy(page, () => new Promise(() => { /* never answers */ }));
+        await openPage(page, PAGE);
+        const banner = page.locator(BANNER);
+        await expect(banner).toBeVisible();                       // the banner itself is not delayed
+        await expect(banner).toContainText(DEMO_RELEASE.title);
+        await expect(page.locator(`${BANNER} img`)).toHaveAttribute('src', '/release/gify.gif', { timeout: 10000 });
+    });
+
+    test('without a KLIPY key (GIPHY / demo) KLIPY is never contacted', async ({ page }) => {
+        await asReturningUser(page);
+        const contacted = [];
+        page.on('request', r => { if (r.url().includes('klipy.com')) contacted.push(r.url()); });
+        await openPage(page, PAGE);   // the demo server has no KLIPY key
+        await expect(page.locator(`${BANNER} img`)).toHaveAttribute('src', '/release/gify.gif');
+        expect(contacted).toEqual([]);
+    });
+
+    test('a slug that is not a plain slug is ignored: our picture, nothing requested', async ({ page }) => {
+        await asReturningUser(page);
+        const asked = await mockKlipy(page);
+        await serveRelease(page, {
+            id: 'klipy-hostile', title: 'Tytuł', intro: 'Wstęp', items: [{ icon: '•', text: 'punkt' }],
+            image: { src: '/release/gify.gif', klipy: 'x/../../evil?y=1', alt: 'x', width: 360, height: 180 }
+        });
+        await openPage(page, PAGE);
+        await expect(page.locator(`${BANNER} img`)).toHaveAttribute('src', '/release/gify.gif');
+        expect(asked.items).toEqual([]);
+    });
+
+    for (const width of [320, 375, 768]) {
+        test(`the banner with the KLIPY GIF fits the ${width}px screen`, async ({ page }) => {
+            await asReturningUser(page);
+            await mockKlipy(page);
+            await openPage(page, PAGE);
+            await setViewport(page, width);
+            const banner = page.locator(BANNER);
+            await expect(banner.locator('img')).toHaveAttribute('src', url('md', 'webp'));
+            const fit = await banner.evaluate(root => {
+                const card = root.firstElementChild.getBoundingClientRect();
+                const img = root.querySelector('img').getBoundingClientRect();
+                return { cardLeft: card.left, cardRight: card.right, imgLeft: img.left, imgRight: img.right, imgHeight: img.height, view: window.innerWidth };
+            });
+            expect(fit.imgLeft, JSON.stringify(fit)).toBeGreaterThanOrEqual(fit.cardLeft - 0.5);
+            expect(fit.imgRight, JSON.stringify(fit)).toBeLessThanOrEqual(fit.cardRight + 0.5);
+            expect(fit.cardRight, JSON.stringify(fit)).toBeLessThanOrEqual(fit.view + 0.5);
+            expect(fit.imgHeight, JSON.stringify(fit)).toBeLessThanOrEqual(241);
+            const report = await collectOverflow(page);
+            expect(report.rootScroll.delta, JSON.stringify(report.rootScroll)).toBeLessThanOrEqual(0.5);
+        });
+    }
+});

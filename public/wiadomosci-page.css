@@ -161,3 +161,105 @@
         .toast-container { z-index: 9999; }
         #successToast, #errorToast, #successToast *, #errorToast * { text-shadow: none; }
     
+        /* ===== Composer =====
+           A pill field that grows with the text. On the right: the purple GIF
+           pill while the field is empty, a round send button once there is
+           something to send (wiadomosci-page.js: syncComposer). */
+        .composer {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-top: 12px;
+            min-width: 0;
+        }
+        .composer-field {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: flex-end;
+            background: #ffffff;
+            border: 1.5px solid #cfd4da;
+            border-radius: 24px;
+            padding: 3px 14px 3px 18px;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .composer-field:focus-within {
+            border-color: #7B1FA2;
+            box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.16);
+        }
+        .composer-field textarea {
+            flex: 1;
+            min-width: 0;
+            border: none;
+            outline: none;
+            resize: none;
+            background: transparent;
+            padding: 9px 0;
+            font-size: 16px;            /* 16px: iOS does not zoom the page on focus */
+            line-height: 22px;
+            max-height: 132px;          /* ~5 lines, then it scrolls */
+            overflow-y: auto;
+            color: #212529;
+            font-family: inherit;
+        }
+        .composer-field textarea::placeholder { color: #8a9099; }
+        .composer-send {
+            flex: none;
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 50%;
+            background: #7B1FA2;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(123, 31, 162, 0.35);
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .composer-send:hover:not(:disabled) { background: #6A1B9A; }
+        .composer-send:active:not(:disabled) { transform: scale(0.94); }
+        .composer-send:disabled {
+            background: #c9b5d3;
+            box-shadow: none;
+            cursor: default;
+        }
+        .composer-send svg {
+            width: 22px;
+            height: 22px;
+            fill: none;
+            stroke: #ffffff;
+            stroke-width: 2.4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            pointer-events: none;
+        }
+        .composer-send:focus-visible,
+        .composer-field textarea:focus-visible {
+            outline: 2px solid #1E88E5;
+            outline-offset: 2px;
+        }
+        .composer-field textarea:focus-visible { outline: none; }  /* the field shows the ring */
+        .composer-send[hidden] { display: none; }
+        @media (prefers-reduced-motion: reduce) {
+            .composer-field, .composer-send { transition: none; }
+        }
+
+        /* ===== New-message card: same look as the conversation composer ===== */
+        #targetSelect {
+            border: 1.5px solid #cfd4da;
+            border-radius: 24px;
+            min-height: 48px;
+            padding-left: 18px;
+            font-size: 16px;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        #targetSelect:focus {
+            border-color: #7B1FA2;
+            box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.16);
+        }
+        #composeGroupHint { padding: 0 6px; }
+        #composeComposer { margin-top: 4px; }
+        @media (prefers-reduced-motion: reduce) {
+            #targetSelect { transition: none; }
+        }

@@ -217,9 +217,8 @@ test.describe('gif picker', () => {
         expect(await page.locator('.chat-bubble').count()).toBe(before);
     });
 
-    test('"Wyślij GIF" sends it: stored as a token, drawn as a picture, typed draft untouched', async ({ page }) => {
+    test('"Wyślij GIF" sends it: stored as a token, drawn as a picture, the field stays empty', async ({ page }) => {
         await openPage(page, THREAD);
-        await page.locator('#replyBody').fill('niedokończona myśl');
         const before = await page.locator('.chat-gif').count();
 
         await openGifPicker(page);
@@ -235,8 +234,8 @@ test.describe('gif picker', () => {
         const bubble = page.locator('.chat-bubble.has-gif').last();
         await expect(bubble.locator('img.chat-gif')).toHaveAttribute('src', '/demo-gifs/hura.gif');
         await expect(bubble.locator('img.chat-gif')).toHaveAttribute('alt', 'Animowany GIF');
-        // The message list returns the token; the draft in the box is still there
-        await expect(page.locator('#replyBody')).toHaveValue('niedokończona myśl');
+        // Nothing got typed into the field by sending a GIF
+        await expect(page.locator('#replyBody')).toHaveValue('');
         // The picture actually loaded
         await expect.poll(() => bubble.locator('img.chat-gif').evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
     });
@@ -348,7 +347,6 @@ test.describe('gif messages', () => {
         await expect(page.locator('.toast.show .toast-body')).toContainText('Wybierz odbiorcę');
         await expect(page.locator(SHEET)).not.toBeVisible();
 
-        await page.locator('#composeBody').fill('szkic zostaje');
         await page.locator('#targetSelect').selectOption('group');
         await openGifPicker(page, '#gifComposeBtn');
         await page.locator(`${SHEET} .gif-sheet-search`).fill('dzieki');
@@ -382,11 +380,13 @@ test.describe('gif messages', () => {
         expect(await page.evaluate(() => window.__xss)).toBeUndefined();
     });
 
-    test('a GIF that cannot be loaded becomes a short note', async ({ page }) => {
+    test('a GIF that cannot be loaded becomes a short note with a retry (we cannot tell "removed" from "offline")', async ({ page }) => {
         await openPage(page, GROUP);
         expect((await postGroupBody(page, '[gif:demo:nie-istnieje:200x100]')).status).toBe(200);
         await page.evaluate(() => window.loadThreadMessages());
-        await expect(page.locator('.chat-gif-missing').last()).toHaveText('Ten GIF jest niedostępny');
+        const note = page.locator('.chat-gif-failed').last();
+        await expect(note).toContainText('Nie udało się wczytać GIF-a');
+        await expect(note.locator('.chat-gif-retry')).toHaveText('Spróbuj ponownie');
     });
 
     test('reduced motion: a still with a play badge; tap plays, tap again stops', async ({ page }) => {
@@ -417,12 +417,15 @@ test.describe('gif messages', () => {
             const report = await collectOverflow(page);
             expect(report.rootScroll.delta, JSON.stringify(report.rootScroll)).toBeLessThanOrEqual(0.5);
             expect(report.offenders, JSON.stringify(report.offenders)).toEqual([]);
+            // Empty field: the GIF pill is in the composer and inside the screen
             const row = await page.evaluate(() => {
-                const box = id => { const r = document.getElementById(id).getBoundingClientRect(); return { l: r.left, r: r.right }; };
-                return { gif: box('gifBtn'), send: box('replyBtn'), view: window.innerWidth };
+                const r = document.getElementById('gifBtn').getBoundingClientRect();
+                const c = document.getElementById('composer').getBoundingClientRect();
+                return { gif: { l: r.left, r: r.right }, composer: { l: c.left, r: c.right }, view: window.innerWidth };
             });
-            expect(row.gif.r, JSON.stringify(row)).toBeLessThanOrEqual(row.send.l + 0.5);
-            expect(row.send.r, JSON.stringify(row)).toBeLessThanOrEqual(row.view + 0.5);
+            expect(row.gif.l, JSON.stringify(row)).toBeGreaterThanOrEqual(row.composer.l - 0.5);
+            expect(row.gif.r, JSON.stringify(row)).toBeLessThanOrEqual(row.composer.r + 0.5);
+            expect(row.composer.r, JSON.stringify(row)).toBeLessThanOrEqual(row.view + 0.5);
         });
     }
 });

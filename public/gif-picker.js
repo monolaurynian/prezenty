@@ -173,16 +173,28 @@
         sheet.setAttribute('aria-hidden', 'true');
         sheet.setAttribute('inert', '');
 
+        // Header: [ spacer | chevron (expand / collapse) | close ]. The title
+        // is for assistive tech only: the panel is self-explanatory by sight.
         const header = node('div', 'gif-sheet-header');
-        const title = node('h2', '', 'Wybierz GIF-a');
+        const spacer = node('span', 'gif-sheet-spacer');
+        spacer.setAttribute('aria-hidden', 'true');
+        const title = node('h2', 'gif-sr-only', 'Wybierz GIF-a');
         title.id = 'gifSheetTitle';
+        const expand = node('button', 'gif-sheet-expand');
+        expand.type = 'button';
+        expand.setAttribute('aria-expanded', 'false');
+        expand.setAttribute('aria-label', 'Rozwiń listę GIF-ów');
+        expand.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14.5l6-6 6 6"/></svg>';
         const close = node('button', 'gif-sheet-close');
         close.type = 'button';
         close.setAttribute('aria-label', 'Zamknij');
         close.textContent = '\u00D7';
-        header.appendChild(title);
+        header.appendChild(spacer);
+        header.appendChild(expand);
         header.appendChild(close);
 
+        // Search: a pill with a magnifier inside
+        const searchbox = node('div', 'gif-sheet-searchbox');
         const search = node('input', 'gif-sheet-search');
         search.type = 'search';
         search.placeholder = 'Szukaj GIF-ów...';
@@ -192,6 +204,11 @@
         search.setAttribute('autocapitalize', 'off');
         search.setAttribute('spellcheck', 'false');
         search.maxLength = MAX_QUERY;
+        const magnifier = node('span', 'gif-sheet-magnifier');
+        magnifier.setAttribute('aria-hidden', 'true');
+        magnifier.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>';
+        searchbox.appendChild(magnifier);
+        searchbox.appendChild(search);
 
         const status = node('p', 'gif-sheet-status');
         status.setAttribute('role', 'status');
@@ -224,8 +241,9 @@
 
         const attribution = node('p', 'gif-sheet-attribution');
 
+        sheet.appendChild(title);
         sheet.appendChild(header);
-        sheet.appendChild(search);
+        sheet.appendChild(searchbox);
         sheet.appendChild(status);
         sheet.appendChild(results);
         sheet.appendChild(more);
@@ -236,12 +254,13 @@
         document.body.appendChild(sheet);
 
         els = {
-            overlay, sheet, title, close, search, status, results, cols: [colA, colB],
+            overlay, sheet, title, close, expand, search, status, results, cols: [colA, colB],
             more, preview, previewImg, send, cancel, attribution
         };
 
         overlay.addEventListener('click', closeSheet);
         close.addEventListener('click', closeSheet);
+        expand.addEventListener('click', function () { setExpanded(!sheet.classList.contains('is-expanded')); });
         cancel.addEventListener('click', clearSelection);
         send.addEventListener('click', sendSelected);
         more.addEventListener('click', function () { load(false); });
@@ -416,6 +435,8 @@
         focusBefore = (options && options.trigger) || document.activeElement;
         state = {
             onPick: options && options.onPick,
+            onOpen: options && options.onOpen,
+            onClose: options && options.onClose,
             ticket: 0, cursor: 0, query: '', items: [], colHeights: [0, 0],
             cache: new Map(), selected: null, timer: null
         };
@@ -423,20 +444,78 @@
         els.search.placeholder = provider().placeholder || 'Szukaj GIF-ów...';
         els.search.setAttribute('aria-label', els.search.placeholder.replace(/\.\.\.$/, ''));
         els.search.value = '';
+        setExpanded(false);        // always opens compact
         els.sheet.removeAttribute('aria-hidden');
         els.sheet.removeAttribute('inert');
         els.overlay.classList.add('is-open');
         els.sheet.classList.add('is-open');
         clearResults();
         load(true);
-        els.search.focus();
+        // On a phone, focusing the search would raise the keyboard over the
+        // very list the user came to look at: start on the panel instead.
+        const touch = !!(root.matchMedia && root.matchMedia('(pointer: coarse)').matches);
+        (touch ? els.close : els.search).focus();
+    }
+
+    // Compact (about half the screen: the conversation stays in view) or
+    // expanded (nearly full height) - toggled by the chevron.
+    function setExpanded(on) {
+        els.sheet.classList.toggle('is-expanded', on);
+        els.expand.setAttribute('aria-expanded', on ? 'true' : 'false');
+        els.expand.setAttribute('aria-label', on ? 'Zwiń listę GIF-ów' : 'Rozwiń listę GIF-ów');
+        reserveSpace();
+    }
+
+    // On a phone the panel covers the bottom of the screen. Reserve that much
+    // room at the bottom of the page (html.gif-panel-open pads <body>) and tell
+    // the page how much is covered, so it can keep the newest messages in view.
+    function reserveSpace() {
+        if (!state) return;
+        const docked = !!(root.matchMedia && root.matchMedia('(max-width: 768px)').matches);
+        const root_ = document.documentElement;
+        if (!docked) {
+            root_.classList.remove('gif-panel-open');
+            root_.style.removeProperty('--gif-panel-h');
+        } else {
+            // The panel's height is animated, so offsetHeight can still be the
+            // OLD height right after the class changes. Read the final one.
+            const height = finalHeight();
+            root_.style.setProperty('--gif-panel-h', height + 'px');
+            root_.classList.add('gif-panel-open');
+        }
+        const onOpen = state.onOpen;
+        if (typeof onOpen === 'function') {
+            root.requestAnimationFrame(function () {
+                if (state) {
+                    onOpen({
+                        docked: docked,
+                        expanded: els.sheet.classList.contains('is-expanded'),
+                        top: root.innerHeight - (docked ? finalHeight() : 0)
+                    });
+                }
+            });
+        }
+    }
+
+    // The height the panel has (or is animating to) in its current state.
+    function finalHeight() {
+        const sheet = els.sheet;
+        const previous = sheet.style.transition;
+        sheet.style.transition = 'none';          // measure without animating
+        const height = Math.round(sheet.getBoundingClientRect().height);
+        sheet.style.transition = previous;
+        return height;
     }
 
     function closeSheet(skipFocus) {
         if (!els || !state) return;
         if (state.timer) clearTimeout(state.timer);
         state.ticket++;
+        const onClose = state.onClose;
         state = null;
+        document.documentElement.classList.remove('gif-panel-open');
+        document.documentElement.style.removeProperty('--gif-panel-h');
+        if (typeof onClose === 'function') onClose();
         els.overlay.classList.remove('is-open');
         els.sheet.classList.remove('is-open');
         els.sheet.setAttribute('aria-hidden', 'true');

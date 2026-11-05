@@ -44,6 +44,10 @@
 
     const cache = new Map();   // slug -> { urls, width, height } | null (not found)
     const inFlight = new Map(); // slug -> Promise of the request that fetches it
+    // Slugs whose last lookup FAILED (network, rate limit, bad key) - which
+    // is different from KLIPY saying it no longer has the GIF (cache = null).
+    // A failure is temporary, so it is never remembered as "gone".
+    const failed = new Map();  // slug -> error kind ('rate' | 'key' | 'http' | 'network')
 
     function configure(config) {
         appKey = config && config.klipyKey ? String(config.klipyKey) : null;
@@ -151,6 +155,7 @@
     /** Fetches the real URLs for slugs not seen yet (batched, deduplicated). */
     function resolve(slugs) {
         const wanted = Array.from(new Set(slugs)).filter(slug => !cache.has(slug) && !inFlight.has(slug));
+        wanted.forEach(function (slug) { failed.delete(slug); }); // asking again
         const batches = [];
         for (let i = 0; i < wanted.length; i += ITEMS_CHUNK) batches.push(wanted.slice(i, i + ITEMS_CHUNK));
 
@@ -171,8 +176,15 @@
                 });
                 // Asked for but not returned: gone from KLIPY (remember that)
                 batch.forEach(function (slug) { if (!found.has(slug)) cache.set(slug, null); });
-            }).catch(function () {
-                /* network / rate limit: leave uncached so the next refresh retries */
+            }).catch(function (error) {
+                // Network / rate limit / key: NOT "the GIF is gone". Leave it
+                // uncached (so a retry asks again) but remember why it failed.
+                const kind = (error && error.kind) || 'network';
+                batch.forEach(function (slug) { failed.set(slug, kind); });
+                if (root.console && root.console.warn) {
+                    root.console.warn('[GIF] KLIPY lookup failed (' + kind + ') for ' + batch.length + ' GIF(s)' +
+                        (kind === 'rate' ? ' - the test key allows 100 requests per hour' : ''));
+                }
             }).then(function () {
                 batch.forEach(function (slug) { inFlight.delete(slug); });
             });
@@ -184,6 +196,17 @@
 
     function cached(slug) {
         return cache.get(slug);
+    }
+
+    /** Why the last lookup of this slug failed, or null if it did not. */
+    function failure(slug) {
+        return failed.get(slug) || null;
+    }
+
+    /** Drops everything known about a slug, so the next resolve() asks KLIPY again. */
+    function forget(slug) {
+        cache.delete(slug);
+        failed.delete(slug);
     }
 
     /** Fire-and-forget: "this GIF was shared" (improves their ranking). */
@@ -205,6 +228,8 @@
         search: search,
         resolve: resolve,
         cached: cached,
+        failure: failure,
+        forget: forget,
         share: share,
         normalize: normalize,
         MEDIA_HOST: MEDIA_HOST

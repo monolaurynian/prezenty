@@ -89,10 +89,60 @@
         return {
             src: src,
             still: safeImagePath(image.still),
+            // optional: a KLIPY GIF (by slug) looked up live; src/still stay
+            // as the picture to use when KLIPY is not available
+            klipy: typeof image.klipy === 'string' && KLIPY_SLUG.test(image.klipy) ? image.klipy : null,
             alt: typeof image.alt === 'string' ? image.alt : '',
+            klipyAlt: typeof image.klipyAlt === 'string' ? image.klipyAlt : '',
             width: Math.round(width),
             height: Math.round(height)
         };
+    }
+
+    const KLIPY_SLUG = /^[A-Za-z0-9_-]{1,120}$/;
+    const KLIPY_WAIT_MS = 4000;   // after this the drawn picture is used instead
+
+    function loadScriptOnce(src, isLoaded) {
+        return new Promise(function (resolve, reject) {
+            if (isLoaded()) { resolve(); return; }
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = function () { isLoaded() ? resolve() : reject(new Error('not loaded')); };
+            script.onerror = function () { reject(new Error('failed to load ' + src)); };
+            document.head.appendChild(script);
+        });
+    }
+
+    // Looks the GIF up on KLIPY from the browser (their rules: the browser
+    // asks, and the URLs are used exactly as returned). Resolves to
+    // { animated, still, width, height } or null for ANY problem (no key,
+    // offline, rate limit, the GIF gone), so the caller can fall back.
+    function lookupKlipy(slug) {
+        const work = fetch('/api/wiadomosci/gif-config', { credentials: 'same-origin' })
+            .then(function (response) { return response.ok ? response.json() : null; })
+            .then(function (config) {
+                if (!config || !config.enabled || !config.klipyKey) return null;
+                return loadScriptOnce('/gif-message.js?v=4', function () { return !!window.GifMessage; })
+                    .then(function () { return loadScriptOnce('/gif-klipy.js?v=3', function () { return !!window.GifKlipy; }); })
+                    .then(function () {
+                        window.GifKlipy.configure(config);
+                        return window.GifKlipy.resolve([slug]);
+                    })
+                    .then(function () {
+                        const entry = window.GifKlipy.cached(slug);
+                        if (!entry || !entry.urls) return null;
+                        const zoom = entry.urls.zoom || {};
+                        return {
+                            animated: zoom.animated || entry.urls.animated,
+                            still: zoom.still || entry.urls.still,
+                            width: entry.width,
+                            height: entry.height
+                        };
+                    });
+            })
+            .catch(function () { return null; });
+        const timeout = new Promise(function (resolve) { setTimeout(function () { resolve(null); }, KLIPY_WAIT_MS); });
+        return Promise.race([work, timeout]);
     }
 
     function prefersReducedMotion() {
@@ -118,16 +168,46 @@
         const image = safeImage(release.image);
         if (image) {
             const picture = document.createElement('img');
-            // People who prefer reduced motion get the still version
-            picture.src = prefersReducedMotion() && image.still ? image.still : image.src;
-            picture.alt = image.alt;
+            const still = prefersReducedMotion();
+            // Our own drawn picture (People who prefer reduced motion get the still)
+            const ownSrc = still && image.still ? image.still : image.src;
+            picture.alt = image.klipy ? '' : image.alt;   // no alt text flashing while KLIPY is asked
             picture.width = image.width;
             picture.height = image.height;
             picture.style.cssText = 'display:block;width:100%;height:auto;max-width:' + image.width +
-                'px;margin:0 auto 12px;border-radius:12px;background:#ffffff;';
+                'px;max-height:240px;object-fit:contain;margin:0 auto 12px;border-radius:12px;background:#ffffff;';
             // A missing file must not leave a broken-image icon: show the text alone
-            picture.addEventListener('error', function () { picture.remove(); });
+            let credit = null;
+            const useOwn = function () {
+                if (credit) { credit.remove(); credit = null; }
+                picture.alt = image.alt;
+                picture.width = image.width;
+                picture.height = image.height;
+                picture.style.maxWidth = image.width + 'px';
+                picture.onerror = function () { picture.remove(); };
+                picture.src = ownSrc;
+            };
             card.appendChild(picture);
+
+            if (image.klipy) {
+                // The space is held (width/height above) while KLIPY is asked
+                lookupKlipy(image.klipy).then(function (found) {
+                    if (!picture.isConnected) return;   // banner was closed meanwhile
+                    if (!found) { useOwn(); return; }
+                    picture.width = 340;
+                    picture.height = Math.round(340 * found.height / found.width);
+                    picture.style.maxWidth = '340px';
+                    picture.alt = image.klipyAlt || image.alt;
+                    // if KLIPY's file will not load, fall back to our own picture
+                    picture.onerror = useOwn;
+                    picture.src = still ? found.still : found.animated;
+                    // KLIPY asks to be credited where its GIFs are shown
+                    credit = el('div', 'font-size:11px;opacity:0.85;text-align:center;margin:-8px 0 10px;', 'GIF: KLIPY');
+                    picture.insertAdjacentElement('afterend', credit);
+                });
+            } else {
+                useOwn();
+            }
         }
 
         card.appendChild(el('div', 'font-size:18px;font-weight:700;margin-bottom:4px;', release.title || 'Nowa wersja'));

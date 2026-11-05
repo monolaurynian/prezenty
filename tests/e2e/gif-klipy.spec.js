@@ -473,13 +473,70 @@ test.describe('klipy GIFs in a conversation', () => {
         expect(Math.round(after.height)).toBe(220);
     });
 
-    test('if the lookup itself fails (offline, rate limit) the GIF shows the note instead of a spinner forever', async ({ page }) => {
-        await mockKlipy(page, { items: route => route.fulfill({ status: 429, json: { result: false } }) });
+    // A lookup that fails (offline, the provider's rate limit) is NOT the same
+    // as a GIF that is gone: it is temporary, so it says so and can be retried.
+    test('if the lookup itself fails (rate limit) it retries on its own, then offers "Spróbuj ponownie" instead of claiming the GIF is gone', async ({ page }) => {
+        await page.addInitScript(() => { window.GIF_RETRY_DELAYS = [60, 60]; });
+        const warnings = [];
+        page.on('console', m => { if (m.type() === 'warning') warnings.push(m.text()); });
+        const calls = await mockKlipy(page, { items: route => route.fulfill({ status: 429, json: { result: false } }) });
         await openPage(page, GROUP);
         expect(await postGroupBody(page, '[gif:klipy:limit-gif-960:220x220]')).toBe(200);
+        calls.items.length = 0;
         await page.evaluate(() => window.loadThreadMessages());
-        await expect(page.locator('.chat-gif-missing').last()).toHaveText('Ten GIF jest niedostępny');
+
+        const note = page.locator('.chat-gif-failed').last();
+        await expect(note).toContainText('Nie udało się wczytać GIF-a');
+        await expect(note.locator('.chat-gif-retry')).toHaveText('Spróbuj ponownie');
         await expect(page.locator('.chat-gif-slot')).toHaveCount(0);
+        // never the permanent message for a temporary problem
+        await expect(page.locator('.chat-gif-missing:not(.chat-gif-failed)')).toHaveCount(0);
+        // first try + the two automatic retries
+        expect(calls.items.length, JSON.stringify(calls.items)).toBe(3);
+        expect(warnings.join('\n')).toContain('[GIF] KLIPY lookup failed');
+    });
+
+    test('"Spróbuj ponownie" draws the GIF once KLIPY answers again', async ({ page }) => {
+        await page.addInitScript(() => { window.GIF_RETRY_DELAYS = []; });
+        let healthy = false;
+        await mockKlipy(page, { items: (route, url) => healthy
+            ? route.fulfill({ json: page1(url.searchParams.get('slugs').split(',').map(s => klipyItem(s, 220, 220, s))) })
+            : route.fulfill({ status: 429, json: { result: false } }) });
+        await openPage(page, GROUP);
+        expect(await postGroupBody(page, '[gif:klipy:znowu-dziala-961:220x220]')).toBe(200);
+        await page.evaluate(() => window.loadThreadMessages());
+        const retry = page.locator('.chat-gif-retry').last();
+        await expect(retry).toBeVisible();
+
+        healthy = true;
+        await retry.click();
+        await expect(page.locator(`img.chat-gif[src="${U('znowu-dziala-961', 'sm', 'webp')}"]`)).toBeVisible();
+        await expect(page.locator('.chat-gif-failed')).toHaveCount(0);
+    });
+
+    test('a failed lookup that recovers during the automatic retries just shows the GIF', async ({ page }) => {
+        await page.addInitScript(() => { window.GIF_RETRY_DELAYS = [150, 150, 150]; });
+        let asked = 0;
+        const calls = await mockKlipy(page, { items: (route, url) => (++asked < 2)
+            ? route.fulfill({ status: 429, json: { result: false } })
+            : route.fulfill({ json: page1(url.searchParams.get('slugs').split(',').map(s => klipyItem(s, 220, 220, s))) }) });
+        await openPage(page, GROUP);
+        expect(await postGroupBody(page, '[gif:klipy:szybko-wraca-962:220x220]')).toBe(200);
+        calls.items.length = 0; asked = 0;
+        await page.evaluate(() => window.loadThreadMessages());
+        await expect(page.locator(`img.chat-gif[src="${U('szybko-wraca-962', 'sm', 'webp')}"]`)).toBeVisible();
+        await expect(page.locator('.chat-gif-failed')).toHaveCount(0);
+    });
+
+    test('a picture that will not load (blocked, offline) becomes the retryable note, not "niedostępny"', async ({ page }) => {
+        await page.addInitScript(() => { window.GIF_RETRY_DELAYS = []; });
+        await mockKlipy(page, { items: (route, url) => route.fulfill({ json: page1(url.searchParams.get('slugs').split(',').map(s => klipyItem(s, 220, 220, s))) }) });
+        await page.route('https://static*.klipy.com/**', route => route.abort()); // registered last, so it wins
+        await openPage(page, GROUP);
+        expect(await postGroupBody(page, '[gif:klipy:obrazek-pada-963:220x220]')).toBe(200);
+        await page.evaluate(() => window.loadThreadMessages());
+        await expect(page.locator('.chat-gif-failed .chat-gif-retry').last()).toBeVisible();
+        await expect(page.locator('.chat-gif-missing:not(.chat-gif-failed)')).toHaveCount(0);
     });
 
     test('a hostile items response (foreign host) is not drawn', async ({ page }) => {

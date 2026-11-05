@@ -179,7 +179,7 @@ test.describe('gif zoom (demo provider)', () => {
         await openPage(page, GROUP);
         expect(await postGroupBody(page, '[gif:demo:nie-ma-takiego:200x100]')).toBe(200);
         await page.evaluate(() => window.loadThreadMessages());
-        await expect(page.locator('.chat-gif-missing').last()).toHaveText('Ten GIF jest niedostępny');
+        await expect(page.locator('.chat-gif-failed').last()).toContainText('Nie udało się wczytać GIF-a');
         // the broken GIF took its zoom button with it
         // (waits for this GIF's own load error: the chat already holds notes
         // left by earlier tests, so the line above can pass too early)

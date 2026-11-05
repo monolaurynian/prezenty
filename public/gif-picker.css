@@ -7,21 +7,28 @@
 /* --- Composer buttons ---------------------------------------------- */
 .btn-gif {
     flex: none;
-    min-width: 44px;
-    min-height: 38px;
-    padding: 0 12px;
-    border: 2px solid #7B1FA2;
-    border-radius: 8px;
-    background: #ffffff;
-    color: #7B1FA2 !important;
+    min-width: 52px;
+    height: 44px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 22px;
+    background: #7B1FA2;
+    /* white wins over the chat page's `.glass-card * { color }` */
+    color: #ffffff !important;
     font-weight: 800;
-    font-size: 13px;
-    letter-spacing: 0.5px;
+    font-size: 14px;
+    letter-spacing: 0.6px;
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(123, 31, 162, 0.35);
+    transition: background 0.15s ease, transform 0.1s ease;
 }
 
 .btn-gif:hover {
-    background: #F3E5F5;
+    background: #6A1B9A;
+}
+
+.btn-gif:active {
+    transform: scale(0.96);
 }
 
 .btn-gif:focus-visible {
@@ -30,10 +37,13 @@
 }
 
 /* --- Sheet ---------------------------------------------------------- */
+/* On a phone the panel docks to the bottom and the conversation stays in view
+   above it, so the overlay does not dim: it only catches a tap outside, which
+   closes the panel. On desktop the panel is a centred card and gets a dim. */
 #gifSheetOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: transparent;
     z-index: 10002;
     opacity: 0;
     visibility: hidden;
@@ -51,11 +61,12 @@
     right: 0;
     bottom: 0;
     width: 100%;
-    height: 82vh;
-    height: min(82dvh, 620px);
+    /* compact: about half the screen, so the conversation stays visible */
+    height: 50vh;
+    height: min(50dvh, 440px);
     background: #ffffff;
     border-radius: 20px 20px 0 0;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.22);
     z-index: 10003;
     display: flex;
     flex-direction: column;
@@ -63,7 +74,7 @@
     padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
     transform: translateY(100%);
-    transition: transform 0.3s ease-out;
+    transition: transform 0.3s ease-out, height 0.25s ease-out;
     visibility: hidden;
     color: #2d3748;
 }
@@ -73,32 +84,85 @@
     visibility: visible;
 }
 
-#gifSheet::before {
-    content: "";
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(0, 0, 0, 0.18);
-    pointer-events: none;
+/* the chevron expands the panel to nearly full height */
+#gifSheet.is-expanded {
+    height: 86vh;
+    height: min(86dvh, 680px);
 }
 
+/* The page behind the docked panel gets room at the bottom, so the newest
+   messages can be scrolled up above it (gif-picker.js sets --gif-panel-h) */
+html.gif-panel-open body {
+    padding-bottom: var(--gif-panel-h, 0px);
+}
+
+/* Header: [ spacer | chevron | close ] - the chevron sits in the middle */
 .gif-sheet-header {
-    display: flex;
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
     align-items: center;
-    justify-content: space-between;
-    padding: 24px 4px 8px;
+    justify-items: center;
+    padding: 6px 0 10px;   /* room under the X so it never crowds the search */
     flex: none;
 }
 
-.gif-sheet-header h2 {
-    margin: 0;
-    font-size: 17px;
-    font-weight: 600;
-    color: #2d3748;
+.gif-sheet-spacer {
+    width: 44px;
+    height: 44px;
+}
+
+.gif-sheet-header .gif-sheet-close {
+    justify-self: end;
+}
+
+.gif-sheet-expand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 44px;
+    border: none;
+    border-radius: 22px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.gif-sheet-expand:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.gif-sheet-expand svg {
+    width: 28px;
+    height: 28px;
+    fill: none;
+    stroke: #6b7280;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s ease;
+}
+
+/* pointing up = "show more"; flips down once expanded */
+#gifSheet.is-expanded .gif-sheet-expand svg {
+    transform: rotate(180deg);
+}
+
+.gif-sheet-expand:focus-visible {
+    outline: 2px solid #1E88E5;
+    outline-offset: 2px;
+}
+
+/* Visible to assistive technology only (the panel's title) */
+.gif-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .gif-sheet-close {
@@ -109,32 +173,63 @@
     height: 44px;
     border: none;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.05);
+    /* 44px tap area, but a smaller 36px circle is drawn so it is not heavy */
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.06) 0 17.5px, transparent 18px);
     color: #2d3748;
-    font-size: 26px;
+    font-size: 24px;
     line-height: 1;
     cursor: pointer;
 }
 
 .gif-sheet-close:hover {
-    background: rgba(0, 0, 0, 0.1);
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.11) 0 17.5px, transparent 18px);
+}
+
+/* Search: a full pill with a magnifier inside */
+.gif-sheet-searchbox {
+    position: relative;
+    flex: none;
+    margin: 0 0 8px;
+}
+
+.gif-sheet-magnifier {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+}
+
+.gif-sheet-magnifier svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: #8a9099;
+    stroke-width: 2.2;
+    stroke-linecap: round;
 }
 
 .gif-sheet-search {
     display: block;
-    flex: none;
     width: 100%;
+    height: 44px;
     box-sizing: border-box;
-    margin: 0 0 6px;
-    padding: 10px 14px;
-    border: 1px solid #d1d5db;
-    border-radius: 12px;
-    background: #f9fafb;
+    padding: 0 16px 0 44px;
+    border: 1.5px solid #cfd4da;
+    border-radius: 22px;
+    background: #f4f5f7;
     font-size: 16px; /* 16px: iOS does not zoom the page on focus */
     color: #2d3748;
     outline: none;
     -webkit-appearance: none;
     appearance: none;
+}
+
+.gif-sheet-search::placeholder {
+    color: #8a9099;
 }
 
 .gif-sheet-search:focus {
@@ -307,19 +402,31 @@
         opacity: 1;
     }
 
-    #gifSheet::before {
-        display: none;
+    /* the card has a fixed size, so there is nothing to expand */
+    #gifSheet.is-expanded {
+        height: min(78vh, 600px);
+        height: min(78dvh, 600px);
+    }
+
+    .gif-sheet-expand {
+        visibility: hidden;
+    }
+
+    /* behind a centred card a dim helps; the docked phone panel has none */
+    #gifSheetOverlay {
+        background: rgba(0, 0, 0, 0.35);
     }
 
     .gif-sheet-header {
-        padding-top: 16px;
+        padding-top: 8px;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     #gifSheetOverlay,
     #gifSheet,
-    #gifSheet.is-open {
+    #gifSheet.is-open,
+    .gif-sheet-expand svg {
         transition: none;
     }
 }
@@ -572,6 +679,31 @@ html.gif-lightbox-open body {
     .chat-gif-slot {
         animation: none;
     }
+}
+
+/* A GIF that could not be loaded right now: the note plus a retry button */
+.chat-gif-failed {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+}
+
+.chat-gif-retry {
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid currentColor;
+    border-radius: 22px;
+    background: transparent;
+    color: inherit !important;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.chat-gif-retry:focus-visible {
+    outline: 2px solid #1E88E5;
+    outline-offset: 2px;
 }
 
 .chat-gif-missing {

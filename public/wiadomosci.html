@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
@@ -23,8 +23,8 @@
     <link href="bottom-tab-bar.css?v=43" rel="stylesheet">
     <link href="app-theme.css?v=14" rel="stylesheet">
     <link href="chat-reactions.css?v=9" rel="stylesheet">
-    <link href="gif-picker.css?v=3" rel="stylesheet">
-    <link href="wiadomosci-page.css?v=2" rel="stylesheet">
+    <link href="gif-picker.css?v=5" rel="stylesheet">
+    <link href="wiadomosci-page.css?v=4" rel="stylesheet">
     <script src="pluralize-pl.js"></script>
     <script src="notification-text.js?v=2"></script>
     <!-- Loaded in <head> (not at the end of <body>) so window.ChatReactions
@@ -34,8 +34,8 @@
     <script src="gif-message.js?v=4"></script>
     <script src="chat-reactions.js?v=7"></script>
     <script src="emoji-picker.js?v=4"></script>
-    <script src="gif-klipy.js?v=2"></script>
-    <script src="gif-picker.js?v=2"></script>
+    <script src="gif-klipy.js?v=3"></script>
+    <script src="gif-picker.js?v=3"></script>
     <script src="gif-lightbox.js?v=1"></script>
 </head>
 <body class="has-tab-bar">
@@ -66,14 +66,19 @@
                     Wiadomość trafi do wspólnego, anonimowego czatu wszystkich - nie powstanie nowa rozmowa.
                 </div>
             </div>
-            <textarea class="form-control mb-2" id="composeBody" rows="2"
-                placeholder="Twoja wiadomość... (np. Jaki rozmiar buta nosisz?)"></textarea>
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-                <button class="btn btn-anon fw-semibold" id="composeBtn" onclick="sendNewMessage()">
-                    <i class="fas fa-paper-plane me-1"></i>Wyślij anonimowo
-                </button>
+            <!-- Same composer as inside a conversation: pill field, GIF pill
+                 while empty, round send button once there is text -->
+            <div class="composer" id="composeComposer">
+                <div class="composer-field">
+                    <textarea id="composeBody" rows="1" maxlength="2000"
+                        aria-label="Twoja wiadomość" placeholder="Np. jaki rozmiar buta nosisz?"></textarea>
+                </div>
                 <button type="button" class="btn-gif" id="gifComposeBtn" style="display: none;"
                     aria-label="Wyślij GIF" title="Wyślij GIF">GIF</button>
+                <button type="button" class="composer-send" id="composeBtn" onclick="sendNewMessage()"
+                    aria-label="Wyślij anonimowo" title="Wyślij anonimowo" disabled>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11.5L12 5.5l6 6"/></svg>
+                </button>
             </div>
             <div id="composeMessage" class="alert mt-2" style="display:none;"></div>
         </div>
@@ -106,13 +111,19 @@
                     </button>
                 </div>
                 <div class="chat-messages" id="chatMessages" style="max-height: 58vh; min-height: 180px;"></div>
-                <div class="d-flex gap-2 mt-3">
-                    <textarea class="form-control" id="replyBody" rows="1" placeholder="Odpowiedz..."
-                        style="flex: 1;"></textarea>
+                <!-- Composer: a pill field that grows with the text, a purple GIF
+                     pill (shown when GIFs are on) and a round send button that
+                     appears once there is something to send -->
+                <div class="composer" id="composer">
+                    <div class="composer-field">
+                        <textarea id="replyBody" rows="1" placeholder="Napisz wiadomość..."
+                            aria-label="Twoja wiadomość" maxlength="2000"></textarea>
+                    </div>
                     <button type="button" class="btn-gif" id="gifBtn" style="display: none;"
                         aria-label="Wyślij GIF" title="Wyślij GIF">GIF</button>
-                    <button class="btn btn-anon" id="replyBtn" onclick="sendReply()" title="Wyślij">
-                        <i class="fas fa-paper-plane"></i>
+                    <button type="button" class="composer-send" id="replyBtn" onclick="sendReply()"
+                        aria-label="Wyślij" title="Wyślij" disabled>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11.5L12 5.5l6 6"/></svg>
                     </button>
                 </div>
             </div>
@@ -155,7 +166,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="wiadomosci-page.js?v=6"></script>
+    <script src="wiadomosci-page.js?v=8"></script>
     <!-- Tells signed-in users when a new version is out (and refreshes
          their caches) so nobody has to clear the cache by hand -->
     <script src="update-checker.js" defer></script>
