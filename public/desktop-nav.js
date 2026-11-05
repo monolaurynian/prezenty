@@ -26,7 +26,7 @@
         { divider: true },
         { href: '/formularz.html', icon: 'ri-edit-line', label: 'Edytuj moje prezenty', editTab: true },
         { href: '/archiwum.html', icon: 'ri-archive-line', label: 'Archiwum', match: ['/archiwum', '/archiwum.html'] },
-        { href: '/ustawienia.html', icon: 'ri-settings-3-line', label: 'Ustawienia', match: ['/ustawienia', '/ustawienia.html'] },
+        { href: '/ustawienia.html', icon: 'ri-settings-3-line', label: 'Ustawienia', match: ['/ustawienia', '/ustawienia.html', '/nowosci', '/nowosci.html'] },   // "Nowości" is a subpage of Ustawienia
         { href: '#', icon: 'ri-logout-box-r-line', label: 'Wyloguj', logout: true }
     ];
 

@@ -1,0 +1,87 @@
+        html, body { overflow-x: hidden; max-width: 100vw; }
+        body {
+            background-image: url('seba.jpg') !important;
+            background-attachment: fixed !important;
+            background-position: center center !important;
+            background-repeat: no-repeat !important;
+            background-size: cover !important;
+        }
+        .background-overlay {
+            position: fixed; inset: 0;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            z-index: -1;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(16px) saturate(160%);
+            -webkit-backdrop-filter: blur(16px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+            border-radius: 20px;
+            color: #2d3748;
+        }
+        .glass-card * { color: #2d3748; }
+
+        .page-title { font-size: 1.5rem; font-weight: 700; }
+
+        /* ===== One announcement card ===== */
+        .release-card {
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            /* long words and URLs wrap instead of overflowing */
+            overflow-wrap: anywhere;
+            min-width: 0;
+        }
+        .release-card-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .release-date {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            color: #4a5568;
+        }
+        .glass-card .release-date { color: #4a5568; }
+        .release-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 10px;
+            background: #7B1FA2;
+        }
+        .glass-card .release-badge { color: #ffffff; }
+        .release-title { font-size: 1.15rem; font-weight: 700; margin: 0 0 4px; }
+        .release-intro { font-size: 14px; margin: 0 0 10px; opacity: 0.9; }
+        .release-items { list-style: none; margin: 0 0 14px; padding: 0; }
+        .release-items li {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        .release-items .release-icon { flex: none; font-size: 18px; line-height: 1.3; }
+        .release-action {
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 0 18px;
+            border-radius: 12px;
+            background: #7B1FA2;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        .glass-card .release-action { color: #ffffff; }
+        .release-action:hover { background: #6A1B9A; }
+        .release-action:focus-visible {
+            outline: 2px solid #1E88E5;
+            outline-offset: 2px;
+        }
+        .release-error { padding: 24px; text-align: center; }

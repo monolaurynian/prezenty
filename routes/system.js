@@ -6,7 +6,7 @@ const router = express.Router();
 const { DEMO_MODE, isMaintenanceMode } = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { updateTracker } = require('../lib/update-tracker');
-const { latestRelease } = require('../lib/release-notes');
+const { latestRelease, releasesFor } = require('../lib/release-notes');
 const { gifEnabled, klipyEnabled } = require('../lib/gif');
 
 // Routes
@@ -47,6 +47,13 @@ router.get('/api/version', (req, res) => {
         // release has something worth announcing (see lib/release-notes.js)
         release: latestRelease({ gif: gifEnabled(), klipy: klipyEnabled() })
     });
+});
+
+// Every announcement that applies here, newest first: the "Nowości" page
+// (public/nowosci.html) lists them all, not only the latest one.
+router.get('/api/releases', requireAuth, (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json({ releases: releasesFor({ gif: gifEnabled(), klipy: klipyEnabled() }) });
 });
 
 // Incremental updates endpoint

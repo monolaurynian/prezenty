@@ -498,3 +498,78 @@ test.describe('banner picture from KLIPY', () => {
         });
     }
 });
+
+// ===========================================================================
+// The banner picture can be an exact KLIPY file, loaded straight from KLIPY
+// ===========================================================================
+
+test.describe('banner picture from an exact KLIPY file', () => {
+    const ENTRY = RELEASES.find(r => r.id === '2026-11-naklejki-i-memy');
+    const REMOTE = ENTRY.image.remote;
+    const GIF_BYTES = require('fs').readFileSync(require('path').join(__dirname, '..', '..', 'public', 'demo-gifs', 'hura.gif'));
+
+    test('the announcement carries a KLIPY file on a klipy.com host plus our own picture as the fallback', () => {
+        expect(REMOTE.src).toMatch(/^https:\/\/static\.klipy\.com\/[^?#]+\.webp$/);
+        expect(ENTRY.image.src).toBe('/release/gify.gif');
+        expect(ENTRY.image.still).toBe('/release/gify-still.gif');
+    });
+
+    test('it is loaded straight from KLIPY (no API call, nothing copied), and sized to fit the banner', async ({ page }) => {
+        const requested = [];
+        page.on('request', r => { if (r.url().includes('klipy.com')) requested.push(r.url()); });
+        await page.route('https://static*.klipy.com/**', route => route.fulfill({ contentType: 'image/gif', body: GIF_BYTES }));
+        await asReturningUser(page);
+        await serveRelease(page, ENTRY);
+        await openPage(page, PAGE);
+        const picture = page.locator(`${BANNER} img`);
+        await expect(picture).toHaveAttribute('src', REMOTE.src);
+        await expect(picture).toHaveAttribute('alt', REMOTE.alt);
+        await expect.poll(() => picture.evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
+        expect(requested).toEqual([REMOTE.src]);   // the file, and nothing else from KLIPY
+        const box = await picture.boundingBox();
+        expect(box.height).toBeLessThanOrEqual(301);
+    });
+
+    test('if KLIPY\'s file cannot be loaded, our own picture is shown', async ({ page }) => {
+        await page.route('https://static*.klipy.com/**', route => route.abort());
+        await asReturningUser(page);
+        await serveRelease(page, ENTRY);
+        await openPage(page, PAGE);
+        await expect(page.locator(`${BANNER} img`)).toHaveAttribute('src', '/release/gify.gif');
+    });
+
+    test('reduced motion: our own still, because the KLIPY file only moves', async ({ page }) => {
+        const requested = [];
+        page.on('request', r => { if (r.url().includes('klipy.com')) requested.push(r.url()); });
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await asReturningUser(page);
+        await serveRelease(page, ENTRY);
+        await openPage(page, PAGE);
+        await expect(page.locator(`${BANNER} img`)).toHaveAttribute('src', '/release/gify-still.gif');
+        expect(requested).toEqual([]);
+    });
+
+    const HOSTILE = [
+        ['another site', 'https://evil.example/x.webp'],
+        ['plain http', 'http://static.klipy.com/x.webp'],
+        ['a look-alike host', 'https://static.klipy.com.evil.example/x.webp'],
+        ['a query string', 'https://static.klipy.com/x.webp?a=1'],
+        ['a path with ..', 'https://static.klipy.com/a/../x.webp'],
+        ['not an image', 'https://static.klipy.com/x.html']
+    ];
+    for (const [label, src] of HOSTILE) {
+        test(`a remote picture on ${label} is ignored: our own picture, nothing requested from it`, async ({ page }) => {
+            const requested = [];
+            page.on('request', r => { if (/evil\.example|static\.klipy\.com/.test(r.url())) requested.push(r.url()); });
+            await asReturningUser(page);
+            await serveRelease(page, {
+                id: 'remote-check-' + label.replace(/\W+/g, '-'), title: 'Tytuł', intro: 'Wstęp',
+                items: [{ icon: '•', text: 'punkt' }],
+                image: { src: '/release/gify.gif', alt: 'x', width: 360, height: 180, remote: { src, alt: 'y', width: 200, height: 200 } }
+            });
+            await openPage(page, PAGE);
+            await expect(page.locator(`${BANNER} img`)).toHaveAttribute('src', '/release/gify.gif');
+            expect(requested).toEqual([]);
+        });
+    }
+});

@@ -59,6 +59,7 @@ const PAGES = [
     { path: '/wiadomosci?rozmowa=1', name: 'wiadomosci-thread', ready: '.chat-bubble' },
     { path: '/rezerwacje', name: 'rezerwacje', ready: '#reservedContent' },
     { path: '/archiwum', name: 'archiwum', ready: '#archiveContent' },
+    { path: '/nowosci', name: 'nowosci', ready: '.release-card' },
     { path: '/ustawienia', name: 'ustawienia', ready: 'h1, h2, h5' }
 ];
 

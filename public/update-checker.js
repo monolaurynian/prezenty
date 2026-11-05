@@ -94,9 +94,24 @@
             klipy: typeof image.klipy === 'string' && KLIPY_SLUG.test(image.klipy) ? image.klipy : null,
             alt: typeof image.alt === 'string' ? image.alt : '',
             klipyAlt: typeof image.klipyAlt === 'string' ? image.klipyAlt : '',
+            remote: safeRemote(image.remote),
             width: Math.round(width),
             height: Math.round(height)
         };
+    }
+
+    // An exact KLIPY file: https, a host under klipy.com, a plain path to an image,
+    // no query string, no ".." (checked below). Loaded by the browser straight from KLIPY.
+    const REMOTE_IMAGE = /^https:\/\/(?:[a-z0-9-]+\.)+klipy\.com\/[A-Za-z0-9_\-\/.]+\.(?:gif|png|jpe?g|webp)$/;
+
+    function safeRemote(remote) {
+        if (!remote || typeof remote !== 'object') return null;
+        const src = remote.src;
+        const width = Number(remote.width);
+        const height = Number(remote.height);
+        if (typeof src !== 'string' || !REMOTE_IMAGE.test(src) || src.indexOf('..') !== -1) return null;
+        if (!(width >= 20 && width <= 2000) || !(height >= 20 && height <= 2000)) return null;
+        return { src: src, alt: typeof remote.alt === 'string' ? remote.alt : '', width: Math.round(width), height: Math.round(height) };
     }
 
     const KLIPY_SLUG = /^[A-Za-z0-9_-]{1,120}$/;
@@ -149,6 +164,61 @@
         return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     }
 
+    // The picture of an announcement, as an <img> that fills itself in:
+    //   1. image.remote  - an exact KLIPY file, loaded straight from KLIPY by
+    //      the browser (nothing is stored or copied by us); not for people who
+    //      prefer reduced motion, since it has no still version;
+    //   2. image.klipy   - a KLIPY GIF looked up by slug through their API;
+    //   3. our own file  - always the fallback, and the still for reduced motion.
+    // Any failure ends at our own file, and if that is missing too the picture
+    // removes itself (no broken-image icon).
+    function buildPicture(image) {
+        const picture = document.createElement('img');
+        const still = prefersReducedMotion();
+        const ownSrc = still && image.still ? image.still : image.src;
+        const remote = image.remote && !still ? image.remote : null;
+        const sizeFrom = remote || image;
+        picture.alt = (image.klipy || remote) ? '' : image.alt;   // no alt text flashing while it loads
+        picture.width = sizeFrom.width;
+        picture.height = sizeFrom.height;
+        const fit = 'display:block;margin:0 auto 12px;border-radius:12px;background:#ffffff;object-fit:contain;max-height:300px;';
+        // a remote picture may be tall: let the box match it instead of filling a wide white box
+        picture.style.cssText = remote
+            ? fit + 'width:auto;height:auto;max-width:100%;'
+            : fit + 'width:100%;height:auto;max-width:' + image.width + 'px;';
+        const useOwn = function () {
+            picture.alt = image.alt;
+            picture.width = image.width;
+            picture.height = image.height;
+            picture.style.width = '100%';
+            picture.style.maxWidth = image.width + 'px';
+            picture.onerror = function () { picture.remove(); };
+            picture.src = ownSrc;
+        };
+
+        if (remote) {
+            picture.alt = remote.alt || image.alt;
+            picture.onerror = useOwn;       // KLIPY's file will not load: our own picture
+            picture.src = remote.src;
+        } else if (image.klipy) {
+            // The space is held (width/height above) while KLIPY is asked
+            lookupKlipy(image.klipy).then(function (found) {
+                if (!picture.isConnected) return;   // closed meanwhile
+                if (!found) { useOwn(); return; }
+                picture.width = 340;
+                picture.height = Math.round(340 * found.height / found.width);
+                picture.style.maxWidth = '340px';
+                picture.alt = image.klipyAlt || image.alt;
+                // if KLIPY's file will not load, fall back to our own picture
+                picture.onerror = useOwn;
+                picture.src = still ? found.still : found.animated;
+            });
+        } else {
+            useOwn();
+        }
+        return picture;
+    }
+
     function showUpdateNotification(release) {
         if (document.getElementById(BANNER_ID)) return;
 
@@ -166,44 +236,7 @@
             'box-shadow:0 8px 28px rgba(0,0,0,0.35);text-align:left;');
 
         const image = safeImage(release.image);
-        if (image) {
-            const picture = document.createElement('img');
-            const still = prefersReducedMotion();
-            // Our own drawn picture (People who prefer reduced motion get the still)
-            const ownSrc = still && image.still ? image.still : image.src;
-            picture.alt = image.klipy ? '' : image.alt;   // no alt text flashing while KLIPY is asked
-            picture.width = image.width;
-            picture.height = image.height;
-            picture.style.cssText = 'display:block;width:100%;height:auto;max-width:' + image.width +
-                'px;max-height:240px;object-fit:contain;margin:0 auto 12px;border-radius:12px;background:#ffffff;';
-            // A missing file must not leave a broken-image icon: show the text alone
-                const useOwn = function () {
-                picture.alt = image.alt;
-                picture.width = image.width;
-                picture.height = image.height;
-                picture.style.maxWidth = image.width + 'px';
-                picture.onerror = function () { picture.remove(); };
-                picture.src = ownSrc;
-            };
-            card.appendChild(picture);
-
-            if (image.klipy) {
-                // The space is held (width/height above) while KLIPY is asked
-                lookupKlipy(image.klipy).then(function (found) {
-                    if (!picture.isConnected) return;   // banner was closed meanwhile
-                    if (!found) { useOwn(); return; }
-                    picture.width = 340;
-                    picture.height = Math.round(340 * found.height / found.width);
-                    picture.style.maxWidth = '340px';
-                    picture.alt = image.klipyAlt || image.alt;
-                    // if KLIPY's file will not load, fall back to our own picture
-                    picture.onerror = useOwn;
-                    picture.src = still ? found.still : found.animated;
-                });
-            } else {
-                useOwn();
-            }
-        }
+        if (image) card.appendChild(buildPicture(image));
 
         card.appendChild(el('div', 'font-size:18px;font-weight:700;margin-bottom:4px;', release.title || 'Nowa wersja'));
         if (release.intro) {
@@ -242,6 +275,14 @@
         buttons.appendChild(go);
         buttons.appendChild(later);
         card.appendChild(buttons);
+
+        // Earlier announcements live on the "Nowości" page
+        const all = el('a',
+            'display:inline-flex;align-items:center;min-height:44px;margin-top:2px;color:#ffffff;' +
+            'font-size:13px;text-decoration:underline;opacity:0.95;',
+            'Wszystkie nowości');
+        all.href = '/nowosci';
+        card.appendChild(all);
         banner.appendChild(card);
 
         if (!document.getElementById('updateBannerStyle')) {
@@ -303,7 +344,11 @@
     window.updateChecker = {
         reload: reloadPage,
         dismiss: dismissNotification,
-        check: checkForUpdates
+        check: checkForUpdates,
+        // for the "Nowości" page, which shows the same cards with the same safety rules
+        buildPicture: buildPicture,
+        safeImage: safeImage,
+        safeInternalUrl: safeInternalUrl
     };
 
     // Start when DOM is ready

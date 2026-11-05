@@ -99,6 +99,15 @@ router.get('/archiwum', (req, res) => {
     }
 });
 
+router.get('/nowosci', (req, res) => {
+    // If user is not authenticated, redirect to login page
+    if (!req.session.userId) {
+        res.redirect('/');
+    } else {
+        res.sendFile(path.join(ROOT_DIR, 'public', 'nowosci.html'));
+    }
+});
+
 router.get('/wiadomosci', (req, res) => {
     // If user is not authenticated, redirect to login page
     if (!req.session.userId) {
