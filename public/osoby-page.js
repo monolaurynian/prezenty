@@ -324,3 +324,8 @@
                 .catch(() => showToast('Błąd połączenia. Spróbuj ponownie.', 'error'));
         }
     
+// The tab bar's menu calls this (each page with the bar has its own copy)
+function logout() {
+    fetch('/api/logout', { method: 'POST' })
+        .finally(function () { window.location.href = '/'; });
+}
