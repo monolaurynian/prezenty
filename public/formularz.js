@@ -179,6 +179,19 @@ function checkAuth() {
                 // Reveal the quiet "edit my presents" path under the form
                 const editLink = document.getElementById('editMyPresentsLink');
                 if (editLink) editLink.style.display = 'block';
+                // A link made for one person (?osoba=Helena) is for adding a
+                // present FOR them - also when the visitor is logged in. Show
+                // that form (the same one a visitor without an account gets)
+                // instead of the visitor's own list; "edit my presents" stays
+                // one tap away under the form.
+                let linkedFor = null;
+                try { linkedFor = new URLSearchParams(window.location.search).get('osoba'); } catch (e) {}
+                if (linkedFor) {
+                    pendingAddMode = false;
+                    document.getElementById('addTab').style.display = 'block';
+                    document.getElementById('editTab').style.display = 'none';
+                    return;
+                }
                 // Edit tab is the default view - show it now that auth is confirmed
                 document.getElementById('editTab').style.display = 'block';
                 loadMyPresents();
