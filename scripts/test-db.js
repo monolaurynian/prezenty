@@ -3,7 +3,7 @@ require('dotenv').config();
 
 // Database configuration
 const dbConfig = {
-    host: process.env.DB_HOST || '153.92.7.101',
+    host: process.env.DB_HOST || '77.37.35.150',
     user: process.env.DB_USER || 'u662139794_mati',
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME || 'u662139794_prezenty',

@@ -26,7 +26,7 @@ Set these in your Render dashboard:
 ### Already Configured in render.yaml:
 - `NODE_ENV=production`
 - `SESSION_SECRET` (auto-generated)
-- `DB_HOST=153.92.7.101`
+- `DB_HOST=77.37.35.150`
 - `DB_USER=u662139794_mati`
 - `DB_NAME=u662139794_prezenty`
 - `DB_PORT=3306`

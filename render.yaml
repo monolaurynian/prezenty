@@ -12,7 +12,7 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: DB_HOST
-        value: 153.92.7.101
+        value: 77.37.35.150
       - key: DB_USER
         value: u662139794_mati
       - key: DB_PASSWORD
