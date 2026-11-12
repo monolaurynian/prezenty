@@ -7,7 +7,7 @@ const { DEMO_MODE, pool } = require('../lib/db');
 const { handleDbError, notFound, forbidden, conflict, badRequest } = require('../lib/http-errors');
 const { requireAuth } = require('../lib/auth');
 const { clearCombinedDataCache } = require('../lib/cache');
-const { getUserIdentification, getRecipientById } = require('../lib/queries');
+const { getUserIdentification, getRecipientById, RECIPIENT_COLUMNS, withPictureUrl } = require('../lib/queries');
 const { withPresence } = require('../lib/presence');
 const { createNotification } = require('../lib/notifications');
 const { demoData } = require('../lib/demo-data');
@@ -45,20 +45,15 @@ router.get('/api/recipients', requireAuth, async (req, res) => {
     }
 
     try {
+        // The picture bytes stay in the database (see RECIPIENT_COLUMNS); each
+        // recipient gets the picture's URL, or null
         const [rows] = await pool.execute(`
-            SELECT r.*, u.username as identified_by_username 
+            SELECT ${RECIPIENT_COLUMNS}, u.username as identified_by_username 
             FROM recipients r 
             LEFT JOIN users u ON r.identified_by = u.id 
             ORDER BY r.name
         `);
-
-        // Add profile picture URLs for recipients that have them
-        const recipients = rows.map(recipient => {
-            if (recipient.profile_picture) {
-                recipient.profile_picture = `/api/recipients/${recipient.id}/profile-picture`;
-            }
-            return recipient;
-        });
+        const recipients = rows.map(withPictureUrl);
 
         console.log('Recipients loaded successfully:', recipients.length, 'recipients');
         res.json(withPresence(recipients));
@@ -551,7 +546,7 @@ lateRouter.post('/api/user/identify', requireAuth, async (req, res) => {
 
     try {
         // Check if user is already identified
-        const [existingRows] = await pool.execute('SELECT r.* FROM recipients r WHERE r.identified_by = ?', [userId]);
+        const [existingRows] = await pool.execute('SELECT r.id, r.name FROM recipients r WHERE r.identified_by = ?', [userId]);
         const existingRecipient = existingRows[0];
 
         if (existingRecipient) {
@@ -560,7 +555,7 @@ lateRouter.post('/api/user/identify', requireAuth, async (req, res) => {
         }
 
         // Check if recipient with this name already exists
-        const [recipientRows] = await pool.execute('SELECT * FROM recipients WHERE name = ?', [name.trim()]);
+        const [recipientRows] = await pool.execute('SELECT id, name, identified_by FROM recipients WHERE name = ?', [name.trim()]);
         const recipient = recipientRows[0];
 
         if (recipient) {
