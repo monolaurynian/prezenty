@@ -369,6 +369,23 @@
                     // html:false plain-text one - do not escape that one.)
                     getMessage: (data, actor) => `🏆 <strong>${notificationTextEscape(data.leaderName || 'Ktoś')}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${notificationTextEscape(data.previousLeaderName)}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
                 },
+                activity_leader: {
+                    icon: 'fa-fire',
+                    color: '#FF6B6B',
+                    // Same innerHTML path as leaderboard_leader above: names are user supplied.
+                    getMessage: (data, actor) => `🔥 <strong>${notificationTextEscape(data.leaderName || 'Ktoś')}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${notificationTextEscape(data.previousLeaderName)}</strong> i` : ''} prowadzi w rankingu <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FF6B6B; text-decoration: underline;">najbardziej aktywnych</a> z ${data.activityCount || '?'} ${data.activityCount === 1 ? 'aktywnością' : 'aktywnościami'}!`
+                },
+                leaderboard_second: {
+                    icon: 'fa-medal',
+                    color: '#FFC107',
+                    // Same innerHTML path as leaderboard_leader above: names are user supplied.
+                    getMessage: (data, actor) => `🥈 <strong>${notificationTextEscape(data.secondName || 'Ktoś')}</strong>${data.previousSecondName ? ` wyprzedza <strong>${notificationTextEscape(data.previousSecondName)}</strong> i` : ''} zajmuje drugie miejsce w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
+                },
+                activity_second: {
+                    icon: 'fa-medal',
+                    color: '#FF6B6B',
+                    getMessage: (data, actor) => `🥈 <strong>${notificationTextEscape(data.secondName || 'Ktoś')}</strong>${data.previousSecondName ? ` wyprzedza <strong>${notificationTextEscape(data.previousSecondName)}</strong> i` : ''} zajmuje drugie miejsce w rankingu <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FF6B6B; text-decoration: underline;">najbardziej aktywnych</a> z ${data.activityCount || '?'} ${data.activityCount === 1 ? 'aktywnością' : 'aktywnościami'}!`
+                },
                 anon_message: {
                     icon: 'fa-comment-dots',
                     color: '#7B1FA2',

@@ -11,7 +11,7 @@ const { getUserIdentification, getAllPresents } = require('../lib/queries');
 const { withPresence } = require('../lib/presence');
 const { sendNotificationToUsers } = require('../lib/push');
 const { createNotification } = require('../lib/notifications');
-const { getLeaderboardLeader, notifyLeaderboardChange } = require('../lib/leaderboard');
+const { getLeaderboardLeader, notifyLeaderboardChange, getActivityLeader, notifyActivityLeaderChange } = require('../lib/leaderboard');
 const { demoData } = require('../lib/demo-data');
 
 // Presents API
@@ -398,6 +398,9 @@ router.put('/api/presents/:id/check', requireAuth, async (req, res) => {
             WHERE p.id = ?
         `, [id]);
 
+        // Snapshot the activity leader before the change
+        const prevActivity = await getActivityLeader().catch(() => null);
+
         // Update the present
         const [result] = await pool.execute('UPDATE presents SET is_checked = ? WHERE id = ?', [is_checked ? 1 : 0, id]);
 
@@ -412,6 +415,9 @@ router.put('/api/presents/:id/check', requireAuth, async (req, res) => {
                 recipientName: presentData.recipient_name || 'kogoś'
             });
         }
+
+        // Activity leader may have changed - notify (non-blocking)
+        if (present.is_checked !== is_checked) notifyActivityLeaderChange(prevActivity, req.session.userId);
 
         console.log('Present check status updated successfully:', {
             id,
@@ -498,6 +504,7 @@ router.delete('/api/presents/:id', requireAuth, async (req, res) => {
     try {
         // Snapshot the leaderboard leader before the change
         const prevLeader = await getLeaderboardLeader().catch(() => null);
+        const prevActivity = await getActivityLeader().catch(() => null);
 
         // Read the title and recipient first: they are gone after the DELETE
         const [presentRows] = await pool.execute(`
@@ -526,6 +533,7 @@ router.delete('/api/presents/:id', requireAuth, async (req, res) => {
 
         // Leaderboard leader may have changed - notify (non-blocking)
         notifyLeaderboardChange(prevLeader, req.session.userId);
+        notifyActivityLeaderChange(prevActivity, req.session.userId);
 
         res.json({ success: true });
     } catch (err) {
@@ -635,6 +643,9 @@ router.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
             WHERE p.id = ?
         `, [id]);
 
+        // Snapshot the activity leader before the change
+        const prevActivity = await getActivityLeader().catch(() => null);
+
         // Reserve the present
         const [result] = await pool.execute('UPDATE presents SET reserved_by = ? WHERE id = ?', [userId, id]);
 
@@ -648,6 +659,9 @@ router.post('/api/presents/:id/reserve', requireAuth, async (req, res) => {
                 recipientName: present.recipient_name || 'kogoś'
             });
         }
+
+        // Activity leader may have changed - notify (non-blocking)
+        notifyActivityLeaderChange(prevActivity, userId);
 
         // Track update for incremental sync
         updateTracker.addUpdate('present_reserved', {
@@ -731,6 +745,9 @@ lateRouter.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => 
             WHERE p.id = ?
         `, [id]);
 
+        // Snapshot the activity leader before the change
+        const prevActivity = await getActivityLeader().catch(() => null);
+
         // Cancel the reservation
         const [result] = await pool.execute('UPDATE presents SET reserved_by = ? WHERE id = ?', [null, id]);
 
@@ -744,6 +761,9 @@ lateRouter.delete('/api/presents/:id/reserve', requireAuth, async (req, res) => 
                 recipientName: present.recipient_name || 'kogoś'
             });
         }
+
+        // Activity leader may have changed - notify (non-blocking)
+        notifyActivityLeaderChange(prevActivity, userId);
 
         console.log('Reservation canceled successfully:', { id, userId, changes: result.affectedRows });
         res.json({ success: true });

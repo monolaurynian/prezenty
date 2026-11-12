@@ -92,6 +92,26 @@
                 getMessage: (data) =>
                     `🏆 <strong>${escapeHtmlText(data.leaderName || 'Ktoś')}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${escapeHtmlText(data.previousLeaderName)}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z <strong>${data.presentCount || '?'}</strong> ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
             },
+            activity_leader: {
+                icon: 'fa-fire',
+                color: '#FF6B6B',
+                // Same escaping rule as leaderboard_leader above: names are user supplied.
+                getMessage: (data) =>
+                    `🔥 <strong>${escapeHtmlText(data.leaderName || 'Ktoś')}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${escapeHtmlText(data.previousLeaderName)}</strong> i` : ''} prowadzi w rankingu <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FF6B6B; text-decoration: underline;">najbardziej aktywnych</a> z <strong>${data.activityCount || '?'}</strong> ${data.activityCount === 1 ? 'aktywnością' : 'aktywnościami'}!`
+            },
+            leaderboard_second: {
+                icon: 'fa-medal',
+                color: '#FFC107',
+                // Names are user supplied and this string goes straight to innerHTML.
+                getMessage: (data) =>
+                    `🥈 <strong>${escapeHtmlText(data.secondName || 'Ktoś')}</strong>${data.previousSecondName ? ` wyprzedza <strong>${escapeHtmlText(data.previousSecondName)}</strong> i` : ''} zajmuje drugie miejsce w <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FFC107; text-decoration: underline;">rankingu</a> z <strong>${data.presentCount || '?'}</strong> ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
+            },
+            activity_second: {
+                icon: 'fa-medal',
+                color: '#FF6B6B',
+                getMessage: (data) =>
+                    `🥈 <strong>${escapeHtmlText(data.secondName || 'Ktoś')}</strong>${data.previousSecondName ? ` wyprzedza <strong>${escapeHtmlText(data.previousSecondName)}</strong> i` : ''} zajmuje drugie miejsce w rankingu <a href="/leaderboard.html" onclick="event.stopPropagation();" style="color: #FF6B6B; text-decoration: underline;">najbardziej aktywnych</a> z <strong>${data.activityCount || '?'}</strong> ${data.activityCount === 1 ? 'aktywnością' : 'aktywnościami'}!`
+            },
             anon_message: {
                 icon: 'fa-comment-dots',
                 color: '#7B1FA2',

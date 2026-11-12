@@ -41,6 +41,21 @@
                 color: '#FFC107',
                 getMessage: (data, actor) => `🏆 ${data.leaderName || 'Ktoś'}${data.previousLeaderName ? ` wyprzedza ${data.previousLeaderName} i` : ''} prowadzi w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
             },
+            activity_leader: {
+                icon: 'fa-fire',
+                color: '#FF6B6B',
+                getMessage: (data, actor) => `🔥 ${data.leaderName || 'Ktoś'}${data.previousLeaderName ? ` wyprzedza ${data.previousLeaderName} i` : ''} prowadzi w rankingu najbardziej aktywnych z ${data.activityCount || '?'} ${data.activityCount === 1 ? 'aktywnością' : 'aktywnościami'}!`
+            },
+            leaderboard_second: {
+                icon: 'fa-medal',
+                color: '#FFC107',
+                getMessage: (data, actor) => `🥈 ${data.secondName || 'Ktoś'}${data.previousSecondName ? ` wyprzedza ${data.previousSecondName} i` : ''} zajmuje drugie miejsce w rankingu z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`
+            },
+            activity_second: {
+                icon: 'fa-medal',
+                color: '#FF6B6B',
+                getMessage: (data, actor) => `🥈 ${data.secondName || 'Ktoś'}${data.previousSecondName ? ` wyprzedza ${data.previousSecondName} i` : ''} zajmuje drugie miejsce w rankingu najbardziej aktywnych z ${data.activityCount || '?'} ${data.activityCount === 1 ? 'aktywnością' : 'aktywnościami'}!`
+            },
             anon_message: {
                 icon: 'fa-comment-dots',
                 color: '#7B1FA2',

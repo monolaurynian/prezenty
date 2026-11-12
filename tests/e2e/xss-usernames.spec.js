@@ -450,13 +450,22 @@ test.describe('XSS: dock notifications panel (tab-bar-functions.js)', () => {
                       data: { leaderName: el, previousLeaderName: attr, presentCount: 3 } },
                     { id: 9002, type: 'anon_message', actor_username: null, is_read: false,
                       created_at: new Date().toISOString(),
-                      data: { label: el, threadId: 2 } }
+                      data: { label: el, threadId: 2 } },
+                    { id: 9004, type: 'activity_leader', actor_username: 'Ola', is_read: false,
+                      created_at: new Date().toISOString(),
+                      data: { leaderName: el, previousLeaderName: attr, activityCount: 3 } },
+                    { id: 9005, type: 'leaderboard_second', actor_username: 'Ola', is_read: false,
+                      created_at: new Date().toISOString(),
+                      data: { secondName: el, previousSecondName: attr, presentCount: 3 } },
+                    { id: 9006, type: 'activity_second', actor_username: 'Ola', is_read: false,
+                      created_at: new Date().toISOString(),
+                      data: { secondName: el, previousSecondName: attr, activityCount: 3 } }
                 ]);
             }, { el: ELEMENT_PAYLOAD, attr: ATTR_PAYLOAD });
 
             const rows = page.locator('#notificationsContent .tab-bar-notification-message');
-            await expect(rows, 'both notifications must be rendered').toHaveCount(2);
-            for (let i = 0; i < 2; i++) {
+            await expect(rows, 'all notifications must be rendered').toHaveCount(5);
+            for (let i = 0; i < 5; i++) {
                 const seen = await rows.nth(i).evaluate(el => ({
                     text: el.textContent.replace(/\s+/g, ' ').trim(),
                     html: el.innerHTML,

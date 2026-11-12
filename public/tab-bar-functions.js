@@ -132,6 +132,9 @@ function displayNotifications(notifications) {
         present_unchecked: { icon: 'ri-checkbox-blank-circle-line', color: '#9E9E9E' },
         present_deleted: { icon: 'ri-delete-bin-line', color: '#9E9E9E' },
         leaderboard_leader: { icon: 'ri-trophy-line', color: '#FFC107' },
+        activity_leader: { icon: 'ri-fire-line', color: '#FF6B6B' },
+        leaderboard_second: { icon: 'ri-medal-line', color: '#FFC107' },
+        activity_second: { icon: 'ri-medal-line', color: '#FF6B6B' },
         anon_message: { icon: 'ri-chat-private-line', color: '#7B1FA2' }
     };
 
@@ -234,6 +237,14 @@ function getNotificationMessage(notif) {
         case 'leaderboard_leader':
             // leaderName / previousLeaderName are recipients.name (user supplied)
             return `🏆 <strong>${escapeHtmlNotif(data.leaderName || 'Ktoś')}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${escapeHtmlNotif(data.previousLeaderName)}</strong> i` : ''} prowadzi w <a href="/leaderboard.html" style="color: #2196F3; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`;
+        case 'activity_leader':
+            // leaderName / previousLeaderName are recipients.name (user supplied)
+            return `🔥 <strong>${escapeHtmlNotif(data.leaderName || 'Ktoś')}</strong>${data.previousLeaderName ? ` wyprzedza <strong>${escapeHtmlNotif(data.previousLeaderName)}</strong> i` : ''} prowadzi w rankingu <a href="/leaderboard.html" style="color: #FF6B6B; text-decoration: underline;">najbardziej aktywnych</a> z ${data.activityCount || '?'} ${data.activityCount === 1 ? 'aktywnością' : 'aktywnościami'}!`;
+        case 'leaderboard_second':
+            // secondName / previousSecondName are recipients.name (user supplied)
+            return `🥈 <strong>${escapeHtmlNotif(data.secondName || 'Ktoś')}</strong>${data.previousSecondName ? ` wyprzedza <strong>${escapeHtmlNotif(data.previousSecondName)}</strong> i` : ''} zajmuje drugie miejsce w <a href="/leaderboard.html" style="color: #2196F3; text-decoration: underline;">rankingu</a> z ${data.presentCount || '?'} ${data.presentCount === 1 ? 'prezentem' : 'prezentami'}!`;
+        case 'activity_second':
+            return `🥈 <strong>${escapeHtmlNotif(data.secondName || 'Ktoś')}</strong>${data.previousSecondName ? ` wyprzedza <strong>${escapeHtmlNotif(data.previousSecondName)}</strong> i` : ''} zajmuje drugie miejsce w rankingu <a href="/leaderboard.html" style="color: #FF6B6B; text-decoration: underline;">najbardziej aktywnych</a> z ${data.activityCount || '?'} ${data.activityCount === 1 ? 'aktywnością' : 'aktywnościami'}!`;
         case 'anon_message': {
             const threadHref = data.threadId ? `/wiadomosci?rozmowa=${data.threadId}` : '/wiadomosci';
             return `💬 <a href="${threadHref}" style="color: #2196F3; text-decoration: underline;"><strong>${escapeHtmlNotif(data.label || 'Nowa wiadomość')}</strong></a>${data.preview ? ': "' + escapeHtmlNotif(data.preview.length > 60 ? data.preview.slice(0, 57) + '...' : data.preview) + '"' : ''}`;

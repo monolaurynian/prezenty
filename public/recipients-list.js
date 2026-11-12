@@ -291,7 +291,7 @@ function displayRecipientsWithPresents(recipients, presents) {
                                     ${getEmojiAvatar(recipient.name)}
                                 </div>`
             }
-                            ${recipient.identified_by ? `<span title="${recipient.online ? 'Online' : 'Offline'}" style="position: absolute; bottom: 6px; right: 6px; width: 16px; height: 16px; border-radius: 50%; background: ${recipient.online ? '#4CAF50' : '#F44336'}; border: 2.5px solid #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.25);"></span>` : ''}
+                            ${recipient.identified_by ? `<span title="${presenceDot(recipient).title}" style="position: absolute; bottom: 6px; right: 6px; width: 16px; height: 16px; border-radius: 50%; background: ${presenceDot(recipient).color}; border: 2.5px solid #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.25);"></span>` : ''}
                         </div>
                         
                         <!-- Name shown in profile section for wider screens -->
@@ -448,3 +448,13 @@ function generateProfilePictureHTML(recipient, isIdentified) {
     }
 }
 
+
+// Presence dot: green = online (seen within 5 min), yellow = seen within the
+// last hour, red = offline. `presence` comes from the server (lib/presence.js);
+// `online` alone is the fallback for data cached before it existed.
+function presenceDot(recipient) {
+    const state = recipient.presence || (recipient.online ? 'online' : 'offline');
+    if (state === 'online') return { color: '#4CAF50', title: 'Online' };
+    if (state === 'recent') return { color: '#FFC107', title: 'Ostatnia aktywność w ciągu godziny' };
+    return { color: '#F44336', title: 'Offline' };
+}
