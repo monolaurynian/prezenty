@@ -499,10 +499,29 @@ router.delete('/api/presents/:id', requireAuth, async (req, res) => {
         // Snapshot the leaderboard leader before the change
         const prevLeader = await getLeaderboardLeader().catch(() => null);
 
+        // Read the title and recipient first: they are gone after the DELETE
+        const [presentRows] = await pool.execute(`
+            SELECT p.title, p.recipient_id, r.name as recipient_name
+            FROM presents p
+            LEFT JOIN recipients r ON p.recipient_id = r.id
+            WHERE p.id = ?
+        `, [id]);
+
         const [result] = await pool.execute('DELETE FROM presents WHERE id = ?', [id]);
 
         if (result.affectedRows === 0) {
             return notFound(res, 'Prezent nie został znaleziony');
+        }
+
+        // Tell the other users. No presentId on purpose: the present no longer
+        // exists, so the notification must not link to it. createNotification
+        // skips the user identified as the recipient, so the surprise stays.
+        if (presentRows.length > 0) {
+            await createNotification('present_deleted', req.session.userId, {
+                presentTitle: presentRows[0].title,
+                recipientId: presentRows[0].recipient_id,
+                recipientName: presentRows[0].recipient_name || null
+            });
         }
 
         // Leaderboard leader may have changed - notify (non-blocking)

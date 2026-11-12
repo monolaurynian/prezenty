@@ -79,6 +79,7 @@ test.describe('notification-text (shared helper, no browser needed)', () => {
         expect(plain('present_unreserved')).toBe('Monika rezygnuje z rezerwacji „Ksiazka” dla: Tomek');
         expect(plain('present_checked')).toBe('Monika kupuje „Ksiazka” dla: Tomek');
         expect(plain('present_unchecked')).toBe('Monika cofa oznaczenie „kupione” przy „Ksiazka” dla: Tomek');
+        expect(plain('present_deleted')).toBe('Monika usuwa prezent „Ksiazka” dla: Tomek');
         expect(plain('present_added_batch')).toBe('Monika dodaje 5 prezentów dla: Tomek');
         expect(plain('leaderboard_leader')).toBe('Monika coś zmienia');
         expect(plain('anon_message')).toBe('Monika coś zmienia');

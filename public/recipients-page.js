@@ -348,6 +348,11 @@
                     color: '#4CAF50',
                     getMessage: (data, actor) => bellMessage('present_checked', data, actor, '#4CAF50')
                 },
+                present_deleted: {
+                    icon: 'fa-trash',
+                    color: '#9E9E9E',
+                    getMessage: (data, actor) => bellMessage('present_deleted', data, actor, '#9E9E9E')
+                },
                 present_unchecked: {
                     icon: 'fa-circle',
                     color: '#9E9E9E',

@@ -11,6 +11,7 @@
 //
 // type:  recipient_added | present_added | present_reserved |
 //        present_unreserved | present_checked | present_unchecked |
+//        present_deleted (no presentId: the present is gone, nothing to link) |
 //        present_added_batch (data.count = number of presents)
 //        anything else -> "<actor> coś zmienia"
 // data:  { presentTitle, recipientName, count, ... } (notification payload)
@@ -91,6 +92,9 @@
                 break;
             case 'present_unchecked':
                 body = `cofa oznaczenie „kupione” przy ${present}${forWhom}`;
+                break;
+            case 'present_deleted':
+                body = `usuwa prezent ${present}${forWhom}`;
                 break;
             case 'present_added_batch': {
                 const n = Number(data.count) || 0;

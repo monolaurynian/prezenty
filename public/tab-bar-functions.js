@@ -130,6 +130,7 @@ function displayNotifications(notifications) {
         present_unreserved: { icon: 'ri-bookmark-line', color: '#9E9E9E' },
         present_checked: { icon: 'ri-checkbox-circle-line', color: '#4CAF50' },
         present_unchecked: { icon: 'ri-checkbox-blank-circle-line', color: '#9E9E9E' },
+        present_deleted: { icon: 'ri-delete-bin-line', color: '#9E9E9E' },
         leaderboard_leader: { icon: 'ri-trophy-line', color: '#FFC107' },
         anon_message: { icon: 'ri-chat-private-line', color: '#7B1FA2' }
     };

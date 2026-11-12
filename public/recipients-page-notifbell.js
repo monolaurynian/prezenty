@@ -26,6 +26,11 @@
                 color: '#4CAF50',
                 getMessage: (data, actor) => notificationText('present_checked', data, actor, { html: false })
             },
+            present_deleted: {
+                icon: 'fa-trash',
+                color: '#9E9E9E',
+                getMessage: (data, actor) => notificationText('present_deleted', data, actor, { html: false })
+            },
             present_unchecked: {
                 icon: 'fa-circle',
                 color: '#9E9E9E',
