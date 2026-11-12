@@ -1,0 +1,6 @@
+# setup-vm.sh replaces __DOMAIN__. Caddy fetches and renews the HTTPS
+# certificate on its own once DNS for the domain points at this VM.
+__DOMAIN__ {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3000
+}

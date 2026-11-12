@@ -230,3 +230,7 @@ Then redeploy.
 
 - **New `SESSION_SECRET`**: every existing session cookie becomes invalid, so all users have to log in again once. Old session rows in the MySQL store simply expire.
 - **New VAPID key pair**: existing push subscriptions were created with the old key and fail with HTTP 403. The server deletes them automatically, and each device subscribes again on its next visit. Set the public and private key together; the boot check in `lib/webpush-config.js` reports a mismatch.
+
+## Alternative: your own VM (Oracle Cloud)
+
+App and database on one machine, with HTTPS from Caddy: see [deploy/oracle/README.md](deploy/oracle/README.md).

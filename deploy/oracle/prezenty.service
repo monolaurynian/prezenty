@@ -1,0 +1,24 @@
+[Unit]
+Description=Prezenty (Node.js)
+After=network-online.target mariadb.service
+Wants=network-online.target
+Requires=mariadb.service
+
+[Service]
+Type=simple
+User=prezenty
+Group=prezenty
+WorkingDirectory=/opt/prezenty/app
+EnvironmentFile=/etc/prezenty/prezenty.env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+
+# Light hardening: the app needs no privileges and writes only under /opt/prezenty
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
