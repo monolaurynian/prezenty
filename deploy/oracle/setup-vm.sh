@@ -76,6 +76,8 @@ id "$APP_USER" >/dev/null 2>&1 || useradd --system --create-home --home-dir "$BA
 if [ ! -d "$APP_DIR/.git" ]; then
   sudo -H -u "$APP_USER" git clone "$REPO_URL" "$APP_DIR"
 fi
+# chmod +x on the scripts must not show up as a local change (it would block pulls)
+sudo -H -u "$APP_USER" git -C "$APP_DIR" config core.fileMode false
 sudo -H -u "$APP_USER" bash -c "cd '$APP_DIR' && npm ci --omit=dev"
 
 echo "==> Database (listens on localhost only)"
