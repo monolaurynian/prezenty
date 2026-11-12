@@ -87,9 +87,28 @@ once, read the output, and stop at the first error.
    `scp ubuntu@<vm-ip>:/var/backups/prezenty/prezenty_<date>.sql.gz .`
    (store it outside the repo).
 
+## Deploys from GitHub
+
+A systemd timer (`prezenty-deploy.timer`) checks GitHub every 5 minutes. When
+`main` has a new commit it pulls it, installs dependencies only if
+`package.json` / `package-lock.json` changed, restarts the app and waits for
+`/health` to answer `OK`. If it does not, it goes back to the previous commit,
+restarts, and skips the broken commit until a newer one arrives.
+
+- Anything pushed to `main` goes live within about 5 minutes, including
+  half-finished work pushed by an automatic sync. To stop that, switch the
+  timer to a `production` branch: set `Environment=DEPLOY_BRANCH=production`
+  in `prezenty-deploy.service` and push to that branch when ready.
+- Watch it: `sudo journalctl -u prezenty-deploy -f`
+- Deploy right now: `sudo /opt/prezenty/app/deploy/oracle/update.sh`
+- Pause it: `sudo systemctl stop prezenty-deploy.timer` (start it again with `start`)
+- Enable it on a VM set up before this existed: run `update.sh` once to pull
+  the new files, then `sudo bash /opt/prezenty/app/deploy/oracle/install-auto-deploy.sh`.
+- It does not change the system files setup-vm.sh installed (service unit,
+  Caddyfile): if those change, run `setup-vm.sh` again.
+
 ## Day to day
 
-- Deploy new code: `sudo /opt/prezenty/app/deploy/oracle/update.sh`
 - Logs: `sudo journalctl -u prezenty -f`
 - Restart: `sudo systemctl restart prezenty`
 - Restore a backup: `gunzip -c prezenty_<date>.sql.gz | sudo mariadb prezenty`

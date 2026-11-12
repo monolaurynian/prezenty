@@ -128,6 +128,9 @@ chmod +x "$APP_DIR/deploy/oracle/backup.sh" "$APP_DIR/deploy/oracle/update.sh"
 echo "17 3 * * * root $APP_DIR/deploy/oracle/backup.sh" > /etc/cron.d/prezenty-backup
 chmod 644 /etc/cron.d/prezenty-backup
 
+echo "==> Automatic deploys from GitHub (every 5 minutes, with rollback)"
+bash "$APP_DIR/deploy/oracle/install-auto-deploy.sh"
+
 cat <<DONE
 
 Setup finished. The app is NOT started yet - the database is empty.
