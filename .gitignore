@@ -54,3 +54,17 @@ test-results/
 
 # screen recordings made by scripts/record-klipy-demo.js
 recordings/
+
+# Workflow scratch output. The plans/reviews/verification notes in
+# .agents/tasks stay tracked; screenshots, before/after measurements and
+# throwaway scripts do not.
+.agents/tasks/screenshots/
+.agents/tasks/**/*-baseline/
+.agents/tasks/**/tmp-*
+.agents/commit.sh
+*.orig
+*.bak
+*.bak.md
+# Editor workspace file and workflow worktrees
+*.code-workspace
+.worktrees/
