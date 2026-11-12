@@ -935,7 +935,14 @@
             // the page's own bottom margin would add scrollable emptiness under the card
             container.style.setProperty('margin-bottom', '0', 'important');
             card.style.setProperty('margin-bottom', '0', 'important');
-            const pad = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;   // room for the tab bar
+            // Room for the tab bar. The body animates its padding (0.3s) when the
+            // GIF panel's extra padding is removed, so right after the panel
+            // closes the computed value is still the panel's height and the
+            // list would be sized to that. Read the settled value instead.
+            const bodyTransition = document.body.style.transition;
+            document.body.style.transition = 'none';
+            const pad = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+            document.body.style.transition = bodyTransition;
             const boxRect = box.getBoundingClientRect();
             const below = card.getBoundingClientRect().bottom - boxRect.bottom;           // composer + card padding
             const top = boxRect.top + window.scrollY;
