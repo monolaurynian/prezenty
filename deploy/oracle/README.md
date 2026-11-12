@@ -30,7 +30,10 @@ once, read the output, and stop at the first error.
   Always Free page). Then set a **budget alert at $1** so a mistake cannot
   cost money quietly.
 - "Out of host capacity" is normal for Arm: try another availability domain,
-  retry later, or use the AMD micro VM (works, slower; setup adds swap).
+  retry later, or use the AMD micro VM (1 GB RAM, 1/8 of a core: enough for
+  this app; setup adds 2 GB of swap and a small MariaDB profile when RAM is
+  under 2 GB, updates are slow). To move to Arm later, restore a backup on the
+  new VM and change the DNS record.
 - The **home region cannot be changed** after sign-up. For users in Poland
   choose **Germany Central (Frankfurt)**.
 

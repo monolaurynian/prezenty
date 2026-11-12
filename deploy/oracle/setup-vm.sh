@@ -75,7 +75,20 @@ fi
 sudo -H -u "$APP_USER" bash -c "cd '$APP_DIR' && npm ci --omit=dev"
 
 echo "==> Database (listens on localhost only)"
+# On a 1 GB machine (the AMD micro shape) keep MariaDB small: this app's
+# database is a few MB. Skipped on bigger machines.
+if [ "$(free -m | awk '/^Mem:/ {print $2}')" -lt 2000 ]; then
+  mkdir -p /etc/mysql/mariadb.conf.d
+  cat > /etc/mysql/mariadb.conf.d/99-prezenty-small.cnf <<'CNF'
+[mysqld]
+innodb_buffer_pool_size = 64M
+performance_schema = OFF
+max_connections = 30
+key_buffer_size = 8M
+CNF
+fi
 systemctl enable --now mariadb
+systemctl restart mariadb
 if [ ! -f "$ENV_FILE" ]; then
   DB_PASSWORD="$(openssl rand -base64 24 | tr -d '/+=')"
   mariadb <<SQL
