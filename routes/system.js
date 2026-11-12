@@ -8,6 +8,7 @@ const { requireAuth } = require('../lib/auth');
 const { updateTracker } = require('../lib/update-tracker');
 const { latestRelease, releasesFor } = require('../lib/release-notes');
 const { gifEnabled, klipyEnabled } = require('../lib/gif');
+const { readDeployStatus } = require('../lib/deploy-status');
 
 // Routes
 router.get('/health', (req, res) => {
@@ -56,6 +57,12 @@ router.get('/api/releases', requireAuth, (req, res) => {
     res.json({ releases: releasesFor({ gif: gifEnabled(), klipy: klipyEnabled() }) });
 });
 
+// What the Oracle VM's auto-deploy is doing (see lib/deploy-status.js); the
+// signed-in /deploy page polls this. { available: false } on other hosts.
+router.get('/api/deploy-status', requireAuth, (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json(readDeployStatus());
+});
 // Incremental updates endpoint
 router.get('/api/updates', requireAuth, (req, res) => {
     const since = req.query.since || 0;

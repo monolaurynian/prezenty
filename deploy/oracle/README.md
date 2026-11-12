@@ -99,6 +99,14 @@ restarts, and skips the broken commit until a newer one arrives.
   half-finished work pushed by an automatic sync. To stop that, switch the
   timer to a `production` branch: set `Environment=DEPLOY_BRANCH=production`
   in `prezenty-deploy.service` and push to that branch when ready.
+- See it in the browser: sign in and open `/deploy` (not linked from the menus). It
+  shows the commit that is live, a deploy in progress (step by step, and
+  "restarting" while the app is briefly down), a rolled-back or failed deploy,
+  and the last lines of the deploy log. The script writes
+  `/var/lib/prezenty-deploy/status.json` and `deploy.log` (see
+  `write-status.js`); the app reads them (`lib/deploy-status.js`). On any other
+  host the page says there is no data. After the first auto-deploy that
+  includes this feature, the page fills in at the next 5-minute check.
 - Watch it: `sudo journalctl -u prezenty-deploy -f`
 - Deploy right now: `sudo /opt/prezenty/app/deploy/oracle/update.sh`
 - Pause it: `sudo systemctl stop prezenty-deploy.timer` (start it again with `start`)

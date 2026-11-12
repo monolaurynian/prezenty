@@ -108,6 +108,14 @@ router.get('/nowosci', (req, res) => {
     }
 });
 
+router.get('/deploy', (req, res) => {
+    // Not linked from the menus: a small terminal-style view of the VM's deploys
+    if (!req.session.userId) {
+        res.redirect('/');
+    } else {
+        res.sendFile(path.join(ROOT_DIR, 'public', 'deploy.html'));
+    }
+});
 router.get('/wiadomosci', (req, res) => {
     // If user is not authenticated, redirect to login page
     if (!req.session.userId) {

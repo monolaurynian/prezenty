@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prezenty-v173';
+const CACHE_NAME = 'prezenty-v174';
 const urlsToCache = [
   '/manifest.json',
   '/pluralize-pl.js',
@@ -51,6 +51,8 @@ const urlsToCache = [
   '/archiwum-page.js?v=2',
     '/nowosci-page.css?v=1',
     '/nowosci-page.js?v=2',
+  '/deploy-page.css?v=1',
+  '/deploy-page.js?v=1',
   '/intro-page.css?v=1',
   '/intro-page.js?v=1',
   '/rezerwacje-page.css?v=1',
