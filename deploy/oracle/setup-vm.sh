@@ -25,6 +25,10 @@ DB_USER=prezenty
 if [ "$(id -u)" -ne 0 ]; then echo "Run as root (sudo)." >&2; exit 1; fi
 export DEBIAN_FRONTEND=noninteractive
 
+echo "==> Base tools (Minimal images leave out free, cron, sudo, curl)"
+apt-get update
+apt-get install -y procps cron sudo curl ca-certificates
+
 echo "==> Swap (npm and MariaDB need headroom on a 1 GB machine)"
 if [ "$(free -m | awk '/^Mem:/ {print $2}')" -lt 2000 ] && ! swapon --show | grep -q .; then
   fallocate -l 2G /swapfile
